@@ -67,10 +67,10 @@ namespace XXX_NAMESPACE
 		MACRO(std::int64_t)
 		MACRO(std::uint32_t)
 		MACRO(std::int32_t)
-        MACRO(std::uint16_t)
-        MACRO(std::int16_t)
-        MACRO(std::uint8_t)
-        MACRO(std::int8_t)
+		MACRO(std::uint16_t)
+		MACRO(std::int16_t)
+		MACRO(std::uint8_t)
+		MACRO(std::int8_t)
 
 		#undef MACRO
 
@@ -96,10 +96,10 @@ namespace XXX_NAMESPACE
 		MACRO(std::int64_t, SIMD_WIDTH_NATIVE_64BIT)
 		MACRO(std::uint32_t, SIMD_WIDTH_NATIVE_32BIT)
 		MACRO(std::int32_t, SIMD_WIDTH_NATIVE_32BIT)
-        MACRO(std::uint16_t, SIMD_WIDTH_NATIVE_16BIT)
-        MACRO(std::int16_t, SIMD_WIDTH_NATIVE_16BIT)
-        MACRO(std::uint8_t, SIMD_WIDTH_NATIVE_8BIT)
-        MACRO(std::int8_t, SIMD_WIDTH_NATIVE_8BIT)
+		MACRO(std::uint16_t, SIMD_WIDTH_NATIVE_16BIT)
+		MACRO(std::int16_t, SIMD_WIDTH_NATIVE_16BIT)
+		MACRO(std::uint8_t, SIMD_WIDTH_NATIVE_8BIT)
+		MACRO(std::int8_t, SIMD_WIDTH_NATIVE_8BIT)
 
 		#undef MACRO
 	}
