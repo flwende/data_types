@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     }
     time = omp_get_wtime() - time;
 
-    #if !defined(CHECK_RESULTS)
+    #if defined(CHECK_RESULTS)
     const double max_abs_error = static_cast<real_t>(1.0E-4);
     bool not_passed = false;
     for (std::size_t z = 0; z < nz; ++z)
