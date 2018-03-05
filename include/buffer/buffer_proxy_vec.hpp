@@ -26,7 +26,7 @@ namespace XXX_NAMESPACE
 		template <typename T>
 		class proxy_vec<T, 1>
 		{
-			using vec = hpm::vec<T, 1>;
+			using vec = XXX_NAMESPACE::vec<T, 1>;
 
 		public:
 
@@ -127,7 +127,7 @@ namespace XXX_NAMESPACE
 		template <typename T>
 		class proxy_vec<T, 2>
 		{
-			using vec = hpm::vec<T, 2>;
+			using vec = XXX_NAMESPACE::vec<T, 2>;
 
 		public:
 
@@ -235,7 +235,7 @@ namespace XXX_NAMESPACE
 		template <typename T>
 		class proxy_vec<T, 3>
 		{
-			using vec = hpm::vec<T, 3>;
+			using vec = XXX_NAMESPACE::vec<T, 3>;
 
 		public:
 

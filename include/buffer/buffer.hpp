@@ -71,7 +71,7 @@ namespace XXX_NAMESPACE
 			//! Base pointer
 			T* ptr;
 			//! Shape of the D-dimensional volume
-			const sarray<std::size_t, D> n;
+			const XXX_NAMESPACE::sarray<std::size_t, D> n;
 
 		public:
 
@@ -79,7 +79,7 @@ namespace XXX_NAMESPACE
 			//!
 			//! \param ptr base pointer
 			//! \param n shape of the D-dimensional volume
-			proxy_layer(T* ptr, const sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
+			proxy_layer(T* ptr, const XXX_NAMESPACE::sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
 
 			//! \brief Subscript operator
 			//!
@@ -114,7 +114,7 @@ namespace XXX_NAMESPACE
 			//! Base pointer
 			T* ptr;
 			//! Shape of the 1-dimensional volume
-			const sarray<std::size_t, 1> n;
+			const XXX_NAMESPACE::sarray<std::size_t, 1> n;
 
 		public:
 
@@ -122,7 +122,7 @@ namespace XXX_NAMESPACE
 			//!
 			//! \param ptr base pointer
 			//! \param n shape of the 1-dimensional volume
-			proxy_layer(T* ptr, const sarray<std::size_t, 1>& n) : ptr(ptr), n(n) { ; }
+			proxy_layer(T* ptr, const XXX_NAMESPACE::sarray<std::size_t, 1>& n) : ptr(ptr), n(n) { ; }
 
 			//! \brief Array subscript operator
 			//!
@@ -155,7 +155,7 @@ namespace XXX_NAMESPACE
 			//! Base pointer (it is of type TT, not T)
 			TT* ptr;
 			//! Shape of the D-dimensional volume
-			const sarray<std::size_t, D> n;
+			const XXX_NAMESPACE::sarray<std::size_t, D> n;
 
 		public:
 
@@ -163,7 +163,7 @@ namespace XXX_NAMESPACE
 			//!
 			//! \param ptr base pointer
 			//! \param n shape of the D-dimensional volume
-			proxy_layer(TT* ptr, const sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
+			proxy_layer(TT* ptr, const XXX_NAMESPACE::sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
 
 			//! \brief Subscript operator
 			//!
@@ -204,7 +204,7 @@ namespace XXX_NAMESPACE
 			//! Base pointer (it is of type TT, not T)
 			TT* ptr;
 			//! Shape of the 1-dimensional volume
-			const sarray<std::size_t, 1> n;
+			const XXX_NAMESPACE::sarray<std::size_t, 1> n;
 
 		public:
 
@@ -212,7 +212,7 @@ namespace XXX_NAMESPACE
 			//!
 			//! \param ptr base pointer
 			//! \param n shape of the 1-dimensional volume
-			proxy_layer(TT* ptr, const sarray<std::size_t, 1>& n) : ptr(ptr), n(n) { ; }
+			proxy_layer(TT* ptr, const XXX_NAMESPACE::sarray<std::size_t, 1>& n) : ptr(ptr), n(n) { ; }
 
 			//! \brief Array subscript operator
 			//!
@@ -717,7 +717,7 @@ namespace XXX_NAMESPACE
 	namespace detail
 	{
 		template <typename T>
-		void memcpy(T* dst, const T* src, const sarray<std::size_t, 1>& size, const std::size_t d_stride, const std::size_t s_stride)
+		void memcpy(T* dst, const T* src, const XXX_NAMESPACE::sarray<std::size_t, 1>& size, const std::size_t d_stride, const std::size_t s_stride)
 		{
 			for (std::size_t i = 0; i < size[0]; ++i)
 			{
@@ -726,7 +726,7 @@ namespace XXX_NAMESPACE
 		}
 
 		template <typename T>
-		void memcpy(T* dst, const T* src, const sarray<std::size_t, 2>& size, const std::size_t d_stride, const std::size_t s_stride)
+		void memcpy(T* dst, const T* src, const XXX_NAMESPACE::sarray<std::size_t, 2>& size, const std::size_t d_stride, const std::size_t s_stride)
 		{
 			for (std::size_t j = 0; j < size[1]; ++j)
 			{
@@ -738,7 +738,7 @@ namespace XXX_NAMESPACE
 		}
 
 		template <typename T>
-		void memcpy(T* dst, const T* src, const sarray<std::size_t, 3>& size, const std::size_t d_stride, const std::size_t s_stride)
+		void memcpy(T* dst, const T* src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size, const std::size_t d_stride, const std::size_t s_stride)
 		{
 			for (std::size_t k = 0; k < size[2]; ++k)
 			{
@@ -914,7 +914,5 @@ namespace XXX_NAMESPACE
 }
 
 #include "buffer_math.hpp"
-
-#undef XXX_NAMESPACE
 
 #endif
