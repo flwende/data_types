@@ -32,12 +32,6 @@
 	#define SIMD_ALIGNMENT 8
 #endif
 
-#include <cstdint>
-
-#if !defined(XXX_NAMESPACE)
-#define XXX_NAMESPACE fw
-#endif
-
 namespace XXX_NAMESPACE
 {
 	namespace simd
@@ -110,6 +104,5 @@ namespace XXX_NAMESPACE
 #undef SIMD_WIDTH_NATIVE_16BIT
 #undef SIMD_WIDTH_NATIVE_8BIT
 #undef SIMD_ALIGNMENT
-#undef XXX_NAMESPACE
 
 #endif
