@@ -6,12 +6,12 @@
 #if !defined(TEMPLATE_STUFF_HPP)
 #define TEMPLATE_STUFF_HPP
 
+#include <cstdlib>
+#include <cstdint>
+
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
-
-#include <cstdlib>
-#include <cstdint>
 
 namespace XXX_NAMESPACE
 {
@@ -77,7 +77,5 @@ namespace XXX_NAMESPACE
 		}; 
 	};
 }
-
-#undef XXX_NAMESPACE
 
 #endif
