@@ -6,12 +6,12 @@
 #if !defined(DATA_TYPES_SARRAY_HPP)
 #define DATA_TYPES_SARRAY_HPP
 
-#if !defined(XXX_NAMESPACE)
-#define XXX_NAMESPACE fw
-#endif  
-
 #include <cstdlib>
 #include <cstdint>
+
+#if !defined(XXX_NAMESPACE)
+#define XXX_NAMESPACE fw
+#endif
 
 namespace XXX_NAMESPACE
 {
@@ -102,7 +102,5 @@ namespace XXX_NAMESPACE
 		}
 	};
 }
-
-#undef XXX_NAMESPACE
 
 #endif
