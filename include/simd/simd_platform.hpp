@@ -58,7 +58,7 @@ namespace XXX_NAMESPACE
 		template <>                                                 \
 		struct implementation<T>                                    \
 		{                                                           \
-			static constexpr bool available = true;                 \
+			static constexpr bool available = true;             \
 		};
 
 		MACRO(double)
@@ -87,7 +87,7 @@ namespace XXX_NAMESPACE
 		template <>                                                 \
 		struct type<T>                                              \
 		{                                                           \
-			static constexpr std::size_t width = SW;                \
+			static constexpr std::size_t width = SW;            \
 		};
 
 		MACRO(double, SIMD_WIDTH_NATIVE_64BIT)
