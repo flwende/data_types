@@ -78,4 +78,6 @@ namespace XXX_NAMESPACE
 	};
 }
 
+#undef XXX_NAMESPACE
+
 #endif
