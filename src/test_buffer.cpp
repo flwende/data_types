@@ -1,0 +1,141 @@
+#include <iostream>
+#include <cstdlib>
+#include <cstdint>
+#include <cmath>
+#include <omp.h>
+#include <buffer/buffer.hpp>
+
+#define NX_DEFAULT 128
+#define NY_DEFAULT 128
+#define NZ_DEFAULT 128
+
+#define WARMUP 10
+#define MEASUREMENT 100
+
+using namespace fw;
+
+int main(int argc, char** argv)
+{
+
+    std::size_t dim = 0;
+    const std::size_t nx = (argc > 1 ? atoi(argv[++dim]) : NX_DEFAULT);
+    const std::size_t ny = (argc > 2 ? atoi(argv[++dim]) : NY_DEFAULT);
+    const std::size_t nz = (argc > 3 ? atoi(argv[++dim]) : NZ_DEFAULT);
+    const std::size_t print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, 12UL));
+
+
+    using real_t = float;
+    using real3_t = vec<real_t, 3>;
+
+    //buffer<real3_t, 3, target::host, data_layout::SoA> _buf({nx, ny, nz});
+    //buffer<real3_t, 3, target::host, data_layout::AoS> _buf({nx, ny, nz});
+    //auto buf = _buf.read_write();
+    std::vector<std::vector<std::vector<real3_t>>> buf(nz, std::vector<std::vector<real3_t>>(ny, std::vector<real3_t>(nx)));
+
+    srand48(nx);
+    const real_t value = static_cast<real_t>(drand48() * 100.0);
+    std::cout << "initial value = " << value << std::endl;
+
+    for (std::size_t z = 0; z < nz; ++z)
+    {
+        for (std::size_t y = 0; y < ny; ++y)
+        {
+            for (std::size_t x = 0; x < nx; ++x)
+            {
+                buf[z][y][x] = value;
+            }
+        }
+    }
+
+    for (std::size_t i = 0; i <WARMUP; ++i)
+    {
+        for (std::size_t z = 0; z < nz; ++z)
+        {
+            for (std::size_t y = 0; y < ny; ++y)
+            {
+                for (std::size_t x = 0; x < nx; ++x)
+                {
+			buf[z][y][x] = exp(buf[z][y][x]);
+                }
+            }
+        }
+
+        for (std::size_t z = 0; z < nz; ++z)
+        {
+            for (std::size_t y = 0; y < ny; ++y)
+            {
+                for (std::size_t x = 0; x < nx; ++x)
+                {
+                    buf[z][y][x] = log(buf[z][y][x]);
+                }
+            }
+        }
+    }
+
+    double time = omp_get_wtime();
+    for (std::size_t i = 0; i <MEASUREMENT; ++i)
+    {
+        for (std::size_t z = 0; z < nz; ++z)
+        {
+            for (std::size_t y = 0; y < ny; ++y)
+            {
+                for (std::size_t x = 0; x < nx; ++x)
+                {
+                    buf[z][y][x] = exp(buf[z][y][x]);
+                }
+            }
+        }
+
+        for (std::size_t z = 0; z < nz; ++z)
+        {
+            for (std::size_t y = 0; y < ny; ++y)
+            {
+                for (std::size_t x = 0; x < nx; ++x)
+                {
+                    buf[z][y][x] = log(buf[z][y][x]);
+                }
+            }
+        }
+    }
+    time = omp_get_wtime() - time;
+
+    #if !defined(CHECK_RESULTS)
+    const double max_abs_error = static_cast<real_t>(1.0E-4);
+    bool not_passed = false;
+    for (std::size_t z = 0; z < nz; ++z)
+    {
+        for (std::size_t y = 0; y < ny; ++y)
+        {
+            for (std::size_t x = 0; x < nx; ++x)
+            {
+                const double x_0[3] = {buf[z][y][x].x, buf[z][y][x].y, buf[z][y][x].z};
+                const double x_1[3] = {value, value, value};
+
+                for (std::size_t i = 0; i < 3; ++i)
+                {
+                    const real_t abs_error = std::abs(x_1[i] != static_cast<real_t>(0) ? (x_0[i] - x_1[i]) / x_1[i] : x_0[i] - x_1[i]);
+                    if (abs_error > max_abs_error)
+                    {
+                        std::cout << "error: " << x_0[i] << " vs " << x_1[i] << " (" << abs_error << ")" << std::endl;
+                        not_passed = true;
+                        break;
+                    }
+                }
+
+                if (not_passed) break;
+            }
+            if (not_passed) break;
+        }
+        if (not_passed) break;
+    }
+
+    if (!not_passed)
+    {
+        std::cout << "success!" << std::endl;
+    }
+    #endif
+
+    std::cout << "elapsed time = " << (time / MEASUREMENT) * 1.0E3 << " ms" << std::endl;
+
+    return 0;
+}
