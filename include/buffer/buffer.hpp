@@ -23,11 +23,9 @@
 
 #include "../misc/template_stuff.hpp"
 #include "../static_array/sarray.hpp"
-
 #include "buffer_constants.hpp"
 #include "buffer_fdecl.hpp"
-#include "buffer_vec.hpp"
-#include "buffer_proxy_vec.hpp"
+#include <vec/vec.hpp>
 
 namespace XXX_NAMESPACE
 {
@@ -38,195 +36,6 @@ namespace XXX_NAMESPACE
 	#else
 	enum target { host = 1 };
 	#endif
-
-	namespace detail
-	{
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//! \brief Proxy data type implementing the index computation for subscript operator chaining
-		//! when accessing the elements of buffer<T, D, Layout, Alignment>
-		//!
-		//! Proxies are defined recursively:
-		//! <pre>
-		//!     proxy_layer<T, D,...>
-		//!         n[D]           = {n_1, n_2,...,n_{D - 1}, n_{D}}
-		//!         ptr_{D}        = &data[0];
-		//!         offset_{D}     = n_1 * n_2 * ... * n_{D - 1}
-		//!
-		//!     proxy_layer<T, D - 1,...>    <-  proxy_layer<T, D,...>::operator[](idx)
-		//!         n[D - 1]       = {n_1, n_2,...,n_{D - 1}}
-		//!         ptr_{D - 1}    = &ptr_{D - 1}[idx * offset_{D}]
-		//!         offset_{D - 1} = n_1 * n_2 * ... * n_{D - 2}
-		//!     ...
-		//!     (ancher case definition) T&  <-  proxy_layer<T, 1,...>::operator[](idx)
-		//! </pre>
-		//!
-		//! \tparam T type of the data stored in buffer<T,...>
-		//! \tparam D recursion depth (and dimension the proxy is associated with)
-		//! \tparam Layout any of SoA (structs of arrays) and AoS (array of structs)
-		//! \tparam Enabled needed for partial specialization with T = vec<TT,...> and Layout = SoA
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		template <typename T, std::size_t D, data_layout Layout = AoS, typename Enabled = void>
-		class proxy_layer
-		{
-			//! Base pointer
-			T* ptr;
-			//! Shape of the D-dimensional volume
-			const XXX_NAMESPACE::sarray<std::size_t, D> n;
-
-		public:
-
-			//! \brief Constructor
-			//!
-			//! \param ptr base pointer
-			//! \param n shape of the D-dimensional volume
-			proxy_layer(T* ptr, const XXX_NAMESPACE::sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
-
-			//! \brief Subscript operator
-			//!
-			//! Determine the base pointer of proxy_layer<T, D - 1,...> by multiplying the
-			//! dimensions of the D-1-dimensional sub-volume and idx.
-			//!
-			//! \param idx index w.r.t. dimension D
-			//! \return a proxy_layer<T, D - 1> object
-			inline proxy_layer<T, D - 1> operator[](const std::size_t idx)
-			{
-				std::size_t offset = idx;
-				for (std::size_t i = 0; i < (D - 1); ++i)
-				{
-					offset *= n[i];
-				}
-				return proxy_layer<T, D - 1>(&ptr[offset], n.template shrink<D - 1>());
-			}
-		};
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//! \brief Specialization with D = 1 (recursion ancher definition)
-		//!
-		//! This proxy implements a standard array subscript operator for accessing the data through the base pointer.
-		//!
-		//! \tparam T type of the data stored in buffer<T,...>
-		//! \tparam Layout any of SoA (structs of arrays) and AoS (array of structs)
-		//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		template <typename T, data_layout Layout, typename Enabled>
-		class proxy_layer<T, 1, Layout, Enabled>
-		{
-			//! Base pointer
-			T* ptr;
-			//! Shape of the 1-dimensional volume
-			const XXX_NAMESPACE::sarray<std::size_t, 1> n;
-
-		public:
-
-			//! \brief Constructor
-			//!
-			//! \param ptr base pointer
-			//! \param n shape of the 1-dimensional volume
-			proxy_layer(T* ptr, const XXX_NAMESPACE::sarray<std::size_t, 1>& n) : ptr(ptr), n(n) { ; }
-
-			//! \brief Array subscript operator
-			//!
-			//! \param idx element to access
-			//! \return reference to the actual data
-			inline T& operator[](const std::size_t idx)
-			{
-				return ptr[idx];
-			}
-		};
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//! \brief Specialization with T = vec<TT,...> and Layout = SoA
-		//!
-		//! This proxy differs from the general case in that an additional next-to-the-innermost dimension is
-		//! assumed implicitely.
-		//! The extent of this dimension is given by the dimension of T, which is T::dim.
-		//!
-		//! \tparam T data type (vec<TT, DD> where TT and DD are recovered from T)
-		//! \tparam D recursion depth (and dimension the proxy is associated with)
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		template <typename T, std::size_t D>
-		class proxy_layer<T, D, SoA, typename std::enable_if<is_vec<T>::value>::type>
-		{
-			//! Recover the fundamental data type that is behind T
-			using TT = typename T::fundamental_type;
-			//! Recover the dimension of T
-			static constexpr std::size_t DD = T::dim;
-
-			//! Base pointer (it is of type TT, not T)
-			TT* ptr;
-			//! Shape of the D-dimensional volume
-			const XXX_NAMESPACE::sarray<std::size_t, D> n;
-
-		public:
-
-			//! \brief Constructor
-			//!
-			//! \param ptr base pointer
-			//! \param n shape of the D-dimensional volume
-			proxy_layer(TT* ptr, const XXX_NAMESPACE::sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
-
-			//! \brief Subscript operator
-			//!
-			//! Determine the base pointer of proxy_layer<T, D - 1,...> by multiplying the
-			//! dimensions of the D-1-dimensional sub-volume and idx and the implicit dimension DD.
-			//!
-			//! \param idx index w.r.t. dimension D
-			//! \return a proxy_layer<T, D - 1, SoA> object
-			inline proxy_layer<T, D - 1, SoA> operator[](const std::size_t idx)
-			{
-				std::size_t offset = idx * DD;
-				for (std::size_t i = 0; i < (D - 1); ++i)
-				{
-					offset *= n[i];
-				}
-				return proxy_layer<T, D - 1, SoA>(&ptr[offset], n.template shrink<D - 1>());
-			}
-		};
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//! \brief Specialization with T = vec<TT,...>, D = 1 (recursion ancher definition) and Layout = SoA
-		//!
-		//! This proxy differs from the general case in that an additional next-to-the-innermost dimension is
-		//! assumed implicitely.
-		//! The extent of this dimension is given by the dimension of T, which is T::dim.
-		//! It is propagated to the vec_proxy<TT, DD> object when calling the array subscript operator.
-		//!
-		//! \tparam T data type (vec<TT, DD> where TT and DD are recovered from T)
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		template <typename T>
-		class proxy_layer<T, 1, SoA, typename std::enable_if<is_vec<T>::value>::type>
-		{
-			//! Recover the fundamental data type that is behind T
-			using TT = typename T::fundamental_type;
-			//! Recover the dimension of T
-			static constexpr std::size_t DD = T::dim;
-
-			//! Base pointer (it is of type TT, not T)
-			TT* ptr;
-			//! Shape of the 1-dimensional volume
-			const XXX_NAMESPACE::sarray<std::size_t, 1> n;
-
-		public:
-
-			//! \brief Constructor
-			//!
-			//! \param ptr base pointer
-			//! \param n shape of the 1-dimensional volume
-			proxy_layer(TT* ptr, const XXX_NAMESPACE::sarray<std::size_t, 1>& n) : ptr(ptr), n(n) { ; }
-
-			//! \brief Array subscript operator
-			//!
-			//! For D = 1, the implicit next-to-innermost dimension DD is propagated to the proxy_vec<TT, DD> object
-			//! which then sets up the references to x, y, and z component of the actual vec<TT, DD> object.
-			//!
-			//! \param idx element to access
-			//! \return a proxy_vec<TT, DD> object
-			inline proxy_vec<TT, DD> operator[](const std::size_t idx)
-			{
-				return proxy_vec<TT, DD>(&ptr[idx], n[0]);
-			}
-		};
-	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Accessor data type implementing array subscript operator chaining
@@ -256,19 +65,19 @@ namespace XXX_NAMESPACE
 
 		//! \brief Array subscript operator
 		//!
-		//! Determine the base pointer of proxy_layer<T, D - 1> by multiplying the
+		//! Determine the base pointer of accessor<T, D - 1> by multiplying the
 		//! dimensions of the D-1-dimensional sub-volume and idx.
 		//!
 		//! \param idx index w.r.t. dimension D
-		//! \return a proxy_layer<T, D - 1> object
-		inline detail::proxy_layer<T, D - 1> operator[](const std::size_t idx)
+		//! \return a accessor<T, D - 1> object
+		inline accessor<T, D - 1> operator[](const std::size_t idx)
 		{
 			std::size_t offset = idx;
 			for (std::size_t i = 0; i < (D - 1); ++i)
 			{
 				offset *= n[i];
 			}
-			return detail::proxy_layer<T, D - 1>(&ptr[offset], n.template shrink<D - 1>());
+			return accessor<T, D - 1>(&ptr[offset], n.template shrink<D - 1>());
 		}
 	};
 
@@ -347,19 +156,19 @@ namespace XXX_NAMESPACE
 
 		//! \brief Array subscript operator
 		//!
-		//! Determine the base pointer of proxy_layer<T, D - 1> by multiplying the
+		//! Determine the base pointer of accessor<T, D - 1> by multiplying the
 		//! dimensions of the D-1-dimensional sub-volume and idx and DD.
 		//!
 		//! \param idx index w.r.t. dimension D
-		//! \return a proxy_layer<T, D - 1> object
-		inline detail::proxy_layer<T, D - 1, SoA> operator[](const std::size_t idx)
+		//! \return a accessor<T, D - 1> object
+		inline accessor<T, D - 1, SoA> operator[](const std::size_t idx)
 		{
 			std::size_t offset = idx * DD;
 			for (std::size_t i = 0; i < (D - 1); ++i)
 			{
 				offset *= n[i];
 			}
-			return detail::proxy_layer<T, D - 1, SoA>(&ptr[offset], n.template shrink<D - 1>());
+			return accessor<T, D - 1, SoA>(&ptr[offset], n.template shrink<D - 1>());
 		}
 	};
 
@@ -491,7 +300,8 @@ namespace XXX_NAMESPACE
 				size_internal[0] = ((size[0] + num_elements_align - 1) / num_elements_align) * num_elements_align;
 
 				// rezise the internal buffer
-				std::size_t num_elements_total = 1;
+				constexpr std::size_t DD = 1;
+				std::size_t num_elements_total = DD;
 				for (std::size_t i = 0; i < D; ++i)
 				{
 					num_elements_total *= size_internal[i];
@@ -713,6 +523,135 @@ namespace XXX_NAMESPACE
 		}
 	};
 
+	/*
+	template <typename T, std::size_t D, target Target = host, data_layout Layout = AoS, std::size_t Alignment = 32, typename Enabled = void>
+	class buffer
+	{
+		static_assert(sizeof(T) < Alignment, "error: buffer alignment should not be smaller than the sizeof of T");
+
+		//! Internal storage using boost's aligned_allocator for data alignment
+		std::vector<T, boost::alignment::aligned_allocator<T, Alignment>> vdata;
+		//! Base pointer (does not necessarily point to vdata)
+		T* data;
+		//! Shape of the buffer with innermost dimension padded
+		sarray<std::size_t, D> size_internal;
+
+	public:
+
+		//! Shape of the buffer (as specified by the user)
+		sarray<std::size_t, D> size;
+
+		//! \brief Standard constructor
+		buffer() : data(nullptr), size_internal{}, size{} { ; }
+
+		//! \brief Constructor
+		//!
+		//! \param size shape of the buffer
+		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
+		//! innermost dimension happens)
+		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr)
+		{
+			resize(size, ptr);
+		}
+
+		//! \brief Set up the buffer
+		//!
+		//! \param size shape of the buffer
+		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
+		//! innermost dimension happens)
+		void resize(const sarray<std::size_t, D>& size, T* ptr = nullptr)
+		{
+			// assign default values
+			size_internal = size;
+			this->size = size;
+
+			if (ptr == nullptr)
+			{
+				// padding according to data type T and the Alignment parameter
+				constexpr std::size_t num_elements_align = Alignment / sizeof(T);
+				size_internal[0] = ((size[0] + num_elements_align - 1) / num_elements_align) * num_elements_align;
+
+				// rezise the internal buffer
+				constexpr std::size_t DD = (is_vec<T>::value ? T::dim : 1);
+				std::size_t num_elements_total = DD;
+				for (std::size_t i = 0; i < D; ++i)
+				{
+					num_elements_total *= size_internal[i];
+				}
+				vdata.resize(num_elements_total);
+
+				// base pointer points to the internal storage
+				data = &vdata[0];
+			}
+			else
+			{
+				// a pointer to external memory is provided: clear internal storage
+				vdata.clear();
+				data = ptr;
+			}
+		}
+
+		//! \brief Read accessor
+		//!
+		//! \return an accessor using const references internally
+		inline const accessor<typename detail::make_const<T>::type, D, Layout> read() const
+		{
+			using const_T = typename detail::make_const<T>::type;
+			return accessor<const_T, D, Layout>(reinterpret_cast<const_T*>(data), size_internal);
+		}
+
+		//! \brief Write accessor
+		//!
+		//! \return an accessor
+		inline const accessor<T, D, Layout> write()
+		{
+			return accessor<T, D, Layout>(data, size_internal);
+		}
+
+		//! \brief Read-write accessor
+		//!
+		//! \return an accessor
+		inline const accessor<T, D, Layout> read_write()
+		{
+			return write();
+		}
+
+		//! \brief Exchange the content of two buffers
+		//!
+		//! The buffers have to have the same size.
+		//!
+		//! \param b
+		void swap(buffer& b)
+		{
+			if (size == b.size)
+			{
+				// swap internal storage (it does not matter whether any of the buffers uses external memory)
+				vdata.swap(b.vdata);
+
+				// swap the base pointer
+				T* this_data = data;
+				data = b.data;
+				b.data = this_data;
+
+				// re-assign base pointers only if internal storage is used
+				if (vdata.size() > 0)
+				{
+					data = &vdata[0];
+				}
+
+				if (b.vdata.size() > 0)
+				{
+					b.data = &(b.vdata[0]);
+				}
+			}
+			else
+			{
+				std::cerr << "error: buffer::swap -> you are trying to swap buffers of different size" << std::endl;
+			}
+		}
+	};
+*/
+	/*
 	#if defined(HAVE_SYCL)
 	namespace detail
 	{
@@ -911,6 +850,7 @@ namespace XXX_NAMESPACE
 		}
 	};
 	#endif
+	 */
 }
 
 #include "buffer_math.hpp"

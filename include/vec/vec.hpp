@@ -6,6 +6,10 @@
 #if !defined(DATA_TYPES_VEC_HPP)
 #define DATA_TYPES_VEC_HPP
 
+#if !defined(XXX_NAMESPACE)
+#define XXX_NAMESPACE fw
+#endif
+
 namespace XXX_NAMESPACE
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -377,5 +381,7 @@ namespace XXX_NAMESPACE
 		};
 	}
 }
+
+#include "proxy_vec.hpp"
 
 #endif
