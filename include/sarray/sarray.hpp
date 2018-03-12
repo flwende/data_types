@@ -6,8 +6,8 @@
 #if !defined(SARRAY_HPP)
 #define SARRAY_HPP
 
-#include <cstdlib>
 #include <cstdint>
+#include <utility>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw

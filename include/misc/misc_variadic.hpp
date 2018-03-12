@@ -6,14 +6,7 @@
 #if !defined(MISC_VARIADIC_HPP)
 #define MISC_VARIADIC_HPP
 
-#include <cstdlib>
-#include <cstdint>
-
-#if !defined(XXX_NAMESPACE)
-#define XXX_NAMESPACE fw
-#endif
-
-namespace XXX_NAMESPACE
+namespace MISC_NAMESPACE
 {
 	namespace variadic
 	{
@@ -74,7 +67,7 @@ namespace XXX_NAMESPACE
 			{
 				return head;
 			}
-		}; 
+		};
 	};
 }
 

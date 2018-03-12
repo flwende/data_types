@@ -77,7 +77,7 @@ namespace XXX_NAMESPACE
 
 			inline vec operator-()
 			{
-				constexpr T minus_one = MATH_NAMESPACE::constants<T>::minus_one;
+				constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
 				return vec(minus_one * x);
 			}
 
@@ -183,7 +183,7 @@ namespace XXX_NAMESPACE
 
 			inline vec operator-()
 			{
-				constexpr T minus_one = MATH_NAMESPACE::constants<T>::minus_one;
+				constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
 				return vec(minus_one * x, minus_one * y);
 			}
 
@@ -225,7 +225,7 @@ namespace XXX_NAMESPACE
 			//! \return Euclidean norm
 			inline T length() const
 			{
-				return MATH_NAMESPACE::math<T>::sqrt(x * x + y * y);
+				return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y);
 			}
 		};
 
@@ -295,7 +295,7 @@ namespace XXX_NAMESPACE
 
 			inline vec operator-()
 			{
-				constexpr T minus_one = MATH_NAMESPACE::constants<T>::minus_one;
+				constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
 				return vec(minus_one * x, minus_one * y, minus_one * z);
 			}
 
@@ -339,7 +339,7 @@ namespace XXX_NAMESPACE
 			//! \return Euclidean norm
 			inline T length() const
 			{
-				return MATH_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
+				return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
 			}
 		};
 	}
