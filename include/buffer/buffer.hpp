@@ -21,6 +21,11 @@
 #define XXX_NAMESPACE fw
 #endif
 
+namespace XXX_NAMESPACE
+{
+	enum data_layout { AoS = 1, SoA = 2 };
+}
+
 #include "../vec/vec.hpp"
 #include "../sarray/sarray.hpp"
 #include "../misc/misc.hpp"
@@ -29,8 +34,6 @@
 namespace XXX_NAMESPACE
 {
 	constexpr std::size_t default_alignment = SIMD_NAMESPACE::simd::alignment;
-
-	enum data_layout { AoS = 1, SoA = 2 };
 
 	#if defined(HAVE_SYCL)
 	enum target { host = 1, device = 2, host_device = 3 };
@@ -246,6 +249,10 @@ namespace XXX_NAMESPACE
 	//!     [1][1].y
 	//!     [1][2].y
 	//! </pre>
+	//! For example you can access the individual components of buffer<vec<double, 3>, 2, SoA> b({3,2})
+	//! as usual: b[1][0].x = ...
+	//! \n
+	//! GNU and Clang/LLVM can optimize the proxies away.
 	//!
 	//! \tparam T data type
 	//! \tparam D dimension
@@ -253,156 +260,15 @@ namespace XXX_NAMESPACE
 	//! \tparam Alignment data alignment (needs to be a power of 2)
 	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, std::size_t D, target Target = host, data_layout Layout = AoS, std::size_t Alignment = default_alignment, typename Enabled = void>
+	template <typename T, std::size_t D, target Target = host, data_layout Layout = AoS, std::size_t Alignment = default_alignment>
 	class buffer
 	{
 		static_assert(sizeof(T) < Alignment, "error: buffer alignment should not be smaller than the sizeof of T");
 
-		//! Internal storage using boost's aligned_allocator for data alignment
-		std::vector<T, boost::alignment::aligned_allocator<T, Alignment>> vdata;
-		//! Base pointer (does not necessarily point to vdata)
-		T* data;
-		//! Shape of the buffer with innermost dimension padded
-		sarray<std::size_t, D> size_internal;
-
-	public:
-
-		//! Shape of the buffer (as specified by the user)
-		sarray<std::size_t, D> size;
-
-		//! \brief Standard constructor
-		buffer() : data(nullptr), size_internal{}, size{} { ; }
-
-		//! \brief Constructor
-		//!
-		//! \param size shape of the buffer
-		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
-		//! innermost dimension happens)
-		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr)
-		{
-			resize(size, ptr);
-		}
-
-		//! \brief Set up the buffer
-		//!
-		//! \param size shape of the buffer
-		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
-		//! innermost dimension happens)
-		void resize(const sarray<std::size_t, D>& size, T* ptr = nullptr)
-		{
-			// assign default values
-			size_internal = size;
-			this->size = size;
-
-			if (ptr == nullptr)
-			{
-				// padding according to data type T and the Alignment parameter
-				constexpr std::size_t num_elements_align = Alignment / sizeof(T);
-				size_internal[0] = ((size[0] + num_elements_align - 1) / num_elements_align) * num_elements_align;
-
-				// rezise the internal buffer
-				constexpr std::size_t DD = 1;
-				std::size_t num_elements_total = DD;
-				for (std::size_t i = 0; i < D; ++i)
-				{
-					num_elements_total *= size_internal[i];
-				}
-				vdata.resize(num_elements_total);
-
-				// base pointer points to the internal storage
-				data = &vdata[0];
-			}
-			else
-			{
-				// a pointer to external memory is provided: clear internal storage
-				vdata.clear();
-				data = ptr;
-			}
-		}
-
-		//! \brief Read accessor
-		//!
-		//! \return an accessor using const references internally
-		inline const accessor<typename make_const<T>::type, D, Layout> read() const
-		{
-			using const_T = typename make_const<T>::type;
-			return accessor<const_T, D, Layout>(reinterpret_cast<const_T*>(data), size_internal);
-		}
-
-		//! \brief Write accessor
-		//!
-		//! \return an accessor
-		inline const accessor<T, D, Layout> write()
-		{
-			return accessor<T, D, Layout>(data, size_internal);
-		}
-
-		//! \brief Read-write accessor
-		//!
-		//! \return an accessor
-		inline const accessor<T, D, Layout> read_write()
-		{
-			return write();
-		}
-
-		//! \brief Exchange the content of two buffers
-		//!
-		//! The buffers have to have the same size.
-		//!
-		//! \param b
-		void swap(buffer& b)
-		{
-			if (size == b.size)
-			{
-				// swap internal storage (it does not matter whether any of the buffers uses external memory)
-				vdata.swap(b.vdata);
-
-				// swap the base pointer
-				T* this_data = data;
-				data = b.data;
-				b.data = this_data;
-
-				// re-assign base pointers only if internal storage is used
-				if (vdata.size() > 0)
-				{
-					data = &vdata[0];
-				}
-
-				if (b.vdata.size() > 0)
-				{
-					b.data = &(b.vdata[0]);
-				}
-			}
-			else
-			{
-				std::cerr << "error: buffer::swap -> you are trying to swap buffers of different size" << std::endl;
-			}
-		}
-	};
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief Specialization with T = vec<TT, DD> and Layout = SoA
-	//!
-	//! This buffer differs from the general case in that it internally stores the data using the SoA
-	//! layout.
-	//! It is implemented for T = vec<TT, DD> only, where DD adds an implicit next-to-the-innermost dimension.
-	//! Data access happens as usual through (recursive) array subscript operator chaining and
-	//! vec_proxy<TT, DD> objects are returned when reaching the recursion ancher.
-	//! \n\n
-	//! For example you can access the individual components of buffer<vec<double, 3>, 2, SoA> b({3,2})
-	//! as usual: b[1][0].x = ...
-	//! \n
-	//! GNU and Clang/LLVM can optimize the proxies away.
-	//!
-	//! \tparam T data type
-	//! \tparam Alignment data alignment (needs to be a power of 2)
-	template <typename T, std::size_t D, target Target, std::size_t Alignment>
-	class buffer<T, D, Target, SoA, Alignment, typename std::enable_if<is_vec<T>::value>::type>
-	{
-		//! Recover the fundamental data type that is behind T
-		using TT = typename T::fundamental_type;
-		//! Recover the dimension of T
-		static constexpr std::size_t DD = T::dim;
+		//! mapped data type
+		using TT = typename type_info<T, Layout>::mapped_type;
+		//! extra dimension: relevant for AoS data layout only
+		static constexpr std::size_t DD = type_info<T, Layout>::extra_dim;
 
 		//! Internal storage using boost's aligned_allocator for data alignment
 		std::vector<TT, boost::alignment::aligned_allocator<TT, Alignment>> vdata;
@@ -446,14 +312,14 @@ namespace XXX_NAMESPACE
 				constexpr std::size_t num_elements_align = Alignment / sizeof(TT);
 				size_internal[0] = ((size[0] + num_elements_align - 1) / num_elements_align) * num_elements_align;
 
-				// rezise the internal buffer
+				// resize the internal buffer: in case of SoA layout, an internal dimension DD is implicit
 				std::size_t num_elements_total = DD;
 				for (std::size_t i = 0; i < D; ++i)
 				{
 					num_elements_total *= size_internal[i];
 				}
-
 				vdata.resize(num_elements_total);
+
 				// base pointer points to the internal storage
 				data = &vdata[0];
 			}
@@ -468,23 +334,25 @@ namespace XXX_NAMESPACE
 		//! \brief Read accessor
 		//!
 		//! \return an accessor using const references internally
-		inline const accessor<typename make_const<T>::type, D, SoA> read() const
+		inline const accessor<typename make_const<T>::type, D, Layout> read() const
 		{
-			return accessor<typename make_const<T>::type, D, SoA>(reinterpret_cast<const TT*>(data), size_internal);
+			using const_T = typename make_const<T>::type;
+			using const_TT = typename make_const<TT>::type;
+			return accessor<const_T, D, Layout>(reinterpret_cast<const_TT*>(data), size_internal);
 		}
 
 		//! \brief Write accessor
 		//!
 		//! \return an accessor
-		inline const accessor<T, D, SoA> write()
+		inline const accessor<T, D, Layout> write()
 		{
-			return accessor<T, D, SoA>(data, size_internal);
+			return accessor<T, D, Layout>(data, size_internal);
 		}
 
 		//! \brief Read-write accessor
 		//!
 		//! \return an accessor
-		inline const accessor<T, D, SoA> read_write()
+		inline const accessor<T, D, Layout> read_write()
 		{
 			return write();
 		}
@@ -524,134 +392,6 @@ namespace XXX_NAMESPACE
 		}
 	};
 
-	/*
-	template <typename T, std::size_t D, target Target = host, data_layout Layout = AoS, std::size_t Alignment = 32, typename Enabled = void>
-	class buffer
-	{
-		static_assert(sizeof(T) < Alignment, "error: buffer alignment should not be smaller than the sizeof of T");
-
-		//! Internal storage using boost's aligned_allocator for data alignment
-		std::vector<T, boost::alignment::aligned_allocator<T, Alignment>> vdata;
-		//! Base pointer (does not necessarily point to vdata)
-		T* data;
-		//! Shape of the buffer with innermost dimension padded
-		sarray<std::size_t, D> size_internal;
-
-	public:
-
-		//! Shape of the buffer (as specified by the user)
-		sarray<std::size_t, D> size;
-
-		//! \brief Standard constructor
-		buffer() : data(nullptr), size_internal{}, size{} { ; }
-
-		//! \brief Constructor
-		//!
-		//! \param size shape of the buffer
-		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
-		//! innermost dimension happens)
-		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr)
-		{
-			resize(size, ptr);
-		}
-
-		//! \brief Set up the buffer
-		//!
-		//! \param size shape of the buffer
-		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
-		//! innermost dimension happens)
-		void resize(const sarray<std::size_t, D>& size, T* ptr = nullptr)
-		{
-			// assign default values
-			size_internal = size;
-			this->size = size;
-
-			if (ptr == nullptr)
-			{
-				// padding according to data type T and the Alignment parameter
-				constexpr std::size_t num_elements_align = Alignment / sizeof(T);
-				size_internal[0] = ((size[0] + num_elements_align - 1) / num_elements_align) * num_elements_align;
-
-				// rezise the internal buffer
-				constexpr std::size_t DD = (is_vec<T>::value ? T::dim : 1);
-				std::size_t num_elements_total = DD;
-				for (std::size_t i = 0; i < D; ++i)
-				{
-					num_elements_total *= size_internal[i];
-				}
-				vdata.resize(num_elements_total);
-
-				// base pointer points to the internal storage
-				data = &vdata[0];
-			}
-			else
-			{
-				// a pointer to external memory is provided: clear internal storage
-				vdata.clear();
-				data = ptr;
-			}
-		}
-
-		//! \brief Read accessor
-		//!
-		//! \return an accessor using const references internally
-		inline const accessor<typename make_const<T>::type, D, Layout> read() const
-		{
-			using const_T = typename make_const<T>::type;
-			return accessor<const_T, D, Layout>(reinterpret_cast<const_T*>(data), size_internal);
-		}
-
-		//! \brief Write accessor
-		//!
-		//! \return an accessor
-		inline const accessor<T, D, Layout> write()
-		{
-			return accessor<T, D, Layout>(data, size_internal);
-		}
-
-		//! \brief Read-write accessor
-		//!
-		//! \return an accessor
-		inline const accessor<T, D, Layout> read_write()
-		{
-			return write();
-		}
-
-		//! \brief Exchange the content of two buffers
-		//!
-		//! The buffers have to have the same size.
-		//!
-		//! \param b
-		void swap(buffer& b)
-		{
-			if (size == b.size)
-			{
-				// swap internal storage (it does not matter whether any of the buffers uses external memory)
-				vdata.swap(b.vdata);
-
-				// swap the base pointer
-				T* this_data = data;
-				data = b.data;
-				b.data = this_data;
-
-				// re-assign base pointers only if internal storage is used
-				if (vdata.size() > 0)
-				{
-					data = &vdata[0];
-				}
-
-				if (b.vdata.size() > 0)
-				{
-					b.data = &(b.vdata[0]);
-				}
-			}
-			else
-			{
-				std::cerr << "error: buffer::swap -> you are trying to swap buffers of different size" << std::endl;
-			}
-		}
-	};
-*/
 	/*
 	#if defined(HAVE_SYCL)
 	namespace detail

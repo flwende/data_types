@@ -6,6 +6,8 @@
 #if !defined(VEC_MISC_HPP)
 #define VEC_MISC_HPP
 
+#include <cstdint>
+
 #if !defined(VEC_NAMESPACE)
 #if !defined(XXX_NAMESPACE)
 #define VEC_NAMESPACE fw
@@ -20,7 +22,7 @@ namespace VEC_NAMESPACE
 	//! \brief Create a const version of data type T
 	//!
 	//! \tparam T data type
-	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
+	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD>
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T, typename Enabled = void>
 	struct make_const
@@ -39,6 +41,37 @@ namespace VEC_NAMESPACE
 	{
 		//! const data type: if the const keyword appears multiple times, it is the same as if it appears just once
 		using type = typename T::const_type;
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//! \brief Get fundamental data type and dimension of T
+	//!
+	//! \tparam T data type
+	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD>
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	template <typename T, XXX_NAMESPACE::data_layout Layout = AoS, typename Enabled = void>
+	struct type_info
+	{
+		//! data type
+		using mapped_type = T;
+
+		//! dimension
+		static constexpr std::size_t extra_dim = 1;
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//! \brief Specialization with T = vec<TT, DD>
+	//!
+	//! \tparam T data type
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	template <typename T>
+	struct type_info<T, SoA, typename std::enable_if<is_vec<T>::value>::type>
+	{
+		//! data type
+		using mapped_type = typename T::fundamental_type;
+
+		//! dimension
+		static constexpr std::size_t extra_dim = T::dim;
 	};
 }
 
