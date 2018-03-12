@@ -6,58 +6,8 @@
 #if !defined(VEC_MATH_HPP)
 #define VEC_MATH_HPP
 
-#include <cmath>
-
-namespace XXX_NAMESPACE
+namespace VEC_NAMESPACE
 {
-	/*
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// fundamental math functions
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	namespace detail
-	{
-		//! \brief Definition of some math functions for different FP types
-		template <typename T>
-		struct math
-		{
-			static T sqrt(const T x)
-			{
-				return std::sqrt(x);
-			}
-
-			static T log(const T x)
-			{
-				return std::log(x);
-			}
-
-			static T exp(const T x)
-			{
-				return std::exp(x);
-			}
-		};
-
-		//! \brief Specialization with T = float
-		template <>
-		struct math<float>
-		{
-			static float sqrt(const float x)
-			{
-				return sqrtf(x);
-			}
-
-			static float log(const float x)
-			{
-				return logf(x);
-			}
-
-			static float exp(const float x)
-			{
-				return expf(x);
-			}
-		};
-	}
-	 */
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// vec<T, D> math functions (applied element wise)
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

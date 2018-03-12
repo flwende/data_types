@@ -32,7 +32,7 @@
 	#define SIMD_ALIGNMENT 8
 #endif
 
-namespace XXX_NAMESPACE
+namespace SIMD_NAMESPACE
 {
 	namespace simd
 	{

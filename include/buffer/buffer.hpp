@@ -22,10 +22,8 @@
 #endif
 
 #include "../vec/vec.hpp"
-#include "../misc/misc_variadic.hpp"
-#include "../misc/misc_math.hpp"
 #include "../sarray/sarray.hpp"
-#include "buffer_fdecl.hpp"
+#include "../misc/misc.hpp"
 
 namespace XXX_NAMESPACE
 {
@@ -322,9 +320,9 @@ namespace XXX_NAMESPACE
 		//! \brief Read accessor
 		//!
 		//! \return an accessor using const references internally
-		inline const accessor<typename detail::make_const<T>::type, D, Layout> read() const
+		inline const accessor<typename make_const<T>::type, D, Layout> read() const
 		{
-			using const_T = typename detail::make_const<T>::type;
+			using const_T = typename make_const<T>::type;
 			return accessor<const_T, D, Layout>(reinterpret_cast<const_T*>(data), size_internal);
 		}
 
@@ -467,9 +465,9 @@ namespace XXX_NAMESPACE
 		//! \brief Read accessor
 		//!
 		//! \return an accessor using const references internally
-		inline const accessor<typename detail::make_const<T>::type, D, SoA> read() const
+		inline const accessor<typename make_const<T>::type, D, SoA> read() const
 		{
-			return accessor<typename detail::make_const<T>::type, D, SoA>(reinterpret_cast<const TT*>(data), size_internal);
+			return accessor<typename make_const<T>::type, D, SoA>(reinterpret_cast<const TT*>(data), size_internal);
 		}
 
 		//! \brief Write accessor
@@ -594,9 +592,9 @@ namespace XXX_NAMESPACE
 		//! \brief Read accessor
 		//!
 		//! \return an accessor using const references internally
-		inline const accessor<typename detail::make_const<T>::type, D, Layout> read() const
+		inline const accessor<typename make_const<T>::type, D, Layout> read() const
 		{
-			using const_T = typename detail::make_const<T>::type;
+			using const_T = typename make_const<T>::type;
 			return accessor<const_T, D, Layout>(reinterpret_cast<const_T*>(data), size_internal);
 		}
 

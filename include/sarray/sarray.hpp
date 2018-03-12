@@ -10,7 +10,7 @@
 #include <utility>
 
 #if !defined(XXX_NAMESPACE)
-#define XXX_NAMESPACE fw
+#define MISC_NAMESPACE fw
 #endif
 
 namespace XXX_NAMESPACE

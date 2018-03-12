@@ -3,16 +3,20 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(DATA_TYPES_VEC_HPP)
-#define DATA_TYPES_VEC_HPP
+#if !defined(VEC_HPP)
+#define VEC_HPP
 
+#if !defined(VEC_NAMESPACE)
 #if !defined(XXX_NAMESPACE)
-#define XXX_NAMESPACE fw
+#define VEC_NAMESPACE fw
+#else
+#define VEC_NAMESPACE XXX_NAMESPACE
+#endif
 #endif
 
 #include "../misc/misc_math.hpp"
 
-namespace XXX_NAMESPACE
+namespace VEC_NAMESPACE
 {
 	namespace detail
 	{
@@ -391,6 +395,7 @@ namespace XXX_NAMESPACE
 }
 
 #include "vec_proxy.hpp"
+#include "vec_misc.hpp"
 #include "vec_math.hpp"
 
 #endif

@@ -8,8 +8,12 @@
 
 #include <cstdint>
 
+#if !defined(SIMD_NAMESPACE)
 #if !defined(XXX_NAMESPACE)
-#define XXX_NAMESPACE fw
+#define SIMD_NAMESPACE fw
+#else
+#define SIMD_NAMESPACE XXX_NAMESPACE
+#endif
 #endif
 
 #include "simd_platform.hpp"

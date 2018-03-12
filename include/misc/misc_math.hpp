@@ -8,6 +8,14 @@
 
 #include <cmath>
 
+#if !defined(MISC_NAMESPACE)
+#if !defined(XXX_NAMESPACE)
+#define MISC_NAMESPACE fw
+#else
+#define MISC_NAMESPACE XXX_NAMESPACE
+#endif
+#endif
+
 namespace MISC_NAMESPACE
 {
 	//! \brief Definition of some math functions and constants for different FP types

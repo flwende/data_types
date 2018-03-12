@@ -3,10 +3,10 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(DATA_TYPES_PROXY_VEC_HPP)
-#define DATA_TYPES_PROXY_VEC_HPP
+#if !defined(VEC_PROXY_HPP)
+#define VEC_PROXY_HPP
 
-namespace XXX_NAMESPACE
+namespace VEC_NAMESPACE
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief A proxy data type for vec<T, D>
@@ -26,7 +26,7 @@ namespace XXX_NAMESPACE
 		template <typename T>
 		class vec_proxy<T, 1>
 		{
-			using vec = XXX_NAMESPACE::vec<T, 1>;
+			using vec = VEC_NAMESPACE::vec<T, 1>;
 
 		public:
 
@@ -127,7 +127,7 @@ namespace XXX_NAMESPACE
 		template <typename T>
 		class vec_proxy<T, 2>
 		{
-			using vec = XXX_NAMESPACE::vec<T, 2>;
+			using vec = VEC_NAMESPACE::vec<T, 2>;
 
 		public:
 
@@ -235,7 +235,7 @@ namespace XXX_NAMESPACE
 		template <typename T>
 		class vec_proxy<T, 3>
 		{
-			using vec = XXX_NAMESPACE::vec<T, 3>;
+			using vec = VEC_NAMESPACE::vec<T, 3>;
 
 		public:
 
