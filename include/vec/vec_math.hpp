@@ -6,8 +6,19 @@
 #if !defined(VEC_MATH_HPP)
 #define VEC_MATH_HPP
 
+#if !defined(VEC_NAMESPACE)
+#if !defined(XXX_NAMESPACE)
+#define VEC_NAMESPACE fw
+#else
+#define VEC_NAMESPACE XXX_NAMESPACE
+#endif
+#endif
+
 namespace VEC_NAMESPACE
 {
+	template <typename T>
+	using math = MISC_NAMESPACE::math<T>;
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// vec<T, D> math functions (applied element wise)
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,37 +26,37 @@ namespace VEC_NAMESPACE
 	template <typename T>                                                                                       \
 	inline vec<T, 1> FUNC(const IN_T<C T, 1>& v)                                                                \
 	{                                                                                                           \
-		return vec<T, 1>(MISC_NAMESPACE::math<T>::FUNC(v.x));                                                           \
+		return vec<T, 1>(math<T>::FUNC(v.x));                                                   				\
 	}                                                                                                           \
 																												\
 	template <typename T>                                                                                       \
 	inline vec<T, 1> FUNC(const IN_T<C T, 1>&& v)                                                               \
 	{                                                                                                           \
-		return vec<T, 1>(MISC_NAMESPACE::math<T>::FUNC(v.x));                                                           \
+		return vec<T, 1>(math<T>::FUNC(v.x));                                                   				\
 	}                                                                                                           \
 																												\
 	template <typename T>                                                                                       \
 	inline vec<T, 2> FUNC(const IN_T<C T, 2>& v)                                                                \
 	{                                                                                                           \
-		return vec<T, 2>(MISC_NAMESPACE::math<T>::FUNC(v.x), MISC_NAMESPACE::math<T>::FUNC(v.y));                               \
+		return vec<T, 2>(math<T>::FUNC(v.x), math<T>::FUNC(v.y));              			 						\
 	}                                                                                                           \
 																												\
 	template <typename T>                                                                                       \
 	inline vec<T, 2> FUNC(const IN_T<C T, 2>&& v)                                                               \
 	{                                                                                                           \
-		return vec<T, 2>(MISC_NAMESPACE::math<T>::FUNC(v.x), MISC_NAMESPACE::math<T>::FUNC(v.y));                               \
+		return vec<T, 2>(math<T>::FUNC(v.x), math<T>::FUNC(v.y));               								\
 	}                                                                                                           \
 																												\
 	template <typename T>                                                                                       \
 	inline vec<T, 3> FUNC(const IN_T<C T, 3>& v)                                                                \
 	{                                                                                                           \
-		return vec<T, 3>(MISC_NAMESPACE::math<T>::FUNC(v.x), MISC_NAMESPACE::math<T>::FUNC(v.y), MISC_NAMESPACE::math<T>::FUNC(v.z));   \
+		return vec<T, 3>(math<T>::FUNC(v.x), math<T>::FUNC(v.y), math<T>::FUNC(v.z));							\
 	}                                                                                                           \
 																												\
 	template <typename T>                                                                                       \
 	inline vec<T, 3> FUNC(const IN_T<C T, 3>&& v)                                                               \
 	{                                                                                                           \
-		return vec<T, 3>(MISC_NAMESPACE::math<T>::FUNC(v.x), MISC_NAMESPACE::math<T>::FUNC(v.y), MISC_NAMESPACE::math<T>::FUNC(v.z));   \
+		return vec<T, 3>(math<T>::FUNC(v.x), math<T>::FUNC(v.y), math<T>::FUNC(v.z));							\
 	}                                                                                                           \
 
 	#define MACRO_C(FUNC, IN_T)                                                                                 \

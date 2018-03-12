@@ -6,6 +6,8 @@
 #if !defined(SIMD_PLATFORM_HPP)
 #define SIMD_PLATFORM_HPP
 
+#include <cstdint>
+
 #if defined(__AVX512F__)
 	#define SIMD_WIDTH_NATIVE_64BIT 8
 	#define SIMD_WIDTH_NATIVE_32BIT 16
@@ -32,6 +34,14 @@
 	#define SIMD_ALIGNMENT 8
 #endif
 
+#if !defined(SIMD_NAMESPACE)
+#if !defined(XXX_NAMESPACE)
+#define SIMD_NAMESPACE fw
+#else
+#define SIMD_NAMESPACE XXX_NAMESPACE
+#endif
+#endif
+
 namespace SIMD_NAMESPACE
 {
 	namespace simd
@@ -52,7 +62,7 @@ namespace SIMD_NAMESPACE
 		template <>                                                 \
 		struct implementation<T>                                    \
 		{                                                           \
-			static constexpr bool available = true;             \
+			static constexpr bool available = true;             	\
 		};
 
 		MACRO(double)
@@ -81,7 +91,7 @@ namespace SIMD_NAMESPACE
 		template <>                                                 \
 		struct type<T>                                              \
 		{                                                           \
-			static constexpr std::size_t width = SW;            \
+			static constexpr std::size_t width = SW;          	 	\
 		};
 
 		MACRO(double, SIMD_WIDTH_NATIVE_64BIT)

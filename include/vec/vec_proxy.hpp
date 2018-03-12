@@ -6,8 +6,19 @@
 #if !defined(VEC_PROXY_HPP)
 #define VEC_PROXY_HPP
 
+#if !defined(VEC_NAMESPACE)
+#if !defined(XXX_NAMESPACE)
+#define VEC_NAMESPACE fw
+#else
+#define VEC_NAMESPACE XXX_NAMESPACE
+#endif
+#endif
+
 namespace VEC_NAMESPACE
 {
+	template <typename T>
+	using math = MISC_NAMESPACE::math<T>;
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief A proxy data type for vec<T, D>
 	//!
@@ -77,7 +88,7 @@ namespace VEC_NAMESPACE
 
 			inline vec operator-()
 			{
-				constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
+				constexpr T minus_one = math<T>::minus_one;
 				return vec(minus_one * x);
 			}
 
@@ -183,7 +194,7 @@ namespace VEC_NAMESPACE
 
 			inline vec operator-()
 			{
-				constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
+				constexpr T minus_one = math<T>::minus_one;
 				return vec(minus_one * x, minus_one * y);
 			}
 
@@ -225,7 +236,7 @@ namespace VEC_NAMESPACE
 			//! \return Euclidean norm
 			inline T length() const
 			{
-				return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y);
+				return math<T>::sqrt(x * x + y * y);
 			}
 		};
 
@@ -295,7 +306,7 @@ namespace VEC_NAMESPACE
 
 			inline vec operator-()
 			{
-				constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
+				constexpr T minus_one = math<T>::minus_one;
 				return vec(minus_one * x, minus_one * y, minus_one * z);
 			}
 
@@ -339,7 +350,7 @@ namespace VEC_NAMESPACE
 			//! \return Euclidean norm
 			inline T length() const
 			{
-				return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
+				return math<T>::sqrt(x * x + y * y + z * z);
 			}
 		};
 	}

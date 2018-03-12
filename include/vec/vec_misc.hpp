@@ -6,6 +6,14 @@
 #if !defined(VEC_MISC_HPP)
 #define VEC_MISC_HPP
 
+#if !defined(VEC_NAMESPACE)
+#if !defined(XXX_NAMESPACE)
+#define VEC_NAMESPACE fw
+#else
+#define VEC_NAMESPACE XXX_NAMESPACE
+#endif
+#endif
+
 namespace VEC_NAMESPACE
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

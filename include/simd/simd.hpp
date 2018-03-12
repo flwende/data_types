@@ -6,16 +6,6 @@
 #if !defined(SIMD_HPP)
 #define SIMD_HPP
 
-#include <cstdint>
-
-#if !defined(SIMD_NAMESPACE)
-#if !defined(XXX_NAMESPACE)
-#define SIMD_NAMESPACE fw
-#else
-#define SIMD_NAMESPACE XXX_NAMESPACE
-#endif
-#endif
-
 #include "simd_platform.hpp"
 
 #endif

@@ -24,9 +24,12 @@
 #include "../vec/vec.hpp"
 #include "../sarray/sarray.hpp"
 #include "../misc/misc.hpp"
+#include "../simd/simd.hpp"
 
 namespace XXX_NAMESPACE
 {
+	constexpr std::size_t default_alignment = SIMD_NAMESPACE::simd::alignment;
+
 	enum data_layout { AoS = 1, SoA = 2 };
 
 	#if defined(HAVE_SYCL)
@@ -250,7 +253,7 @@ namespace XXX_NAMESPACE
 	//! \tparam Alignment data alignment (needs to be a power of 2)
 	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, std::size_t D, target Target = host, data_layout Layout = AoS, std::size_t Alignment = 32, typename Enabled = void>
+	template <typename T, std::size_t D, target Target = host, data_layout Layout = AoS, std::size_t Alignment = default_alignment, typename Enabled = void>
 	class buffer
 	{
 		static_assert(sizeof(T) < Alignment, "error: buffer alignment should not be smaller than the sizeof of T");
