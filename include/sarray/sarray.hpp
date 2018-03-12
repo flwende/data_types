@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(DATA_TYPES_SARRAY_HPP)
-#define DATA_TYPES_SARRAY_HPP
+#if !defined(SARRAY_HPP)
+#define SARRAY_HPP
 
 #include <cstdlib>
 #include <cstdint>

@@ -24,7 +24,7 @@
 #include "../vec/vec.hpp"
 #include "../misc/misc_variadic.hpp"
 #include "../misc/misc_math.hpp"
-#include "../static_array/sarray.hpp"
+#include "../sarray/sarray.hpp"
 #include "buffer_fdecl.hpp"
 
 namespace XXX_NAMESPACE
