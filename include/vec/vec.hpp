@@ -18,10 +18,10 @@ namespace XXX_NAMESPACE
 	{
 		template <typename T, std::size_t D>
 		class vec_proxy;
-
-		template <typename T>
-		struct math;
 	}
+
+	template <typename T>
+	struct math;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief A simple vector with D components
@@ -76,7 +76,7 @@ namespace XXX_NAMESPACE
 
 		inline vec operator-()
 		{
-			constexpr T minus_one = detail::constants<T>::minus_one;
+			constexpr T minus_one = MATH_NAMESPACE::constants<T>::minus_one;
 			return vec(minus_one * x);
 		}
 
@@ -174,7 +174,7 @@ namespace XXX_NAMESPACE
 
 		inline vec operator-()
 		{
-			constexpr T minus_one = detail::constants<T>::minus_one;
+			constexpr T minus_one = MATH_NAMESPACE::constants<T>::minus_one;
 			return vec(minus_one * x, minus_one * y);
 		}
 
@@ -216,7 +216,7 @@ namespace XXX_NAMESPACE
 		//! \return Euclidean norm
 		inline T length() const
 		{
-			return detail::math<T>::sqrt(x * x + y * y);
+			return MATH_NAMESPACE::math<T>::sqrt(x * x + y * y);
 		}
 	};
 
@@ -279,7 +279,7 @@ namespace XXX_NAMESPACE
 
 		inline vec operator-()
 		{
-			constexpr T minus_one = detail::constants<T>::minus_one;
+			constexpr T minus_one = MATH_NAMESPACE::constants<T>::minus_one;
 			return vec(minus_one * x, minus_one * y, minus_one * z);
 		}
 
@@ -323,7 +323,7 @@ namespace XXX_NAMESPACE
 		//! \return Euclidean norm
 		inline T length() const
 		{
-			return detail::math<T>::sqrt(x * x + y * y + z * z);
+			return MATH_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
 		}
 	};
 
