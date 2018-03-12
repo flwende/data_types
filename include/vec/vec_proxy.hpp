@@ -24,7 +24,7 @@ namespace XXX_NAMESPACE
 		//!
 		//! \tparam T data type
 		template <typename T>
-		class proxy_vec<T, 1>
+		class vec_proxy<T, 1>
 		{
 			using vec = XXX_NAMESPACE::vec<T, 1>;
 
@@ -42,33 +42,33 @@ namespace XXX_NAMESPACE
 			//!
 			//! \param ptr pointer to x component
 			//! \param n extent of the underlying field in dimension 1 (innermost)
-			proxy_vec(T* ptr, const std::size_t n) : x(ptr[0 * n]) { ; }
+			vec_proxy(T* ptr, const std::size_t n) : x(ptr[0 * n]) { ; }
 
-			//! \brief Create a detail::proxy_vec<T, 1> object from a vec<T, 1> object
+			//! \brief Create a detail::vec_proxy<T, 1> object from a vec<T, 1> object
 			//!
 			//! \param v
-			proxy_vec(vec& v) : x(v.x) { ; }
+			vec_proxy(vec& v) : x(v.x) { ; }
 
-			//! \brief Create a detail::proxy_vec<T, 1> object from a vec<T, 1> object
+			//! \brief Create a detail::vec_proxy<T, 1> object from a vec<T, 1> object
 			//!
 			//! \param v
-			proxy_vec(vec&& v) : x(v.x) { ; }
+			vec_proxy(vec&& v) : x(v.x) { ; }
 
 			//! \brief Copy constructor
 			//!
 			//! \param v
-			proxy_vec(proxy_vec& v) : x(v.x) { ; }
+			vec_proxy(vec_proxy& v) : x(v.x) { ; }
 
 			//! \brief Move constructor
 			//!
 			//! \param v
-			proxy_vec(proxy_vec&& v) : x(v.x) { ; }
+			vec_proxy(vec_proxy&& v) : x(v.x) { ; }
 
-			//! \brief Create a detail::proxy_vec<T, 1> object from a vec<T, 1> object
+			//! \brief Create a detail::vec_proxy<T, 1> object from a vec<T, 1> object
 			//!
 			//! \param v
 			//! \return a detail::proxy<T, 1> object
-			inline proxy_vec& operator=(const vec& v)
+			inline vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
 
@@ -87,10 +87,10 @@ namespace XXX_NAMESPACE
 				x OP v.x;                           \
 			}                                       \
 
-			MACRO(+=, proxy_vec)
-			MACRO(-=, proxy_vec)
-			MACRO(*=, proxy_vec)
-			MACRO(/=, proxy_vec)
+			MACRO(+=, vec_proxy)
+			MACRO(-=, vec_proxy)
+			MACRO(*=, vec_proxy)
+			MACRO(/=, vec_proxy)
 
 			MACRO(+=, vec)
 			MACRO(-=, vec)
@@ -125,7 +125,7 @@ namespace XXX_NAMESPACE
 		//!
 		//! \tparam T data type
 		template <typename T>
-		class proxy_vec<T, 2>
+		class vec_proxy<T, 2>
 		{
 			using vec = XXX_NAMESPACE::vec<T, 2>;
 
@@ -147,33 +147,33 @@ namespace XXX_NAMESPACE
 			//!
 			//! \param ptr pointer to x component
 			//! \param n extent of the underlying field in dimension 1 (innermost)
-			proxy_vec(T* ptr, const std::size_t n) : x(ptr[0 * n]), y(ptr[1 * n]) { ; }
+			vec_proxy(T* ptr, const std::size_t n) : x(ptr[0 * n]), y(ptr[1 * n]) { ; }
 
-			//! \brief Create a detail::proxy_vec<T, 2> object from a vec<T, 2> object
+			//! \brief Create a detail::vec_proxy<T, 2> object from a vec<T, 2> object
 			//!
 			//! \param v
-			proxy_vec(vec& v) : x(v.x), y(v.y) { ; }
+			vec_proxy(vec& v) : x(v.x), y(v.y) { ; }
 
-			//! \brief Create a detail::proxy_vec<T, 2> object from a vec<T, 2> object
+			//! \brief Create a detail::vec_proxy<T, 2> object from a vec<T, 2> object
 			//!
 			//! \param v
-			proxy_vec(vec&& v) : x(v.x), y(v.y) { ; }
+			vec_proxy(vec&& v) : x(v.x), y(v.y) { ; }
 
 			//! \brief Copy constructor
 			//!
 			//! \param v
-			proxy_vec(proxy_vec& v) : x(v.x), y(v.y) { ; }
+			vec_proxy(vec_proxy& v) : x(v.x), y(v.y) { ; }
 
 			//! \brief Move constructor
 			//!
 			//! \param v
-			proxy_vec(proxy_vec&& v) : x(v.x), y(v.y) { ; }
+			vec_proxy(vec_proxy&& v) : x(v.x), y(v.y) { ; }
 
-			//! \brief Create a detail::proxy_vec<T, 2> object from a vec<T, 2> object
+			//! \brief Create a detail::vec_proxy<T, 2> object from a vec<T, 2> object
 			//!
 			//! \param v
 			//! \return a detail::proxy<T, 2> object
-			inline proxy_vec& operator=(const vec& v)
+			inline vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
 				y = v.y;
@@ -194,10 +194,10 @@ namespace XXX_NAMESPACE
 				y OP v.y;                           \
 			}                                       \
 
-			MACRO(+=, proxy_vec)
-			MACRO(-=, proxy_vec)
-			MACRO(*=, proxy_vec)
-			MACRO(/=, proxy_vec)
+			MACRO(+=, vec_proxy)
+			MACRO(-=, vec_proxy)
+			MACRO(*=, vec_proxy)
+			MACRO(/=, vec_proxy)
 
 			MACRO(+=, vec)
 			MACRO(-=, vec)
@@ -233,7 +233,7 @@ namespace XXX_NAMESPACE
 		//!
 		//! \tparam T data type
 		template <typename T>
-		class proxy_vec<T, 3>
+		class vec_proxy<T, 3>
 		{
 			using vec = XXX_NAMESPACE::vec<T, 3>;
 
@@ -258,33 +258,33 @@ namespace XXX_NAMESPACE
 			//!
 			//! \param ptr pointer to x component
 			//! \param n extent of the underlying field in dimension 1 (innermost)
-			proxy_vec(T* ptr, const std::size_t n) : x(ptr[0 * n]), y(ptr[1 * n]), z(ptr[2 * n]) { ; }
+			vec_proxy(T* ptr, const std::size_t n) : x(ptr[0 * n]), y(ptr[1 * n]), z(ptr[2 * n]) { ; }
 
-			//! \brief Create a detail::proxy_vec<T, 3> object from a vec<T, 3> object
+			//! \brief Create a detail::vec_proxy<T, 3> object from a vec<T, 3> object
 			//!
 			//! \param v
-			proxy_vec(vec& v) : x(v.x), y(v.y), z(v.z) { ; }
+			vec_proxy(vec& v) : x(v.x), y(v.y), z(v.z) { ; }
 
-			//! \brief Create a detail::proxy_vec<T, 3> object from a vec<T, 3> object
+			//! \brief Create a detail::vec_proxy<T, 3> object from a vec<T, 3> object
 			//!
 			//! \param v
-			proxy_vec(vec&& v) : x(v.x), y(v.y), z(v.z) { ; }
+			vec_proxy(vec&& v) : x(v.x), y(v.y), z(v.z) { ; }
 
 			//! \brief Copy constructor
 			//!
 			//! \param v
-			proxy_vec(proxy_vec& v) : x(v.x), y(v.y), z(v.z) { ; }
+			vec_proxy(vec_proxy& v) : x(v.x), y(v.y), z(v.z) { ; }
 
 			//! \brief Move constructor
 			//!
 			//! \param v
-			proxy_vec(proxy_vec&& v) : x(v.x), y(v.y), z(v.z) { ; }
+			vec_proxy(vec_proxy&& v) : x(v.x), y(v.y), z(v.z) { ; }
 
-			//! \brief Create a detail::proxy_vec<T, 3> object from a vec<T, 3> object
+			//! \brief Create a detail::vec_proxy<T, 3> object from a vec<T, 3> object
 			//!
 			//! \param v
 			//! \return a detail::proxy<T, 3> object
-			proxy_vec& operator=(const vec& v)
+			vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
 				y = v.y;
@@ -307,10 +307,10 @@ namespace XXX_NAMESPACE
 				z OP v.z;                           \
 			}                                       \
 
-			MACRO(+=, proxy_vec)
-			MACRO(-=, proxy_vec)
-			MACRO(*=, proxy_vec)
-			MACRO(/=, proxy_vec)
+			MACRO(+=, vec_proxy)
+			MACRO(-=, vec_proxy)
+			MACRO(*=, vec_proxy)
+			MACRO(/=, vec_proxy)
 
 			MACRO(+=, vec)
 			MACRO(-=, vec)

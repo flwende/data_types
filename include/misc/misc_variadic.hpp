@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(TEMPLATE_STUFF_HPP)
-#define TEMPLATE_STUFF_HPP
+#if !defined(MISC_VARIADIC_HPP)
+#define MISC_VARIADIC_HPP
 
 #include <cstdlib>
 #include <cstdint>

@@ -10,8 +10,19 @@
 #define XXX_NAMESPACE fw
 #endif
 
+#include "../misc/misc_math.hpp"
+
 namespace XXX_NAMESPACE
 {
+	namespace detail
+	{
+		template <typename T, std::size_t D>
+		class vec_proxy;
+
+		template <typename T>
+		struct math;
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief A simple vector with D components
 	//!
@@ -28,8 +39,8 @@ namespace XXX_NAMESPACE
 	class vec<T, 1>
 	{
 		using cvec = vec<const T, 1>;
-		using proxy_vec = detail::proxy_vec<T, 1>;
-		using proxy_cvec = detail::proxy_vec<const T, 1>;
+		using vec_proxy = detail::vec_proxy<T, 1>;
+		using proxy_cvec = detail::vec_proxy<const T, 1>;
 
 	public:
 
@@ -53,12 +64,12 @@ namespace XXX_NAMESPACE
 		//! \param v
 		vec(const cvec& v) : x(v.x) { ; }
 
-		//! \brief Create a vec<T, 1> object from a detail::proxy_vec<T, 1> object
+		//! \brief Create a vec<T, 1> object from a detail::vec_proxy<T, 1> object
 		//!
 		//! \param v
-		vec(const proxy_vec& v) : x(v.x) { ; }
+		vec(const vec_proxy& v) : x(v.x) { ; }
 
-		//! \brief Create a vec<T, 1> object from a detail::proxy_vec<const T, 1> object
+		//! \brief Create a vec<T, 1> object from a detail::vec_proxy<const T, 1> object
 		//!
 		//! \param v
 		vec(proxy_cvec&& v) : x(v.x) { ; }
@@ -80,10 +91,10 @@ namespace XXX_NAMESPACE
 		MACRO(*=, vec)
 		MACRO(/=, vec)
 
-		MACRO(+=, proxy_vec)
-		MACRO(-=, proxy_vec)
-		MACRO(*=, proxy_vec)
-		MACRO(/=, proxy_vec)
+		MACRO(+=, vec_proxy)
+		MACRO(-=, vec_proxy)
+		MACRO(*=, vec_proxy)
+		MACRO(/=, vec_proxy)
 
 		#undef MACRO
 
@@ -118,8 +129,8 @@ namespace XXX_NAMESPACE
 	class vec<T, 2>
 	{
 		using cvec = vec<const T, 2>;
-		using proxy_vec = detail::proxy_vec<T, 2>;
-		using proxy_cvec = detail::proxy_vec<const T, 2>;
+		using vec_proxy = detail::vec_proxy<T, 2>;
+		using proxy_cvec = detail::vec_proxy<const T, 2>;
 
 	public:
 
@@ -151,12 +162,12 @@ namespace XXX_NAMESPACE
 		//! \param v
 		vec(const cvec& v) : x(v.x), y(v.y) { ; }
 
-		//! \brief Create a vec<T, 2> object from a detail::proxy_vec<T, 2> object
+		//! \brief Create a vec<T, 2> object from a detail::vec_proxy<T, 2> object
 		//!
 		//! \param v
-		vec(const proxy_vec& v) : x(v.x), y(v.y) { ; }
+		vec(const vec_proxy& v) : x(v.x), y(v.y) { ; }
 
-		//! \brief Create a vec<T, 2> object from a detail::proxy_vec<const T, 2> object
+		//! \brief Create a vec<T, 2> object from a detail::vec_proxy<const T, 2> object
 		//!
 		//! \param v
 		vec(proxy_cvec&& v) : x(v.x), y(v.y) { ; }
@@ -179,10 +190,10 @@ namespace XXX_NAMESPACE
 		MACRO(*=, vec)
 		MACRO(/=, vec)
 
-		MACRO(+=, proxy_vec)
-		MACRO(-=, proxy_vec)
-		MACRO(*=, proxy_vec)
-		MACRO(/=, proxy_vec)
+		MACRO(+=, vec_proxy)
+		MACRO(-=, vec_proxy)
+		MACRO(*=, vec_proxy)
+		MACRO(/=, vec_proxy)
 
 		#undef MACRO
 
@@ -218,8 +229,8 @@ namespace XXX_NAMESPACE
 	class vec<T, 3>
 	{
 		using cvec = vec<const T, 3>;
-		using proxy_vec = detail::proxy_vec<T, 3>;
-		using proxy_cvec = detail::proxy_vec<const T, 3>;
+		using vec_proxy = detail::vec_proxy<T, 3>;
+		using proxy_cvec = detail::vec_proxy<const T, 3>;
 
 	public:
 
@@ -256,12 +267,12 @@ namespace XXX_NAMESPACE
 
 		vec(const cvec& v) : x(v.x), y(v.y), z(v.z) { ; }
 
-		//! \brief Create a vec<T, 3> object from a detail::proxy_vec<T, 3> object
+		//! \brief Create a vec<T, 3> object from a detail::vec_proxy<T, 3> object
 		//!
 		//! \param v
-		vec(const proxy_vec& v) : x(v.x), y(v.y), z(v.z) { ; }
+		vec(const vec_proxy& v) : x(v.x), y(v.y), z(v.z) { ; }
 
-		//! \brief Create a vec<T, 3> object from a detail::proxy_vec<const T, 3> object
+		//! \brief Create a vec<T, 3> object from a detail::vec_proxy<const T, 3> object
 		//!
 		//! \param v
 		vec(proxy_cvec&& v) : x(v.x), y(v.y), z(v.z) { ; }
@@ -285,10 +296,10 @@ namespace XXX_NAMESPACE
 		MACRO(*=, vec)
 		MACRO(/=, vec)
 
-		MACRO(+=, proxy_vec)
-		MACRO(-=, proxy_vec)
-		MACRO(*=, proxy_vec)
-		MACRO(/=, proxy_vec)
+		MACRO(+=, vec_proxy)
+		MACRO(-=, vec_proxy)
+		MACRO(*=, vec_proxy)
+		MACRO(/=, vec_proxy)
 
 		#undef MACRO
 
@@ -382,6 +393,7 @@ namespace XXX_NAMESPACE
 	}
 }
 
-#include "proxy_vec.hpp"
+#include "vec_proxy.hpp"
+#include "vec_math.hpp"
 
 #endif

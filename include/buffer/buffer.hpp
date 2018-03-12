@@ -21,11 +21,11 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include "../misc/template_stuff.hpp"
+#include "../vec/vec.hpp"
+#include "../misc/misc_variadic.hpp"
+#include "../misc/misc_math.hpp"
 #include "../static_array/sarray.hpp"
-#include "buffer_constants.hpp"
 #include "buffer_fdecl.hpp"
-#include <vec/vec.hpp>
 
 namespace XXX_NAMESPACE
 {
@@ -205,10 +205,10 @@ namespace XXX_NAMESPACE
 		//! \brief Array subscript operator
 		//!
 		//! \param idx element to access
-		//! \return a proxy_vec<TT, DD> object
-		inline detail::proxy_vec<TT, DD> operator[](const std::size_t idx)
+		//! \return a vec_proxy<TT, DD> object
+		inline detail::vec_proxy<TT, DD> operator[](const std::size_t idx)
 		{
-			return detail::proxy_vec<TT, DD>(&ptr[idx], n[0]);
+			return detail::vec_proxy<TT, DD>(&ptr[idx], n[0]);
 		}
 
 	};
@@ -386,7 +386,7 @@ namespace XXX_NAMESPACE
 	//! layout.
 	//! It is implemented for T = vec<TT, DD> only, where DD adds an implicit next-to-the-innermost dimension.
 	//! Data access happens as usual through (recursive) array subscript operator chaining and
-	//! proxy_vec<TT, DD> objects are returned when reaching the recursion ancher.
+	//! vec_proxy<TT, DD> objects are returned when reaching the recursion ancher.
 	//! \n\n
 	//! For example you can access the individual components of buffer<vec<double, 3>, 2, SoA> b({3,2})
 	//! as usual: b[1][0].x = ...
@@ -852,7 +852,5 @@ namespace XXX_NAMESPACE
 	#endif
 	 */
 }
-
-#include "buffer_math.hpp"
 
 #endif
