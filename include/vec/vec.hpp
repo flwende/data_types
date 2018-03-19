@@ -16,6 +16,7 @@
 #endif
 #endif
 
+#include "../simd/simd.hpp"
 #include "../misc/misc_math.hpp"
 
 namespace VEC_NAMESPACE

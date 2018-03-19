@@ -65,6 +65,7 @@ int main(int argc, char** argv)
 		#else
 		buffer<real3_t, 1, target::host, data_layout::SoA> _buf(nx);
 		//buffer<real3_t, 1, target::host, data_layout::AoS> _buf(nx);
+		//buffer<real3_t, 1, target::host, data_layout::SoAoS> _buf(nx);
 		auto buf = _buf.read_write();
 		//std::vector<real3_t> buf(nx);
 		#endif
@@ -166,6 +167,7 @@ int main(int argc, char** argv)
 	{
 		buffer<real3_t, 3, target::host, data_layout::SoA> _buf({nx, ny, nz});
 		//buffer<real3_t, 3, target::host, data_layout::AoS> _buf({nx, ny, nz});
+		//buffer<real3_t, 3, target::host, data_layout::SoAoS> _buf({nx, ny, nz});
 		auto buf = _buf.read_write();
 		//std::vector<std::vector<std::vector<real3_t>>> buf(nz, std::vector<std::vector<real3_t>>(ny, std::vector<real3_t>(nx)));
 

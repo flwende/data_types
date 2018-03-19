@@ -65,17 +65,22 @@ namespace SIMD_NAMESPACE
 			static constexpr bool available = true;		\
 		};							\
 
-		MACRO(double)
-		MACRO(float)
-		MACRO(std::uint64_t)
-		MACRO(std::int64_t)
-		MACRO(std::uint32_t)
-		MACRO(std::int32_t)
-		MACRO(std::uint16_t)
-		MACRO(std::int16_t)
-		MACRO(std::uint8_t)
-		MACRO(std::int8_t)
+		#define MACRO_C(T)					\
+		MACRO(T)						\
+		MACRO(const T)						\
 
+		MACRO_C(double)
+		MACRO_C(float)
+		MACRO_C(std::uint64_t)
+		MACRO_C(std::int64_t)
+		MACRO_C(std::uint32_t)
+		MACRO_C(std::int32_t)
+		MACRO_C(std::uint16_t)
+		MACRO_C(std::int16_t)
+		MACRO_C(std::uint8_t)
+		MACRO_C(std::int8_t)
+
+		#undef MACRO_C
 		#undef MACRO
 
 		//! \brief Get information for fundamental data types when used in the SIMD context
@@ -92,19 +97,24 @@ namespace SIMD_NAMESPACE
 		struct type<T>						\
 		{							\
 			static constexpr std::size_t width = SW;	\
-		};
+		};							\
 
-		MACRO(double, SIMD_WIDTH_NATIVE_64BIT)
-		MACRO(float, SIMD_WIDTH_NATIVE_32BIT)
-		MACRO(std::uint64_t, SIMD_WIDTH_NATIVE_64BIT)
-		MACRO(std::int64_t, SIMD_WIDTH_NATIVE_64BIT)
-		MACRO(std::uint32_t, SIMD_WIDTH_NATIVE_32BIT)
-		MACRO(std::int32_t, SIMD_WIDTH_NATIVE_32BIT)
-		MACRO(std::uint16_t, SIMD_WIDTH_NATIVE_16BIT)
-		MACRO(std::int16_t, SIMD_WIDTH_NATIVE_16BIT)
-		MACRO(std::uint8_t, SIMD_WIDTH_NATIVE_8BIT)
-		MACRO(std::int8_t, SIMD_WIDTH_NATIVE_8BIT)
+		#define MACRO_C(T, SW)					\
+		MACRO(T, SW)						\
+		MACRO(const T, SW)					\
 
+		MACRO_C(double, SIMD_WIDTH_NATIVE_64BIT)
+		MACRO_C(float, SIMD_WIDTH_NATIVE_32BIT)
+		MACRO_C(std::uint64_t, SIMD_WIDTH_NATIVE_64BIT)
+		MACRO_C(std::int64_t, SIMD_WIDTH_NATIVE_64BIT)
+		MACRO_C(std::uint32_t, SIMD_WIDTH_NATIVE_32BIT)
+		MACRO_C(std::int32_t, SIMD_WIDTH_NATIVE_32BIT)
+		MACRO_C(std::uint16_t, SIMD_WIDTH_NATIVE_16BIT)
+		MACRO_C(std::int16_t, SIMD_WIDTH_NATIVE_16BIT)
+		MACRO_C(std::uint8_t, SIMD_WIDTH_NATIVE_8BIT)
+		MACRO_C(std::int8_t, SIMD_WIDTH_NATIVE_8BIT)
+
+		#undef MACRO_C
 		#undef MACRO
 	}
 }

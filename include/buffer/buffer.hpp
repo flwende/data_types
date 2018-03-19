@@ -23,7 +23,7 @@
 
 namespace XXX_NAMESPACE
 {
-	enum data_layout { AoS = 1, SoA = 2 };
+	enum data_layout { AoS = 1, SoA = 2, SoAoS = 3 };
 }
 
 #include "../vec/vec.hpp"
@@ -217,6 +217,98 @@ namespace XXX_NAMESPACE
 
 	};
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//! \brief Specialization with T = vec<TT, DD> and Layout = SoAoS
+	//!
+	//! This accessor differs from the general case in that it internally accesses the data using the SoAoS
+	//! layout.
+	//! It is implemented for T = vec<TT, DD> only, where DD adds an implicit next-to-the-innermost dimension.
+	//!
+	//! \tparam T data type
+	//! \tparam D dimension
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	template <typename T, std::size_t D>
+	class accessor<T, D, SoAoS, typename std::enable_if<is_vec<T>::value>::type>
+	{
+		//! Recover the fundamental data type that is behind T
+		using TT = typename T::fundamental_type;
+		//! Recover the dimension of T
+		static constexpr std::size_t DD = T::dim;
+
+		//! Base pointer
+		TT* ptr;
+		//! Extent of the D-dimensional array
+		sarray<std::size_t, D> n;
+
+	public:
+
+		//! \brief Standard constructor
+		//!
+		//! \param ptr base pointer
+		//! \param n extent of the D-dimensional array
+		accessor(TT* ptr, const sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
+
+		//! \brief Array subscript operator
+		//!
+		//! Determine the base pointer of accessor<T, D - 1> by multiplying the
+		//! dimensions of the D-1-dimensional sub-volume and idx and DD.
+		//!
+		//! \param idx index w.r.t. dimension D
+		//! \return a accessor<T, D - 1> object
+		inline accessor<T, D - 1, SoAoS> operator[](const std::size_t idx)
+		{
+			std::size_t offset = idx * DD;
+			for (std::size_t i = 0; i < (D - 1); ++i)
+			{
+				offset *= n[i];
+			}
+			return accessor<T, D - 1, SoAoS>(&ptr[offset], n.template shrink<D - 1>());
+		}
+	};
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//! \brief Specialization with T = vec<TT, DD>, D = 1 and Layout = SoA
+	//!
+	//! This accessor differs from the general case in that it internally accesses the data using the SoA
+	//! layout.
+	//! It is implemented for T = vec<TT, DD> only, where DD adds an implicit next-to-the-innermost dimension.
+	//!
+	//! \tparam T data type
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	template <typename T>
+	class accessor<T, 1, SoAoS, typename std::enable_if<is_vec<T>::value>::type>
+	{
+		//! Recover the fundamental data type that is behind T
+		using TT = typename T::fundamental_type;
+		//! Recover the dimension of T
+		static constexpr std::size_t DD = T::dim;
+
+		//! Base pointer
+		TT* ptr;
+
+		//! simdlen
+		static constexpr std::size_t simdlen = SIMD_NAMESPACE::simd::type<TT>::width;
+
+	public:
+
+		//! \brief Standard constructor
+		//!
+		//! \param ptr base pointer
+		//! \param n extent of the D-dimensional array
+		accessor(TT* ptr, const sarray<std::size_t, 1>& n) : ptr(ptr) { ; }
+
+		//! \brief Array subscript operator
+		//!
+		//! \param idx element to access
+		//! \return a vec_proxy<TT, DD> object
+		inline detail::vec_proxy<TT, DD> operator[](const std::size_t idx)
+		{
+			const std::size_t mapped_idx = DD * ((idx / simdlen) * simdlen) + (idx % simdlen);
+			return detail::vec_proxy<TT, DD>(&ptr[mapped_idx], simdlen);
+		}
+
+	};
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Multi-dimensional buffer data type
 	//!
@@ -309,8 +401,9 @@ namespace XXX_NAMESPACE
 			if (ptr == nullptr)
 			{
 				// padding according to data type T and the Alignment parameter
-				constexpr std::size_t num_elements_align = Alignment / sizeof(TT);
-				size_internal[0] = ((size[0] + num_elements_align - 1) / num_elements_align) * num_elements_align;
+				//constexpr std::size_t n_padd = (Alignment + sizeof(TT) - 1) / sizeof(TT);
+				constexpr std::size_t n_padd = type_info<T, Layout>::get_n_padd(Alignment);
+				size_internal[0] = ((size[0] + n_padd - 1) / n_padd) * n_padd;
 
 				// resize internal buffer: in case of SoA layout, an internal dimension DD is implicit
 				std::size_t num_elements_total = DD;
