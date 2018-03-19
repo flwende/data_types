@@ -20,10 +20,6 @@
 
 namespace VEC_NAMESPACE
 {
-	/*
-	template <typename T>
-	using math = MISC_NAMESPACE::MISC_NAMESPACE::math<T>;
-*/
 	namespace detail
 	{
 		template <typename T, std::size_t D>
