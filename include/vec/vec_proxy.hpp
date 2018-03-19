@@ -96,7 +96,7 @@ namespace VEC_NAMESPACE
 			#define MACRO(OP, IN_T)                 \
 			inline void operator OP (const IN_T& v) \
 			{                                       \
-				x OP v.x;                           \
+				x OP v.x;							\
 			}                                       \
 
 			MACRO(+=, vec_proxy)
@@ -114,7 +114,7 @@ namespace VEC_NAMESPACE
 			#define MACRO(OP)                       \
 			inline void operator OP (const T c)     \
 			{                                       \
-				x OP c;                             \
+				x OP c;								\
 			}                                       \
 
 			MACRO(+=)
@@ -202,8 +202,8 @@ namespace VEC_NAMESPACE
 			#define MACRO(OP, IN_T)                 \
 			inline void operator OP (const IN_T& v) \
 			{                                       \
-				x OP v.x;                           \
-				y OP v.y;                           \
+				x OP v.x;							\
+				y OP v.y;							\
 			}                                       \
 
 			MACRO(+=, vec_proxy)
@@ -221,8 +221,8 @@ namespace VEC_NAMESPACE
 			#define MACRO(OP)                       \
 			inline void operator OP (const T c)     \
 			{                                       \
-				x OP c;                             \
-				y OP c;                             \
+				x OP c;								\
+				y OP c;								\
 			}                                       \
 
 			MACRO(+=)
@@ -314,9 +314,9 @@ namespace VEC_NAMESPACE
 			#define MACRO(OP, IN_T)                 \
 			inline void operator OP (const IN_T& v) \
 			{                                       \
-				x OP v.x;                           \
-				y OP v.y;                           \
-				z OP v.z;                           \
+				x OP v.x;							\
+				y OP v.y;							\
+				z OP v.z;							\
 			}                                       \
 
 			MACRO(+=, vec_proxy)
@@ -334,9 +334,9 @@ namespace VEC_NAMESPACE
 			#define MACRO(OP)                       \
 			inline void operator OP (const T c)     \
 			{                                       \
-				x OP c;                             \
-				y OP c;                             \
-				z OP c;                             \
+				x OP c;								\
+				y OP c;								\
+				z OP c;								\
 			}                                       \
 
 			MACRO(+=)
