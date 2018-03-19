@@ -14,6 +14,38 @@
 
 using namespace fw;
 
+using real_t = float;
+using real3_t = vec<real_t, 3>;
+
+#if defined(__INTEL_SDLT)
+#include <sdlt/sdlt.h>
+typedef struct
+{
+	real_t x;
+	real_t y;
+	real_t z;
+} real3_sdlt;
+SDLT_PRIMITIVE(real3_sdlt, x, y, z)
+
+inline real3_sdlt exp(const real3_sdlt& x)
+{
+	real3_sdlt y;
+	y.x = exp(x.x);
+	y.y = exp(x.y);
+	y.z = exp(x.z);
+	return y;
+}
+
+inline real3_sdlt log(const real3_sdlt& x)
+{
+	real3_sdlt y;
+	y.x = log(x.x);
+	y.y = log(x.y);
+	y.z = log(x.z);
+	return y;
+}
+#endif
+
 int main(int argc, char** argv)
 {
 
@@ -23,17 +55,19 @@ int main(int argc, char** argv)
     const std::size_t nz = (argc > 3 ? atoi(argv[++dim]) : NZ_DEFAULT);
     const std::size_t print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, 12UL));
 
-    using real_t = float;
-	using real3_t = vec<real_t, 3>;
-
 	double time = 0.0;
 
 	if (dim == 1)
 	{
-		//buffer<real3_t, 1, target::host, data_layout::SoA> _buf(nx);
-		buffer<real3_t, 1, target::host, data_layout::AoS> _buf(nx);
+		#if defined(__INTEL_SDLT)
+		sdlt::soa1d_container<real3_sdlt> _buf(nx);
+		auto buf = _buf.access();
+		#else
+		buffer<real3_t, 1, target::host, data_layout::SoA> _buf(nx);
+		//buffer<real3_t, 1, target::host, data_layout::AoS> _buf(nx);
 		auto buf = _buf.read_write();
 		//std::vector<real3_t> buf(nx);
+		#endif
 
 		srand48(nx);
 		const real_t value = static_cast<real_t>(drand48() * 100.0);
@@ -41,16 +75,27 @@ int main(int argc, char** argv)
 
 		for (std::size_t x = 0; x < nx; ++x)
 		{
+			#if defined(__INTEL_SDLT)
+			buf[x] = {value, value, value};
+			#else
 			buf[x] = value;
+			#endif
 		}
 
 		for (std::size_t i = 0; i <WARMUP; ++i)
 		{
+			#if defined(__INTEL_COMPILER)
+			#pragma forceinline recursive
+			#pragma omp simd
+			#endif
 			for (std::size_t x = 0; x < nx; ++x)
 			{
 				buf[x] = exp(buf[x]);
 			}
-
+			#if defined(__INTEL_COMPILER)
+			#pragma forceinline recursive
+			#pragma omp simd
+			#endif
 			for (std::size_t x = 0; x < nx; ++x)
 			{
 				buf[x] = log(buf[x]);
@@ -60,11 +105,18 @@ int main(int argc, char** argv)
 		time = omp_get_wtime();
 		for (std::size_t i = 0; i <MEASUREMENT; ++i)
 		{
+			#if defined(__INTEL_COMPILER)
+			#pragma forceinline recursive
+			#pragma omp simd
+			#endif
 			for (std::size_t x = 0; x < nx; ++x)
 			{
 				buf[x] = exp(buf[x]);
 			}
-
+			#if defined(__INTEL_COMPILER)
+			#pragma forceinline recursive
+			#pragma omp simd
+			#endif
 			for (std::size_t x = 0; x < nx; ++x)
 			{
 				buf[x] = log(buf[x]);
@@ -77,7 +129,12 @@ int main(int argc, char** argv)
 		bool not_passed = false;
 		for (std::size_t x = 0; x < nx; ++x)
 		{
+			#if defined(__INTEL_SDLT)
+			const real3_sdlt _x_0 = buf[x];
+			const double x_0[3] = {_x_0.x, _x_0.y, _x_0.z};
+			#else
 			const double x_0[3] = {buf[x].x, buf[x].y, buf[x].z};
+			#endif
 			const double x_1[3] = {value, value, value};
 
 			for (std::size_t i = 0; i < 3; ++i)
@@ -104,6 +161,7 @@ int main(int argc, char** argv)
 	{
 		std::cerr << "not implemented for dim = 2" << std::endl;
 	}
+
 	else if (dim == 3)
 	{
 		buffer<real3_t, 3, target::host, data_layout::SoA> _buf({nx, ny, nz});
@@ -132,9 +190,17 @@ int main(int argc, char** argv)
 			{
 				for (std::size_t y = 0; y < ny; ++y)
 				{
+					#if defined(__INTEL_COMPILER)
+					#pragma forceinline recursive
+					#pragma omp simd
+					#endif
 					for (std::size_t x = 0; x < nx; ++x)
 					{
-				buf[z][y][x] = exp(buf[z][y][x]);
+						#if defined(COMPONENT_WISE)
+						buf[z][y][x].x = MISC_NAMESPACE::math<real_t>::exp(buf[z][y][x].x);
+						#else
+						buf[z][y][x] = exp(buf[z][y][x]);
+						#endif
 					}
 				}
 			}
@@ -143,9 +209,17 @@ int main(int argc, char** argv)
 			{
 				for (std::size_t y = 0; y < ny; ++y)
 				{
+					#if defined(__INTEL_COMPILER)
+					#pragma forceinline recursive
+					#pragma omp simd
+					#endif
 					for (std::size_t x = 0; x < nx; ++x)
 					{
+						#if defined(COMPONENT_WISE)
+						buf[z][y][x].x = MISC_NAMESPACE::math<real_t>::log(buf[z][y][x].x);
+						#else
 						buf[z][y][x] = log(buf[z][y][x]);
+						#endif
 					}
 				}
 			}
@@ -158,9 +232,17 @@ int main(int argc, char** argv)
 			{
 				for (std::size_t y = 0; y < ny; ++y)
 				{
+					#if defined(__INTEL_COMPILER)
+					#pragma forceinline recursive
+					#pragma omp simd
+					#endif
 					for (std::size_t x = 0; x < nx; ++x)
 					{
+						#if defined(COMPONENT_WISE)
+						buf[z][y][x].x = MISC_NAMESPACE::math<real_t>::exp(buf[z][y][x].x);
+						#else
 						buf[z][y][x] = exp(buf[z][y][x]);
+						#endif
 					}
 				}
 			}
@@ -169,9 +251,17 @@ int main(int argc, char** argv)
 			{
 				for (std::size_t y = 0; y < ny; ++y)
 				{
+					#if defined(__INTEL_COMPILER)
+					#pragma forceinline recursive
+					#pragma omp simd
+					#endif
 					for (std::size_t x = 0; x < nx; ++x)
 					{
+						#if defined(COMPONENT_WISE)
+						buf[z][y][x].x = MISC_NAMESPACE::math<real_t>::log(buf[z][y][x].x);
+						#else
 						buf[z][y][x] = log(buf[z][y][x]);
+						#endif
 					}
 				}
 			}
