@@ -267,9 +267,9 @@ namespace XXX_NAMESPACE
 	};
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief Specialization with T = vec<TT, DD>, D = 1 and Layout = SoA
+	//! \brief Specialization with T = vec<TT, DD>, D = 1 and Layout = SoAoS
 	//!
-	//! This accessor differs from the general case in that it internally accesses the data using the SoA
+	//! This accessor differs from the general case in that it internally accesses the data using the SoAoS
 	//! layout.
 	//! It is implemented for T = vec<TT, DD> only, where DD adds an implicit next-to-the-innermost dimension.
 	//!
@@ -344,7 +344,7 @@ namespace XXX_NAMESPACE
 	//! For example you can access the individual components of buffer<vec<double, 3>, 2, SoA> b({3,2})
 	//! as usual: b[1][0].x = ...
 	//! \n
-	//! GNU and Clang/LLVM can optimize the proxies away.
+	//! GNU and Clang/LLVM seem to optimize the proxies away.
 	//!
 	//! \tparam T data type
 	//! \tparam D dimension
