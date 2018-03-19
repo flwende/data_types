@@ -30,12 +30,12 @@ namespace VEC_NAMESPACE
 		class vec_proxy;
 	}
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief A simple vector with D components
 	//!
 	//! \tparam T data type
 	//! \tparam D dimension
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T, std::size_t D>
 	class vec;
 
@@ -87,11 +87,11 @@ namespace VEC_NAMESPACE
 			return vec(minus_one * x);
 		}
 
-		#define MACRO(OP, IN_T)                 \
-		inline void operator OP (const IN_T& v) \
-		{                                       \
-			x OP v.x;							\
-		}										\
+		#define MACRO(OP, IN_T)				\
+		inline void operator OP (const IN_T& v)		\
+		{						\
+			x OP v.x;				\
+		}						\
 
 		MACRO(+=, vec)
 		MACRO(-=, vec)
@@ -105,11 +105,11 @@ namespace VEC_NAMESPACE
 
 		#undef MACRO
 
-		#define MACRO(OP)                       \
-		inline void operator OP (const T c)     \
-		{                                       \
-			x OP c;								\
-		}                                       \
+		#define MACRO(OP)				\
+		inline void operator OP (const T c)		\
+		{						\
+			x OP c;					\
+		}						\
 
 		MACRO(+=)
 		MACRO(-=)
@@ -127,11 +127,11 @@ namespace VEC_NAMESPACE
 		}
 	};
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief D = 2 specialization with components x and y
 	//!
 	//! \tparam T data type
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T>
 	class vec<T, 2>
 	{
@@ -185,12 +185,12 @@ namespace VEC_NAMESPACE
 			return vec(minus_one * x, minus_one * y);
 		}
 
-		#define MACRO(OP, IN_T)                 \
-		inline void operator OP (const IN_T& v) \
-		{                                       \
-			x OP v.x;							\
-			y OP v.y;							\
-		}                                       \
+		#define MACRO(OP, IN_T)				\
+		inline void operator OP (const IN_T& v)		\
+		{						\
+			x OP v.x;				\
+			y OP v.y;				\
+		}						\
 
 		MACRO(+=, vec)
 		MACRO(-=, vec)
@@ -204,12 +204,12 @@ namespace VEC_NAMESPACE
 
 		#undef MACRO
 
-		#define MACRO(OP)                       \
-		inline void operator OP (const T c)     \
-		{                                       \
-			x OP c;                             \
-			y OP c;                             \
-		}                                       \
+		#define MACRO(OP)				\
+		inline void operator OP (const T c)		\
+		{						\
+			x OP c;					\
+			y OP c;					\
+		}						\
 
 		MACRO(+=)
 		MACRO(-=)
@@ -227,11 +227,11 @@ namespace VEC_NAMESPACE
 		}
 	};
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief D = 3 specialization with components x, y and z
 	//!
 	//! \tparam T data type
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T>
 	class vec<T, 3>
 	{
@@ -288,13 +288,13 @@ namespace VEC_NAMESPACE
 			return vec(minus_one * x, minus_one * y, minus_one * z);
 		}
 
-		#define MACRO(OP, IN_T)                 \
-		inline void operator OP (const IN_T& v) \
-		{                                       \
-			x OP v.x;							\
-			y OP v.y;							\
-			z OP v.z;							\
-		}                                       \
+		#define MACRO(OP, IN_T)				\
+		inline void operator OP (const IN_T& v)		\
+		{						\
+			x OP v.x;				\
+			y OP v.y;				\
+			z OP v.z;				\
+		}						\
 
 		MACRO(+=, vec)
 		MACRO(-=, vec)
@@ -308,13 +308,13 @@ namespace VEC_NAMESPACE
 
 		#undef MACRO
 
-		#define MACRO(OP)                       \
-		inline void operator OP (const T c)     \
-		{                                       \
-			x OP c;								\
-			y OP c;								\
-			z OP c;								\
-		}                                       \
+		#define MACRO(OP)				\
+		inline void operator OP (const T c)		\
+		{						\
+			x OP c;					\
+			y OP c;					\
+			z OP c;					\
+		}						\
 
 		MACRO(+=)
 		MACRO(-=)
@@ -332,26 +332,26 @@ namespace VEC_NAMESPACE
 		}
 	};
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Testing on whether T is of type vec<TT, DD> or not
 	//!
 	//! (default) T is not of type vec<TT, DD>.
 	//!
 	//! \tparam T
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T>
 	struct is_vec
 	{
 		static constexpr bool value = false;
 	};
 
-	#define MACRO(T)                                                                            \
-	template <> struct is_vec<vec<T, 1>> { static constexpr bool value = true; };               \
-	template <> struct is_vec<vec<T, 2>> { static constexpr bool value = true; };               \
-	template <> struct is_vec<vec<T, 3>> { static constexpr bool value = true; };               \
-	template <> struct is_vec<const vec<T, 1>> { static constexpr bool value = true; };         \
-	template <> struct is_vec<const vec<T, 2>> { static constexpr bool value = true; };         \
-	template <> struct is_vec<const vec<T, 3>> { static constexpr bool value = true; };         \
+	#define MACRO(T)										\
+	template <> struct is_vec<vec<T, 1>> { static constexpr bool value = true; };			\
+	template <> struct is_vec<vec<T, 2>> { static constexpr bool value = true; };			\
+	template <> struct is_vec<vec<T, 3>> { static constexpr bool value = true; };			\
+	template <> struct is_vec<const vec<T, 1>> { static constexpr bool value = true; };		\
+	template <> struct is_vec<const vec<T, 2>> { static constexpr bool value = true; };		\
+	template <> struct is_vec<const vec<T, 3>> { static constexpr bool value = true; };		\
 
 	MACRO(double)
 	MACRO(float)

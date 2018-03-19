@@ -20,7 +20,7 @@ namespace VEC_NAMESPACE
 	template <typename T>
 	using math = MISC_NAMESPACE::MISC_NAMESPACE::math<T>;
 */
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief A proxy data type for vec<T, D>
 	//!
 	//! This data type is returned by buffer<T, D, Layout, Alignment>::operator[]() if D = 1 and Layout=SoA.
@@ -29,7 +29,7 @@ namespace VEC_NAMESPACE
 	//!
 	//! \tparam T data type
 	//! \tparam D dimension
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	namespace detail
 	{
 		//! \brief D = 1 specialization with component x
@@ -93,11 +93,11 @@ namespace VEC_NAMESPACE
 				return vec(minus_one * x);
 			}
 
-			#define MACRO(OP, IN_T)                 \
-			inline void operator OP (const IN_T& v) \
-			{                                       \
-				x OP v.x;							\
-			}                                       \
+			#define MACRO(OP, IN_T)				\
+			inline void operator OP (const IN_T& v)		\
+			{						\
+				x OP v.x;				\
+			}						\
 
 			MACRO(+=, vec_proxy)
 			MACRO(-=, vec_proxy)
@@ -111,11 +111,11 @@ namespace VEC_NAMESPACE
 
 			#undef MACRO
 
-			#define MACRO(OP)                       \
-			inline void operator OP (const T c)     \
-			{                                       \
-				x OP c;								\
-			}                                       \
+			#define MACRO(OP)				\
+			inline void operator OP (const T c)		\
+			{						\
+				x OP c;					\
+			}						\
 
 			MACRO(+=)
 			MACRO(-=)
@@ -199,12 +199,12 @@ namespace VEC_NAMESPACE
 				return vec(minus_one * x, minus_one * y);
 			}
 
-			#define MACRO(OP, IN_T)                 \
-			inline void operator OP (const IN_T& v) \
-			{                                       \
-				x OP v.x;							\
-				y OP v.y;							\
-			}                                       \
+			#define MACRO(OP, IN_T)				\
+			inline void operator OP (const IN_T& v)		\
+			{						\
+				x OP v.x;				\
+				y OP v.y;				\
+			}						\
 
 			MACRO(+=, vec_proxy)
 			MACRO(-=, vec_proxy)
@@ -218,12 +218,12 @@ namespace VEC_NAMESPACE
 
 			#undef MACRO
 
-			#define MACRO(OP)                       \
-			inline void operator OP (const T c)     \
-			{                                       \
-				x OP c;								\
-				y OP c;								\
-			}                                       \
+			#define MACRO(OP)				\
+			inline void operator OP (const T c)		\
+			{						\
+				x OP c;					\
+				y OP c;					\
+			}						\
 
 			MACRO(+=)
 			MACRO(-=)
@@ -311,13 +311,13 @@ namespace VEC_NAMESPACE
 				return vec(minus_one * x, minus_one * y, minus_one * z);
 			}
 
-			#define MACRO(OP, IN_T)                 \
-			inline void operator OP (const IN_T& v) \
-			{                                       \
-				x OP v.x;							\
-				y OP v.y;							\
-				z OP v.z;							\
-			}                                       \
+			#define MACRO(OP, IN_T)				\
+			inline void operator OP (const IN_T& v)		\
+			{						\
+				x OP v.x;				\
+				y OP v.y;				\
+				z OP v.z;				\
+			}						\
 
 			MACRO(+=, vec_proxy)
 			MACRO(-=, vec_proxy)
@@ -331,13 +331,13 @@ namespace VEC_NAMESPACE
 
 			#undef MACRO
 
-			#define MACRO(OP)                       \
-			inline void operator OP (const T c)     \
-			{                                       \
-				x OP c;								\
-				y OP c;								\
-				z OP c;								\
-			}                                       \
+			#define MACRO(OP)				\
+			inline void operator OP (const T c)		\
+			{						\
+				x OP c;					\
+				y OP c;					\
+				z OP c;					\
+			}						\
 
 			MACRO(+=)
 			MACRO(-=)

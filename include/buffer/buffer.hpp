@@ -41,7 +41,7 @@ namespace XXX_NAMESPACE
 	enum target { host = 1 };
 	#endif
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Accessor data type implementing array subscript operator chaining
 	//!
 	//! This data type basically collects all indices and determines the final base pointer for data access.
@@ -50,7 +50,7 @@ namespace XXX_NAMESPACE
 	//! \tparam D dimension
 	//! \tparam Layout any of SoA (structs of arrays) and AoS (array of structs)
 	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T, std::size_t D, data_layout Layout = AoS, typename Enabled = void>
 	class accessor
 	{
@@ -85,13 +85,13 @@ namespace XXX_NAMESPACE
 		}
 	};
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Specialization with D = 1 (recursion ancher definition)
 	//!
 	//! \tparam T data type
 	//! \tparam Layout any of SoA (structs of arrays) and AoS (array of structs)
 	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T, data_layout Layout, typename Enabled>
 	class accessor<T, 1, Layout, Enabled>
 	{
@@ -127,7 +127,7 @@ namespace XXX_NAMESPACE
 		}
 	};
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Specialization with T = vec<TT, DD> and Layout = SoA
 	//!
 	//! This accessor differs from the general case in that it internally accesses the data using the SoA
@@ -136,7 +136,7 @@ namespace XXX_NAMESPACE
 	//!
 	//! \tparam T data type
 	//! \tparam D dimension
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T, std::size_t D>
 	class accessor<T, D, SoA, typename std::enable_if<is_vec<T>::value>::type>
 	{
@@ -176,7 +176,7 @@ namespace XXX_NAMESPACE
 		}
 	};
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Specialization with T = vec<TT, DD>, D = 1 and Layout = SoA
 	//!
 	//! This accessor differs from the general case in that it internally accesses the data using the SoA
@@ -184,7 +184,7 @@ namespace XXX_NAMESPACE
 	//! It is implemented for T = vec<TT, DD> only, where DD adds an implicit next-to-the-innermost dimension.
 	//!
 	//! \tparam T data type
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T>
 	class accessor<T, 1, SoA, typename std::enable_if<is_vec<T>::value>::type>
 	{
@@ -217,7 +217,7 @@ namespace XXX_NAMESPACE
 
 	};
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Multi-dimensional buffer data type
 	//!
 	//! This buffer data type internally uses std::vector<T> to dynamically adapt to the needed memory requirement.
@@ -229,9 +229,9 @@ namespace XXX_NAMESPACE
 	//! \n\n
 	//! In case of Layout = AoS, data is stored with all elements placed in main memory one after the other.
 	//! \n
-	//! In case of Layout = SoA (meaningful only if T is of type vec<TT, DD>) the individual components (x,y and z) are
-	//! placed one after the other along the innermost dimension, e.g. for buffer<vec<double, 3>, 2, SoA, 32>({3, 2})
-	//! the memory layout would be the following one:
+	//! In case of Layout = SoA (meaningful only if T is of type vec<TT, DD>) the individual components (x,y and z)
+	//! are placed one after the other along the innermost dimension, e.g. for
+	//! buffer<vec<double, 3>, 2, SoA, 32>({3, 2}) the memory layout would be the following one:
 	//! <pre>
 	//!     [0][0].x
 	//!     [0][1].x
@@ -259,7 +259,7 @@ namespace XXX_NAMESPACE
 	//! \tparam Layout any of SoA (structs of arrays) and AoS (array of structs)
 	//! \tparam Alignment data alignment (needs to be a power of 2)
 	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T, std::size_t D, target Target = host, data_layout Layout = AoS, std::size_t Alignment = default_alignment>
 	class buffer
 	{
@@ -288,8 +288,8 @@ namespace XXX_NAMESPACE
 		//! \brief Constructor
 		//!
 		//! \param size shape of the buffer
-		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
-		//! innermost dimension happens)
+		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of
+		//! the innermost dimension happens)
 		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr)
 		{
 			resize(size, ptr);
@@ -298,8 +298,8 @@ namespace XXX_NAMESPACE
 		//! \brief Set up the buffer
 		//!
 		//! \param size shape of the buffer
-		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
-		//! innermost dimension happens)
+		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of
+		//! the innermost dimension happens)
 		void resize(const sarray<std::size_t, D>& size, T* ptr = nullptr)
 		{
 			// assign default values
@@ -312,7 +312,7 @@ namespace XXX_NAMESPACE
 				constexpr std::size_t num_elements_align = Alignment / sizeof(TT);
 				size_internal[0] = ((size[0] + num_elements_align - 1) / num_elements_align) * num_elements_align;
 
-				// resize the internal buffer: in case of SoA layout, an internal dimension DD is implicit
+				// resize internal buffer: in case of SoA layout, an internal dimension DD is implicit
 				std::size_t num_elements_total = DD;
 				for (std::size_t i = 0; i < D; ++i)
 				{
@@ -366,7 +366,8 @@ namespace XXX_NAMESPACE
 		{
 			if (size == b.size)
 			{
-				// swap internal storage (it does not matter whether any of the buffers uses external memory)
+				// swap internal storage (it does not matter whether any of the buffers uses
+				// external memory)
 				vdata.swap(b.vdata);
 
 				// swap the base pointer

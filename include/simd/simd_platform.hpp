@@ -58,12 +58,12 @@ namespace SIMD_NAMESPACE
 			static constexpr bool available = false;
 		};
 
-		#define MACRO(T)                                            \
-		template <>                                                 \
-		struct implementation<T>                                    \
-		{                                                           \
-			static constexpr bool available = true;             	\
-		};
+		#define MACRO(T)					\
+		template <>						\
+		struct implementation<T>				\
+		{							\
+			static constexpr bool available = true;		\
+		};							\
 
 		MACRO(double)
 		MACRO(float)
@@ -87,11 +87,11 @@ namespace SIMD_NAMESPACE
 			static_assert(implementation<T>::available, "error: there is no implementation for data type T");
 		};
 
-		#define MACRO(T, SW)                                        \
-		template <>                                                 \
-		struct type<T>                                              \
-		{                                                           \
-			static constexpr std::size_t width = SW;          	 	\
+		#define MACRO(T, SW)					\
+		template <>						\
+		struct type<T>						\
+		{							\
+			static constexpr std::size_t width = SW;	\
 		};
 
 		MACRO(double, SIMD_WIDTH_NATIVE_64BIT)
