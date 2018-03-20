@@ -1,7 +1,8 @@
 CXX = clang++
 LD = clang++
 
-INC = -I$(HOME)/opt/gnu-7.2.0/boost/include -I./include -I./src/include -I/dassw/intel/compilers_and_libraries_2018.1.163/linux/compiler/include
+INTELROOT = $(MKLROOT)/../compiler
+INC = -I$(HOME)/opt/gnu-7.2.0/boost/include -I./include -I./src/include -I$(INTELROOT)/include
 CXXFLAGS = -O3 -std=c++14 -mavx2 -fopenmp=libiomp5 -fveclib=SVML -ftree-vectorize -ffast-math $(INC)
 LDFLAGS = -O2 -fopenmp -L/dassw/intel/compilers_and_libraries_2018.1.163/linux/compiler/lib/intel64 -lsvml
 
