@@ -23,7 +23,7 @@ for (std::size_t j = 0; j < ny; ++j)
   }
 }
 ```
-The advantage: if you choose the SoA data layout, components `x`, `y` and `z` are contiguous in memory and SIMD vectorization should work out of the box.
+The advantage: if you choose the SoA data layout, components `x`, `y` and `z` are contiguous in memory each, and SIMD vectorization should work out of the box.
 
 ### Performance
 The table below lists the performance of the buffer (execution time in seconds) in 1 and 3 dimensions for calculating the element-wise logarithm and exponential of a given field using the implementation in `src/test_buffer.cpp` and the provided Makefiles.
