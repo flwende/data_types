@@ -10,36 +10,46 @@
 
 // data types
 using real_t = float;
-using real3_t = fw::vec<real_t, 3>;
 
 #if defined(__INTEL_SDLT)
-#include <sdlt/sdlt.h>
-typedef struct
-{
-	real_t x;
-	real_t y;
-	real_t z;
-} sdlt_real3_t;
+	#include <sdlt/sdlt.h>
+	typedef struct
+	{
+		real_t x;
+		real_t y;
+		real_t z;
+	} sdlt_real3_t;
 
-SDLT_PRIMITIVE(sdlt_real3_t, x, y, z)
+	SDLT_PRIMITIVE(sdlt_real3_t, x, y, z)
 
-inline sdlt_real3_t exp(const sdlt_real3_t& x)
-{
-	sdlt_real3_t y;
-	y.x = exp(x.x);
-	y.y = exp(x.y);
-	y.z = exp(x.z);
-	return y;
-}
+	inline sdlt_real3_t exp(const sdlt_real3_t& x)
+	{
+		sdlt_real3_t y;
+		y.x = fw::math<real_t>::exp(x.x);
+		y.y = fw::math<real_t>::exp(x.y);
+		y.z = fw::math<real_t>::exp(x.z);
+		return y;
+	}
 
-inline sdlt_real3_t log(const sdlt_real3_t& x)
-{
-	sdlt_real3_t y;
-	y.x = log(x.x);
-	y.y = log(x.y);
-	y.z = log(x.z);
-	return y;
-}
+	inline sdlt_real3_t log(const sdlt_real3_t& x)
+	{
+		sdlt_real3_t y;
+		y.x = fw::math<real_t>::log(x.x);
+		y.y = fw::math<real_t>::log(x.y);
+		y.z = fw::math<real_t>::log(x.z);
+		return y;
+	}
+
+	using real3_t = sdlt_real3_t;
+
+	template <typename T, std::size_t D>
+	using buffer_type = sdlt::soa1d_container<T>;
+
+#else
+	using real3_t = fw::vec<real_t, 3>;
+
+	template <typename T, std::size_t D>
+	using buffer_type = fw::buffer<T, D, fw::target::host, fw::data_layout::SoA>;
 #endif
 
 // data layout
@@ -50,17 +60,11 @@ constexpr fw::data_layout layout = fw::data_layout::SoA;
 template <typename T>
 struct kernel
 {
-	#if defined(__INTEL_SDLT)
 	template <std::size_t D>
-	static double exp(sdlt::soa1d_container<T>& x);
+	static double exp(buffer_type<T, D>& x);
+
 	template <std::size_t D>
-	static double log(sdlt::soa1d_container<T>& x);
-	#else
-	template <std::size_t D>
-	static double exp(fw::buffer<T, D, fw::target::host, layout>& x);
-	template <std::size_t D>
-	static double log(fw::buffer<T, D, fw::target::host, layout>& x);
-	#endif
+	static double log(buffer_type<T, D>& x);
 };
 
 #endif

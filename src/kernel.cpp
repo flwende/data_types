@@ -13,16 +13,17 @@
 using namespace fw;
 
 #if defined(__INTEL_SDLT)
-
 	template <>
 	template <>
-	double kernel<sdlt_real3_t>::exp<1>(sdlt::soa1d_container<sdlt_real3_t>& x)
+	double kernel<real3_t>::exp<1>(buffer_type<real3_t, 1>& x)
 	{
 		double time = omp_get_wtime();
 		
 		auto a_x = x.access();
+		#if defined(__INTEL_COMPILER)
 		#pragma forceinline recursive
 		#pragma omp simd
+		#endif
 		for (std::size_t i = 0; i < x.size(); ++i)
 		{
 			a_x[i] = ::exp(a_x[i]);
@@ -33,13 +34,15 @@ using namespace fw;
 
 	template <>
 	template <>
-	double kernel<sdlt_real3_t>::log<1>(sdlt::soa1d_container<sdlt_real3_t>& x)
+	double kernel<real3_t>::log<1>(buffer_type<real3_t, 1>& x)
 	{
 		double time = omp_get_wtime();
 		
 		auto a_x = x.access();
+		#if defined(__INTEL_COMPILER)
 		#pragma forceinline recursive
 		#pragma omp simd
+		#endif
 		for (std::size_t i = 0; i < x.size(); ++i)
 		{
 			a_x[i] = ::log(a_x[i]);
@@ -47,15 +50,10 @@ using namespace fw;
 
 		return (omp_get_wtime() - time);
 	}
-
-	template double kernel<sdlt_real3_t>::exp<1>(sdlt::soa1d_container<sdlt_real3_t>& x);
-	template double kernel<sdlt_real3_t>::log<1>(sdlt::soa1d_container<sdlt_real3_t>& x);
-
 #else
-
 	template <>
 	template <>
-	double kernel<real3_t>::exp<1>(buffer<real3_t, 1, target::host, layout>& x)
+	double kernel<real3_t>::exp<1>(buffer_type<real3_t, 1>& x)
 	{
 		double time = omp_get_wtime();
 		
@@ -98,7 +96,7 @@ using namespace fw;
 
 	template <>
 	template <>
-	double kernel<real3_t>::exp<3>(buffer<real3_t, 3, target::host, layout>& x)
+	double kernel<real3_t>::exp<3>(buffer_type<real3_t, 3>& x)
 	{
 		double time = omp_get_wtime();
 
@@ -153,7 +151,7 @@ using namespace fw;
 
 	template <>
 	template <>
-	double kernel<real3_t>::log<1>(buffer<real3_t, 1, target::host, layout>& x)
+	double kernel<real3_t>::log<1>(buffer_type<real3_t, 1>& x)
 	{
 		double time = omp_get_wtime();
 		
@@ -196,7 +194,7 @@ using namespace fw;
 
 	template <>
 	template <>
-	double kernel<real3_t>::log<3>(buffer<real3_t, 3, target::host, layout>& x)
+	double kernel<real3_t>::log<3>(buffer_type<real3_t, 3>& x)
 	{
 		double time = omp_get_wtime();
 
@@ -248,10 +246,4 @@ using namespace fw;
 
 		return (omp_get_wtime() - time);
 	}
-
-	template double kernel<real3_t>::exp<1>(buffer<real3_t, 1, target::host, layout>& x);
-	template double kernel<real3_t>::log<1>(buffer<real3_t, 1, target::host, layout>& x);
-	template double kernel<real3_t>::exp<3>(buffer<real3_t, 3, target::host, layout>& x);
-	template double kernel<real3_t>::log<3>(buffer<real3_t, 3, target::host, layout>& x);
-
 #endif

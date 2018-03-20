@@ -40,14 +40,12 @@ int main(int argc, char** argv)
 
 	if (dim == 1)
 	{
+		buffer_type<real3_t, 1> buf(nx);
+		buffer_type<real3_t, 1> buf_original(nx);
 		#if defined(__INTEL_SDLT)
-		sdlt::soa1d_container<sdlt_real3_t> buf(nx);
-		sdlt::soa1d_container<sdlt_real3_t> buf_original(nx);
 		auto a_buf = buf.access();
 		auto a_buf_original = buf_original.access();
 		#else
-		fw::buffer<real3_t, 1, fw::target::host, layout> buf(nx);
-		fw::buffer<real3_t, 1, fw::target::host, layout> buf_original(nx);
 		auto a_buf = buf.read_write();
 		auto a_buf_original = buf_original.read_write();
 		#endif
@@ -64,8 +62,8 @@ int main(int argc, char** argv)
 		for (std::size_t n = 0; n < WARMUP; ++n)
 		{
 			#if defined(__INTEL_SDLT)
-			kernel<sdlt_real3_t>::exp<1>(buf);
-			kernel<sdlt_real3_t>::log<1>(buf);
+			kernel<real3_t>::exp<1>(buf);
+			kernel<real3_t>::log<1>(buf);
 			#else
 			kernel<real3_t>::exp<1>(buf);
 			kernel<real3_t>::log<1>(buf);
@@ -75,8 +73,8 @@ int main(int argc, char** argv)
 		for (std::size_t n = 0; n < MEASUREMENT; ++n)
 		{
 			#if defined(__INTEL_SDLT)
-			time += kernel<sdlt_real3_t>::exp<1>(buf);
-			time += kernel<sdlt_real3_t>::log<1>(buf);
+			time += kernel<real3_t>::exp<1>(buf);
+			time += kernel<real3_t>::log<1>(buf);
 			#else
 			time += kernel<real3_t>::exp<1>(buf);
 			time += kernel<real3_t>::log<1>(buf);
@@ -89,8 +87,8 @@ int main(int argc, char** argv)
 		for (std::size_t i = 0; i < nx; ++i)
 		{
 			#if defined(__INTEL_SDLT)
-			sdlt_real3_t _x_0 = a_buf[i];
-			sdlt_real3_t _x_1 = a_buf_original[i];
+			real3_t _x_0 = a_buf[i];
+			real3_t _x_1 = a_buf_original[i];
 			const double x_0[3] = {_x_0.x, _x_0.y, _x_0.z};
 			const double x_1[3] = {_x_1.x, _x_1.y, _x_1.z};
 			#else
@@ -120,11 +118,11 @@ int main(int argc, char** argv)
 	#if !defined(__INTEL_SDLT)
 	else if (dim == 3)
 	{
-		fw::buffer<real3_t, 3, fw::target::host, layout> buf({nx, ny, nz});
-		fw::buffer<real3_t, 3, fw::target::host, layout> buf_original({nx, ny, nz});
+		buffer_type<real3_t, 3> buf({nx, ny, nz});
+		buffer_type<real3_t, 3> buf_original({nx, ny, nz});
 		auto a_buf = buf.read_write();
 		auto a_buf_original = buf_original.read_write();
-
+		
 		for (std::size_t z = 0; z < nz; ++z)
 		{
 			for (std::size_t y = 0; y < ny; ++y)
