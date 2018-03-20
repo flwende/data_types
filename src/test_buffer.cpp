@@ -3,152 +3,106 @@
 #include <cstdint>
 #include <cmath>
 #include <omp.h>
-#include <buffer/buffer.hpp>
 
-#define NX_DEFAULT 128
-#define NY_DEFAULT 128
-#define NZ_DEFAULT 128
+#include <kernel.hpp>
 
-#define WARMUP 10
-#define MEASUREMENT 100
+constexpr std::size_t NX_DEFAULT = 128;
+constexpr std::size_t NY_DEFAULT = 128;
+constexpr std::size_t NZ_DEFAULT = 128;
 
-using namespace fw;
+constexpr std::size_t WARMUP = 10;
+constexpr std::size_t MEASUREMENT = 100;
 
-using real_t = float;
-using real3_t = vec<real_t, 3>;
-
-#if defined(__INTEL_SDLT)
-#include <sdlt/sdlt.h>
-typedef struct
-{
-	real_t x;
-	real_t y;
-	real_t z;
-} real3_sdlt;
-SDLT_PRIMITIVE(real3_sdlt, x, y, z)
-
-inline real3_sdlt exp(const real3_sdlt& x)
-{
-	real3_sdlt y;
-	y.x = exp(x.x);
-	y.y = exp(x.y);
-	y.z = exp(x.z);
-	return y;
-}
-
-inline real3_sdlt log(const real3_sdlt& x)
-{
-	real3_sdlt y;
-	y.x = log(x.x);
-	y.y = log(x.y);
-	y.z = log(x.z);
-	return y;
-}
-#endif
+constexpr double SPREAD = 0.2;
+constexpr double OFFSET = 0.9;
 
 int main(int argc, char** argv)
 {
+	// command line arguments
+	std::size_t dim = 0;
+	const std::size_t nx = (argc > 1 ? atoi(argv[++dim]) : NX_DEFAULT);
+	const std::size_t ny = (argc > 2 ? atoi(argv[++dim]) : NY_DEFAULT);
+	const std::size_t nz = (argc > 3 ? atoi(argv[++dim]) : NZ_DEFAULT);
+	const std::size_t print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, 12UL));
 
-    std::size_t dim = 0;
-    const std::size_t nx = (argc > 1 ? atoi(argv[++dim]) : NX_DEFAULT);
-    const std::size_t ny = (argc > 2 ? atoi(argv[++dim]) : NY_DEFAULT);
-    const std::size_t nz = (argc > 3 ? atoi(argv[++dim]) : NZ_DEFAULT);
-    const std::size_t print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, 12UL));
+	// initialization
+	srand48(nx);
+	const real_t value = static_cast<real_t>(drand48() * 100.0);
+	std::cout << "initial value = " << value << std::endl;
 
+	// benchmark
 	double time = 0.0;
 
 	if (dim == 1)
 	{
 		#if defined(__INTEL_SDLT)
-		sdlt::soa1d_container<real3_sdlt> _buf(nx);
-		auto buf = _buf.access();
+		sdlt::soa1d_container<sdlt_real3_t> buf(nx);
+		sdlt::soa1d_container<sdlt_real3_t> buf_original(nx);
+		auto a_buf = buf.access();
+		auto a_buf_original = buf_original.access();
 		#else
-		buffer<real3_t, 1, target::host, data_layout::SoA> _buf(nx);
-		//buffer<real3_t, 1, target::host, data_layout::AoS> _buf(nx);
-		//buffer<real3_t, 1, target::host, data_layout::SoAoS> _buf(nx);
-		auto buf = _buf.read_write();
-		//std::vector<real3_t> buf(nx);
+		fw::buffer<real3_t, 1, fw::target::host, layout> buf(nx);
+		fw::buffer<real3_t, 1, fw::target::host, layout> buf_original(nx);
+		auto a_buf = buf.read_write();
+		auto a_buf_original = buf_original.read_write();
 		#endif
-
-		srand48(nx);
-		const real_t value = static_cast<real_t>(drand48() * 100.0);
-		std::cout << "initial value = " << value << std::endl;
 
 		for (std::size_t x = 0; x < nx; ++x)
 		{
+			real_t s_1 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
+			real_t s_2 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
+			real_t s_3 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
+			a_buf[x] = {s_1 * value, s_2 * value, s_3 * value};
+			a_buf_original[x] = a_buf[x];
+		}
+
+		for (std::size_t n = 0; n < WARMUP; ++n)
+		{
 			#if defined(__INTEL_SDLT)
-			buf[x] = {value, value, value};
+			kernel<sdlt_real3_t>::exp<1>(buf);
+			kernel<sdlt_real3_t>::log<1>(buf);
 			#else
-			buf[x] = value;
+			kernel<real3_t>::exp<1>(buf);
+			kernel<real3_t>::log<1>(buf);
 			#endif
 		}
 
-		for (std::size_t i = 0; i <WARMUP; ++i)
+		for (std::size_t n = 0; n < MEASUREMENT; ++n)
 		{
-			#if defined(__INTEL_COMPILER)
-			#pragma forceinline recursive
-			#pragma omp simd
+			#if defined(__INTEL_SDLT)
+			time += kernel<sdlt_real3_t>::exp<1>(buf);
+			time += kernel<sdlt_real3_t>::log<1>(buf);
+			#else
+			time += kernel<real3_t>::exp<1>(buf);
+			time += kernel<real3_t>::log<1>(buf);
 			#endif
-			for (std::size_t x = 0; x < nx; ++x)
-			{
-				buf[x] = exp(buf[x]);
-			}
-			#if defined(__INTEL_COMPILER)
-			#pragma forceinline recursive
-			#pragma omp simd
-			#endif
-			for (std::size_t x = 0; x < nx; ++x)
-			{
-				buf[x] = log(buf[x]);
-			}
 		}
-
-		time = omp_get_wtime();
-		for (std::size_t i = 0; i <MEASUREMENT; ++i)
-		{
-			#if defined(__INTEL_COMPILER)
-			#pragma forceinline recursive
-			#pragma omp simd
-			#endif
-			for (std::size_t x = 0; x < nx; ++x)
-			{
-				buf[x] = exp(buf[x]);
-			}
-			#if defined(__INTEL_COMPILER)
-			#pragma forceinline recursive
-			#pragma omp simd
-			#endif
-			for (std::size_t x = 0; x < nx; ++x)
-			{
-				buf[x] = log(buf[x]);
-			}
-		}
-		time = omp_get_wtime() - time;
 
 		#if defined(CHECK_RESULTS)
 		const double max_abs_error = static_cast<real_t>(1.0E-4);
 		bool not_passed = false;
-		for (std::size_t x = 0; x < nx; ++x)
+		for (std::size_t i = 0; i < nx; ++i)
 		{
 			#if defined(__INTEL_SDLT)
-			const real3_sdlt _x_0 = buf[x];
+			sdlt_real3_t _x_0 = a_buf[i];
+			sdlt_real3_t _x_1 = a_buf_original[i];
 			const double x_0[3] = {_x_0.x, _x_0.y, _x_0.z};
+			const double x_1[3] = {_x_1.x, _x_1.y, _x_1.z};
 			#else
-			const double x_0[3] = {buf[x].x, buf[x].y, buf[x].z};
+			const double x_0[3] = {a_buf[i].x, a_buf[i].y, a_buf[i].z};
+			const double x_1[3] = {a_buf_original[i].x, a_buf_original[i].y, a_buf_original[i].z};
 			#endif
-			const double x_1[3] = {value, value, value};
 
-			for (std::size_t i = 0; i < 3; ++i)
+			for (std::size_t ii = 0; ii < 3; ++ii)
 			{
-				const real_t abs_error = std::abs(x_1[i] != static_cast<real_t>(0) ? (x_0[i] - x_1[i]) / x_1[i] : x_0[i] - x_1[i]);
+				const real_t abs_error = std::abs(x_1[ii] != static_cast<real_t>(0) ? (x_0[ii] - x_1[ii]) / x_1[ii] : x_0[ii] - x_1[ii]);
 				if (abs_error > max_abs_error)
 				{
-					std::cout << "error: " << x_0[i] << " vs " << x_1[i] << " (" << abs_error << ")" << std::endl;
+					std::cout << "error: " << x_0[ii] << " vs " << x_1[ii] << " (" << abs_error << ")" << std::endl;
 					not_passed = true;
 					break;
 				}
 			}
-
 			if (not_passed) break;
 		}
 
@@ -158,22 +112,13 @@ int main(int argc, char** argv)
 		}
 		#endif
 	}
-	else if (dim == 2)
-	{
-		std::cerr << "not implemented for dim = 2" << std::endl;
-	}
-
+	#if !defined(__INTEL_SDLT)
 	else if (dim == 3)
 	{
-		buffer<real3_t, 3, target::host, data_layout::SoA> _buf({nx, ny, nz});
-		//buffer<real3_t, 3, target::host, data_layout::AoS> _buf({nx, ny, nz});
-		//buffer<real3_t, 3, target::host, data_layout::SoAoS> _buf({nx, ny, nz});
-		auto buf = _buf.read_write();
-		//std::vector<std::vector<std::vector<real3_t>>> buf(nz, std::vector<std::vector<real3_t>>(ny, std::vector<real3_t>(nx)));
-
-		srand48(nx);
-		const real_t value = static_cast<real_t>(drand48() * 100.0);
-		std::cout << "initial value = " << value << std::endl;
+		fw::buffer<real3_t, 3, fw::target::host, layout> buf({nx, ny, nz});
+		fw::buffer<real3_t, 3, fw::target::host, layout> buf_original({nx, ny, nz});
+		auto a_buf = buf.read_write();
+		auto a_buf_original = buf_original.read_write();
 
 		for (std::size_t z = 0; z < nz; ++z)
 		{
@@ -181,118 +126,49 @@ int main(int argc, char** argv)
 			{
 				for (std::size_t x = 0; x < nx; ++x)
 				{
-					buf[z][y][x] = value;
+					real_t s_1 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
+					real_t s_2 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
+					real_t s_3 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
+					a_buf[z][y][x] = {s_1 * value, s_2 * value, s_3 * value};
+					a_buf_original[z][y][x] = a_buf[z][y][x];
 				}
 			}
 		}
 
-		for (std::size_t i = 0; i <WARMUP; ++i)
+		for (std::size_t n = 0; n < WARMUP; ++n)
 		{
-			for (std::size_t z = 0; z < nz; ++z)
-			{
-				for (std::size_t y = 0; y < ny; ++y)
-				{
-					#if defined(__INTEL_COMPILER)
-					#pragma forceinline recursive
-					#pragma omp simd
-					#endif
-					for (std::size_t x = 0; x < nx; ++x)
-					{
-						#if defined(COMPONENT_WISE)
-						buf[z][y][x].x = MISC_NAMESPACE::math<real_t>::exp(buf[z][y][x].x);
-						#else
-						buf[z][y][x] = exp(buf[z][y][x]);
-						#endif
-					}
-				}
-			}
-
-			for (std::size_t z = 0; z < nz; ++z)
-			{
-				for (std::size_t y = 0; y < ny; ++y)
-				{
-					#if defined(__INTEL_COMPILER)
-					#pragma forceinline recursive
-					#pragma omp simd
-					#endif
-					for (std::size_t x = 0; x < nx; ++x)
-					{
-						#if defined(COMPONENT_WISE)
-						buf[z][y][x].x = MISC_NAMESPACE::math<real_t>::log(buf[z][y][x].x);
-						#else
-						buf[z][y][x] = log(buf[z][y][x]);
-						#endif
-					}
-				}
-			}
+			kernel<real3_t>::exp<3>(buf);
+			kernel<real3_t>::log<3>(buf);
 		}
 
-		time = omp_get_wtime();
-		for (std::size_t i = 0; i <MEASUREMENT; ++i)
+		for (std::size_t n = 0; n < MEASUREMENT; ++n)
 		{
-			for (std::size_t z = 0; z < nz; ++z)
-			{
-				for (std::size_t y = 0; y < ny; ++y)
-				{
-					#if defined(__INTEL_COMPILER)
-					#pragma forceinline recursive
-					#pragma omp simd
-					#endif
-					for (std::size_t x = 0; x < nx; ++x)
-					{
-						#if defined(COMPONENT_WISE)
-						buf[z][y][x].x = MISC_NAMESPACE::math<real_t>::exp(buf[z][y][x].x);
-						#else
-						buf[z][y][x] = exp(buf[z][y][x]);
-						#endif
-					}
-				}
-			}
-
-			for (std::size_t z = 0; z < nz; ++z)
-			{
-				for (std::size_t y = 0; y < ny; ++y)
-				{
-					#if defined(__INTEL_COMPILER)
-					#pragma forceinline recursive
-					#pragma omp simd
-					#endif
-					for (std::size_t x = 0; x < nx; ++x)
-					{
-						#if defined(COMPONENT_WISE)
-						buf[z][y][x].x = MISC_NAMESPACE::math<real_t>::log(buf[z][y][x].x);
-						#else
-						buf[z][y][x] = log(buf[z][y][x]);
-						#endif
-					}
-				}
-			}
+			time += kernel<real3_t>::exp<3>(buf);
+			time += kernel<real3_t>::log<3>(buf);
 		}
-		time = omp_get_wtime() - time;
 
 		#if defined(CHECK_RESULTS)
 		const double max_abs_error = static_cast<real_t>(1.0E-4);
 		bool not_passed = false;
-		for (std::size_t z = 0; z < nz; ++z)
+		for (std::size_t k = 0; k < nz; ++k)
 		{
-			for (std::size_t y = 0; y < ny; ++y)
+			for (std::size_t j = 0; j < ny; ++j)
 			{
-				for (std::size_t x = 0; x < nx; ++x)
+				for (std::size_t i = 0; i < nx; ++i)
 				{
-					const double x_0[3] = {buf[z][y][x].x, buf[z][y][x].y, buf[z][y][x].z};
-					const double x_1[3] = {value, value, value};
+					const double x_0[3] = {a_buf[k][j][i].x, a_buf[k][j][i].y, a_buf[k][j][i].z};
+					const double x_1[3] = {a_buf_original[k][j][i].x, a_buf_original[k][j][i].y, a_buf_original[k][j][i].z};
 
-					for (std::size_t i = 0; i < 3; ++i)
+					for (std::size_t ii = 0; ii < 3; ++ii)
 					{
-						const real_t abs_error = std::abs(x_1[i] != static_cast<real_t>(0) ? (x_0[i] - x_1[i]) / x_1[i] : x_0[i] - x_1[i]);
+						const real_t abs_error = std::abs(x_1[ii] != static_cast<real_t>(0) ? (x_0[ii] - x_1[ii]) / x_1[ii] : x_0[ii] - x_1[ii]);
 						if (abs_error > max_abs_error)
 						{
-							std::cout << "error: " << x_0[i] << " vs " << x_1[i] << " (" << abs_error << ")" << std::endl;
+							std::cout << "error: " << x_0[ii] << " vs " << x_1[ii] << " (" << abs_error << ")" << std::endl;
 							not_passed = true;
 							break;
 						}
 					}
-
 					if (not_passed) break;
 				}
 				if (not_passed) break;
@@ -306,8 +182,9 @@ int main(int argc, char** argv)
 		}
 		#endif
 	}
+	#endif
 
-    std::cout << "elapsed time = " << (time / MEASUREMENT) * 1.0E3 << " ms" << std::endl;
+	std::cout << "elapsed time = " << (time / MEASUREMENT) * 1.0E3 << " ms" << std::endl;
 
-    return 0;
+	return 0;
 }

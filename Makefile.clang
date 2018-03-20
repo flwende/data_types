@@ -1,0 +1,26 @@
+CXX = clang++
+LD = clang++
+
+INC = -I$(HOME)/opt/gnu-7.2.0/boost/include -I./include -I./src/include -I/dassw/intel/compilers_and_libraries_2018.1.163/linux/compiler/include
+CXXFLAGS = -O3 -std=c++14 -mavx2 -fopenmp=libiomp5 -fveclib=SVML -ftree-vectorize -ffast-math $(INC)
+LDFLAGS = -O2 -fopenmp -L/dassw/intel/compilers_and_libraries_2018.1.163/linux/compiler/lib/intel64 -lsvml
+
+CXXFLAGS += -DCHECK_RESULTS
+#CXXFLAGS += -DUSE_PLAIN_POINTER
+#CXXFLAGS += -D__INTEL_SDLT
+
+target: bin/test_buffer.x
+
+bin/test_buffer.x: obj/test_buffer.o obj/kernel.o
+	$(LD) $(LDFLAGS) -o $@ $^
+
+obj/test_buffer.o: src/test_buffer.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/kernel.o: src/kernel.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -S $<
+
+clean:
+	rm -f *~ obj/*.o bin/test_buffer.x
+
