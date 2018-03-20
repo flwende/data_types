@@ -31,9 +31,9 @@ However, there is (currently) no SDLT container for D > 1.
 
 ```
                             D = 1 (nx = 65536)       D = 3 (nx/ny/nz = 128/128/128)
-                            AoS   SoA   SDLT-SoA  AoS   SoA
-g++-7.3, glibc-2.25         3.7   0.7   0.7       112   12.1
-clang++-5.0, Intel SVML     4.0   0.5   -         123   9.8
+                            AoS   SoA   SDLT-SoA     AoS   SoA
+g++-7.3, glibc-2.25         3.7   0.7   0.7          112   12.1
+clang++-5.0, Intel SVML     4.0   0.5   -            123   9.8
 ```
 The execution happened on a dual socket Intel Xeon E5-2630v3 compute node.
 
