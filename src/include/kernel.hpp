@@ -50,11 +50,8 @@ using real_t = float;
 
 	template <typename T, std::size_t D>
 	using buffer_type = fw::buffer<T, D, fw::target::host, fw::data_layout::SoA>;
+	//using buffer_type = fw::buffer<T, D, fw::target::host, fw::data_layout::AoS>;
 #endif
-
-// data layout
-constexpr fw::data_layout layout = fw::data_layout::SoA;
-//constexpr fw::data_layout layout = fw::data_layout::AoS;
 
 // prototypes
 template <typename T>
