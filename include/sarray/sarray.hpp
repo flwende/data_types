@@ -24,6 +24,9 @@ namespace XXX_NAMESPACE
 	template <typename T, std::size_t D>
 	class sarray
 	{
+		template <typename TT, std::size_t DD>
+		friend class sarray;
+
 		T data[D];
 
 	public:
@@ -37,6 +40,20 @@ namespace XXX_NAMESPACE
 		//! \param args parameters
 		template <typename ... Args>
 		sarray(const Args ... args) : data{ static_cast<T>(std::move(args)) ... } { ; }
+
+		//! \brief Copy constructor
+		//!
+		//! \tparam DD array size
+		//! \param x an sarray object of type T with size X
+		template <std::size_t X>
+		sarray(const sarray<T, X>& x) : data{}
+		{
+			constexpr std::size_t i_max = (X < D ? X : D);
+			for (std::size_t i = 0; i < i_max; ++i)
+			{
+				data[i] = static_cast<T>(x.data[i]);
+			}
+		}
 
 		//! \brief Array subscript operator
 		//!
