@@ -85,27 +85,6 @@ namespace VEC_NAMESPACE
 			return SIMD_NAMESPACE::simd::type<mapped_type>::width;
 		}
 	};
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief Specialization with T = vec<TT, DD> and data layout SoAoS
-	//!
-	//! \tparam T data type
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T>
-	struct type_info<T, SoAoS, typename std::enable_if<is_vec<T>::value>::type>
-	{
-		//! data type
-		using mapped_type = typename T::fundamental_type;
-
-		//! dimension
-		static constexpr std::size_t extra_dim = T::dim;
-		
-		//! get number of elements for padding
-		static constexpr std::size_t get_n_padd(const std::size_t n_bytes)
-		{
-			return SIMD_NAMESPACE::simd::type<mapped_type>::width;
-		}
-	};
 }
 
 #endif
