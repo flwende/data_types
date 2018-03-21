@@ -57,7 +57,7 @@ namespace XXX_NAMESPACE
 		//! Base pointer
 		T* ptr;
 		//! Extent of the D-dimensional array
-		sarray<std::size_t, D> n;
+		const sarray<std::size_t, D> n;
 
 	public:
 
@@ -98,7 +98,7 @@ namespace XXX_NAMESPACE
 		//! Base pointer
 		T* ptr;
 		//! Extent of the 1-dimensional array
-		sarray<std::size_t, 1> n;
+		const sarray<std::size_t, 1> n;
 
 	public:
 
@@ -148,7 +148,7 @@ namespace XXX_NAMESPACE
 		//! Base pointer
 		TT* ptr;
 		//! Extent of the D-dimensional array
-		sarray<std::size_t, D> n;
+		const sarray<std::size_t, D> n;
 
 	public:
 
@@ -196,7 +196,7 @@ namespace XXX_NAMESPACE
 		//! Base pointer
 		TT* ptr;
 		//! Extent of the 1-dimensional array
-		sarray<std::size_t, 1> n;
+		const sarray<std::size_t, 1> n;
 
 	public:
 
@@ -309,7 +309,6 @@ namespace XXX_NAMESPACE
 			if (ptr == nullptr)
 			{
 				// padding according to data type T and the Alignment parameter
-				//constexpr std::size_t n_padd = (Alignment + sizeof(TT) - 1) / sizeof(TT);
 				constexpr std::size_t n_padd = type_info<T, Layout>::get_n_padd(Alignment);
 				size_internal[0] = ((size[0] + n_padd - 1) / n_padd) * n_padd;
 
