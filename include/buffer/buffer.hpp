@@ -81,7 +81,7 @@ namespace XXX_NAMESPACE
 			{
 				offset *= n[i];
 			}
-			return accessor<T, D - 1>(&ptr[offset], n.template shrink<D - 1>());
+			return accessor<T, D - 1>(&ptr[offset], n);
 		}
 	};
 
@@ -172,7 +172,7 @@ namespace XXX_NAMESPACE
 			{
 				offset *= n[i];
 			}
-			return accessor<T, D - 1, SoA>(&ptr[offset], n.template shrink<D - 1>());
+			return accessor<T, D - 1, SoA>(&ptr[offset], n);
 		}
 	};
 

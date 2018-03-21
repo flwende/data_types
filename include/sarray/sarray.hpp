@@ -46,12 +46,16 @@ namespace XXX_NAMESPACE
 		//! \tparam DD array size
 		//! \param x an sarray object of type T with size X
 		template <std::size_t X>
-		sarray(const sarray<T, X>& x) : data{}
+		sarray(const sarray<T, X>& x)
 		{
 			constexpr std::size_t i_max = (X < D ? X : D);
 			for (std::size_t i = 0; i < i_max; ++i)
 			{
 				data[i] = static_cast<T>(x.data[i]);
+			}
+			for (std::size_t i = i_max; i < D; ++i)
+			{
+				data[i] = static_cast<T>(0);
 			}
 		}
 
@@ -85,23 +89,6 @@ namespace XXX_NAMESPACE
 				is_same &= (data[i] == rhs.data[i]);
 			}
 			return is_same;
-		}
-
-		//! \brief Create an sarray<T, X> object from the current one containing the leading X elements
-		//!
-		//! \tparam X size of the new sarray object
-		//! \return sarray<T, X>
-		template <std::size_t X>
-		inline constexpr sarray<T, X> shrink() const
-		{
-			static_assert(X <= D, "error: sarray::shrink -> at most D elements available");
-
-			sarray<T, X> tmp;
-			for (std::size_t i = 0; i < X; ++i)
-			{
-				tmp[i] = data[i];
-			}
-			return tmp;
 		}
 
 		//! \brief Reduce across all entries
