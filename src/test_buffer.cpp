@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 
 	// initialization
 	srand48(nx);
-	const real_t value = static_cast<real_t>(drand48() * 100.0);
+	const real_t value = static_cast<real_t>(drand48() * 10.0);
 	std::cout << "initial value = " << value << std::endl;
 
 	// benchmark
