@@ -16,10 +16,6 @@
 
 namespace VEC_NAMESPACE
 {
-	/*
-	template <typename T>
-	using math = MISC_NAMESPACE::MISC_NAMESPACE::math<T>;
-*/
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief A proxy data type for vec<T, D>
 	//!
@@ -59,31 +55,10 @@ namespace VEC_NAMESPACE
 			//! \brief Create a detail::vec_proxy<T, 1> object from a vec<T, 1> object
 			//!
 			//! \param v
-			vec_proxy(vec& v) : x(v.x) { ; }
-
-			//! \brief Create a detail::vec_proxy<T, 1> object from a vec<T, 1> object
-			//!
-			//! \param v
-			vec_proxy(vec&& v) : x(v.x) { ; }
-
-			//! \brief Copy constructor
-			//!
-			//! \param v
-			vec_proxy(vec_proxy& v) : x(v.x) { ; }
-
-			//! \brief Move constructor
-			//!
-			//! \param v
-			vec_proxy(vec_proxy&& v) : x(v.x) { ; }
-
-			//! \brief Create a detail::vec_proxy<T, 1> object from a vec<T, 1> object
-			//!
-			//! \param v
 			//! \return a detail::proxy<T, 1> object
 			inline vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
-
 				return *this;
 			}
 
@@ -94,7 +69,6 @@ namespace VEC_NAMESPACE
 			inline vec_proxy& operator=(const vec_proxy& v)
 			{
 				x = v.x;
-
 				return *this;
 			}
 
@@ -175,32 +149,11 @@ namespace VEC_NAMESPACE
 			//! \brief Create a detail::vec_proxy<T, 2> object from a vec<T, 2> object
 			//!
 			//! \param v
-			vec_proxy(vec& v) : x(v.x), y(v.y) { ; }
-
-			//! \brief Create a detail::vec_proxy<T, 2> object from a vec<T, 2> object
-			//!
-			//! \param v
-			vec_proxy(vec&& v) : x(v.x), y(v.y) { ; }
-
-			//! \brief Copy constructor
-			//!
-			//! \param v
-			vec_proxy(vec_proxy& v) : x(v.x), y(v.y) { ; }
-
-			//! \brief Move constructor
-			//!
-			//! \param v
-			vec_proxy(vec_proxy&& v) : x(v.x), y(v.y) { ; }
-
-			//! \brief Create a detail::vec_proxy<T, 2> object from a vec<T, 2> object
-			//!
-			//! \param v
 			//! \return a detail::proxy<T, 2> object
 			inline vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
 				y = v.y;
-
 				return *this;
 			}
 
@@ -212,7 +165,6 @@ namespace VEC_NAMESPACE
 			{
 				x = v.x;
 				y = v.y;
-
 				return *this;
 			}
 
@@ -298,33 +250,12 @@ namespace VEC_NAMESPACE
 			//! \brief Create a detail::vec_proxy<T, 3> object from a vec<T, 3> object
 			//!
 			//! \param v
-			vec_proxy(vec& v) : x(v.x), y(v.y), z(v.z) { ; }
-
-			//! \brief Create a detail::vec_proxy<T, 3> object from a vec<T, 3> object
-			//!
-			//! \param v
-			vec_proxy(vec&& v) : x(v.x), y(v.y), z(v.z) { ; }
-
-			//! \brief Copy constructor
-			//!
-			//! \param v
-			vec_proxy(vec_proxy& v) : x(v.x), y(v.y), z(v.z) { ; }
-
-			//! \brief Move constructor
-			//!
-			//! \param v
-			vec_proxy(vec_proxy&& v) : x(v.x), y(v.y), z(v.z) { ; }
-
-			//! \brief Create a detail::vec_proxy<T, 3> object from a vec<T, 3> object
-			//!
-			//! \param v
 			//! \return a detail::proxy<T, 3> object
 			vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
 				y = v.y;
 				z = v.z;
-
 				return *this;
 			}
 
@@ -337,7 +268,6 @@ namespace VEC_NAMESPACE
 				x = v.x;
 				y = v.y;
 				z = v.z;
-
 				return *this;
 			}
 
