@@ -36,9 +36,9 @@ namespace XXX_NAMESPACE
 	constexpr std::size_t default_alignment = SIMD_NAMESPACE::simd::alignment;
 
 	#if defined(HAVE_SYCL)
-	enum target { host = 1, device = 2, host_device = 3 };
+	enum compute_target { host = 1, device = 2, host_device = 3 };
 	#else
-	enum target { host = 1 };
+	enum compute_target { host = 1 };
 	#endif
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,19 +260,19 @@ namespace XXX_NAMESPACE
 	//! \tparam Alignment data alignment (needs to be a power of 2)
 	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, std::size_t D, target Target = host, data_layout Layout = AoS, std::size_t Alignment = default_alignment>
+	template <typename T, std::size_t D, compute_target target = host, data_layout Layout = AoS, std::size_t Alignment = default_alignment>
 	class buffer
 	{
-		static_assert(sizeof(T) < Alignment, "error: buffer alignment should not be smaller than the sizeof of T");
+		static_assert(sizeof(T) <= Alignment, "error: buffer alignment should not be smaller than the sizeof of T");
 
-		//! mapped data type
+		//! Mapped data type
 		using TT = typename type_info<T, Layout>::mapped_type;
-		//! extra dimension: relevant for AoS data layout only
+		//! Extra dimension: relevant for AoS data layout only
 		static constexpr std::size_t DD = type_info<T, Layout>::extra_dim;
 
 		//! Internal storage using boost's aligned_allocator for data alignment
-		std::vector<TT, boost::alignment::aligned_allocator<TT, Alignment>> vdata;
-		//! Base pointer (does not necessarily point to vdata)
+		std::vector<TT, boost::alignment::aligned_allocator<TT, Alignment>> m_data;
+		//! Base pointer (does not necessarily point to m_data)
 		TT* data;
 		//! Shape of the buffer with innermost dimension padded
 		sarray<std::size_t, D> size_internal;
@@ -318,15 +318,15 @@ namespace XXX_NAMESPACE
 				{
 					num_elements_total *= size_internal[i];
 				}
-				vdata.resize(num_elements_total);
+				m_data.resize(num_elements_total);
 
 				// base pointer points to the internal storage
-				data = &vdata[0];
+				data = &m_data[0];
 			}
 			else
 			{
 				// a pointer to external memory is provided: clear internal storage
-				vdata.clear();
+				m_data.clear();
 				data = reinterpret_cast<TT*>(ptr);
 			}
 		}
@@ -368,7 +368,7 @@ namespace XXX_NAMESPACE
 			{
 				// swap internal storage (it does not matter whether any of the buffers uses
 				// external memory)
-				vdata.swap(b.vdata);
+				m_data.swap(b.m_data);
 
 				// swap the base pointer
 				TT* this_data = data;
@@ -376,14 +376,14 @@ namespace XXX_NAMESPACE
 				b.data = this_data;
 
 				// re-assign base pointers only if internal storage is used
-				if (vdata.size() > 0)
+				if (m_data.size() > 0)
 				{
-					data = &vdata[0];
+					data = &m_data[0];
 				}
 
-				if (b.vdata.size() > 0)
+				if (b.m_data.size() > 0)
 				{
-					b.data = &(b.vdata[0]);
+					b.data = &(b.m_data[0]);
 				}
 			}
 			else
@@ -393,7 +393,6 @@ namespace XXX_NAMESPACE
 		}
 	};
 
-	/*
 	#if defined(HAVE_SYCL)
 	namespace detail
 	{
@@ -434,16 +433,15 @@ namespace XXX_NAMESPACE
 		}
 	}
 
-	template <typename T, std::size_t D, data_layout Layout, std::size_t Alignment, typename Enabled>
-	class buffer<T, D, device, Layout, Alignment, Enabled>
+	template <typename T, std::size_t D, data_layout Layout, std::size_t Alignment>
+	class buffer<T, D, device, Layout, Alignment>
 	{
-		static_assert(sizeof(T) < Alignment, "error: buffer alignment should not be smaller than the sizeof of T");
-
 		//! SYCL device buffer
-		cl::sycl::buffer<T, D>* d_data;
-		//! External host pointer
+		cl::sycl::buffer<T, D>* m_data;
+		//! Host pointer
 		T* host_ptr;
-		bool has_external_host_pointer;
+		//! Is it an external pointer
+		bool has_external_host_ptr;
 
 	public:
 
@@ -451,14 +449,14 @@ namespace XXX_NAMESPACE
 		sarray<std::size_t, D> size;
 
 		//! \brief Standard constructor
-		buffer() : d_data(nullptr), host_ptr(nullptr), has_external_host_pointer(false), size{} { ; }
+		buffer() : m_data(nullptr), host_ptr(nullptr), has_external_host_ptr(false), size{} { ; }
 
 		//! \brief Constructor
 		//!
 		//! \param size shape of the buffer
 		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
 		//! innermost dimension happens)
-		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr) : d_data(nullptr), host_ptr(nullptr), has_external_host_pointer(false)
+		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr) : m_data(nullptr), host_ptr(nullptr), has_external_host_ptr(false)
 		{
 			resize(size, ptr);
 		}
@@ -466,11 +464,12 @@ namespace XXX_NAMESPACE
 		//! \brief Destructor
 		~buffer()
 		{
-			if (d_data != nullptr)
+			if (m_data != nullptr)
 			{
-				delete d_data;
-				d_data = nullptr;
+				delete m_data;
+				m_data = nullptr;
 			}
+			host_ptr = nullptr;
 		}
 
 		//! \brief Set up the buffer
@@ -483,7 +482,7 @@ namespace XXX_NAMESPACE
 			// assign default values
 			this->size = size;
 
-			// SYCL range
+			// SYCL range: the order of the entries is inverse
 			cl::sycl::range<D> size_internal;
 			for (std::size_t i = 0; i < D; ++i)
 			{
@@ -491,16 +490,16 @@ namespace XXX_NAMESPACE
 			}
 
 			// rezise the internal buffer
-			if (d_data != nullptr)
+			if (m_data != nullptr)
 			{
-				delete d_data;
+				delete m_data;
 			}
-			d_data = new cl::sycl::buffer<T, D>(size_internal);
+			m_data = new cl::sycl::buffer<T, D>(size_internal);
 
 			if (ptr != nullptr)
 			{
 				host_ptr = ptr;
-				has_external_host_pointer = true;
+				has_external_host_ptr = true;
 			}
 		}
 		//! \brief Read accessor
@@ -508,7 +507,7 @@ namespace XXX_NAMESPACE
 		//! \return a read accessor
 		inline auto read(cl::sycl::handler& h)
 		{
-			return d_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::global_buffer>(h);
+			return m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::global_buffer>(h);
 		}
 
 		//! \brief Write accessor
@@ -516,7 +515,7 @@ namespace XXX_NAMESPACE
 		//! \return a write accessor
 		inline auto write(cl::sycl::handler& h)
 		{
-			return d_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::global_buffer>(h);
+			return m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::global_buffer>(h);
 		}
 
 		//! \brief Read-write accessor
@@ -524,7 +523,7 @@ namespace XXX_NAMESPACE
 		//! \return a read-write accessor
 		inline auto read_write(cl::sycl::handler& h)
 		{
-			return d_data->template get_access<cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>(h);
+			return m_data->template get_access<cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>(h);
 		}
 
 		//! \brief Copy data from the host to the device
@@ -532,8 +531,8 @@ namespace XXX_NAMESPACE
 		{
 			const std::size_t s_stride = (stride == 0 ? n[0] : stride);
 			const std::size_t d_stride = size[0];
-			auto a_d_data = d_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::host_buffer>();
-			detail::memcpy(a_d_data.get_pointer(), ptr, n, d_stride, s_stride);
+			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::host_buffer>();
+			detail::memcpy(a_m_data.get_pointer(), ptr, n, d_stride, s_stride);
 		}
 
 		//! \brief Copy data from the host to the device
@@ -542,13 +541,27 @@ namespace XXX_NAMESPACE
 			memcpy_h2d(ptr, size, stride);
 		}
 
+		//! \brief Copy data from the host to the device
+		inline void memcpy_h2d()
+		{
+			if (!has_external_host_ptr)
+			{
+				std::cerr << "warning: buffer::memcpy_h2d -> no external host pointer available" << std::endl;
+			}
+			else
+			{
+				auto a_m_data = m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::host_buffer>();
+				std::memcpy(a_m_data.get_pointer(), host_ptr, size.reduce([&] (const T a, const T b) { return a * b; }, 1) * sizeof(T));
+			}
+		}
+
 		//! \brief Copy data from the device to the host
 		inline void memcpy_d2h(T* ptr, const sarray<std::size_t, D>& n, const std::size_t stride = 0)
 		{
 			const std::size_t s_stride = size[0];
 			const std::size_t d_stride = (stride == 0 ? n[0] : stride);
-			auto a_d_data = d_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
-			detail::memcpy(ptr, a_d_data.get_pointer(), n, d_stride, s_stride);
+			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
+			detail::memcpy(ptr, a_m_data.get_pointer(), n, d_stride, s_stride);
 		}
 
 		//! \brief Copy data from the device to the host
@@ -560,14 +573,14 @@ namespace XXX_NAMESPACE
 		//! \brief Copy data from the device to the host
 		inline void memcpy_d2h()
 		{
-			if (!has_external_host_pointer)
+			if (!has_external_host_ptr)
 			{
 				std::cerr << "warning: buffer::memcpy_d2h -> no external host pointer available" << std::endl;
 			}
 			else
 			{
-				auto a_d_data = d_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
-				std::memcpy(host_ptr, a_d_data.get_pointer(), size.reduce([&] (const T a, const T b) { return a * b; }, 1) * sizeof(T));
+				auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
+				std::memcpy(host_ptr, a_m_data.get_pointer(), size.reduce([&] (const T a, const T b) { return a * b; }, 1) * sizeof(T));
 			}
 		}
 
@@ -581,18 +594,26 @@ namespace XXX_NAMESPACE
 			if (size == b.size)
 			{
 				// swap internal storage
-				cl::sycl::buffer<T, D>* this_d_data = d_data;
-				d_data = b.d_data;
-				b.d_data = this_d_data;
+				cl::sycl::buffer<T, D>* this_m_data = m_data;
+				m_data = b.m_data;
+				b.m_data = this_m_data;
+
+				// swap external host pointer
+				T* this_host_ptr = host_ptr;
+				host_ptr = b.host_ptr;
+				b.host_ptr = this_host_ptr;
+
+				bool this_has_external_host_ptr = has_external_host_ptr;
+				has_external_host_ptr = b.has_external_host_ptr;
+				b.has_external_host_ptr = this_has_external_host_ptr;
 			}
 			else
 			{
-				std::cerr << "error: buffer<>::swap -> you are trying to swap buffers of different size" << std::endl;
+				std::cerr << "error: buffer::swap -> you are trying to swap buffers of different size" << std::endl;
 			}
 		}
 	};
 	#endif
-	 */
 }
 
 #endif
