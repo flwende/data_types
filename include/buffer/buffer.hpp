@@ -33,7 +33,7 @@ namespace XXX_NAMESPACE
 
 namespace XXX_NAMESPACE
 {
-	constexpr std::size_t default_alignment = SIMD_NAMESPACE::simd::alignment;
+	constexpr std::size_t data_alignment = SIMD_NAMESPACE::simd::alignment;
 
 	#if defined(HAVE_SYCL)
 	enum compute_target { host = 1, device = 2, host_device = 3 };
@@ -222,7 +222,7 @@ namespace XXX_NAMESPACE
 	//!
 	//! This buffer data type internally uses std::vector<T> to dynamically adapt to the needed memory requirement.
 	//! In case of D > 1, the size of the std::vector<T> is determined as the product of all dimensions with the
-	//! innermost dimension padded according to T and the value if the Alignment parameter.
+	//! innermost dimension padded according to T or the (default) data alignment.
 	//! All memory thus is contiguous and can be moved as a whole (important e.g. for data transfers from/to GPGPU).
 	//! The buffer, however, allows access to the data using array subscript operator chaining using proxy objects.
 	//! GNU and Clang/LLVM can optimize the proxies away.
@@ -257,21 +257,21 @@ namespace XXX_NAMESPACE
 	//! \tparam T data type
 	//! \tparam D dimension
 	//! \tparam Layout any of SoA (structs of arrays) and AoS (array of structs)
-	//! \tparam Alignment data alignment (needs to be a power of 2)
 	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, std::size_t D, compute_target target = host, data_layout Layout = AoS, std::size_t Alignment = default_alignment>
+	template <typename T, std::size_t D, compute_target target = host, data_layout Layout = AoS>
 	class buffer
 	{
-		static_assert(sizeof(T) <= Alignment, "error: buffer alignment should not be smaller than the sizeof of T");
-
 		//! Mapped data type
 		using TT = typename type_info<T, Layout>::mapped_type;
 		//! Extra dimension: relevant for AoS data layout only
 		static constexpr std::size_t DD = type_info<T, Layout>::extra_dim;
 
 		//! Internal storage using boost's aligned_allocator for data alignment
-		std::vector<TT, boost::alignment::aligned_allocator<TT, Alignment>> m_data;
+		std::vector<TT, boost::alignment::aligned_allocator<TT, data_alignment>> m_data;
+
+	protected:
+
 		//! Base pointer (does not necessarily point to m_data)
 		TT* data;
 		//! Shape of the buffer with innermost dimension padded
@@ -308,8 +308,8 @@ namespace XXX_NAMESPACE
 
 			if (ptr == nullptr)
 			{
-				// padding according to data type T and the Alignment parameter
-				constexpr std::size_t n_padd = type_info<T, Layout>::get_n_padd(Alignment);
+				// padding according to data type T and the (default) data alignment
+				constexpr std::size_t n_padd = type_info<T, Layout>::get_n_padd(data_alignment);
 				size_internal[0] = ((size[0] + n_padd - 1) / n_padd) * n_padd;
 
 				// resize internal buffer: in case of SoA layout, an internal dimension DD is implicit
@@ -433,9 +433,11 @@ namespace XXX_NAMESPACE
 		}
 	}
 
-	template <typename T, std::size_t D, data_layout Layout, std::size_t Alignment>
-	class buffer<T, D, device, Layout, Alignment>
+	template <typename T, std::size_t D, data_layout Layout>
+	class buffer<T, D, device, Layout>
 	{
+	protected:
+
 		//! SYCL device buffer
 		cl::sycl::buffer<T, D>* m_data;
 		//! Host pointer
@@ -613,6 +615,12 @@ namespace XXX_NAMESPACE
 			}
 		}
 	};
+
+	template <typename T, std::size_t D, data_layout Layout>
+	class buffer<T, D, host_device, Layout>
+	{
+	};
+	
 	#endif
 }
 
