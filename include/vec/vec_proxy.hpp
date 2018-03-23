@@ -55,7 +55,7 @@ namespace VEC_NAMESPACE
 			//! \brief Create a detail::vec_proxy<T, 1> object from a vec<T, 1> object
 			//!
 			//! \param v
-			//! \return a detail::proxy<T, 1> object
+			//! \return a detail::vec_proxy<T, 1> object
 			inline vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
@@ -65,7 +65,7 @@ namespace VEC_NAMESPACE
 			//! \brief Create a detail::vec_proxy<T, 1> object from a detail::vec_proxy<T, 1> object
 			//!
 			//! \param v
-			//! \return a detail::proxy<T, 1> object
+			//! \return a detail::vec_proxy<T, 1> object
 			inline vec_proxy& operator=(const vec_proxy& v)
 			{
 				x = v.x;
@@ -149,7 +149,7 @@ namespace VEC_NAMESPACE
 			//! \brief Create a detail::vec_proxy<T, 2> object from a vec<T, 2> object
 			//!
 			//! \param v
-			//! \return a detail::proxy<T, 2> object
+			//! \return a detail::vec_proxy<T, 2> object
 			inline vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
@@ -160,7 +160,7 @@ namespace VEC_NAMESPACE
 			//! \brief Create a detail::vec_proxy<T, 2> object from a detail::vec_proxy<T, 2> object
 			//!
 			//! \param v
-			//! \return a detail::proxy<T, 2> object
+			//! \return a detail::vec_proxy<T, 2> object
 			inline vec_proxy& operator=(const vec_proxy& v)
 			{
 				x = v.x;
@@ -250,7 +250,7 @@ namespace VEC_NAMESPACE
 			//! \brief Create a detail::vec_proxy<T, 3> object from a vec<T, 3> object
 			//!
 			//! \param v
-			//! \return a detail::proxy<T, 3> object
+			//! \return a detail::vec_proxy<T, 3> object
 			vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
@@ -262,7 +262,7 @@ namespace VEC_NAMESPACE
 			//! \brief Create a detail::vec_proxy<T, 3> object from a detail::proxy_vec<T, 3> object
 			//!
 			//! \param v
-			//! \return a detail::proxy<T, 3> object
+			//! \return a detail::vec_proxy<T, 3> object
 			vec_proxy& operator=(const vec_proxy& v)
 			{
 				x = v.x;

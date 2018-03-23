@@ -66,6 +66,28 @@ namespace VEC_NAMESPACE
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//! \brief Specialization with T = vec<TT, DD> and data layout AoS
+	//!
+	//! \tparam T data type
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	template <typename T>
+	struct type_info<T, AoS, typename std::enable_if<is_vec<T>::value>::type>
+	{
+		//! data type
+		using mapped_type = T;
+
+		//! dimension
+		static constexpr std::size_t extra_dim = 1;
+
+		//! get number of elements for padding
+		static constexpr std::size_t get_n_padd(const std::size_t n_bytes)
+		{
+			using TT = typename T::fundamental_type;
+			return (n_bytes + sizeof(TT) - 1) / sizeof(TT);
+		}
+	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Specialization with T = vec<TT, DD> and data layout SoA
 	//!
 	//! \tparam T data type

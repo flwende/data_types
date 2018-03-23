@@ -10,8 +10,9 @@
 
 // data types and layout
 using real_t = float;
-constexpr fw::data_layout layout = fw::data_layout::SoA;
-//constexpr fw::data_layout layout = fw::data_layout::AoS;
+constexpr fw::buffer_type Buffer_type = fw::buffer_type::host; 
+constexpr fw::data_layout Data_layout = fw::data_layout::SoA;
+//constexpr fw::data_layout Data_layout = fw::data_layout::AoS;
 
 #if defined(__INTEL_SDLT)
 	#include <sdlt/sdlt.h>
@@ -51,7 +52,7 @@ constexpr fw::data_layout layout = fw::data_layout::SoA;
 	using real3_t = fw::vec<real_t, 3>;
 
 	template <typename T, std::size_t D>
-	using buffer_type = fw::buffer<T, D, fw::target::host, layout>;
+	using buffer_type = fw::buffer<T, D, Buffer_type, Data_layout>;
 #endif
 
 // prototypes
@@ -59,10 +60,24 @@ template <typename T>
 struct kernel
 {
 	template <std::size_t D>
-	static double exp(buffer_type<T, D>& x);
+	static double exp(fw::buffer<T, D, fw::buffer_type::host, fw::data_layout::AoS>& x);
 
 	template <std::size_t D>
-	static double log(buffer_type<T, D>& x);
+	static double exp(fw::buffer<T, D, fw::buffer_type::host, fw::data_layout::SoA>& x);
+
+	template <std::size_t D>
+	static double log(fw::buffer<T, D, fw::buffer_type::host, fw::data_layout::AoS>& x);
+
+	template <std::size_t D>
+	static double log(fw::buffer<T, D, fw::buffer_type::host, fw::data_layout::SoA>& x);
+
+	#if defined(HAVE_SYCL)
+	template <std::size_t D>
+	static double exp(fw::buffer<T, D, fw::buffer_type::host_device, fw::data_layout::AoS>& x);
+
+	template <std::size_t D>
+	static double exp(fw::buffer<T, D, fw::buffer_type::host_device, fw::data_layout::SoA>& x);
+	#endif
 };
 
 #endif

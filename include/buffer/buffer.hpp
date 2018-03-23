@@ -36,187 +36,231 @@ namespace XXX_NAMESPACE
 	constexpr std::size_t data_alignment = SIMD_NAMESPACE::simd::alignment;
 
 	#if defined(HAVE_SYCL)
-	enum compute_target { host = 1, device = 2, host_device = 3 };
+	enum buffer_type { host = 1, device = 2, host_device = 3 };
 	#else
-	enum compute_target { host = 1 };
+	enum buffer_type { host = 1 };
 	#endif
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief Accessor data type implementing array subscript operator chaining
-	//!
-	//! This data type basically collects all indices and determines the final base pointer for data access.
-	//!
-	//! \tparam T data type
-	//! \tparam D dimension
-	//! \tparam Layout any of SoA (structs of arrays) and AoS (array of structs)
-	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, std::size_t D, data_layout Layout = AoS, typename Enabled = void>
-	class accessor
+	namespace detail
 	{
-		//! Base pointer
-		T* ptr;
-		//! Extent of the D-dimensional array
-		const sarray<std::size_t, D> n;
-
-	public:
-
-		//! \brief Standard constructor
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//! \brief Accessor data type implementing array subscript operator chaining
 		//!
-		//! \param ptr base pointer
-		//! \param n extent of the D-dimensional array
-		accessor(T* ptr, const sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
-
-		//! \brief Array subscript operator
+		//! This data type basically collects all indices and determines the final base pointer for data access.
 		//!
-		//! Determine the base pointer of accessor<T, D - 1> by multiplying the
-		//! dimensions of the D-1-dimensional sub-volume and idx.
-		//!
-		//! \param idx index w.r.t. dimension D
-		//! \return a accessor<T, D - 1> object
-		inline accessor<T, D - 1> operator[](const std::size_t idx)
+		//! \tparam T data type
+		//! \tparam D dimension
+		//! \tparam Data_layout any of SoA (structs of arrays) and AoS (array of structs)
+		//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Data_layout = SoA
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		template <typename T, std::size_t D, data_layout Data_layout = AoS, typename Enabled = void>
+		class accessor
 		{
-			std::size_t offset = idx;
-			for (std::size_t i = 0; i < (D - 1); ++i)
+			//! Base pointer
+			T* ptr;
+			//! Extent of the D-dimensional array
+			const sarray<std::size_t, D> n;
+
+		public:
+
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the D-dimensional array
+			accessor(T* ptr, const sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
+
+			//! \brief Array subscript operator
+			//!
+			//! Determine the base pointer of accessor<T, D - 1> by multiplying the
+			//! dimensions of the D-1-dimensional sub-volume and idx.
+			//!
+			//! \param idx index w.r.t. dimension D
+			//! \return a accessor<T, D - 1> object
+			inline accessor<T, D - 1> operator[](const std::size_t idx)
 			{
-				offset *= n[i];
+				std::size_t offset = idx;
+				for (std::size_t i = 0; i < (D - 1); ++i)
+				{
+					offset *= n[i];
+				}
+				return accessor<T, D - 1>(&ptr[offset], n);
 			}
-			return accessor<T, D - 1>(&ptr[offset], n);
-		}
-	};
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief Specialization with D = 1 (recursion ancher definition)
-	//!
-	//! \tparam T data type
-	//! \tparam Layout any of SoA (structs of arrays) and AoS (array of structs)
-	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, data_layout Layout, typename Enabled>
-	class accessor<T, 1, Layout, Enabled>
-	{
-		//! Base pointer
-		T* ptr;
-		//! Extent of the 1-dimensional array
-		const sarray<std::size_t, 1> n;
-
-	public:
-
-		//! \brief Standard constructor
-		//!
-		//! \param ptr base pointer
-		//! \param n extent of the 1-dimensional array
-		accessor(T* ptr, const sarray<std::size_t, 1>& n) : ptr(ptr), n(n) { ; }
-
-		//! \brief Array subscript operator
-		//!
-		//! \param idx element to access
-		//! \return the actual data to be accessed
-		inline T& operator[](const std::size_t idx)
-		{
-			return ptr[idx];
-		}
-
-		//! \brief Array subscript operator
-		//!
-		//! \param idx element to access
-		//! \return the actual data to be accessed
-		inline const T& operator[](const std::size_t idx) const
-		{
-			return ptr[idx];
-		}
-	};
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief Specialization with T = vec<TT, DD> and Layout = SoA
-	//!
-	//! This accessor differs from the general case in that it internally accesses the data using the SoA
-	//! layout.
-	//! It is implemented for T = vec<TT, DD> only, where DD adds an implicit next-to-the-innermost dimension.
-	//!
-	//! \tparam T data type
-	//! \tparam D dimension
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, std::size_t D>
-	class accessor<T, D, SoA, typename std::enable_if<is_vec<T>::value>::type>
-	{
-		//! Recover the fundamental data type that is behind T
-		using TT = typename T::fundamental_type;
-		//! Recover the dimension of T
-		static constexpr std::size_t DD = T::dim;
-
-		//! Base pointer
-		TT* ptr;
-		//! Extent of the D-dimensional array
-		const sarray<std::size_t, D> n;
-
-	public:
-
-		//! \brief Standard constructor
-		//!
-		//! \param ptr base pointer
-		//! \param n extent of the D-dimensional array
-		accessor(TT* ptr, const sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
-
-		//! \brief Array subscript operator
-		//!
-		//! Determine the base pointer of accessor<T, D - 1> by multiplying the
-		//! dimensions of the D-1-dimensional sub-volume and idx and DD.
-		//!
-		//! \param idx index w.r.t. dimension D
-		//! \return a accessor<T, D - 1> object
-		inline accessor<T, D - 1, SoA> operator[](const std::size_t idx)
-		{
-			std::size_t offset = idx * DD;
-			for (std::size_t i = 0; i < (D - 1); ++i)
+			//! \brief Array subscript operator
+			//!
+			//! Determine the base pointer of accessor<T, D - 1> by multiplying the
+			//! dimensions of the D-1-dimensional sub-volume and idx.
+			//!
+			//! \param idx index w.r.t. dimension D
+			//! \return a const accessor<T, D - 1> object
+			inline accessor<T, D - 1> operator[](const std::size_t idx) const
 			{
-				offset *= n[i];
+				std::size_t offset = idx;
+				for (std::size_t i = 0; i < (D - 1); ++i)
+				{
+					offset *= n[i];
+				}
+				return accessor<T, D - 1>(&ptr[offset], n);
 			}
-			return accessor<T, D - 1, SoA>(&ptr[offset], n);
-		}
-	};
+		};
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief Specialization with T = vec<TT, DD>, D = 1 and Layout = SoA
-	//!
-	//! This accessor differs from the general case in that it internally accesses the data using the SoA
-	//! layout.
-	//! It is implemented for T = vec<TT, DD> only, where DD adds an implicit next-to-the-innermost dimension.
-	//!
-	//! \tparam T data type
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T>
-	class accessor<T, 1, SoA, typename std::enable_if<is_vec<T>::value>::type>
-	{
-		//! Recover the fundamental data type that is behind T
-		using TT = typename T::fundamental_type;
-		//! Recover the dimension of T
-		static constexpr std::size_t DD = T::dim;
-
-		//! Base pointer
-		TT* ptr;
-		//! Extent of the 1-dimensional array
-		const sarray<std::size_t, 1> n;
-
-	public:
-
-		//! \brief Standard constructor
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//! \brief Specialization with D = 1 (recursion ancher definition)
 		//!
-		//! \param ptr base pointer
-		//! \param n extent of the D-dimensional array
-		accessor(TT* ptr, const sarray<std::size_t, 1>& n) : ptr(ptr), n(n) { ; }
-
-		//! \brief Array subscript operator
-		//!
-		//! \param idx element to access
-		//! \return a vec_proxy<TT, DD> object
-		inline detail::vec_proxy<TT, DD> operator[](const std::size_t idx)
+		//! \tparam T data type
+		//! \tparam Data_layout any of SoA (structs of arrays) and AoS (array of structs)
+		//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Data_layout = SoA
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		template <typename T, data_layout Data_layout, typename Enabled>
+		class accessor<T, 1, Data_layout, Enabled>
 		{
-			return detail::vec_proxy<TT, DD>(&ptr[idx], n[0]);
-		}
+			//! Base pointer
+			T* ptr;
+			//! Extent of the 1-dimensional array
+			const sarray<std::size_t, 1> n;
 
-	};
+		public:
 
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the 1-dimensional array
+			accessor(T* ptr, const sarray<std::size_t, 1>& n) : ptr(ptr), n(n) { ; }
+
+			//! \brief Array subscript operator
+			//!
+			//! \param idx element to access
+			//! \return the actual data to be accessed
+			inline T& operator[](const std::size_t idx)
+			{
+				return ptr[idx];
+			}
+
+			//! \brief Array subscript operator
+			//!
+			//! \param idx element to access
+			//! \return the actual data to be accessed
+			inline const T& operator[](const std::size_t idx) const
+			{
+				return ptr[idx];
+			}
+		};
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//! \brief Specialization with T = vec<TT, DD> and Data_layout = SoA
+		//!
+		//! This accessor differs from the general case in that it internally accesses the data using the SoA
+		//! layout.
+		//! It is implemented for T = vec<TT, DD> only, where DD adds an implicit next-to-the-innermost dimension.
+		//!
+		//! \tparam T data type
+		//! \tparam D dimension
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		template <typename T, std::size_t D>
+		class accessor<T, D, SoA, typename std::enable_if<is_vec<T>::value>::type>
+		{
+			//! Recover the fundamental data type that is behind T
+			using TT = typename T::fundamental_type;
+			//! Recover the dimension of T
+			static constexpr std::size_t DD = T::dim;
+
+			//! Base pointer
+			TT* ptr;
+			//! Extent of the D-dimensional array
+			const sarray<std::size_t, D> n;
+
+		public:
+
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the D-dimensional array
+			accessor(TT* ptr, const sarray<std::size_t, D>& n) : ptr(ptr), n(n) { ; }
+
+			//! \brief Array subscript operator
+			//!
+			//! Determine the base pointer of accessor<T, D - 1> by multiplying the
+			//! dimensions of the D-1-dimensional sub-volume and idx and DD.
+			//!
+			//! \param idx index w.r.t. dimension D
+			//! \return a accessor<T, D - 1> object
+			inline accessor<T, D - 1, SoA> operator[](const std::size_t idx)
+			{
+				std::size_t offset = idx * DD;
+				for (std::size_t i = 0; i < (D - 1); ++i)
+				{
+					offset *= n[i];
+				}
+				return accessor<T, D - 1, SoA>(&ptr[offset], n);
+			}
+
+			//! \brief Array subscript operator
+			//!
+			//! Determine the base pointer of accessor<T, D - 1> by multiplying the
+			//! dimensions of the D-1-dimensional sub-volume and idx and DD.
+			//!
+			//! \param idx index w.r.t. dimension D
+			//! \return a const accessor<T, D - 1> object
+			inline accessor<T, D - 1, SoA> operator[](const std::size_t idx) const
+			{
+				std::size_t offset = idx * DD;
+				for (std::size_t i = 0; i < (D - 1); ++i)
+				{
+					offset *= n[i];
+				}
+				return accessor<T, D - 1, SoA>(&ptr[offset], n);
+			}
+		};
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//! \brief Specialization with T = vec<TT, DD>, D = 1 and Data_layout = SoA
+		//!
+		//! This accessor differs from the general case in that it internally accesses the data using the SoA
+		//! layout.
+		//! It is implemented for T = vec<TT, DD> only, where DD adds an implicit next-to-the-innermost dimension.
+		//!
+		//! \tparam T data type
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		template <typename T>
+		class accessor<T, 1, SoA, typename std::enable_if<is_vec<T>::value>::type>
+		{
+			//! Recover the fundamental data type that is behind T
+			using TT = typename T::fundamental_type;
+			//! Recover the dimension of T
+			static constexpr std::size_t DD = T::dim;
+
+			//! Base pointer
+			TT* ptr;
+			//! Extent of the 1-dimensional array
+			const sarray<std::size_t, 1> n;
+
+		public:
+
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the D-dimensional array
+			accessor(TT* ptr, const sarray<std::size_t, 1>& n) : ptr(ptr), n(n) { ; }
+
+			//! \brief Array subscript operator
+			//!
+			//! \param idx element to access
+			//! \return a vec_proxy<TT, DD> object
+			inline detail::vec_proxy<TT, DD> operator[](const std::size_t idx)
+			{
+				return detail::vec_proxy<TT, DD>(&ptr[idx], n[0]);
+			}
+
+			//! \brief Array subscript operator
+			//!
+			//! \param idx element to access
+			//! \return a const vec_proxy<TT, DD> object
+			inline detail::vec_proxy<TT, DD> operator[](const std::size_t idx) const
+			{
+				return detail::vec_proxy<TT, DD>(&ptr[idx], n[0]);
+			}
+		};
+	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Multi-dimensional buffer data type
 	//!
@@ -227,9 +271,9 @@ namespace XXX_NAMESPACE
 	//! The buffer, however, allows access to the data using array subscript operator chaining using proxy objects.
 	//! GNU and Clang/LLVM can optimize the proxies away.
 	//! \n\n
-	//! In case of Layout = AoS, data is stored with all elements placed in main memory one after the other.
+	//! In case of Data_layout = AoS, data is stored with all elements placed in main memory one after the other.
 	//! \n
-	//! In case of Layout = SoA (meaningful only if T is of type vec<TT, DD>) the individual components (x,y and z)
+	//! In case of Data_layout = SoA (meaningful only if T is of type vec<TT, DD>) the individual components (x,y and z)
 	//! are placed one after the other along the innermost dimension, e.g. for
 	//! buffer<vec<double, 3>, 2, SoA, 32>({3, 2}) the memory layout would be the following one:
 	//! <pre>
@@ -256,16 +300,16 @@ namespace XXX_NAMESPACE
 	//!
 	//! \tparam T data type
 	//! \tparam D dimension
-	//! \tparam Layout any of SoA (structs of arrays) and AoS (array of structs)
-	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Layout = SoA
+	//! \tparam Data_layout any of SoA (structs of arrays) and AoS (array of structs)
+	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Data_layout = SoA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, std::size_t D, compute_target target = host, data_layout Layout = AoS>
+	template <typename T, std::size_t D, buffer_type Buffer_type = host, data_layout Data_layout = AoS>
 	class buffer
 	{
 		//! Mapped data type
-		using TT = typename type_info<T, Layout>::mapped_type;
+		using TT = typename type_info<T, Data_layout>::mapped_type;
 		//! Extra dimension: relevant for AoS data layout only
-		static constexpr std::size_t DD = type_info<T, Layout>::extra_dim;
+		static constexpr std::size_t DD = type_info<T, Data_layout>::extra_dim;
 
 		//! Internal storage using boost's aligned_allocator for data alignment
 		std::vector<TT, boost::alignment::aligned_allocator<TT, data_alignment>> m_data;
@@ -309,8 +353,9 @@ namespace XXX_NAMESPACE
 			if (ptr == nullptr)
 			{
 				// padding according to data type T and the (default) data alignment
-				constexpr std::size_t n_padd = type_info<T, Layout>::get_n_padd(data_alignment);
+				constexpr std::size_t n_padd = type_info<T, Data_layout>::get_n_padd(data_alignment);
 				size_internal[0] = ((size[0] + n_padd - 1) / n_padd) * n_padd;
+				std::cout << "n_padd = " << n_padd << ", n[0] = " << size_internal[0] << std::endl;
 
 				// resize internal buffer: in case of SoA layout, an internal dimension DD is implicit
 				std::size_t num_elements_total = DD;
@@ -334,25 +379,25 @@ namespace XXX_NAMESPACE
 		//! \brief Read accessor
 		//!
 		//! \return an accessor using const references internally
-		inline const accessor<typename make_const<T>::type, D, Layout> read() const
+		inline const detail::accessor<typename make_const<T>::type, D, Data_layout> read() const
 		{
 			using const_T = typename make_const<T>::type;
 			using const_TT = typename make_const<TT>::type;
-			return accessor<const_T, D, Layout>(reinterpret_cast<const_TT*>(data), size_internal);
+			return detail::accessor<const_T, D, Data_layout>(reinterpret_cast<const_TT*>(data), size_internal);
 		}
 
 		//! \brief Write accessor
 		//!
 		//! \return an accessor
-		inline const accessor<T, D, Layout> write()
+		inline const detail::accessor<T, D, Data_layout> write()
 		{
-			return accessor<T, D, Layout>(data, size_internal);
+			return detail::accessor<T, D, Data_layout>(data, size_internal);
 		}
 
 		//! \brief Read-write accessor
 		//!
 		//! \return an accessor
-		inline const accessor<T, D, Layout> read_write()
+		inline const detail::accessor<T, D, Data_layout> read_write()
 		{
 			return write();
 		}
@@ -396,8 +441,8 @@ namespace XXX_NAMESPACE
 	#if defined(HAVE_SYCL)
 	namespace detail
 	{
-		template <typename T>
-		void memcpy(T* dst, const T* src, const XXX_NAMESPACE::sarray<std::size_t, 1>& size, const std::size_t d_stride, const std::size_t s_stride)
+		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
+		void memcpy(const accessor<T, 1, Data_layout_dst>& dst, const accessor<T, 1, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 1>& size)
 		{
 			for (std::size_t i = 0; i < size[0]; ++i)
 			{
@@ -405,20 +450,20 @@ namespace XXX_NAMESPACE
 			}
 		}
 
-		template <typename T>
-		void memcpy(T* dst, const T* src, const XXX_NAMESPACE::sarray<std::size_t, 2>& size, const std::size_t d_stride, const std::size_t s_stride)
+		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
+		void memcpy(const accessor<T, 2, Data_layout_dst>& dst, const accessor<T, 2, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size)
 		{
 			for (std::size_t j = 0; j < size[1]; ++j)
 			{
 				for (std::size_t i = 0; i < size[0]; ++i)
 				{
-					dst[j * d_stride + i] = src[j * s_stride + i];
+					dst[j][i] = src[j][i];
 				}
 			}
 		}
 
-		template <typename T>
-		void memcpy(T* dst, const T* src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size, const std::size_t d_stride, const std::size_t s_stride)
+		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
+		void memcpy(const accessor<T, 3, Data_layout_dst>& dst, const accessor<T, 3, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size)
 		{
 			for (std::size_t k = 0; k < size[2]; ++k)
 			{
@@ -426,15 +471,15 @@ namespace XXX_NAMESPACE
 				{
 					for (std::size_t i = 0; i < size[0]; ++i)
 					{
-						dst[(k * size[1] + j) * d_stride + i] = src[(k * size[1] + j) * s_stride + i];
+						dst[k][j][i] = src[k][j][i];
 					}
 				}
 			}
 		}
 	}
 
-	template <typename T, std::size_t D, data_layout Layout>
-	class buffer<T, D, device, Layout>
+	template <typename T, std::size_t D, data_layout Data_layout>
+	class buffer<T, D, device, Data_layout>
 	{
 	protected:
 
@@ -532,58 +577,72 @@ namespace XXX_NAMESPACE
 		//! \brief Copy data from the host to the device
 		inline void memcpy_h2d(const T* ptr, const sarray<std::size_t, D>& n, const std::size_t stride = 0)
 		{
-			const std::size_t s_stride = (stride == 0 ? n[0] : stride);
-			const std::size_t d_stride = size[0];
+			// host accessor: inner dimension for data access is given by 'stride', or n[0]
+			sarray<std::size_t, D> n_src = n;
+			n_src[0] = (stride == 0 ? n[0] : stride);
+			using TT = typename type_info<T, Data_layout>::mapped_type;
+			const detail::accessor<T, D, Data_layout> src(const_cast<TT*>(reinterpret_cast<const TT*>(ptr)), n_src);
+			
+			// device accessor: data layout for the device is always AoS
 			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::host_buffer>();
-			detail::memcpy(a_m_data.get_pointer(), ptr, n, d_stride, s_stride);
+			const detail::accessor<T, D> dst(a_m_data.get_pointer(), size);
+
+			detail::memcpy(dst, src, n);
 		}
 
 		//! \brief Copy data from the host to the device
-		inline void memcpy_h2d(const T* ptr, const std::size_t stride = 0)
+		inline void memcpy_h2d(const T* ptr = nullptr, const std::size_t stride = 0)
 		{
-			memcpy_h2d(ptr, size, stride);
-		}
-
-		//! \brief Copy data from the host to the device
-		inline void memcpy_h2d()
-		{
-			if (!has_external_host_ptr)
+			if (ptr != nullptr)
 			{
-				std::cerr << "warning: buffer::memcpy_h2d -> no external host pointer available" << std::endl;
+				memcpy_h2d(ptr, size, stride);
 			}
 			else
 			{
-				auto a_m_data = m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::host_buffer>();
-				std::memcpy(a_m_data.get_pointer(), external_host_ptr, size.reduce([&] (const std::size_t a, const std::size_t b) { return a * b; }, 1) * sizeof(T));
+				if (has_external_host_ptr)
+				{
+					memcpy_d2h(external_host_ptr, size, stride);
+				}
+				else
+				{
+					std::cerr << "warning: buffer::memcpy_h2d -> no external host pointer available" << std::endl;
+				}
 			}
 		}
 
 		//! \brief Copy data from the device to the host
 		inline void memcpy_d2h(T* ptr, const sarray<std::size_t, D>& n, const std::size_t stride = 0)
 		{
-			const std::size_t s_stride = size[0];
-			const std::size_t d_stride = (stride == 0 ? n[0] : stride);
+			// device accessor: data layout for the device is always AoS
 			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
-			detail::memcpy(ptr, a_m_data.get_pointer(), n, d_stride, s_stride);
+			const detail::accessor<T, D> src(a_m_data.get_pointer(), size);
+
+			// host accessor: inner dimension for data access is given by 'stride', or n[0]
+			sarray<std::size_t, D> n_dst = n;
+			n_dst[0] = (stride == 0 ? n[0] : stride);
+			using TT = typename type_info<T, Data_layout>::mapped_type;
+			const detail::accessor<T, D, Data_layout> dst(reinterpret_cast<TT*>(ptr), n_dst);
+
+			detail::memcpy(dst, src, n);
 		}
 
 		//! \brief Copy data from the device to the host
-		inline void memcpy_d2h(T* ptr, const std::size_t stride = 0)
+		inline void memcpy_d2h(T* ptr = nullptr, const std::size_t stride = 0)
 		{
-			memcpy_d2h(ptr, size, stride);
-		}
-
-		//! \brief Copy data from the device to the host
-		inline void memcpy_d2h()
-		{
-			if (!has_external_host_ptr)
+			if (ptr != nullptr)
 			{
-				std::cerr << "warning: buffer::memcpy_d2h -> no external host pointer available" << std::endl;
+				memcpy_d2h(ptr, size, stride);
 			}
 			else
 			{
-				auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
-				std::memcpy(external_host_ptr, a_m_data.get_pointer(), size.reduce([&] (const std::size_t a, const std::size_t b) { return a * b; }, 1) * sizeof(T));
+				if (has_external_host_ptr)
+				{
+					memcpy_d2h(external_host_ptr, size, stride);
+				}
+				else
+				{
+					std::cerr << "warning: buffer::memcpy_d2h -> no external host pointer available" << std::endl;
+				}
 			}
 		}
 
@@ -617,28 +676,64 @@ namespace XXX_NAMESPACE
 		}
 	};
 
-	template <typename T, std::size_t D, data_layout Layout>
-	class buffer<T, D, host_device, Layout> : public buffer<T, D, host, Layout>, buffer<T, D, device, Layout>
+	template <typename T, std::size_t D, data_layout Data_layout>
+	class buffer<T, D, host_device, Data_layout> : public buffer<T, D, host, Data_layout>, buffer<T, D, device, Data_layout>
 	{
-		using host_buffer = buffer<T, D, host, Layout>;
-		using device_buffer = buffer<T, D, device, Layout>;
+		using host_buffer = buffer<T, D, host, Data_layout>;
+		using device_buffer = buffer<T, D, device, Data_layout>;
 
 	public:
 
+		using host_buffer::size;
+
 		buffer() : host_buffer(), device_buffer() { ; }
 
-		buffer(const sarray<std::size_t, D>& size) : host_buffer(size), device_buffer(size, host_buffer::data) { ; }
+		buffer(const sarray<std::size_t, D>& size) : host_buffer(size), device_buffer(size, reinterpret_cast<T*>(host_buffer::data)) { ; }
 
-		template <compute_target Selector, typename X = typename std::enable_if<Selector == host>::type>
+		template <buffer_type Selector, typename X = typename std::enable_if<Selector == host>::type>
 		inline auto read(X* dummy = nullptr) const
 		{
 			return host_buffer::read();
 		}
 
-		template <compute_target Selector>
+		template <buffer_type Selector, typename X = typename std::enable_if<Selector == host>::type>
+		inline auto write(X* dummy = nullptr)
+		{
+			return host_buffer::write();
+		}
+
+		template <buffer_type Selector, typename X = typename std::enable_if<Selector == host>::type>
+		inline auto read_write(X* dummy = nullptr)
+		{
+			return host_buffer::read_write();
+		}
+
+		template <buffer_type Selector>
 		inline auto read(cl::sycl::handler& h) const
 		{
 			return device_buffer::read(h);
+		}
+
+		template <buffer_type Selector>
+		inline auto write(cl::sycl::handler& h)
+		{
+			return device_buffer::write(h);
+		}
+
+		template <buffer_type Selector>
+		inline auto read_write(cl::sycl::handler& h)
+		{
+			return device_buffer::read_write(h);
+		}
+
+		inline void memcpy_h2d()
+		{
+			device_buffer::memcpy_h2d(reinterpret_cast<T*>(host_buffer::data), size, host_buffer::size_internal[0]);
+		}
+
+		inline void memcpy_d2h()
+		{
+			device_buffer::memcpy_d2h(reinterpret_cast<T*>(host_buffer::data), size, host_buffer::size_internal[0]);
 		}
 	};
 	

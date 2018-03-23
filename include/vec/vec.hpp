@@ -83,6 +83,16 @@ namespace VEC_NAMESPACE
 		//! \param v
 		vec(const cvec_proxy&& v) : x(v.x) { ; }
 
+		//! \brief Create a vec<T, 1> object for a detail::vec_proxy<T, 1> object
+		//!
+		//! \param v
+		//! \return a vec<T, 1> object
+		vec& operator=(const vec_proxy& v)
+		{
+			x = v.x;
+			return *this;
+		}
+
 		inline vec operator-()
 		{
 			constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
@@ -185,6 +195,17 @@ namespace VEC_NAMESPACE
 		//!
 		//! \param v
 		vec(const cvec_proxy&& v) : x(v.x), y(v.y) { ; }
+
+		//! \brief Create a vec<T, 2> object for a detail::vec_proxy<T, 2> object
+		//!
+		//! \param v
+		//! \return a vec<T, 2> object
+		vec& operator=(const vec_proxy& v)
+		{
+			x = v.x;
+			y = v.y;
+			return *this;
+		}
 
 		inline vec operator-()
 		{
@@ -293,6 +314,18 @@ namespace VEC_NAMESPACE
 		//!
 		//! \param v
 		vec(const cvec_proxy&& v) : x(v.x), y(v.y), z(v.z) { ; }
+
+		//! \brief Create a vec<T, 3> object for a detail::vec_proxy<T, 3> object
+		//!
+		//! \param v
+		//! \return a vec<T, 3> object
+		vec& operator=(const vec_proxy& v)
+		{
+			x = v.x;
+			y = v.y;
+			z = v.z;
+			return *this;
+		}
 
 		inline vec operator-()
 		{
