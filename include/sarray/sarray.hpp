@@ -95,7 +95,7 @@ namespace XXX_NAMESPACE
 		//!
 		//! \return reduction
 		template <typename F>
-		inline T reduce(F func, const T init)
+		inline T reduce(F func, const T init) const
 		{
 			T r = init;
 			for (std::size_t i = 0; i < D; ++i)

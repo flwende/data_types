@@ -440,8 +440,8 @@ namespace XXX_NAMESPACE
 
 		//! SYCL device buffer
 		cl::sycl::buffer<T, D>* m_data;
-		//! Host pointer
-		T* host_ptr;
+		//! External host pointer
+		T* external_host_ptr;
 		//! Is it an external pointer
 		bool has_external_host_ptr;
 
@@ -451,14 +451,14 @@ namespace XXX_NAMESPACE
 		sarray<std::size_t, D> size;
 
 		//! \brief Standard constructor
-		buffer() : m_data(nullptr), host_ptr(nullptr), has_external_host_ptr(false), size{} { ; }
+		buffer() : m_data(nullptr), external_host_ptr(nullptr), has_external_host_ptr(false), size{} { ; }
 
 		//! \brief Constructor
 		//!
 		//! \param size shape of the buffer
 		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
 		//! innermost dimension happens)
-		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr) : m_data(nullptr), host_ptr(nullptr), has_external_host_ptr(false)
+		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr) : m_data(nullptr), external_host_ptr(nullptr), has_external_host_ptr(false)
 		{
 			resize(size, ptr);
 		}
@@ -471,7 +471,7 @@ namespace XXX_NAMESPACE
 				delete m_data;
 				m_data = nullptr;
 			}
-			host_ptr = nullptr;
+			external_host_ptr = nullptr;
 		}
 
 		//! \brief Set up the buffer
@@ -498,16 +498,17 @@ namespace XXX_NAMESPACE
 			}
 			m_data = new cl::sycl::buffer<T, D>(size_internal);
 
+			// is there an external host pointer?
 			if (ptr != nullptr)
 			{
-				host_ptr = ptr;
+				external_host_ptr = ptr;
 				has_external_host_ptr = true;
 			}
 		}
 		//! \brief Read accessor
 		//!
 		//! \return a read accessor
-		inline auto read(cl::sycl::handler& h)
+		inline auto read(cl::sycl::handler& h) const
 		{
 			return m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::global_buffer>(h);
 		}
@@ -553,7 +554,7 @@ namespace XXX_NAMESPACE
 			else
 			{
 				auto a_m_data = m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::host_buffer>();
-				std::memcpy(a_m_data.get_pointer(), host_ptr, size.reduce([&] (const T a, const T b) { return a * b; }, 1) * sizeof(T));
+				std::memcpy(a_m_data.get_pointer(), external_host_ptr, size.reduce([&] (const std::size_t a, const std::size_t b) { return a * b; }, 1) * sizeof(T));
 			}
 		}
 
@@ -582,7 +583,7 @@ namespace XXX_NAMESPACE
 			else
 			{
 				auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
-				std::memcpy(host_ptr, a_m_data.get_pointer(), size.reduce([&] (const T a, const T b) { return a * b; }, 1) * sizeof(T));
+				std::memcpy(external_host_ptr, a_m_data.get_pointer(), size.reduce([&] (const std::size_t a, const std::size_t b) { return a * b; }, 1) * sizeof(T));
 			}
 		}
 
@@ -601,9 +602,9 @@ namespace XXX_NAMESPACE
 				b.m_data = this_m_data;
 
 				// swap external host pointer
-				T* this_host_ptr = host_ptr;
-				host_ptr = b.host_ptr;
-				b.host_ptr = this_host_ptr;
+				T* this_external_host_ptr = external_host_ptr;
+				external_host_ptr = b.external_host_ptr;
+				b.external_host_ptr = this_external_host_ptr;
 
 				bool this_has_external_host_ptr = has_external_host_ptr;
 				has_external_host_ptr = b.has_external_host_ptr;
@@ -617,8 +618,28 @@ namespace XXX_NAMESPACE
 	};
 
 	template <typename T, std::size_t D, data_layout Layout>
-	class buffer<T, D, host_device, Layout>
+	class buffer<T, D, host_device, Layout> : public buffer<T, D, host, Layout>, buffer<T, D, device, Layout>
 	{
+		using host_buffer = buffer<T, D, host, Layout>;
+		using device_buffer = buffer<T, D, device, Layout>;
+
+	public:
+
+		buffer() : host_buffer(), device_buffer() { ; }
+
+		buffer(const sarray<std::size_t, D>& size) : host_buffer(size), device_buffer(size, host_buffer::data) { ; }
+
+		template <compute_target Selector, typename X = typename std::enable_if<Selector == host>::type>
+		inline auto read(X* dummy = nullptr) const
+		{
+			return host_buffer::read();
+		}
+
+		template <compute_target Selector>
+		inline auto read(cl::sycl::handler& h) const
+		{
+			return device_buffer::read(h);
+		}
 	};
 	
 	#endif
