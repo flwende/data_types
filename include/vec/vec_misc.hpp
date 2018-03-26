@@ -49,7 +49,7 @@ namespace VEC_NAMESPACE
 	//! \tparam T data type
 	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD>
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, XXX_NAMESPACE::data_layout Layout = AoS, typename Enabled = void>
+	template <typename T, XXX_NAMESPACE::data_layout Layout = data_layout::AoS, typename Enabled = void>
 	struct type_info
 	{
 		//! data type
@@ -71,7 +71,7 @@ namespace VEC_NAMESPACE
 	//! \tparam T data type
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T>
-	struct type_info<T, AoS, typename std::enable_if<is_vec<T>::value>::type>
+	struct type_info<T, data_layout::AoS, typename std::enable_if<is_vec<T>::value>::type>
 	{
 		//! data type
 		using mapped_type = T;
@@ -93,7 +93,7 @@ namespace VEC_NAMESPACE
 	//! \tparam T data type
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T>
-	struct type_info<T, SoA, typename std::enable_if<is_vec<T>::value>::type>
+	struct type_info<T, data_layout::SoA, typename std::enable_if<is_vec<T>::value>::type>
 	{
 		//! data type
 		using mapped_type = typename T::fundamental_type;
