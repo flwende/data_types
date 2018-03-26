@@ -8,6 +8,8 @@
 
 #if defined(HAVE_SYCL)
 #include <CL/sycl.hpp>
+#include <sched.h>
+#include <sys/sysinfo.h>
 #endif
 
 #include <iostream>
@@ -527,6 +529,26 @@ namespace XXX_NAMESPACE
 		//! innermost dimension happens)
 		void resize(const sarray<std::size_t, D>& size, T* ptr = nullptr)
 		{
+			static bool fix_thread_pinning = true;
+			static cpu_set_t master_thread_cpu_mask;
+			static cpu_set_t sycl_thread_cpu_mask;
+
+			// fix thread affinity issue: SYCL internally spawns a scheduling thread
+			// which inherits the master thread's cpu affinity -> place it to an exclusive CPU core
+			if (fix_thread_pinning)
+			{	
+				// get cpu core counts: phyical and logical
+				std::size_t num_cpu_cores = get_nprocs();
+				std::size_t num_cpu_cores_conf = get_nprocs_conf();
+				// backup the master cpu mask
+				sched_getaffinity(0, sizeof(master_thread_cpu_mask), &master_thread_cpu_mask);
+				// the cpu mask for the SYCL thread is given by 'num_cpu_cores' and 'num_cpu_cores - 1'
+				CPU_ZERO(&sycl_thread_cpu_mask);
+				CPU_SET(num_cpu_cores - 1, &sycl_thread_cpu_mask);
+				CPU_SET(num_cpu_cores_conf - 1, &sycl_thread_cpu_mask);
+				sched_setaffinity(0, sizeof(sycl_thread_cpu_mask), &sycl_thread_cpu_mask);
+			}
+
 			// assign default values
 			this->size = size;
 
@@ -549,6 +571,14 @@ namespace XXX_NAMESPACE
 			{
 				external_host_ptr = ptr;
 				has_external_host_ptr = true;
+			}
+
+			// reset CPU affinity of the master thread
+			if (fix_thread_pinning)
+			{
+				CPU_XOR(&master_thread_cpu_mask, &master_thread_cpu_mask, &sycl_thread_cpu_mask);
+				sched_setaffinity(0, sizeof(master_thread_cpu_mask), &master_thread_cpu_mask);
+				fix_thread_pinning = false;
 			}
 		}
 		//! \brief Read accessor
@@ -693,6 +723,12 @@ namespace XXX_NAMESPACE
 		buffer() : host_buffer(), device_buffer() { ; }
 
 		buffer(const sarray<std::size_t, D>& size) : host_buffer(size), device_buffer(size, reinterpret_cast<T*>(host_buffer::data)) { ; }
+
+		void resize(const sarray<std::size_t, D>& size)
+		{
+			host_buffer::resize(size);
+			device_buffer::resize(size, reinterpret_cast<T*>(host_buffer::data));
+		}
 
 		template <target Target, typename X = typename std::enable_if<Target == target::host>::type>
 		inline auto read(X* dummy = nullptr) const
