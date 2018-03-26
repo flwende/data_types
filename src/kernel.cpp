@@ -16,62 +16,7 @@ using namespace fw;
 #if defined(HAVE_SYCL)
 	template <std::size_t D>
 	class my_kernel;
-/*
-	template <>
-	template <>
-	double kernel<real_t>::exp<1>(fw::buffer<real_t, 1, fw::buffer_type::device, fw::data_layout::AoS>& x)
-	{
-		// queue
-        	static cl::sycl::gpu_selector gpu;
-        	static cl::sycl::queue gpu_q(gpu);
 
-		// kernel
-		static const cl::sycl::range<1> block(64);
-		const std::size_t nx = x.size[0];
-		const cl::sycl::range<1> grid(((nx + block[0] - 1) / block[0]) * block[0]);
-
-		// info
-		static bool first_call = true;
-        	if (first_call)
-		{
-			try
-			{
-				std::cout << "device: " << gpu_q.get_device().get_info<cl::sycl::info::device::vendor>()
-							<< gpu_q.get_device().get_info<cl::sycl::info::device::name>()
-							<< std::endl;
-			}
-			catch (cl::sycl::exception)
-			{
-				std::cerr << "error: kernel -> no gpu device available -> STOP COMPUTATION" << std::endl;
-				return 0.0;
-			}
-
-			std::cout << "block: " << block[0] << std::endl;
-			std::cout << "grid: " << grid[0] << std::endl;
-		}
-
-		// offload
-		{
-			gpu_q.submit([&] (cl::sycl::handler& h)
-			{
-				// accessors
-				auto a_x = x.read_write(h);
-
-				// execute
-				h.parallel_for<class my_kernel<1>>(cl::sycl::nd_range<1>(grid, block), [=](cl::sycl::nd_item<1> item)
-				{
-					const std::size_t i = item.get_global(0);
-					if (i < nx)
-					{
-						a_x[i] += i;
-					}
-				});
-			});
-		}
-
-		return 0.0;
-	}
-*/
 	template <>
 	template <>
 	double kernel<real3_t>::exp<2>(fw::buffer<real3_t, 2, fw::buffer_type::host_device, fw::data_layout::AoS>& x)
@@ -111,7 +56,7 @@ using namespace fw;
 			gpu_q.submit([&] (cl::sycl::handler& h)
 			{
 				// accessors
-				auto a_x = x.read_write<fw::buffer_type::device>(h);
+				auto a_x = x.read_write<fw::target::device>(h);
 
 				// execute
 				h.parallel_for<class my_kernel<1>>(cl::sycl::nd_range<2>(grid, block), [=](cl::sycl::nd_item<2> item)
@@ -168,7 +113,7 @@ using namespace fw;
 			gpu_q.submit([&] (cl::sycl::handler& h)
 			{
 				// accessors
-				auto a_x = x.read_write<fw::buffer_type::device>(h);
+				auto a_x = x.read_write<fw::target::device>(h);
 
 				// execute
 				h.parallel_for<class my_kernel<2>>(cl::sycl::nd_range<2>(grid, block), [=](cl::sycl::nd_item<2> item)

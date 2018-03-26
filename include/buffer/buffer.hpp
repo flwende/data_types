@@ -36,9 +36,11 @@ namespace XXX_NAMESPACE
 	constexpr std::size_t data_alignment = SIMD_NAMESPACE::simd::alignment;
 
 	#if defined(HAVE_SYCL)
-	enum buffer_type { host = 1, device = 2, host_device = 3 };
+	enum class target { host = 1, device = 2 };
+	enum class buffer_type { host = 1, device = 2, host_device = 3 };
 	#else
-	enum buffer_type { host = 1 };
+	enum class target { host = 1 };
+	enum class buffer_type { host = 1 };
 	#endif
 
 	namespace detail
@@ -303,7 +305,7 @@ namespace XXX_NAMESPACE
 	//! \tparam Data_layout any of SoA (structs of arrays) and AoS (array of structs)
 	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Data_layout = SoA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, std::size_t D, buffer_type Buffer_type = host, data_layout Data_layout = AoS>
+	template <typename T, std::size_t D, buffer_type Buffer_type = buffer_type::host, data_layout Data_layout = AoS>
 	class buffer
 	{
 		//! Mapped data type
@@ -355,7 +357,6 @@ namespace XXX_NAMESPACE
 				// padding according to data type T and the (default) data alignment
 				constexpr std::size_t n_padd = type_info<T, Data_layout>::get_n_padd(data_alignment);
 				size_internal[0] = ((size[0] + n_padd - 1) / n_padd) * n_padd;
-				std::cout << "n_padd = " << n_padd << ", n[0] = " << size_internal[0] << std::endl;
 
 				// resize internal buffer: in case of SoA layout, an internal dimension DD is implicit
 				std::size_t num_elements_total = DD;
@@ -441,6 +442,7 @@ namespace XXX_NAMESPACE
 	#if defined(HAVE_SYCL)
 	namespace detail
 	{
+		// TODO: introduce 'const'
 		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
 		void memcpy(const accessor<T, 1, Data_layout_dst>& dst, const accessor<T, 1, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 1>& size)
 		{
@@ -479,7 +481,7 @@ namespace XXX_NAMESPACE
 	}
 
 	template <typename T, std::size_t D, data_layout Data_layout>
-	class buffer<T, D, device, Data_layout>
+	class buffer<T, D, buffer_type::device, Data_layout>
 	{
 	protected:
 
@@ -577,6 +579,7 @@ namespace XXX_NAMESPACE
 		//! \brief Copy data from the host to the device
 		inline void memcpy_h2d(const T* ptr, const sarray<std::size_t, D>& n, const std::size_t stride = 0)
 		{
+			// TODO: introduce 'const'			
 			// host accessor: inner dimension for data access is given by 'stride', or n[0]
 			sarray<std::size_t, D> n_src = n;
 			n_src[0] = (stride == 0 ? n[0] : stride);
@@ -617,6 +620,7 @@ namespace XXX_NAMESPACE
 			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
 			const detail::accessor<T, D> src(a_m_data.get_pointer(), size);
 
+			// TODO: introduce 'const'
 			// host accessor: inner dimension for data access is given by 'stride', or n[0]
 			sarray<std::size_t, D> n_dst = n;
 			n_dst[0] = (stride == 0 ? n[0] : stride);
@@ -677,10 +681,10 @@ namespace XXX_NAMESPACE
 	};
 
 	template <typename T, std::size_t D, data_layout Data_layout>
-	class buffer<T, D, host_device, Data_layout> : public buffer<T, D, host, Data_layout>, buffer<T, D, device, Data_layout>
+	class buffer<T, D, buffer_type::host_device, Data_layout> : public buffer<T, D, buffer_type::host, Data_layout>, buffer<T, D, buffer_type::device, Data_layout>
 	{
-		using host_buffer = buffer<T, D, host, Data_layout>;
-		using device_buffer = buffer<T, D, device, Data_layout>;
+		using host_buffer = buffer<T, D, buffer_type::host, Data_layout>;
+		using device_buffer = buffer<T, D, buffer_type::device, Data_layout>;
 
 	public:
 
@@ -690,37 +694,37 @@ namespace XXX_NAMESPACE
 
 		buffer(const sarray<std::size_t, D>& size) : host_buffer(size), device_buffer(size, reinterpret_cast<T*>(host_buffer::data)) { ; }
 
-		template <buffer_type Selector, typename X = typename std::enable_if<Selector == host>::type>
+		template <target Target, typename X = typename std::enable_if<Target == target::host>::type>
 		inline auto read(X* dummy = nullptr) const
 		{
 			return host_buffer::read();
 		}
 
-		template <buffer_type Selector, typename X = typename std::enable_if<Selector == host>::type>
+		template <target Target, typename X = typename std::enable_if<Target == target::host>::type>
 		inline auto write(X* dummy = nullptr)
 		{
 			return host_buffer::write();
 		}
 
-		template <buffer_type Selector, typename X = typename std::enable_if<Selector == host>::type>
+		template <target Target, typename X = typename std::enable_if<Target == target::host>::type>
 		inline auto read_write(X* dummy = nullptr)
 		{
 			return host_buffer::read_write();
 		}
 
-		template <buffer_type Selector>
+		template <target Target>
 		inline auto read(cl::sycl::handler& h) const
 		{
 			return device_buffer::read(h);
 		}
 
-		template <buffer_type Selector>
+		template <target Target>
 		inline auto write(cl::sycl::handler& h)
 		{
 			return device_buffer::write(h);
 		}
 
-		template <buffer_type Selector>
+		template <target Target>
 		inline auto read_write(cl::sycl::handler& h)
 		{
 			return device_buffer::read_write(h);
