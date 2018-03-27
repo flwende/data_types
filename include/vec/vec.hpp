@@ -42,16 +42,15 @@ namespace VEC_NAMESPACE
 	template <typename T>
 	class vec<T, 1>
 	{
+		static_assert(!std::is_const<T>::value, "error: vec<const T, 1> is not allowed");
+
 		using vec_proxy = detail::vec_proxy<T, 1>;
-		using cvec = vec<const T, 1>;
-		using cvec_proxy = detail::vec_proxy<const T, 1>;
+		using vec_proxy_const = detail::vec_proxy<const T, 1>;
 
 	public:
 
 		//! Remember the template type parameter T
 		using fundamental_type = T;
-		//! const version of this type
-		using const_type = const cvec;
 		//! Remember the template parameter D (=1)
 		static constexpr std::size_t dim = 1;
 
@@ -63,35 +62,11 @@ namespace VEC_NAMESPACE
 		//! \param x
 		vec(const T x = 0) : x(x) { ; }
 
-		//! \brief Copy constructor
-		//!
-		//! \param v
-		vec(const cvec& v) : x(v.x) { ; }
+		vec(const vec& v) : x(v.x) { ; }
 
-		//! \brief Move constructor
-		//!
-		//! \param v
-		vec(const cvec&& v) : x(v.x) { ; }
+		vec(const vec_proxy& v) : x(v.x) { ; }
 
-		//! \brief Create a vec<T, 1> object from a detail::vec_proxy<const T, 1> object
-		//!
-		//! \param v
-		vec(const cvec_proxy& v) : x(v.x) { ; }
-
-		//! \brief Create a vec<T, 1> object from a detail::vec_proxy<const T, 1> object
-		//!
-		//! \param v
-		vec(const cvec_proxy&& v) : x(v.x) { ; }
-
-		//! \brief Create a vec<T, 1> object for a detail::vec_proxy<T, 1> object
-		//!
-		//! \param v
-		//! \return a vec<T, 1> object
-		vec& operator=(const vec_proxy& v)
-		{
-			x = v.x;
-			return *this;
-		}
+		vec(const vec_proxy_const& v) : x(v.x) { ; }
 
 		inline vec operator-()
 		{
@@ -147,16 +122,15 @@ namespace VEC_NAMESPACE
 	template <typename T>
 	class vec<T, 2>
 	{
+		static_assert(!std::is_const<T>::value, "error: vec<const T, 2> is not allowed");
+
 		using vec_proxy = detail::vec_proxy<T, 2>;
-		using cvec = vec<const T, 2>;
-		using cvec_proxy = detail::vec_proxy<const T, 2>;
+		using vec_proxy_const = detail::vec_proxy<const T, 2>;
 
 	public:
 
 		//! Remember the template type parameter T
 		using fundamental_type = T;
-		//! const version of this type
-		using const_type = const cvec;
 		//! Remember the template parameter D (=2)
 		static constexpr std::size_t dim = 2;
 
@@ -176,36 +150,11 @@ namespace VEC_NAMESPACE
 		//! \param y
 		vec(const T x, const T y) : x(x), y(y) { ; }
 
-		//! \brief Copy constructor
-		//!
-		//! \param v
-		vec(const cvec& v) : x(v.x), y(v.y) { ; }
+		vec(const vec& v) : x(v.x), y(v.y) { ; }
 
-		//! \brief Move constructor
-		//!
-		//! \param v
-		vec(const cvec&& v) : x(v.x), y(v.y) { ; }
+		vec(const vec_proxy& v) : x(v.x), y(v.y) { ; }
 
-		//! \brief Create a vec<T, 2> object from a detail::vec_proxy<const T, 2> object
-		//!
-		//! \param v
-		vec(const cvec_proxy& v) : x(v.x), y(v.y) { ; }
-
-		//! \brief Create a vec<T, 2> object from a detail::vec_proxy<const T, 2> object
-		//!
-		//! \param v
-		vec(const cvec_proxy&& v) : x(v.x), y(v.y) { ; }
-
-		//! \brief Create a vec<T, 2> object for a detail::vec_proxy<T, 2> object
-		//!
-		//! \param v
-		//! \return a vec<T, 2> object
-		vec& operator=(const vec_proxy& v)
-		{
-			x = v.x;
-			y = v.y;
-			return *this;
-		}
+		vec(const vec_proxy_const& v) : x(v.x), y(v.y) { ; }
 
 		inline vec operator-()
 		{
@@ -263,16 +212,15 @@ namespace VEC_NAMESPACE
 	template <typename T>
 	class vec<T, 3>
 	{
+		static_assert(!std::is_const<T>::value, "error: vec<const T, 3> is not allowed");
+
 		using vec_proxy = detail::vec_proxy<T, 3>;
-		using cvec = vec<const T, 3>;
-		using cvec_proxy = detail::vec_proxy<const T, 3>;
+		using vec_proxy_const = detail::vec_proxy<const T, 3>;
 
 	public:
 
 		//! Remember the template type parameter T
 		using fundamental_type = T;
-		//! const version of this type
-		using const_type = const cvec;
 		//! Remember the template parameter D (=3)
 		static constexpr std::size_t dim = 3;
 
@@ -295,37 +243,11 @@ namespace VEC_NAMESPACE
 		//! \param z
 		vec(const T x, const T y, const T z) : x(x), y(y), z(z) { ; }
 
-		//! \brief Copy constructor
-		//!
-		//! \param v
-		vec(const cvec& v) : x(v.x), y(v.y), z(v.z) { ; }
+		vec(const vec& v) : x(v.x), y(v.y), z(v.z) { ; }
 
-		//! \brief Move constructor
-		//!
-		//! \param v
-		vec(const cvec&& v) : x(v.x), y(v.y), z(v.z) { ; }
+		vec(const vec_proxy& v) : x(v.x), y(v.y), z(v.z) { ; }
 
-		//! \brief Create a vec<T, 3> object from a detail::vec_proxy<const T, 3> object
-		//!
-		//! \param v
-		vec(const cvec_proxy& v) : x(v.x), y(v.y), z(v.z) { ; }
-
-		//! \brief Create a vec<T, 3> object from a detail::vec_proxy<const T, 3> object
-		//!
-		//! \param v
-		vec(const cvec_proxy&& v) : x(v.x), y(v.y), z(v.z) { ; }
-
-		//! \brief Create a vec<T, 3> object for a detail::vec_proxy<T, 3> object
-		//!
-		//! \param v
-		//! \return a vec<T, 3> object
-		vec& operator=(const vec_proxy& v)
-		{
-			x = v.x;
-			y = v.y;
-			z = v.z;
-			return *this;
-		}
+		vec(const vec_proxy_const& v) : x(v.x), y(v.y), z(v.z) { ; }
 
 		inline vec operator-()
 		{

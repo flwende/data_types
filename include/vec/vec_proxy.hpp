@@ -34,7 +34,8 @@ namespace VEC_NAMESPACE
 		template <typename T>
 		class vec_proxy<T, 1>
 		{
-			using vec = VEC_NAMESPACE::vec<T, 1>;
+			using nonconst_T = typename std::remove_const<T>::type;
+			using vec = VEC_NAMESPACE::vec<nonconst_T, 1>;
 
 		public:
 
@@ -52,21 +53,11 @@ namespace VEC_NAMESPACE
 			//! \param n extent of the underlying field in dimension 1 (innermost)
 			vec_proxy(T* ptr, const std::size_t n) : x(ptr[0 * n]) { ; }
 
-			//! \brief Create a detail::vec_proxy<T, 1> object from a vec<T, 1> object
-			//!
-			//! \param v
-			//! \return a detail::vec_proxy<T, 1> object
-			inline vec_proxy& operator=(const vec& v)
-			{
-				x = v.x;
-				return *this;
-			}
+			vec_proxy(vec& v) : x(v.x) { ; }
+			
+			vec_proxy(const vec& v) : x(v.x) { ; }
 
-			//! \brief Create a detail::vec_proxy<T, 1> object from a detail::vec_proxy<T, 1> object
-			//!
-			//! \param v
-			//! \return a detail::vec_proxy<T, 1> object
-			inline vec_proxy& operator=(const vec_proxy& v)
+			vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
 				return *this;
@@ -124,7 +115,8 @@ namespace VEC_NAMESPACE
 		template <typename T>
 		class vec_proxy<T, 2>
 		{
-			using vec = VEC_NAMESPACE::vec<T, 2>;
+			using nonconst_T = typename std::remove_const<T>::type;
+			using vec = VEC_NAMESPACE::vec<nonconst_T, 2>;
 
 		public:
 
@@ -146,22 +138,11 @@ namespace VEC_NAMESPACE
 			//! \param n extent of the underlying field in dimension 1 (innermost)
 			vec_proxy(T* ptr, const std::size_t n) : x(ptr[0 * n]), y(ptr[1 * n]) { ; }
 
-			//! \brief Create a detail::vec_proxy<T, 2> object from a vec<T, 2> object
-			//!
-			//! \param v
-			//! \return a detail::vec_proxy<T, 2> object
-			inline vec_proxy& operator=(const vec& v)
-			{
-				x = v.x;
-				y = v.y;
-				return *this;
-			}
+			vec_proxy(vec& v) : x(v.x), y(v.y) { ; }
+			
+			vec_proxy(const vec& v) : x(v.x), y(v.y) { ; }
 
-			//! \brief Create a detail::vec_proxy<T, 2> object from a detail::vec_proxy<T, 2> object
-			//!
-			//! \param v
-			//! \return a detail::vec_proxy<T, 2> object
-			inline vec_proxy& operator=(const vec_proxy& v)
+			vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
 				y = v.y;
@@ -222,7 +203,8 @@ namespace VEC_NAMESPACE
 		template <typename T>
 		class vec_proxy<T, 3>
 		{
-			using vec = VEC_NAMESPACE::vec<T, 3>;
+			using nonconst_T = typename std::remove_const<T>::type;
+			using vec = VEC_NAMESPACE::vec<nonconst_T, 3>;
 
 		public:
 
@@ -251,19 +233,11 @@ namespace VEC_NAMESPACE
 			//!
 			//! \param v
 			//! \return a detail::vec_proxy<T, 3> object
-			vec_proxy& operator=(const vec& v)
-			{
-				x = v.x;
-				y = v.y;
-				z = v.z;
-				return *this;
-			}
+			vec_proxy(vec& v) : x(v.x), y(v.y), z(v.z) { ; }
 
-			//! \brief Create a detail::vec_proxy<T, 3> object from a detail::proxy_vec<T, 3> object
-			//!
-			//! \param v
-			//! \return a detail::vec_proxy<T, 3> object
-			vec_proxy& operator=(const vec_proxy& v)
+			vec_proxy(const vec& v) : x(v.x), y(v.y), z(v.z) { ; }
+
+			vec_proxy& operator=(const vec& v)
 			{
 				x = v.x;
 				y = v.y;

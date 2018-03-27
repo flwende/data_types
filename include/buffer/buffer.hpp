@@ -163,8 +163,8 @@ namespace XXX_NAMESPACE
 		template <typename T, std::size_t D>
 		class accessor<T, D, data_layout::SoA, typename std::enable_if<is_vec<T>::value>::type>
 		{
-			//! Recover the fundamental data type that is behind T
-			using TT = typename T::fundamental_type;
+			//! Get the mapped data type that is behind T
+			using TT = typename type_info<T, data_layout::SoA>::mapped_type;
 			//! Recover the dimension of T
 			static constexpr std::size_t DD = T::dim;
 
@@ -228,8 +228,8 @@ namespace XXX_NAMESPACE
 		template <typename T>
 		class accessor<T, 1, data_layout::SoA, typename std::enable_if<is_vec<T>::value>::type>
 		{
-			//! Recover the fundamental data type that is behind T
-			using TT = typename T::fundamental_type;
+			//! Get the mapped data type that is behind T
+			using TT = typename type_info<T, data_layout::SoA>::mapped_type;
 			//! Recover the dimension of T
 			static constexpr std::size_t DD = T::dim;
 
@@ -381,11 +381,10 @@ namespace XXX_NAMESPACE
 		//! \brief Read accessor
 		//!
 		//! \return an accessor using const references internally
-		inline const detail::accessor<typename make_const<T>::type, D, Data_layout> read() const
+		inline const detail::accessor<const T, D, Data_layout> read() const
 		{
-			using const_T = typename make_const<T>::type;
-			using const_TT = typename make_const<TT>::type;
-			return detail::accessor<const_T, D, Data_layout>(reinterpret_cast<const_TT*>(data), size_internal);
+			using const_TT = typename type_info<const T, Data_layout>::mapped_type;
+			return detail::accessor<const T, D, Data_layout>(reinterpret_cast<const_TT*>(data), size_internal);
 		}
 
 		//! \brief Write accessor

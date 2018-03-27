@@ -58,19 +58,19 @@ namespace VEC_NAMESPACE
 				 		 MISC_NAMESPACE::math<T>::FUNC(v.z));				\
 	}													\
 
-	#define MACRO_C(FUNC, IN_T)										\
+	MACRO(sqrt, vec, )
+	MACRO(log, vec, )
+	MACRO(exp, vec, )
+
+	#define MACRO_C1(FUNC, IN_T)										\
 	MACRO(FUNC, IN_T,      )										\
 	MACRO(FUNC, IN_T, const)										\
 
-	MACRO_C(sqrt, vec)
-	MACRO_C(log, vec)
-	MACRO_C(exp, vec)
+	MACRO_C1(sqrt, detail::vec_proxy)
+	MACRO_C1(log, detail::vec_proxy)
+	MACRO_C1(exp, detail::vec_proxy)
 
-	MACRO_C(sqrt, detail::vec_proxy)
-	MACRO_C(log, detail::vec_proxy)
-	MACRO_C(exp, detail::vec_proxy)
-
-	#undef MACRO_C
+	#undef MACRO_C1
 	#undef MACRO
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,33 +149,33 @@ namespace VEC_NAMESPACE
 		return vec<T, 3>(v_1.x OP v_2.x, v_1.y OP v_2.y, v_1.z OP v_2.z);				\
 	}													\
 
-	#define MACRO_C(OP, IN_1_T, IN_2_T)									\
+	MACRO(*, vec, vec, , )
+	MACRO(/, vec, vec, , )
+	MACRO(+, vec, vec, , )
+	MACRO(-, vec, vec, , )
+
+	#define MACRO_C1(OP, IN_1_T, IN_2_T)									\
 	MACRO(OP, IN_1_T, IN_2_T,      ,      )									\
 	MACRO(OP, IN_1_T, IN_2_T, const,      )									\
-	MACRO(OP, IN_1_T, IN_2_T,      , const)									\
+	MACRO(OP, IN_2_T, IN_1_T,      ,      )									\
+	MACRO(OP, IN_2_T, IN_1_T,      , const)									\
+	
+	#define MACRO_C2(OP, IN_1_T, IN_2_T)									\
+	MACRO(OP, IN_1_T, IN_2_T,      ,      )									\
 	MACRO(OP, IN_1_T, IN_2_T, const, const)									\
 
-	MACRO_C(*, vec, vec)
-	MACRO_C(*, vec, detail::vec_proxy)
-	MACRO_C(*, detail::vec_proxy, vec)
-	MACRO_C(*, detail::vec_proxy, detail::vec_proxy)
+	MACRO_C1(*, detail::vec_proxy, vec)
+	MACRO_C1(/, detail::vec_proxy, vec)
+	MACRO_C1(+, detail::vec_proxy, vec)
+	MACRO_C1(-, detail::vec_proxy, vec)
 
-	MACRO_C(/, vec, vec)
-	MACRO_C(/, vec, detail::vec_proxy)
-	MACRO_C(/, detail::vec_proxy, vec)
-	MACRO_C(/, detail::vec_proxy, detail::vec_proxy)
+	MACRO_C2(*, detail::vec_proxy, detail::vec_proxy)
+	MACRO_C2(/, detail::vec_proxy, detail::vec_proxy)
+	MACRO_C2(+, detail::vec_proxy, detail::vec_proxy)
+	MACRO_C2(-, detail::vec_proxy, detail::vec_proxy)
 
-	MACRO_C(+, vec, vec)
-	MACRO_C(+, vec, detail::vec_proxy)
-	MACRO_C(+, detail::vec_proxy, vec)
-	MACRO_C(+, detail::vec_proxy, detail::vec_proxy)
-
-	MACRO_C(-, vec, vec)
-	MACRO_C(-, vec, detail::vec_proxy)
-	MACRO_C(-, detail::vec_proxy, vec)
-	MACRO_C(-, detail::vec_proxy, detail::vec_proxy)
-
-	#undef MACRO_C
+	#undef MACRO_C1
+	#undef MACRO_C2
 	#undef MACRO
 
 	#define MACRO(OP, IN_T, C)										\
@@ -251,21 +251,21 @@ namespace VEC_NAMESPACE
 		return vec<T, 3>(x_1 OP v_2.x, x_1 OP v_2.y, x_1 OP v_2.z);					\
 	}													\
 
-	#define MACRO_C(OP, IN_T)										\
+	MACRO(*, vec, )
+	MACRO(/, vec, )
+	MACRO(+, vec, )
+	MACRO(-, vec, )
+
+	#define MACRO_C1(OP, IN_T)										\
 	MACRO(OP, IN_T,      )											\
 	MACRO(OP, IN_T, const)											\
 
-	MACRO_C(*, vec)
-	MACRO_C(/, vec)
-	MACRO_C(+, vec)
-	MACRO_C(-, vec)
+	MACRO_C1(*, detail::vec_proxy)
+	MACRO_C1(/, detail::vec_proxy)
+	MACRO_C1(+, detail::vec_proxy)
+	MACRO_C1(-, detail::vec_proxy)
 
-	MACRO_C(*, detail::vec_proxy)
-	MACRO_C(/, detail::vec_proxy)
-	MACRO_C(+, detail::vec_proxy)
-	MACRO_C(-, detail::vec_proxy)
-
-	#undef MACRO_C
+	#undef MACRO_C1
 	#undef MACRO
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,18 +296,23 @@ namespace VEC_NAMESPACE
 		return v_1 * v_2;										\
 	}													\
 
-	#define MACRO_C(IN_1_T, IN_2_T)										\
+	MACRO(vec, vec, , )
+
+	#define MACRO_C1(IN_1_T, IN_2_T)									\
 	MACRO(IN_1_T, IN_2_T,      ,      )									\
 	MACRO(IN_1_T, IN_2_T, const,      )									\
-	MACRO(IN_1_T, IN_2_T,      , const)									\
+	MACRO(IN_2_T, IN_1_T,      ,      )									\
+	MACRO(IN_2_T, IN_1_T,      , const)									\
+	
+	#define MACRO_C2(IN_1_T, IN_2_T)									\
+	MACRO(IN_1_T, IN_2_T,      ,      )									\
 	MACRO(IN_1_T, IN_2_T, const, const)									\
 
-	MACRO_C(vec, vec)
-	MACRO_C(vec, detail::vec_proxy)
-	MACRO_C(detail::vec_proxy, vec)
-	MACRO_C(detail::vec_proxy, detail::vec_proxy)
-
-	#undef MACRO_C
+	MACRO_C1(detail::vec_proxy, vec)
+	MACRO_C2(detail::vec_proxy, detail::vec_proxy)
+	
+	#undef MACRO_C1
+	#undef MACRO_C2
 	#undef MACRO
 
 	#define MACRO(IN_1_T, IN_2_T, C_1, C_2)									\
@@ -407,18 +412,23 @@ namespace VEC_NAMESPACE
 		return dot_product(v_1, v_2);									\
 	}													\
 
-	#define MACRO_C(IN_1_T, IN_2_T)										\
+	MACRO(vec, vec, , )
+
+	#define MACRO_C1(IN_1_T, IN_2_T)									\
 	MACRO(IN_1_T, IN_2_T,      ,      )									\
 	MACRO(IN_1_T, IN_2_T, const,      )									\
-	MACRO(IN_1_T, IN_2_T,      , const)									\
+	MACRO(IN_2_T, IN_1_T,      ,      )									\
+	MACRO(IN_2_T, IN_1_T,      , const)									\
+	
+	#define MACRO_C2(IN_1_T, IN_2_T)									\
+	MACRO(IN_1_T, IN_2_T,      ,      )									\
 	MACRO(IN_1_T, IN_2_T, const, const)									\
 
-	MACRO_C(vec, vec)
-	MACRO_C(vec, detail::vec_proxy)
-	MACRO_C(detail::vec_proxy, vec)
-	MACRO_C(detail::vec_proxy, detail::vec_proxy)
-
-	#undef MACRO_C
+	MACRO_C1(detail::vec_proxy, vec)
+	MACRO_C2(detail::vec_proxy, detail::vec_proxy)
+	
+	#undef MACRO_C1
+	#undef MACRO_C2
 	#undef MACRO
 
 	#define MACRO(IN_1_T, IN_2_T, C_1, C_2)									\
@@ -478,18 +488,23 @@ namespace VEC_NAMESPACE
 		return cross_product(v_1, v_2);									\
 	}													\
 
-	#define MACRO_C(IN_1_T, IN_2_T)										\
+	MACRO(vec, vec, , )
+
+	#define MACRO_C1(IN_1_T, IN_2_T)									\
 	MACRO(IN_1_T, IN_2_T,      ,      )									\
 	MACRO(IN_1_T, IN_2_T, const,      )									\
-	MACRO(IN_1_T, IN_2_T,      , const)									\
+	MACRO(IN_2_T, IN_1_T,      ,      )									\
+	MACRO(IN_2_T, IN_1_T,      , const)									\
+	
+	#define MACRO_C2(IN_1_T, IN_2_T)									\
+	MACRO(IN_1_T, IN_2_T,      ,      )									\
 	MACRO(IN_1_T, IN_2_T, const, const)									\
 
-	MACRO_C(vec, vec)
-	MACRO_C(vec, detail::vec_proxy)
-	MACRO_C(detail::vec_proxy, vec)
-	MACRO_C(detail::vec_proxy, detail::vec_proxy)
-
-	#undef MACRO_C
+	MACRO_C1(detail::vec_proxy, vec)
+	MACRO_C2(detail::vec_proxy, detail::vec_proxy)
+	
+	#undef MACRO_C1
+	#undef MACRO_C2
 	#undef MACRO
 }
 

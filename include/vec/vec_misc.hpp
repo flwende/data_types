@@ -19,31 +19,6 @@
 namespace VEC_NAMESPACE
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief Create a const version of data type T
-	//!
-	//! \tparam T data type
-	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD>
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T, typename Enabled = void>
-	struct make_const
-	{
-		//! const type: if the const keyword appears multiple times, it is the same as if it appears just once
-		using type = const T;
-	};
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief Specialization with T = vec<TT, DD>
-	//!
-	//! \tparam T data type
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	template <typename T>
-	struct make_const<T, typename std::enable_if<is_vec<T>::value>::type>
-	{
-		//! const type: if the const keyword appears multiple times, it is the same as if it appears just once
-		using type = typename T::const_type;
-	};
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Get fundamental data type and dimension of T
 	//!
 	//! \tparam T data type
@@ -93,7 +68,7 @@ namespace VEC_NAMESPACE
 	//! \tparam T data type
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T>
-	struct type_info<T, data_layout::SoA, typename std::enable_if<is_vec<T>::value>::type>
+	struct type_info<T, data_layout::SoA, typename std::enable_if<is_vec<T>::value && !std::is_const<T>::value>::type>
 	{
 		//! data type
 		using mapped_type = typename T::fundamental_type;
@@ -107,6 +82,28 @@ namespace VEC_NAMESPACE
 			return SIMD_NAMESPACE::simd::type<mapped_type>::width;
 		}
 	};
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//! \brief Specialization with T = const vec<TT, DD> and data layout SoA
+	//!
+	//! \tparam T data type
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	template <typename T>
+	struct type_info<T, data_layout::SoA, typename std::enable_if<is_vec<T>::value && std::is_const<T>::value>::type>
+	{
+		//! data type
+		using mapped_type = const typename T::fundamental_type;
+
+		//! dimension
+		static constexpr std::size_t extra_dim = T::dim;
+
+		//! get number of elements for padding
+		static constexpr std::size_t get_n_padd(const std::size_t n_bytes)
+		{
+			return SIMD_NAMESPACE::simd::type<mapped_type>::width;
+		}
+	};
+	
 }
 
 #endif
