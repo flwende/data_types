@@ -315,11 +315,10 @@ namespace XXX_NAMESPACE
 		//! Extra dimension: relevant for AoS data layout only
 		static constexpr std::size_t DD = type_info<T, Data_layout>::extra_dim;
 
-		//! Internal storage using boost's aligned_allocator for data alignment
-		std::vector<TT, boost::alignment::aligned_allocator<TT, data_alignment>> m_data;
-
 	protected:
 
+		//! Internal storage using boost's aligned_allocator for data alignment
+		std::vector<TT, boost::alignment::aligned_allocator<TT, data_alignment>> m_data;
 		//! Base pointer (does not necessarily point to m_data)
 		TT* data;
 		//! Shape of the buffer with innermost dimension padded
@@ -537,11 +536,11 @@ namespace XXX_NAMESPACE
 			// which inherits the master thread's cpu affinity -> place it to an exclusive CPU core
 			if (fix_thread_pinning)
 			{	
+				// backup the master cpu mask
+				sched_getaffinity(0, sizeof(master_thread_cpu_mask), &master_thread_cpu_mask);
 				// get cpu core counts: phyical and logical
 				std::size_t num_cpu_cores = get_nprocs();
 				std::size_t num_cpu_cores_conf = get_nprocs_conf();
-				// backup the master cpu mask
-				sched_getaffinity(0, sizeof(master_thread_cpu_mask), &master_thread_cpu_mask);
 				// the cpu mask for the SYCL thread is given by 'num_cpu_cores' and 'num_cpu_cores - 1'
 				CPU_ZERO(&sycl_thread_cpu_mask);
 				CPU_SET(num_cpu_cores - 1, &sycl_thread_cpu_mask);
@@ -581,6 +580,7 @@ namespace XXX_NAMESPACE
 				fix_thread_pinning = false;
 			}
 		}
+
 		//! \brief Read accessor
 		//!
 		//! \return a read accessor
@@ -713,6 +713,11 @@ namespace XXX_NAMESPACE
 	template <typename T, std::size_t D, data_layout Data_layout>
 	class buffer<T, D, buffer_type::host_device, Data_layout> : public buffer<T, D, buffer_type::host, Data_layout>, buffer<T, D, buffer_type::device, Data_layout>
 	{
+		//! Mapped data type
+		using TT = typename type_info<T, Data_layout>::mapped_type;
+		//! Extra dimension: relevant for AoS data layout only
+		static constexpr std::size_t DD = type_info<T, Data_layout>::extra_dim;
+
 		using host_buffer = buffer<T, D, buffer_type::host, Data_layout>;
 		using device_buffer = buffer<T, D, buffer_type::device, Data_layout>;
 
@@ -776,7 +781,53 @@ namespace XXX_NAMESPACE
 			device_buffer::memcpy_d2h(reinterpret_cast<T*>(host_buffer::data), size, host_buffer::size_internal[0]);
 		}
 
-		// TODO: swap()
+		void swap(buffer& b)
+		{
+			if (size == b.size)
+			{
+				// host buffer:
+
+				// swap internal storage (it does not matter whether any of the buffers uses
+				// external memory)
+				host_buffer::m_data.swap(b.host_buffer::m_data);
+
+				// swap the base pointer
+				TT* this_data = host_buffer::data;
+				host_buffer::data = b.host_buffer::data;
+				b.host_buffer::data = this_data;
+
+				// re-assign base pointers only if internal storage is used
+				if (host_buffer::m_data.size() > 0)
+				{
+					host_buffer::data = &host_buffer::m_data[0];
+				}
+
+				if (b.host_buffer::m_data.size() > 0)
+				{
+					b.host_buffer::data = &(b.host_buffer::m_data[0]);
+				}
+
+				// SYCL buffer:
+
+				// swap internal storage
+				cl::sycl::buffer<T, D>* this_m_data = device_buffer::m_data;
+				device_buffer::m_data = b.device_buffer::m_data;
+				b.device_buffer::m_data = this_m_data;
+
+				// swap external host pointer
+				T* this_external_host_ptr = device_buffer::external_host_ptr;
+				device_buffer::external_host_ptr = b.device_buffer::external_host_ptr;
+				b.device_buffer::external_host_ptr = this_external_host_ptr;
+
+				bool this_has_external_host_ptr = device_buffer::has_external_host_ptr;
+				device_buffer::has_external_host_ptr = b.device_buffer::has_external_host_ptr;
+				b.device_buffer::has_external_host_ptr = this_has_external_host_ptr;
+			}
+			else
+			{
+				std::cerr << "error: buffer::swap -> you are trying to swap buffers of different size" << std::endl;
+			}
+		}
 	};
 	
 	#endif
