@@ -443,7 +443,7 @@ namespace XXX_NAMESPACE
 	namespace detail
 	{
 		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
-		void memcpy(const accessor<T, 1, Data_layout_dst>& dst, const accessor<typename make_const<T>::type, 1, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 1>& size)
+		void memcpy(const accessor<T, 1, Data_layout_dst>& dst, const accessor<const T, 1, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 1>& size)
 		{
 			for (std::size_t i = 0; i < size[0]; ++i)
 			{
@@ -452,7 +452,7 @@ namespace XXX_NAMESPACE
 		}
 
 		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
-		void memcpy(const accessor<T, 2, Data_layout_dst>& dst, const accessor<typename make_const<T>::type, 2, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size)
+		void memcpy(const accessor<T, 2, Data_layout_dst>& dst, const accessor<const T, 2, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size)
 		{
 			for (std::size_t j = 0; j < size[1]; ++j)
 			{
@@ -464,7 +464,7 @@ namespace XXX_NAMESPACE
 		}
 
 		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
-		void memcpy(const accessor<T, 3, Data_layout_dst>& dst, const accessor<typename make_const<T>::type, 3, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size)
+		void memcpy(const accessor<T, 3, Data_layout_dst>& dst, const accessor<const T, 3, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size)
 		{
 			for (std::size_t k = 0; k < size[2]; ++k)
 			{
@@ -610,11 +610,9 @@ namespace XXX_NAMESPACE
 			// host accessor: inner dimension for data access is given by 'stride', or n[0]
 			sarray<std::size_t, D> n_src = n;
 			n_src[0] = (stride == 0 ? n[0] : stride);
-			using TT = typename type_info<T, Data_layout>::mapped_type;
-			using const_T = typename make_const<T>::type;
-			using const_TT = typename make_const<TT>::type;
-			const detail::accessor<const_T, D, Data_layout> src(reinterpret_cast<const_TT*>(ptr), n_src);
-			
+			using const_TT = typename type_info<const T, Data_layout>::mapped_type;
+			const detail::accessor<const T, D, Data_layout> src(reinterpret_cast<const_TT*>(ptr), n_src);
+
 			// device accessor: data layout for the device is always AoS
 			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::host_buffer>();
 			const detail::accessor<T, D> dst(a_m_data.get_pointer(), size);
@@ -647,8 +645,7 @@ namespace XXX_NAMESPACE
 		{
 			// device accessor: data layout for the device is always AoS
 			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
-			using const_T = typename make_const<T>::type;
-			const detail::accessor<const_T, D> src(reinterpret_cast<const_T*>(a_m_data.get_pointer()), size);
+			const detail::accessor<const T, D> src(a_m_data.get_pointer(), size);
 
 			// host accessor: inner dimension for data access is given by 'stride', or n[0]
 			sarray<std::size_t, D> n_dst = n;
@@ -772,7 +769,7 @@ namespace XXX_NAMESPACE
 
 		inline void memcpy_h2d()
 		{
-			device_buffer::memcpy_h2d(reinterpret_cast<T*>(host_buffer::data), size, host_buffer::size_internal[0]);
+			device_buffer::memcpy_h2d(reinterpret_cast<const T*>(host_buffer::data), size, host_buffer::size_internal[0]);
 		}
 
 		inline void memcpy_d2h()
