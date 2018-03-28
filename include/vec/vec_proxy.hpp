@@ -63,6 +63,12 @@ namespace VEC_NAMESPACE
 				return *this;
 			}
 
+			vec_proxy& operator=(const vec_proxy& v)
+			{
+				x = v.x;
+				return *this;
+			}
+
 			inline vec operator-()
 			{
 				constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
@@ -143,6 +149,13 @@ namespace VEC_NAMESPACE
 			vec_proxy(const vec& v) : x(v.x), y(v.y) { ; }
 
 			vec_proxy& operator=(const vec& v)
+			{
+				x = v.x;
+				y = v.y;
+				return *this;
+			}
+
+			vec_proxy& operator=(const vec_proxy& v)
 			{
 				x = v.x;
 				y = v.y;
@@ -238,6 +251,14 @@ namespace VEC_NAMESPACE
 			vec_proxy(const vec& v) : x(v.x), y(v.y), z(v.z) { ; }
 
 			vec_proxy& operator=(const vec& v)
+			{
+				x = v.x;
+				y = v.y;
+				z = v.z;
+				return *this;
+			}
+
+			vec_proxy& operator=(const vec_proxy& v)
 			{
 				x = v.x;
 				y = v.y;

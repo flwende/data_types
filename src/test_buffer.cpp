@@ -31,7 +31,8 @@ int main(int argc, char** argv)
 	const std::size_t print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, 12UL));
 
 	#if defined(HAVE_SYCL)
-		fw::buffer<real3_t, 2, fw::buffer_type::host_device, fw::data_layout::SoA> my_buffer({nx, ny});
+		//fw::buffer<real3_t, 2, fw::buffer_type::host_device, fw::data_layout::SoA> my_buffer({nx, ny});
+		fw::buffer<real3_t, 2, fw::buffer_type::host_device, fw::data_layout::AoS> my_buffer({nx, ny});
 		auto my_accessor = my_buffer.write<fw::target::host>();
 		for (std::size_t j = 0; j < ny; ++j)
 		{
