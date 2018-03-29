@@ -11,8 +11,6 @@
 
 using namespace fw;
 
-//#define HAVE_SYCL
-
 #if defined(HAVE_SYCL)
 	template <std::size_t D>
 	class my_kernel;
