@@ -93,11 +93,13 @@ namespace XXX_NAMESPACE
 
 		//! \brief Reduce across all entries
 		//!
+		//! \param func a lambda implementing the reduction
+		//! \param r_0 start value for the reduction
 		//! \return reduction
 		template <typename F>
-		inline T reduce(F func, const T init) const
+		inline T reduce(F func, const T r_0) const
 		{
-			T r = init;
+			T r = r_0;
 			for (std::size_t i = 0; i < D; ++i)
 			{
 				r = func(r, data[i]);
