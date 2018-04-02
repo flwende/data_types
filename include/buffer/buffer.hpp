@@ -443,7 +443,7 @@ namespace XXX_NAMESPACE
 	namespace detail
 	{
 		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
-		void memcpy(const accessor<T, 1, Data_layout_dst>& dst, const accessor<const T, 1, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 1>& size)
+		void memcpy(accessor<T, 1, Data_layout_dst>& dst, accessor<const T, 1, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 1>& size)
 		{
 			for (std::size_t i = 0; i < size[0]; ++i)
 			{
@@ -452,7 +452,7 @@ namespace XXX_NAMESPACE
 		}
 
 		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
-		void memcpy(const accessor<T, 2, Data_layout_dst>& dst, const accessor<const T, 2, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size)
+		void memcpy(accessor<T, 2, Data_layout_dst>& dst, accessor<const T, 2, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 2>& size)
 		{
 			for (std::size_t j = 0; j < size[1]; ++j)
 			{
@@ -464,7 +464,7 @@ namespace XXX_NAMESPACE
 		}
 
 		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
-		void memcpy(const accessor<T, 3, Data_layout_dst>& dst, const accessor<const T, 3, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size)
+		void memcpy(accessor<T, 3, Data_layout_dst>& dst, accessor<const T, 3, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size)
 		{
 			for (std::size_t k = 0; k < size[2]; ++k)
 			{
@@ -490,6 +490,9 @@ namespace XXX_NAMESPACE
 		T* external_host_ptr;
 		//! Is it an external pointer
 		bool has_external_host_ptr;
+
+		//! SYCL scheduling thread migration
+		static bool fix_thread_pinning;
 
 	public:
 
@@ -527,24 +530,28 @@ namespace XXX_NAMESPACE
 		//! innermost dimension happens)
 		void resize(const sarray<std::size_t, D>& size, T* ptr = nullptr)
 		{
-			static bool fix_thread_pinning = true;
-			static cpu_set_t master_thread_cpu_mask;
-			static cpu_set_t sycl_thread_cpu_mask;
+			cpu_set_t master_cpu_mask;
+			bool migrate_sycl_thread = false;
+			const char* placement_str = secure_getenv("SYCL_PLACES");
+			if (fix_thread_pinning && placement_str != NULL)
+			{
+				const std::size_t num_cpu_cores_conf = get_nprocs_conf();
+				const std::size_t sycl_cpu_core = atoi(placement_str);
+				if (sycl_cpu_core < num_cpu_cores_conf)
+				{
+					std::cout << "master: pin SYCL scheduling thread to CPU core " << sycl_cpu_core << std::endl;
+					// backup the master cpu mask
+					sched_getaffinity(0, sizeof(master_cpu_mask), &master_cpu_mask);
+					
+					// now migrate the SYCL scheduling thread
+					cpu_set_t sycl_cpu_mask;
+					CPU_ZERO(&sycl_cpu_mask);
+					CPU_SET(sycl_cpu_core, &sycl_cpu_mask);
+					sched_setaffinity(0, sizeof(sycl_cpu_mask), &sycl_cpu_mask);
 
-			// fix thread affinity issue: SYCL internally spawns a scheduling thread
-			// which inherits the master thread's cpu affinity -> place it to an exclusive CPU core
-			if (fix_thread_pinning)
-			{	
-				// backup the master cpu mask
-				sched_getaffinity(0, sizeof(master_thread_cpu_mask), &master_thread_cpu_mask);
-				// get cpu core counts: phyical and logical
-				std::size_t num_cpu_cores = get_nprocs();
-				std::size_t num_cpu_cores_conf = get_nprocs_conf();
-				// the cpu mask for the SYCL thread is given by 'num_cpu_cores' and 'num_cpu_cores - 1'
-				CPU_ZERO(&sycl_thread_cpu_mask);
-				CPU_SET(num_cpu_cores - 1, &sycl_thread_cpu_mask);
-				CPU_SET(num_cpu_cores_conf - 1, &sycl_thread_cpu_mask);
-				sched_setaffinity(0, sizeof(sycl_thread_cpu_mask), &sycl_thread_cpu_mask);
+					// continuation below...
+					migrate_sycl_thread = true;
+				}
 			}
 
 			// assign default values
@@ -563,19 +570,20 @@ namespace XXX_NAMESPACE
 				delete m_data;
 			}
 			m_data = new cl::sycl::buffer<T, D>(size_internal);
-
+			
 			// is there an external host pointer?
 			if (ptr != nullptr)
 			{
 				external_host_ptr = ptr;
 				has_external_host_ptr = true;
 			}
-
+			
 			// reset CPU affinity of the master thread
-			if (fix_thread_pinning)
+			if (fix_thread_pinning && migrate_sycl_thread)
 			{
-				CPU_XOR(&master_thread_cpu_mask, &master_thread_cpu_mask, &sycl_thread_cpu_mask);
-				sched_setaffinity(0, sizeof(master_thread_cpu_mask), &master_thread_cpu_mask);
+				// reset master cpu mask
+				sched_setaffinity(0, sizeof(master_cpu_mask), &master_cpu_mask);
+				// migration should happen just once
 				fix_thread_pinning = false;
 			}
 		}
@@ -611,11 +619,11 @@ namespace XXX_NAMESPACE
 			sarray<std::size_t, D> n_src = n;
 			n_src[0] = (stride == 0 ? n[0] : stride);
 			using const_TT = typename type_info<const T, Data_layout>::mapped_type;
-			const detail::accessor<const T, D, Data_layout> src(reinterpret_cast<const_TT*>(ptr), n_src);
+			detail::accessor<const T, D, Data_layout> src(reinterpret_cast<const_TT*>(ptr), n_src);
 
 			// device accessor: data layout for the device is always AoS
 			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::host_buffer>();
-			const detail::accessor<T, D> dst(a_m_data.get_pointer(), size);
+			detail::accessor<T, D> dst(a_m_data.get_pointer(), size);
 
 			detail::memcpy(dst, src, n);
 		}
@@ -631,7 +639,7 @@ namespace XXX_NAMESPACE
 			{
 				if (has_external_host_ptr)
 				{
-					memcpy_d2h(external_host_ptr, size, stride);
+					memcpy_h2d(external_host_ptr, size, stride);
 				}
 				else
 				{
@@ -645,13 +653,13 @@ namespace XXX_NAMESPACE
 		{
 			// device accessor: data layout for the device is always AoS
 			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
-			const detail::accessor<const T, D> src(a_m_data.get_pointer(), size);
+			detail::accessor<const T, D> src(a_m_data.get_pointer(), size);
 
 			// host accessor: inner dimension for data access is given by 'stride', or n[0]
 			sarray<std::size_t, D> n_dst = n;
 			n_dst[0] = (stride == 0 ? n[0] : stride);
 			using TT = typename type_info<T, Data_layout>::mapped_type;
-			const detail::accessor<T, D, Data_layout> dst(reinterpret_cast<TT*>(ptr), n_dst);
+			detail::accessor<T, D, Data_layout> dst(reinterpret_cast<TT*>(ptr), n_dst);
 
 			detail::memcpy(dst, src, n);
 		}
@@ -707,6 +715,9 @@ namespace XXX_NAMESPACE
 	};
 
 	template <typename T, std::size_t D, data_layout Data_layout>
+	bool buffer<T, D, buffer_type::device, Data_layout>::fix_thread_pinning = true;
+
+	template <typename T, std::size_t D, data_layout Data_layout>
 	class buffer<T, D, buffer_type::host_device, Data_layout> : public buffer<T, D, buffer_type::host, Data_layout>, buffer<T, D, buffer_type::device, Data_layout>
 	{
 		//! Mapped data type
@@ -731,37 +742,31 @@ namespace XXX_NAMESPACE
 			device_buffer::resize(size, reinterpret_cast<T*>(host_buffer::data));
 		}
 
-		template <target Target, typename X = typename std::enable_if<Target == target::host>::type>
-		inline auto read(X* dummy = nullptr) const
+		inline auto read() const
 		{
 			return host_buffer::read();
 		}
 
-		template <target Target, typename X = typename std::enable_if<Target == target::host>::type>
-		inline auto write(X* dummy = nullptr)
+		inline auto write()
 		{
 			return host_buffer::write();
 		}
 
-		template <target Target, typename X = typename std::enable_if<Target == target::host>::type>
-		inline auto read_write(X* dummy = nullptr)
+		inline auto read_write()
 		{
 			return host_buffer::read_write();
 		}
 
-		template <target Target>
 		inline auto read(cl::sycl::handler& h) const
 		{
 			return device_buffer::read(h);
 		}
 
-		template <target Target>
 		inline auto write(cl::sycl::handler& h)
 		{
 			return device_buffer::write(h);
 		}
 
-		template <target Target>
 		inline auto read_write(cl::sycl::handler& h)
 		{
 			return device_buffer::read_write(h);

@@ -315,6 +315,128 @@ namespace VEC_NAMESPACE
 	#undef MACRO_C2
 	#undef MACRO
 
+	#if defined(HAVE_SYCL)
+	#define MACRO(IN_1_T, IN_2_T, C_1, C_2)									\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 1>& v_1, const IN_2_T<C_2 T, 1>& v_2)				\
+	{													\
+		const cl::sycl::vec<T, 1> _v_1(v_1.x);								\
+		const cl::sycl::vec<T, 1> _v_2(v_2.x);								\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 1>&& v_1, const IN_2_T<C_2 T, 1>& v_2)				\
+	{													\
+		const cl::sycl::vec<T, 1> _v_1(v_1.x);								\
+		const cl::sycl::vec<T, 1> _v_2(v_2.x);								\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 1>& v_1, const IN_2_T<C_2 T, 1>&& v_2)				\
+	{													\
+		const cl::sycl::vec<T, 1> _v_1(v_1.x);								\
+		const cl::sycl::vec<T, 1> _v_2(v_2.x);								\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 1>&& v_1, const IN_2_T<C_2 T, 1>&& v_2)			\
+	{													\
+		const cl::sycl::vec<T, 1> _v_1(v_1.x);								\
+		const cl::sycl::vec<T, 1> _v_2(v_2.x);								\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 2>& v_1, const IN_2_T<C_2 T, 2>& v_2)				\
+	{													\
+		const cl::sycl::vec<T, 2> _v_1(v_1.x, v_1.y);							\
+		const cl::sycl::vec<T, 2> _v_2(v_2.x, v_2.y);							\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 2>&& v_1, const IN_2_T<C_2 T, 2>& v_2)				\
+	{													\
+		const cl::sycl::vec<T, 2> _v_1(v_1.x, v_1.y);							\
+		const cl::sycl::vec<T, 2> _v_2(v_2.x, v_2.y);							\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 2>& v_1, const IN_2_T<C_2 T, 2>&& v_2)				\
+	{													\
+		const cl::sycl::vec<T, 2> _v_1(v_1.x, v_1.y);							\
+		const cl::sycl::vec<T, 2> _v_2(v_2.x, v_2.y);							\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 2>&& v_1, const IN_2_T<C_2 T, 2>&& v_2)			\
+	{													\
+		const cl::sycl::vec<T, 2> _v_1(v_1.x, v_1.y);							\
+		const cl::sycl::vec<T, 2> _v_2(v_2.x, v_2.y);							\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 3>& v_1, const IN_2_T<C_2 T, 3>& v_2)				\
+	{													\
+		const cl::sycl::vec<T, 3> _v_1(v_1.x, v_1.y, v_1.z);						\
+		const cl::sycl::vec<T, 3> _v_2(v_2.x, v_2.y, v_2.z);						\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 3>&& v_1, const IN_2_T<C_2 T, 3>& v_2)				\
+	{													\
+		const cl::sycl::vec<T, 3> _v_1(v_1.x, v_1.y, v_1.z);						\
+		const cl::sycl::vec<T, 3> _v_2(v_2.x, v_2.y, v_2.z);						\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 3>& v_1, const IN_2_T<C_2 T, 3>&& v_2)				\
+	{													\
+		const cl::sycl::vec<T, 3> _v_1(v_1.x, v_1.y, v_1.z);						\
+		const cl::sycl::vec<T, 3> _v_2(v_2.x, v_2.y, v_2.z);						\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T>											\
+	inline T dot_product(const IN_1_T<C_1 T, 3>&& v_1, const IN_2_T<C_2 T, 3>&& v_2)			\
+	{													\
+		const cl::sycl::vec<T, 3> _v_1(v_1.x, v_1.y, v_1.z);						\
+		const cl::sycl::vec<T, 3> _v_2(v_2.x, v_2.y, v_2.z);						\
+		return dot(_v_1, _v_2);										\
+	}													\
+														\
+	template <typename T, std::size_t D>									\
+	inline T dot(const IN_1_T<C_1 T, D>& v_1, const IN_2_T<C_2 T, D>& v_2)					\
+	{													\
+		return dot_product(v_1, v_2);									\
+	}													\
+														\
+	template <typename T, std::size_t D>									\
+	inline T dot(const IN_1_T<C_1 T, D>&& v_1, const IN_2_T<C_2 T, D>& v_2)					\
+	{													\
+		return dot_product(v_1, v_2);									\
+	}													\
+														\
+	template <typename T, std::size_t D>									\
+	inline T dot(const IN_1_T<C_1 T, D>& v_1, const IN_2_T<C_2 T, D>&& v_2)					\
+	{													\
+		return dot_product(v_1, v_2);									\
+	}													\
+														\
+	template <typename T, std::size_t D>									\
+	inline T dot(const IN_1_T<C_1 T, D>&& v_1, const IN_2_T<C_2 T, D>&& v_2)				\
+	{													\
+		return dot_product(v_1, v_2);									\
+	}
+	#else
 	#define MACRO(IN_1_T, IN_2_T, C_1, C_2)									\
 	template <typename T>											\
 	inline T dot_product(const IN_1_T<C_1 T, 1>& v_1, const IN_2_T<C_2 T, 1>& v_2)				\
@@ -410,7 +532,8 @@ namespace VEC_NAMESPACE
 	inline T dot(const IN_1_T<C_1 T, D>&& v_1, const IN_2_T<C_2 T, D>&& v_2)				\
 	{													\
 		return dot_product(v_1, v_2);									\
-	}													\
+	}
+	#endif
 
 	MACRO(vec, vec, , )
 
@@ -431,6 +554,68 @@ namespace VEC_NAMESPACE
 	#undef MACRO_C2
 	#undef MACRO
 
+	#if defined(HAVE_SYCL)
+	#define MACRO(IN_1_T, IN_2_T, C_1, C_2)									\
+	template <typename T>											\
+	inline vec<T, 3> cross_product(const IN_1_T<C_1 T, 3>& v_1, const IN_2_T<C_2 T, 3>& v_2)		\
+	{													\
+		const cl::sycl::vec<T, 3> _v_1(v_1.x, v_1.y, v_1.z);						\
+		const cl::sycl::vec<T, 3> _v_2(v_2.x, v_2.y, v_2.z);						\
+		const cl::sycl::vec<T, 3> y = cross(_v_1, _v_2);						\
+		return vec<T, 3>(y.x(), y.y(), y.z());								\
+	}													\
+														\
+	template <typename T>											\
+	inline vec<T, 3> cross_product(const IN_1_T<C_1 T, 3>&& v_1, const IN_2_T<C_2 T, 3>& v_2)		\
+	{													\
+		const cl::sycl::vec<T, 3> _v_1(v_1.x, v_1.y, v_1.z);						\
+		const cl::sycl::vec<T, 3> _v_2(v_2.x, v_2.y, v_2.z);						\
+		const cl::sycl::vec<T, 3> y = cross(_v_1, _v_2);						\
+		return vec<T, 3>(y.x(), y.y(), y.z());								\
+	}													\
+														\
+	template <typename T>											\
+	inline vec<T, 3> cross_product(const IN_1_T<C_1 T, 3>& v_1, const IN_2_T<C_2 T, 3>&& v_2)		\
+	{													\
+		const cl::sycl::vec<T, 3> _v_1(v_1.x, v_1.y, v_1.z);						\
+		const cl::sycl::vec<T, 3> _v_2(v_2.x, v_2.y, v_2.z);						\
+		const cl::sycl::vec<T, 3> y = cross(_v_1, _v_2);						\
+		return vec<T, 3>(y.x(), y.y(), y.z());								\
+	}													\
+														\
+	template <typename T>											\
+	inline vec<T, 3> cross_product(const IN_1_T<C_1 T, 3>&& v_1, const IN_2_T<C_2 T, 3>&& v_2)		\
+	{													\
+		const cl::sycl::vec<T, 3> _v_1(v_1.x, v_1.y, v_1.z);						\
+		const cl::sycl::vec<T, 3> _v_2(v_2.x, v_2.y, v_2.z);						\
+		const cl::sycl::vec<T, 3> y = cross(_v_1, _v_2);						\
+		return vec<T, 3>(y.x(), y.y(), y.z());								\
+	}													\
+														\
+	template <typename T>											\
+	inline vec<T, 3> cross(const IN_1_T<C_1 T, 3>& v_1, const IN_2_T<C_2 T, 3>& v_2)			\
+	{													\
+		return cross_product(v_1, v_2);									\
+	}													\
+														\
+	template <typename T>											\
+	inline vec<T, 3> cross(const IN_1_T<C_1 T, 3>&& v_1, const IN_2_T<C_2 T, 3>& v_2)			\
+	{													\
+		return cross_product(v_1, v_2);									\
+	}													\
+														\
+	template <typename T>											\
+	inline vec<T, 3> cross(const IN_1_T<C_1 T, 3>& v_1, const IN_2_T<C_2 T, 3>&& v_2)			\
+	{													\
+		return cross_product(v_1, v_2);									\
+	}													\
+														\
+	template <typename T>											\
+	inline vec<T, 3> cross(const IN_1_T<C_1 T, 3>&& v_1, const IN_2_T<C_2 T, 3>&& v_2)			\
+	{													\
+		return cross_product(v_1, v_2);									\
+	}
+	#else
 	#define MACRO(IN_1_T, IN_2_T, C_1, C_2)									\
 	template <typename T>											\
 	inline vec<T, 3> cross_product(const IN_1_T<C_1 T, 3>& v_1, const IN_2_T<C_2 T, 3>& v_2)		\
@@ -486,7 +671,8 @@ namespace VEC_NAMESPACE
 	inline vec<T, 3> cross(const IN_1_T<C_1 T, 3>&& v_1, const IN_2_T<C_2 T, 3>&& v_2)			\
 	{													\
 		return cross_product(v_1, v_2);									\
-	}													\
+	}
+	#endif
 
 	MACRO(vec, vec, , )
 
