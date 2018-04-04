@@ -7,9 +7,6 @@
 #define VEC_HPP
 
 #include <cstdint>
-#if defined(HAVE_SYCL)
-#include <CL/sycl.hpp>
-#endif
 
 #if !defined(VEC_NAMESPACE)
 #if !defined(XXX_NAMESPACE)

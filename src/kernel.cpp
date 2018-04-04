@@ -54,7 +54,7 @@ using namespace fw;
 			gpu_q.submit([&] (cl::sycl::handler& h)
 			{
 				// accessors
-				auto a_x = x.read_write<fw::target::device>(h);
+				auto a_x = x.read_write(h);
 
 				// execute
 				h.parallel_for<class my_kernel<1>>(cl::sycl::nd_range<2>(grid, block), [=](cl::sycl::nd_item<2> item)
@@ -111,13 +111,18 @@ using namespace fw;
 			gpu_q.submit([&] (cl::sycl::handler& h)
 			{
 				// accessors
-				auto a_x = x.read_write<fw::target::device>(h);
+				auto a_x = x.read_write(h);
+/*
+				sarray<std::size_t, 2> size = {nx, ny};
 
+				detail::device_accessor<real3_t, 2> aa_x(a_x, size);
+*/			
 				// execute
 				h.parallel_for<class my_kernel<2>>(cl::sycl::nd_range<2>(grid, block), [=](cl::sycl::nd_item<2> item)
 				{
 					const std::size_t j = item.get_global(0);
 					const std::size_t i = item.get_global(1);
+
 					if (j < nx && i < ny)
 					{
 						a_x[i][j] += i * nx + j;

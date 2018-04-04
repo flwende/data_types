@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 	#if defined(HAVE_SYCL)
 		//fw::buffer<real3_t, 2, fw::buffer_type::host_device, fw::data_layout::SoA> my_buffer({nx, ny});
 		fw::buffer<real3_t, 2, fw::buffer_type::host_device, fw::data_layout::AoS> my_buffer({nx, ny});
-		auto my_accessor = my_buffer.read_write<fw::target::host>();
+		auto my_accessor = my_buffer.read_write();
 		for (std::size_t j = 0; j < ny; ++j)
 		{
 			for (std::size_t i = 0; i < nx; ++i)
