@@ -54,7 +54,7 @@ namespace XXX_NAMESPACE
 		//!
 		//! \tparam T data type
 		//! \tparam D dimension
-		//! \tparam Data_layout any of SoA (structs of arrays) and AoS (array of structs)
+		//! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
 		//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Data_layout = SoA
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		template <typename T, std::size_t D, data_layout Data_layout = data_layout::AoS, typename Enabled = void>
@@ -112,7 +112,7 @@ namespace XXX_NAMESPACE
 		//! \brief Specialization with D = 1 (recursion ancher definition)
 		//!
 		//! \tparam T data type
-		//! \tparam Data_layout any of SoA (structs of arrays) and AoS (array of structs)
+		//! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
 		//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Data_layout = SoA
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		template <typename T, data_layout Data_layout, typename Enabled>
@@ -305,7 +305,7 @@ namespace XXX_NAMESPACE
 	//!
 	//! \tparam T data type
 	//! \tparam D dimension
-	//! \tparam Data_layout any of SoA (structs of arrays) and AoS (array of structs)
+	//! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
 	//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Data_layout = SoA
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T, std::size_t D, buffer_type Buffer_type = buffer_type::host, data_layout Data_layout = data_layout::AoS>
@@ -343,7 +343,7 @@ namespace XXX_NAMESPACE
 			resize(size, ptr);
 		}
 
-		//! \brief Set up the buffer
+		//! \brief Resize the buffer
 		//!
 		//! \param size shape of the buffer
 		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of
@@ -382,7 +382,7 @@ namespace XXX_NAMESPACE
 		//! \brief Read accessor
 		//!
 		//! \return an accessor using const references internally
-		inline const detail::accessor<const T, D, Data_layout> read() const
+		inline detail::accessor<const T, D, Data_layout> read() const
 		{
 			using const_TT = typename type_info<const T, Data_layout>::mapped_type;
 			return detail::accessor<const T, D, Data_layout>(reinterpret_cast<const_TT*>(data), size_internal);
@@ -391,7 +391,7 @@ namespace XXX_NAMESPACE
 		//! \brief Write accessor
 		//!
 		//! \return an accessor
-		inline const detail::accessor<T, D, Data_layout> write()
+		inline detail::accessor<T, D, Data_layout> write()
 		{
 			return detail::accessor<T, D, Data_layout>(data, size_internal);
 		}
@@ -399,7 +399,7 @@ namespace XXX_NAMESPACE
 		//! \brief Read-write accessor
 		//!
 		//! \return an accessor
-		inline const detail::accessor<T, D, Data_layout> read_write()
+		inline detail::accessor<T, D, Data_layout> read_write()
 		{
 			return write();
 		}
@@ -441,8 +441,16 @@ namespace XXX_NAMESPACE
 	};
 
 	#if defined(HAVE_SYCL)
+	
 	namespace detail
 	{
+		//! \brief Copy the content from 'src' to 'dst' (D = 1 case)
+		//! 
+		//! Data layout transformations [AoS,SoA] -> [AoS,SoA] are implicit!
+		//!
+		//! \param dst write accessor
+		//! \param src read accessor
+		//! \param size number of elements to copy
 		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
 		void memcpy(accessor<T, 1, Data_layout_dst>& dst, accessor<const T, 1, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 1>& size)
 		{
@@ -452,6 +460,13 @@ namespace XXX_NAMESPACE
 			}
 		}
 
+		//! \brief Copy the content from 'src' to 'dst' (D = 2 case)
+		//!
+		//! Data layout transformations [AoS,SoA] -> [AoS,SoA] are implicit!
+		//!
+		//! \param dst write accessor
+		//! \param src read accessor
+		//! \param size number of elements to copy
 		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
 		void memcpy(accessor<T, 2, Data_layout_dst>& dst, accessor<const T, 2, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 2>& size)
 		{
@@ -464,6 +479,13 @@ namespace XXX_NAMESPACE
 			}
 		}
 
+		//! \brief Copy the content from 'src' to 'dst' (D = 3 case)
+		//!
+		//! Data layout transformations [AoS,SoA] -> [AoS,SoA] are implicit!
+		//! 
+		//! \param dst write accessor
+		//! \param src read accessor
+		//! \param size number of elements to copy
 		template <typename T, data_layout Data_layout_dst, data_layout Data_layout_src>
 		void memcpy(accessor<T, 3, Data_layout_dst>& dst, accessor<const T, 3, Data_layout_src>& src, const XXX_NAMESPACE::sarray<std::size_t, 3>& size)
 		{
@@ -480,6 +502,15 @@ namespace XXX_NAMESPACE
 		}
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//! \brief Multi-dimensional buffer data type (device buffer)
+	//!
+	//! This buffer does not support the SoA (structs of arrays) data layout!
+	//!
+	//! \tparam T data type
+	//! \tparam D dimension
+	//! \tparam Data_layout (always AoS)
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T, std::size_t D, data_layout Data_layout>
 	class buffer<T, D, buffer_type::device, Data_layout>
 	{
@@ -491,7 +522,6 @@ namespace XXX_NAMESPACE
 		T* external_host_ptr;
 		//! Is it an external pointer
 		bool has_external_host_ptr;
-
 		//! SYCL scheduling thread migration
 		static bool fix_thread_pinning;
 
@@ -506,8 +536,7 @@ namespace XXX_NAMESPACE
 		//! \brief Constructor
 		//!
 		//! \param size shape of the buffer
-		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
-		//! innermost dimension happens)
+		//! \param ptr external pointer to write / read data to / from
 		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr) : m_data(nullptr), external_host_ptr(nullptr), has_external_host_ptr(false)
 		{
 			resize(size, ptr);
@@ -524,7 +553,7 @@ namespace XXX_NAMESPACE
 			external_host_ptr = nullptr;
 		}
 
-		//! \brief Set up the buffer
+		//! \brief Resize the buffer
 		//!
 		//! \param size shape of the buffer
 		//! \param ptr external pointer (if specified, no internal storage will be allocated and no padding of the
@@ -558,7 +587,7 @@ namespace XXX_NAMESPACE
 			// assign default values
 			this->size = size;
 
-			// SYCL range: the order of the entries is inverse
+			// SYCL range: inverse order of entries
 			cl::sycl::range<D> size_internal;
 			for (std::size_t i = 0; i < D; ++i)
 			{
@@ -590,7 +619,8 @@ namespace XXX_NAMESPACE
 		}
 
 		//! \brief Read accessor
-		//!
+		//! 
+		//! \param h SYCL handler
 		//! \return a read accessor
 		inline auto read(cl::sycl::handler& h) const
 		{
@@ -599,6 +629,7 @@ namespace XXX_NAMESPACE
 
 		//! \brief Write accessor
 		//!
+		//! \param h SYCL handler
 		//! \return a write accessor
 		inline auto write(cl::sycl::handler& h)
 		{
@@ -607,6 +638,7 @@ namespace XXX_NAMESPACE
 
 		//! \brief Read-write accessor
 		//!
+		//! \param h SYCL handler
 		//! \return a read-write accessor
 		inline auto read_write(cl::sycl::handler& h)
 		{
@@ -614,6 +646,10 @@ namespace XXX_NAMESPACE
 		}
 
 		//! \brief Copy data from the host to the device
+		//!
+		//! \param ptr pointer to the data to be transferred from host to device
+		//! \param n number of elements to be transferred
+		//! \param stride [optional] extent of the innermost dimension of the field pointed to by 'ptr'
 		inline void memcpy_h2d(const T* ptr, const sarray<std::size_t, D>& n, const std::size_t stride = 0)
 		{		
 			// host accessor: inner dimension for data access is given by 'stride', or n[0]
@@ -630,8 +666,12 @@ namespace XXX_NAMESPACE
 		}
 
 		//! \brief Copy data from the host to the device
+		//!
+		//! \param ptr pointer to the data to be transferred from host to device
+		//! \param stride [optional] extent of the innermost dimension of the field pointed to by 'ptr'
 		inline void memcpy_h2d(const T* ptr = nullptr, const std::size_t stride = 0)
 		{
+			// all successive calls to memcpy_h2d use the extent of this buffer
 			if (ptr != nullptr)
 			{
 				memcpy_h2d(ptr, size, stride);
@@ -650,6 +690,10 @@ namespace XXX_NAMESPACE
 		}
 
 		//! \brief Copy data from the device to the host
+		//!
+		//! \param ptr pointer to the data to be transferred to from device to host
+		//! \param n number of elements to be transferred
+		//! \param stride [optional] extent of the innermost dimension of the field pointed to by 'ptr'
 		inline void memcpy_d2h(T* ptr, const sarray<std::size_t, D>& n, const std::size_t stride = 0)
 		{
 			// device accessor: data layout for the device is always AoS
@@ -666,8 +710,12 @@ namespace XXX_NAMESPACE
 		}
 
 		//! \brief Copy data from the device to the host
+		//!
+		//! \param ptr pointer to the data to be transferred to from device to host
+		//! \param stride [optional] extent of the innermost dimension of the field pointed to by 'ptr'
 		inline void memcpy_d2h(T* ptr = nullptr, const std::size_t stride = 0)
 		{
+			// all successive calls to memcpy_d2h use the extent of this buffer
 			if (ptr != nullptr)
 			{
 				memcpy_d2h(ptr, size, stride);
@@ -689,7 +737,7 @@ namespace XXX_NAMESPACE
 		//!
 		//! The buffers have to have the same size.
 		//!
-		//! \param b
+		//! \param b buffer to swap with
 		void swap(buffer& b)
 		{
 			if (size == b.size)
@@ -715,9 +763,22 @@ namespace XXX_NAMESPACE
 		}
 	};
 
+	//! SYCL internally spawns a scheduling thread: this thread has to be placed to some CPU cores that
+	//! are not used for the computation:
+	//!
+	//! You can set the environment variable SYCL_PLACES=cpu_core
 	template <typename T, std::size_t D, data_layout Data_layout>
 	bool buffer<T, D, buffer_type::device, Data_layout>::fix_thread_pinning = true;
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//! \brief Multi-dimensional buffer data type (device buffer)
+	//!
+	//! This buffer does not support the SoA (structs of arrays) data layout!
+	//!
+	//! \tparam T data type
+	//! \tparam D dimension
+	//! \tparam Data_layout (always AoS)
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	template <typename T, std::size_t D, data_layout Data_layout>
 	class buffer<T, D, buffer_type::host_device, Data_layout> : public buffer<T, D, buffer_type::host, Data_layout>, buffer<T, D, buffer_type::device, Data_layout>
 	{
@@ -731,58 +792,95 @@ namespace XXX_NAMESPACE
 
 	public:
 
+		//! use the host buffer extent
 		using host_buffer::size;
 
+		//! \brief Standard constructor
 		buffer() : host_buffer(), device_buffer() { ; }
 
+		//! \brief Constructor
+		//!
+		//! This constructor creates the host buffer first, and afterwards the device buffer with the host buffer as external pointer.
+		//! Data transfers between host and device, thus happen always through the host buffer.
+		//! The host buffer can have any of AoS or SoA data layout (the data layout transformation is implicit through the accessors).
+		//!
+		//! \param size extent of the buffer
 		buffer(const sarray<std::size_t, D>& size) : host_buffer(size), device_buffer(size, reinterpret_cast<T*>(host_buffer::data)) { ; }
 
+		//! \brief Resize the buffer
+		//!
+		//! \param size extent of the buffer
 		void resize(const sarray<std::size_t, D>& size)
 		{
 			host_buffer::resize(size);
 			device_buffer::resize(size, reinterpret_cast<T*>(host_buffer::data));
 		}
 
+		//! \brief Read accessor (host buffer)
+		//! 
+		//! \return a read accessor to the host buffer
 		inline auto read() const
 		{
 			return host_buffer::read();
 		}
 
+		//! \brief Write accessor (host buffer)
+		//! 
+		//! \return a write accessor to the host buffer
 		inline auto write()
 		{
 			return host_buffer::write();
 		}
 
+		//! \brief Read-write accessor (host buffer)
+		//! 
+		//! \return a read-write accessor to the host buffer
 		inline auto read_write()
 		{
 			return host_buffer::read_write();
 		}
 
+		//! \brief Read accessor (device buffer)
+		//! 
+		//! \return a read accessor to the device buffer
 		inline auto read(cl::sycl::handler& h) const
 		{
 			return device_buffer::read(h);
 		}
 
+		//! \brief Write accessor (device buffer)
+		//! 
+		//! \return a write accessor to the device buffer
 		inline auto write(cl::sycl::handler& h)
 		{
 			return device_buffer::write(h);
 		}
 
+		//! \brief Read-write accessor (device buffer)
+		//! 
+		//! \return a read-write accessor to the device buffer
 		inline auto read_write(cl::sycl::handler& h)
 		{
 			return device_buffer::read_write(h);
 		}
 
+		//! \brief Copy data from host to device
 		inline void memcpy_h2d()
 		{
 			device_buffer::memcpy_h2d(reinterpret_cast<const T*>(host_buffer::data), size, host_buffer::size_internal[0]);
 		}
 
+		//! \brief Copy data from device to host
 		inline void memcpy_d2h()
 		{
 			device_buffer::memcpy_d2h(reinterpret_cast<T*>(host_buffer::data), size, host_buffer::size_internal[0]);
 		}
 
+		//! \brief Exchange the content of two buffers
+		//!
+		//! The buffers have to have the same size.
+		//!
+		//! \param b
 		void swap(buffer& b)
 		{
 			if (size == b.size)
