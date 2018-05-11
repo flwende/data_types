@@ -6,6 +6,10 @@
 #if !defined(VEC_HPP)
 #define VEC_HPP
 
+#if defined(HAVE_SYCL)
+#include <CL/sycl.hpp>
+#endif
+
 #include <cstdint>
 
 #if !defined(VEC_NAMESPACE)
@@ -55,30 +59,63 @@ namespace VEC_NAMESPACE
 		static constexpr std::size_t dim = 1;
 
 		//! x component
-		T x;
+		union
+		{
+			#if defined(HAVE_SYCL)
+			cl::sycl::vec<T, 1> sycl_vec;
+			#endif
+			struct { T x; };
+		};
 
-		//! \brief Standard constructor
-		//!
-		//! \param x
+		//! Constructors
+		#if defined(HAVE_SYCL)
+		vec(const T x = 0) : sycl_vec(x) { ; }
+		vec(const cl::sycl::vec<T, 1>& v) : sycl_vec(v) { ; }
+		vec(const vec& v) : sycl_vec(v.sycl_vec) { ; }
+		vec(const vec_proxy& v) : sycl_vec(v.x) { ; }
+		vec(const vec_proxy_const& v) : sycl_vec(v.x) { ; }
+
+		vec operator=(const vec& v)
+		{
+			sycl_vec = v.sycl_vec;
+			return *this;
+		}
+
+		vec operator=(const vec& v) const
+		{
+			sycl_vec = v.sycl_vec;
+			return *this;
+		}
+		#else
 		vec(const T x = 0) : x(x) { ; }
-
 		vec(const vec& v) : x(v.x) { ; }
-
 		vec(const vec_proxy& v) : x(v.x) { ; }
-
 		vec(const vec_proxy_const& v) : x(v.x) { ; }
+		#endif
 
 		inline vec operator-()
 		{
 			constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
+			#if defined(HAVE_SYCL)
+			return vec(sycl_vec * minus_one);
+			#else
 			return vec(minus_one * x);
+			#endif
 		}
 
+		#if defined(HAVE_SYCL)
+		#define MACRO(OP, IN_T)				\
+		inline void operator OP (const IN_T& v)		\
+		{						\
+			sycl_vec OP v.sycl_vec;			\
+		}
+		#else
 		#define MACRO(OP, IN_T)				\
 		inline void operator OP (const IN_T& v)		\
 		{						\
 			x OP v.x;				\
-		}						\
+		}
+		#endif
 
 		MACRO(+=, vec)
 		MACRO(-=, vec)
@@ -92,11 +129,19 @@ namespace VEC_NAMESPACE
 
 		#undef MACRO
 
+		#if defined(HAVE_SYCL)
+		#define MACRO(OP)				\
+		inline void operator OP (const T c)		\
+		{						\
+			sycl_vec OP c;				\
+		}
+		#else
 		#define MACRO(OP)				\
 		inline void operator OP (const T c)		\
 		{						\
 			x OP c;					\
-		}						\
+		}
+		#endif						\
 
 		MACRO(+=)
 		MACRO(-=)
@@ -134,40 +179,67 @@ namespace VEC_NAMESPACE
 		//! Remember the template parameter D (=2)
 		static constexpr std::size_t dim = 2;
 
-		//! x component
-		T x;
-		//! y component
-		T y;
+		//! x, y component
+		union
+		{
+			#if defined(HAVE_SYCL)
+			cl::sycl::vec<T, 2> sycl_vec;
+			#endif
+			struct { T x; T y; };
+		};
 
-		//! \brief Standard constructor: all components are set to x (=0)
-		//!
-		//! \param x
+		//! Constructors
+		#if defined(HAVE_SYCL)
+		vec(const T x = 0) : sycl_vec(x) { ; }
+		vec(const T x, const T y) : sycl_vec(x, y) { ; }
+		vec(const cl::sycl::vec<T, 2>& v) : sycl_vec(v) { ; }
+		vec(const vec& v) : sycl_vec(v.sycl_vec) { ; }
+		vec(const vec_proxy& v) : sycl_vec(v.x, v.y) { ; }
+		vec(const vec_proxy_const& v) : sycl_vec(v.x, v.y) { ; }
+
+		vec operator=(const vec& v)
+		{
+			sycl_vec = v.sycl_vec;
+			return *this;
+		}
+
+		vec operator=(const vec& v) const
+		{
+			sycl_vec = v.sycl_vec;
+			return *this;
+		}
+		#else
 		vec(const T x = 0) : x(x), y(x) { ; }
-
-		//! \brief Constructor for component-wise initialization
-		//!
-		//! \param x
-		//! \param y
 		vec(const T x, const T y) : x(x), y(y) { ; }
-
 		vec(const vec& v) : x(v.x), y(v.y) { ; }
-
 		vec(const vec_proxy& v) : x(v.x), y(v.y) { ; }
-
 		vec(const vec_proxy_const& v) : x(v.x), y(v.y) { ; }
+		#endif
 
 		inline vec operator-()
 		{
 			constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
+			#if defined(HAVE_SYCL)
+			return vec(sycl_vec * minus_one);
+			#else
 			return vec(minus_one * x, minus_one * y);
+			#endif
 		}
 
+		#if defined(HAVE_SYCL)
+		#define MACRO(OP, IN_T)				\
+		inline void operator OP (const IN_T& v)		\
+		{						\
+			sycl_vec OP v.sycl_vec;			\
+		}
+		#else
 		#define MACRO(OP, IN_T)				\
 		inline void operator OP (const IN_T& v)		\
 		{						\
 			x OP v.x;				\
 			y OP v.y;				\
-		}						\
+		}
+		#endif
 
 		MACRO(+=, vec)
 		MACRO(-=, vec)
@@ -181,12 +253,20 @@ namespace VEC_NAMESPACE
 
 		#undef MACRO
 
+		#if defined(HAVE_SYCL)
+		#define MACRO(OP)				\
+		inline void operator OP (const T c)		\
+		{						\
+			sycl_vec OP c;				\
+		}
+		#else
 		#define MACRO(OP)				\
 		inline void operator OP (const T c)		\
 		{						\
 			x OP c;					\
 			y OP c;					\
-		}						\
+		}
+		#endif
 
 		MACRO(+=)
 		MACRO(-=)
@@ -200,7 +280,12 @@ namespace VEC_NAMESPACE
 		//! \return Euclidean norm
 		inline T length() const
 		{
+			#if defined(HAVE_SYCL)
+			return cl::sycl::length(sycl_vec);
+			#else
 			return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y);
+			#endif
+			
 		}
 	};
 
@@ -224,44 +309,68 @@ namespace VEC_NAMESPACE
 		//! Remember the template parameter D (=3)
 		static constexpr std::size_t dim = 3;
 
-		//! x component
-		T x;
-		//! y component
-		T y;
-		//! z component
-		T z;
+		//! x, y, z component
+		union
+		{
+			#if defined(HAVE_SYCL)
+			cl::sycl::vec<T, 3> sycl_vec;
+			#endif
+			struct { T x; T y; T z; };
+		};
+	       
+		//! Constructors
+		#if defined(HAVE_SYCL)
+		vec(const T x = 0) : sycl_vec(x) { ; }
+		vec(const T x, const T y, const T z) : sycl_vec(x, y, z) { ; }
+		vec(const cl::sycl::vec<T, 3>& v) : sycl_vec(v) { ; }
+		vec(const vec& v) : sycl_vec(v.sycl_vec) { ; }
+		vec(const vec_proxy& v) : sycl_vec(v.x, v.y, v.z) { ; }
+		vec(const vec_proxy_const& v) : sycl_vec(v.x, v.y, v.z) { ; }
 
-		//! \brief Standard constructor: all components are set to x (=0)
-		//!
-		//! \param x
+		vec operator=(const vec& v)
+		{
+			sycl_vec = v.sycl_vec;
+			return *this;
+		}
+
+		vec operator=(const vec& v) const
+		{
+			sycl_vec = v.sycl_vec;
+			return *this;
+		}
+		#else
 		vec(const T x = 0) : x(x), y(x), z(x) { ; }
-
-		//! \brief Constructor for component-wise initialization
-		//!
-		//! \param x
-		//! \param y
-		//! \param z
 		vec(const T x, const T y, const T z) : x(x), y(y), z(z) { ; }
-
 		vec(const vec& v) : x(v.x), y(v.y), z(v.z) { ; }
-
 		vec(const vec_proxy& v) : x(v.x), y(v.y), z(v.z) { ; }
-
 		vec(const vec_proxy_const& v) : x(v.x), y(v.y), z(v.z) { ; }
+		#endif
 
 		inline vec operator-()
 		{
 			constexpr T minus_one = MISC_NAMESPACE::math<T>::minus_one;
+			#if defined(HAVE_SYCL)
+			return vec(sycl_vec * minus_one);
+			#else
 			return vec(minus_one * x, minus_one * y, minus_one * z);
+			#endif
 		}
 
+		#if defined(HAVE_SYCL)
+		#define MACRO(OP, IN_T)				\
+		inline void operator OP (const IN_T& v)		\
+		{						\
+			sycl_vec OP v.sycl_vec;			\
+		}
+		#else
 		#define MACRO(OP, IN_T)				\
 		inline void operator OP (const IN_T& v)		\
 		{						\
 			x OP v.x;				\
 			y OP v.y;				\
 			z OP v.z;				\
-		}						\
+		}
+		#endif
 
 		MACRO(+=, vec)
 		MACRO(-=, vec)
@@ -275,13 +384,21 @@ namespace VEC_NAMESPACE
 
 		#undef MACRO
 
+		#if defined(HAVE_SYCL)
+		#define MACRO(OP)				\
+		inline void operator OP (const T c)		\
+		{						\
+			sycl_vec OP c;				\
+		}
+		#else
 		#define MACRO(OP)				\
 		inline void operator OP (const T c)		\
 		{						\
 			x OP c;					\
 			y OP c;					\
 			z OP c;					\
-		}						\
+		}
+		#endif
 
 		MACRO(+=)
 		MACRO(-=)
@@ -295,7 +412,11 @@ namespace VEC_NAMESPACE
 		//! \return Euclidean norm
 		inline T length() const
 		{
+			#if defined(HAVE_SYCL)
+			return cl::sycl::length(sycl_vec);
+			#else
 			return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
+			#endif
 		}
 	};
 

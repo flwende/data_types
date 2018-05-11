@@ -265,7 +265,7 @@ namespace XXX_NAMESPACE
 			}
 		};
 	}
-
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//! \brief Multi-dimensional buffer data type
 	//!
@@ -444,6 +444,208 @@ namespace XXX_NAMESPACE
 	
 	namespace detail
 	{
+		template <typename T>
+		class DEBUG;
+
+		template <typename T, std::size_t D, data_layout Data_layout = data_layout::AoS, typename Enabled = void>
+		class device_accessor
+		{
+			using rw_accessor = typename cl::sycl::accessor<T, 1, cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>;
+
+			//! SYCL accessor
+			rw_accessor a;
+			//! Extent of the D-dimensional array
+			const sarray<std::size_t, D> n;
+			//! Offset for pointer access
+			const std::size_t offset;
+
+		public:
+
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the D-dimensional array
+			device_accessor(rw_accessor a, const sarray<std::size_t, D>& n, const std::size_t offset = 0) : a(a), n(n), offset(offset) { ; }
+
+			//! \brief Array subscript operator
+			//!
+			//! Determine the base pointer of accessor<T, D - 1> by multiplying the
+			//! dimensions of the D-1-dimensional sub-volume and idx.
+			//!
+			//! \param idx index w.r.t. dimension D
+			//! \return a accessor<T, D - 1> object
+			inline device_accessor<T, D - 1> operator[](const std::size_t idx)
+			{
+				std::size_t d_offset = idx;
+				for (std::size_t i = 0; i < (D - 1); ++i)
+				{
+					d_offset *= n[i];
+				}
+				return device_accessor<T, D - 1>(a, n, offset + d_offset);
+			}
+
+			//! \brief Array subscript operator
+			//!
+			//! Determine the base pointer of accessor<T, D - 1> by multiplying the
+			//! dimensions of the D-1-dimensional sub-volume and idx.
+			//!
+			//! \param idx index w.r.t. dimension D
+			//! \return a const accessor<T, D - 1> object
+			inline device_accessor<T, D - 1> operator[](const std::size_t idx) const
+			{
+				std::size_t d_offset = idx;
+				for (std::size_t i = 0; i < (D - 1); ++i)
+				{
+					d_offset *= n[i];
+				}
+				return device_accessor<T, D - 1>(a, n, offset + d_offset);
+			}
+		};
+
+		template <typename T, data_layout Data_layout, typename Enabled>
+		class device_accessor<T, 1, Data_layout, Enabled>
+		{
+			using rw_accessor = typename cl::sycl::accessor<T, 1, cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>;
+
+			//! SYCL accessor
+			rw_accessor a;
+			//! Extent of the 1-dimensional array
+			const sarray<std::size_t, 1> n;
+			//! Offset for pointer access
+			const std::size_t offset;
+
+		public:
+
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the 1-dimensional array
+			device_accessor(rw_accessor a, const sarray<std::size_t, 1>& n, const std::size_t offset = 0) : a(a), n(n), offset(offset) { ; }
+
+			//! \brief Array subscript operator
+			//!
+			//! \param idx element to access
+			//! \return the actual data to be accessed
+			inline T& operator[](const std::size_t idx)
+			{
+				return a[offset + idx];
+			}
+
+			//! \brief Array subscript operator
+			//!
+			//! \param idx element to access
+			//! \return the actual data to be accessed
+			inline const T& operator[](const std::size_t idx) const
+			{
+				return a[offset + idx];
+			}
+		};
+		
+		template <typename T, std::size_t D>
+		class device_accessor<T, D, data_layout::SoA, typename std::enable_if<is_vec<T>::value>::type>
+		{
+			//! Get the mapped data type that is behind T
+			using TT = typename type_info<T, data_layout::SoA>::mapped_type;
+			//! Recover the dimension of T
+			static constexpr std::size_t DD = T::dim;
+
+			using rw_accessor = typename cl::sycl::accessor<TT, 1, cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>;
+
+			//! SYCL accessor
+			rw_accessor a;
+			//! Extent of the D-dimensional array
+			const sarray<std::size_t, D> n;
+			//! Offset for pointer access
+			const std::size_t offset;
+
+		public:
+
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the D-dimensional array
+			device_accessor(rw_accessor a, const sarray<std::size_t, D>& n, const std::size_t offset = 0) : a(a), n(n), offset(offset) { ; }
+
+			//! \brief Array subscript operator
+			//!
+			//! Determine the base pointer of accessor<T, D - 1> by multiplying the
+			//! dimensions of the D-1-dimensional sub-volume and idx.
+			//!
+			//! \param idx index w.r.t. dimension D
+			//! \return a accessor<T, D - 1> object
+			inline device_accessor<T, D - 1, data_layout::SoA> operator[](const std::size_t idx)
+			{
+				std::size_t d_offset = idx * DD;
+				for (std::size_t i = 0; i < (D - 1); ++i)
+				{
+					d_offset *= n[i];
+				}
+				return device_accessor<T, D - 1, data_layout::SoA>(a, n, offset + d_offset);
+			}
+
+			//! \brief Array subscript operator
+			//!
+			//! Determine the base pointer of accessor<T, D - 1> by multiplying the
+			//! dimensions of the D-1-dimensional sub-volume and idx.
+			//!
+			//! \param idx index w.r.t. dimension D
+			//! \return a const accessor<T, D - 1> object
+			inline device_accessor<T, D - 1, data_layout::SoA> operator[](const std::size_t idx) const
+			{
+				std::size_t d_offset = idx * DD;
+				for (std::size_t i = 0; i < (D - 1); ++i)
+				{
+					d_offset *= n[i];
+				}
+				return device_accessor<T, D - 1, data_layout::SoA>(a, n, offset + d_offset);
+			}
+		};
+
+		template <typename T>
+		class device_accessor<T, 1, data_layout::SoA, typename std::enable_if<is_vec<T>::value>::type>
+		{
+			//! Get the mapped data type that is behind T
+			using TT = typename type_info<T, data_layout::SoA>::mapped_type;
+			//! Recover the dimension of T
+			static constexpr std::size_t DD = T::dim;
+
+			using rw_accessor = typename cl::sycl::accessor<TT, 1, cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>;
+
+			//! SYCL accessor
+			rw_accessor a;
+			//! Extent of the 1-dimensional array
+			const sarray<std::size_t, 1> n;
+			//! Offset for pointer access
+			const std::size_t offset;
+
+		public:
+
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the 1-dimensional array
+			device_accessor(rw_accessor a, const sarray<std::size_t, 1>& n, const std::size_t offset = 0) : a(a), n(n), offset(offset) { ; }
+
+
+			//! \brief Array subscript operator
+			//!
+			//! \param idx element to access
+			//! \return a vec_proxy<TT, DD> object
+			inline detail::vec_proxy<TT, DD> operator[](const std::size_t idx)
+			{
+				return detail::vec_proxy<TT, DD>(&a[offset + idx], n[0]);
+			}
+
+			//! \brief Array subscript operator
+			//!
+			//! \param idx element to access
+			//! \return a const vec_proxy<TT, DD> object
+			inline detail::vec_proxy<TT, DD> operator[](const std::size_t idx) const
+			{
+				return detail::vec_proxy<TT, DD>(&a[offset + idx], n[0]);
+			}
+		};
+		
 		//! \brief Copy the content from 'src' to 'dst' (D = 1 case)
 		//! 
 		//! Data layout transformations [AoS,SoA] -> [AoS,SoA] are implicit!
@@ -514,16 +716,31 @@ namespace XXX_NAMESPACE
 	template <typename T, std::size_t D, data_layout Data_layout>
 	class buffer<T, D, buffer_type::device, Data_layout>
 	{
+		#if defined(USE_OWN_ACCESSOR)
+		using TT = typename type_info<T, Data_layout>::mapped_type;
+		static constexpr std::size_t DD = type_info<T, Data_layout>::extra_dim;
+		#endif
+
 	protected:
 
 		//! SYCL device buffer
+		#if defined(USE_OWN_ACCESSOR)
+		cl::sycl::buffer<TT, 1>* m_data;
+		//! External host pointer
+		TT* external_host_ptr;
+		#else
 		cl::sycl::buffer<T, D>* m_data;
 		//! External host pointer
 		T* external_host_ptr;
+		#endif
+
 		//! Is it an external pointer
 		bool has_external_host_ptr;
 		//! SYCL scheduling thread migration
 		static bool fix_thread_pinning;
+
+		//! Shape of the buffer [with innermost dimension padded]
+		sarray<std::size_t, D> size_internal;
 
 	public:
 
@@ -537,7 +754,7 @@ namespace XXX_NAMESPACE
 		//!
 		//! \param size shape of the buffer
 		//! \param ptr external pointer to write / read data to / from
-		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr) : m_data(nullptr), external_host_ptr(nullptr), has_external_host_ptr(false)
+		buffer(const sarray<std::size_t, D>& size, T* ptr = nullptr) : m_data(nullptr), external_host_ptr(nullptr), has_external_host_ptr(false), size_internal{}, size{}
 		{
 			resize(size, ptr);
 		}
@@ -585,13 +802,16 @@ namespace XXX_NAMESPACE
 			}
 
 			// assign default values
+			size_internal = size;
 			this->size = size;
 
-			// SYCL range: inverse order of entries
-			cl::sycl::range<D> size_internal;
+			// TODO: padding of innermost dimension?
+
+			#if defined(USE_OWN_ACCESSOR)
+			std::size_t num_elements_total = DD;
 			for (std::size_t i = 0; i < D; ++i)
 			{
-				size_internal[(D - 1) - i] = size[i];
+				num_elements_total *= size[i];
 			}
 
 			// rezise the internal buffer
@@ -599,15 +819,34 @@ namespace XXX_NAMESPACE
 			{
 				delete m_data;
 			}
-			m_data = new cl::sycl::buffer<T, D>(size_internal);
+			m_data = new cl::sycl::buffer<TT, 1>(num_elements_total);
+			#else
+			// SYCL range: inverse order of entries
+			cl::sycl::range<D> size_alloc;
+			for (std::size_t i = 0; i < D; ++i)
+			{
+				size_alloc[(D - 1) - i] = size[i];
+			}
+
+			// rezise the internal buffer
+			if (m_data != nullptr)
+			{
+				delete m_data;
+			}
+			m_data = new cl::sycl::buffer<T, D>(size_alloc);
+			#endif
 			
 			// is there an external host pointer?
 			if (ptr != nullptr)
 			{
+				#if defined(USE_OWN_ACCESSOR)
+				external_host_ptr = reinterpret_cast<TT*>(ptr);
+				#else
 				external_host_ptr = ptr;
+				#endif
 				has_external_host_ptr = true;
 			}
-			
+
 			// reset CPU affinity of the master thread
 			if (fix_thread_pinning && migrate_sycl_thread)
 			{
@@ -618,13 +857,19 @@ namespace XXX_NAMESPACE
 			}
 		}
 
+		#if defined(old)
 		//! \brief Read accessor
 		//! 
 		//! \param h SYCL handler
 		//! \return a read accessor
 		inline auto read(cl::sycl::handler& h) const
 		{
+			#if defined(USE_OWN_ACCESSOR)
+			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>(h);
+			return detail::accessor<T, D>(a_m_data.get_pointer(), size_internal);
+			#else
 			return m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::global_buffer>(h);
+			#endif
 		}
 
 		//! \brief Write accessor
@@ -633,7 +878,12 @@ namespace XXX_NAMESPACE
 		//! \return a write accessor
 		inline auto write(cl::sycl::handler& h)
 		{
+			#if defined(USE_OWN_ACCESSOR)
+			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>(h);
+			return detail::accessor<T, D>(a_m_data.get_pointer(), size_internal);
+			#else
 			return m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::global_buffer>(h);
+			#endif
 		}
 
 		//! \brief Read-write accessor
@@ -642,8 +892,56 @@ namespace XXX_NAMESPACE
 		//! \return a read-write accessor
 		inline auto read_write(cl::sycl::handler& h)
 		{
+			#if defined(USE_OWN_ACCESSOR)
+			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>(h);
+			return detail::accessor<T, D>(a_m_data.get_pointer(), size_internal);
+			#else
 			return m_data->template get_access<cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>(h);
+			#endif
 		}
+		#else
+		//! \brief Read accessor
+		//! 
+		//! \param h SYCL handler
+		//! \return a read accessor
+		inline auto read(cl::sycl::handler& h) const
+		{
+			#if defined(USE_OWN_ACCESSOR)
+			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>(h);
+			return detail::device_accessor<T, D, Data_layout>(a_m_data, size_internal);
+			#else
+			return m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::global_buffer>(h);
+			#endif
+		}
+
+		//! \brief Write accessor
+		//!
+		//! \param h SYCL handler
+		//! \return a write accessor
+		inline auto write(cl::sycl::handler& h)
+		{
+			#if defined(USE_OWN_ACCESSOR)
+			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>(h);
+			return detail::device_accessor<T, D, Data_layout>(a_m_data, size_internal);
+			#else
+			return m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::global_buffer>(h);
+			#endif
+		}
+
+		//! \brief Read-write accessor
+		//!
+		//! \param h SYCL handler
+		//! \return a read-write accessor
+		inline auto read_write(cl::sycl::handler& h)
+		{
+			#if defined(USE_OWN_ACCESSOR)
+			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>(h);
+			return detail::device_accessor<T, D, Data_layout>(a_m_data, size_internal);
+			#else
+			return m_data->template get_access<cl::sycl::access::mode::read_write, cl::sycl::access::target::global_buffer>(h);
+			#endif
+		}
+		#endif
 
 		//! \brief Copy data from the host to the device
 		//!
@@ -659,8 +957,13 @@ namespace XXX_NAMESPACE
 			detail::accessor<const T, D, Data_layout> src(reinterpret_cast<const_TT*>(ptr), n_src);
 
 			// device accessor: data layout for the device is always AoS
-			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::write, cl::sycl::access::target::host_buffer>();
-			detail::accessor<T, D> dst(a_m_data.get_pointer(), size);
+			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::write>();
+			//using TT = typename type_info<T, Data_layout>::mapped_type;
+			#if defined(USE_OWN_ACCESSOR)
+			detail::accessor<T, D, Data_layout> dst(reinterpret_cast<TT*>(a_m_data.get_pointer()), size_internal);
+			#else
+			detail::accessor<T, D> dst(a_m_data.get_pointer(), size_internal);
+			#endif
 
 			detail::memcpy(dst, src, n);
 		}
@@ -695,10 +998,15 @@ namespace XXX_NAMESPACE
 		//! \param n number of elements to be transferred
 		//! \param stride [optional] extent of the innermost dimension of the field pointed to by 'ptr'
 		inline void memcpy_d2h(T* ptr, const sarray<std::size_t, D>& n, const std::size_t stride = 0)
-		{
+		{			
 			// device accessor: data layout for the device is always AoS
-			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read, cl::sycl::access::target::host_buffer>();
-			detail::accessor<const T, D> src(a_m_data.get_pointer(), size);
+			auto a_m_data = m_data->template get_access<cl::sycl::access::mode::read>();
+			#if defined(USE_OWN_ACCESSOR)
+			using const_TT = typename type_info<const T, Data_layout>::mapped_type;
+			detail::accessor<const T, D, Data_layout> src(reinterpret_cast<const_TT*>(a_m_data.get_pointer()), size_internal);
+			#else
+			detail::accessor<const T, D> src(a_m_data.get_pointer(), size_internal);
+			#endif
 
 			// host accessor: inner dimension for data access is given by 'stride', or n[0]
 			sarray<std::size_t, D> n_dst = n;
@@ -910,12 +1218,20 @@ namespace XXX_NAMESPACE
 				// SYCL buffer:
 
 				// swap internal storage
+				#if defined(USE_OWN_ACCESSOR)
+				cl::sycl::buffer<TT, 1>* this_m_data = device_buffer::m_data;
+				#else
 				cl::sycl::buffer<T, D>* this_m_data = device_buffer::m_data;
+				#endif
 				device_buffer::m_data = b.device_buffer::m_data;
 				b.device_buffer::m_data = this_m_data;
 
 				// swap external host pointer
+				#if defined(USE_OWN_ACCESSOR)
+				TT* this_external_host_ptr = device_buffer::external_host_ptr;
+				#else
 				T* this_external_host_ptr = device_buffer::external_host_ptr;
+				#endif
 				device_buffer::external_host_ptr = b.device_buffer::external_host_ptr;
 				b.device_buffer::external_host_ptr = this_external_host_ptr;
 

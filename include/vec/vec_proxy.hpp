@@ -14,6 +14,13 @@
 #endif
 #endif
 
+
+#if defined(USE_OWN_ACCESSOR) && defined(__SYCL_DEVICE_ONLY__)
+#define ADDR_SPACE __attribute__((address_space(1)))
+#else
+#define ADDR_SPACE
+#endif
+
 namespace VEC_NAMESPACE
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -227,11 +234,11 @@ namespace VEC_NAMESPACE
 			static constexpr std::size_t dim = 3;
 
 			//! Reference to x component of the corresponding vec<T, 3> object
-			T& x;
+			ADDR_SPACE T& x;
 			//! Reference to y component of the corresponding vec<T, 3> object
-			T& y;
+			ADDR_SPACE T& y;
 			//! Reference to z component of the corresponding vec<T, 3> object
-			T& z;
+			ADDR_SPACE T& z;
 
 			//! \brief Constructor taking the address of the x component of the vec<T, 3> object
 			//!
