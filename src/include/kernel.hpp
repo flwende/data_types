@@ -10,9 +10,10 @@
 
 // data types and layout
 using real_t = float;
-constexpr fw::buffer_type Buffer_type = fw::buffer_type::host; 
-constexpr fw::data_layout Data_layout = fw::data_layout::SoA;
-//constexpr fw::data_layout Data_layout = fw::data_layout::AoS;
+//constexpr fw::buffer_type Buffer_type = fw::buffer_type::host;
+constexpr fw::buffer_type Buffer_type = fw::buffer_type::host_device; 
+//constexpr fw::data_layout Data_layout = fw::data_layout::SoA;
+constexpr fw::data_layout Data_layout = fw::data_layout::AoS;
 
 #if defined(__INTEL_SDLT)
 	#include <sdlt/sdlt.h>

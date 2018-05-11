@@ -8,7 +8,7 @@ LD = g++
 
 INTELROOT = $(MKLROOT)/../compiler
 INC = -I$(HOME)/opt/gnu-7.2.0/boost/include -I./include -I./src/include -I$(COMPUTECPP_PACKAGE_ROOT_DIR)/include
-CXXFLAGS = -O3 -std=c++14 -mavx2 -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized -DHAVE_SYCL $(INC)
+CXXFLAGS = -O3 -std=c++14 -mavx2 -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized -DHAVE_SYCL -DUSE_OWN_ACCESSOR $(INC)
 LDFLAGS = -O2 -L$(INTELROOT)/lib/intel64 -liomp5 -L$(COMPUTECPP_PACKAGE_ROOT_DIR)/lib -lComputeCpp
 
 CXXFLAGS += -DCHECK_RESULTS
@@ -22,7 +22,7 @@ obj/test_buffer.o: src/test_buffer.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/kernel.o: src/kernel.cpp
-	compute++ -sycl-driver -O3 -std=c++14 -fvectorize -ffast-math -ftree-vectorize -fopenmp=libiomp5 -DHAVE_SYCL -D_GLIBCXX_USE_CXX11_ABI=0 $(INC) -o $@ -c $<
+	compute++ -sycl-driver -O3 -std=c++14 -fvectorize -ffast-math -ftree-vectorize -fopenmp=libiomp5 -DHAVE_SYCL -DUSE_OWN_ACCESSOR -D_GLIBCXX_USE_CXX11_ABI=0 $(INC) -o $@ -c $<
 
 clean:
 	rm -f *~ obj/*.o bin/test_buffer.x
