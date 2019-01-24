@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <type_traits>
 #include <vector>
+#include <memory>
 #include <boost/align/aligned_allocator.hpp>
 
 #if !defined(XXX_NAMESPACE)
@@ -33,6 +34,7 @@ namespace XXX_NAMESPACE
 #include "../misc/misc.hpp"
 #include "../simd/simd.hpp"
 
+#if defined(OLD)
 namespace XXX_NAMESPACE
 {
 	constexpr std::size_t data_alignment = SIMD_NAMESPACE::simd::alignment;
@@ -1248,5 +1250,175 @@ namespace XXX_NAMESPACE
 	
 	#endif
 }
+#else // OLD
+namespace XXX_NAMESPACE
+{
+	constexpr std::size_t data_alignment = SIMD_NAMESPACE::simd::alignment;
+
+	namespace internal
+	{
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//! \brief Accessor data type implementing array subscript operator chaining
+		//!
+		//! This data type basically collects all indices and determines the final base pointer for data access.
+		//!
+		//! \tparam T data type
+		//! \tparam D dimension
+		//! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
+		//! \tparam Enabled needed for partial specialization with T = vec<TT, DD> and Data_layout = SoA
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <typename T, std::size_t D, data_layout L, typename Enabled = void>
+		class accessor
+		{
+            //using T_fundamental = typename traits<typename traits<T>::proxy_type>::fundamental_type;
+            //using T_internal = typename std::conditional<L == data_layout::SoA, T_fundamental, T>::type;
+            using T_internal = typename std::conditional<L == data_layout::SoA, typename traits<T>::public_member_ptr_type, T>::type;
+			//! Base pointer
+			T_internal* ptr;
+			//! Extent of the D-dimensional array
+			const sarray<std::uint32_t, D> n;
+            static constexpr std::uint32_t n_innermost = (L == data_layout::SoA ? (traits<T>::public_member_bytes / sizeof(T_internal)) : 1);
+
+		public:
+
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the D-dimensional array
+			accessor(T_internal* ptr, const sarray<std::uint32_t, D>& n) : ptr(ptr), n(n) { ; }
+
+            accessor<T, D - 1, L> operator[] (const std::uint32_t i)
+            {
+                const std::uint32_t offset = n.reduce([](std::uint32_t product, const std::uint32_t x) { return product * x; }, i * n_innermost, D - 1);
+                std::cout << "n_innermost=" << n_innermost << std::endl;
+                std::cout << "offset=" << offset << std::endl;
+
+                return accessor<T, D - 1, L>(&ptr[offset], n);
+            }
+		};
+
+        template <typename T, data_layout L, typename Enabled>
+		class accessor<T, 1, L, Enabled>
+		{
+			//! Base pointer
+			T* ptr;
+			//! Extent of the D-dimensional array
+			const sarray<std::uint32_t, 1> n;
+
+		public:
+
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the D-dimensional array
+			accessor(T* ptr, const sarray<std::uint32_t, 1>& n) : ptr(ptr), n(n) { ; }
+
+            T& operator[] (const std::uint32_t i)
+            {
+                return ptr[i];
+            }
+		};
+
+        template <typename T>
+		class accessor<T, 1, data_layout::SoA, typename std::enable_if<provides_proxy_type<T>::value>::type>
+		{
+            using T_internal = typename traits<typename traits<T>::proxy_type>::public_member_ptr_type;
+			//! Base pointer
+			T_internal* ptr;
+			//! Extent of the D-dimensional array
+			const sarray<std::uint32_t, 1> n;
+
+            using proxy_type = typename traits<T>::proxy_type;
+
+		public:
+
+			//! \brief Standard constructor
+			//!
+			//! \param ptr base pointer
+			//! \param n extent of the D-dimensional array
+			accessor(T_internal* ptr, const sarray<std::uint32_t, 1>& n) : ptr(ptr), n(n) { ; }
+
+            proxy_type operator[] (const std::uint32_t i)
+            {
+                return proxy_type(&ptr[i], n[0]);
+            }
+		};
+	}
+
+	template <typename T, std::uint32_t D, data_layout L = data_layout::AoS>
+	class buffer
+	{
+        static_assert(!std::is_const<T>::value, "error: buffer with const elements is not allowed");
+
+		using element_type = T;
+        using const_element_type = typename internal::traits<T>::const_type;
+		static constexpr std::uint32_t d = D;
+
+		using T_internal = typename std::conditional<L == data_layout::SoA, typename internal::traits<T>::public_member_ptr_type, T>::type;
+		std::vector<T_internal> memory;
+
+        const sarray<std::uint32_t, D> size;
+        const std::uint32_t num_elements;
+
+        using return_type = typename std::conditional<(D > 1), internal::accessor<element_type, D - 1, L>, typename std::result_of<decltype(&internal::accessor<element_type, 1, L>::operator[])(internal::accessor<element_type, 1, L>, std::uint32_t)>::type>::type;
+        using const_return_type = typename std::conditional<(D > 1), internal::accessor<const_element_type, D - 1, L>, typename std::result_of<decltype(&internal::accessor<const_element_type, 1, L>::operator[])(internal::accessor<const_element_type, 1, L>, std::uint32_t)>::type>::type;
+        
+	public:
+
+		buffer(const sarray<std::uint32_t, D>& size, const bool intialize_to_zero = false)
+			:
+			size(size),
+            num_elements(size.reduce([](std::uint32_t product, const std::uint32_t x) { return product * x; }, 1))
+		{
+			const std::uint32_t type_scaling_factor = sizeof(T) / sizeof(T_internal);
+			std::cout << "INFO from buffer() : allocate " << num_elements << " elements of size " << sizeof(T_internal) << " with type_scaling_factor " << type_scaling_factor << std::endl;
+
+            memory.reserve(num_elements * type_scaling_factor);
+			if (intialize_to_zero)
+			{
+				for (std::uint32_t i = 0; i < (num_elements * type_scaling_factor); ++i)
+                {
+                    memory[i] = 0;
+                }
+			}
+		}
+
+		return_type operator[] (const std::uint32_t idx)
+		{	
+            internal::accessor<element_type, D, L> read_write(memory.data(), size);
+			return read_write[idx];
+		}
+
+        const_return_type operator[] (const std::uint32_t idx) const
+		{	
+            internal::accessor<const_element_type, D, L> read(memory.data(), size);
+			return read[idx];
+		}
+
+        template <typename RT>
+        class DEBUG;
+
+        void print() const
+        {
+            using ptr_type = typename std::conditional<L == data_layout::SoA, typename internal::traits<T>::fundamental_type, T>::type;
+            constexpr std::uint32_t type_scaling_factor = sizeof(T) / sizeof(ptr_type);
+            const ptr_type* ptr = &memory[0];
+
+            //DEBUG<ptr_type> y;
+
+            for (std::uint32_t i = 0; i < (num_elements * type_scaling_factor); ++i)
+            {
+                if (i > 0 && (i % size[0]) == 0)
+                {
+                    std::cout << std::endl;
+                }
+
+                std::cout << ptr[i] << ", ";
+            }
+            std::cout << std::endl;
+        }
+	};
+}
+#endif
 
 #endif
