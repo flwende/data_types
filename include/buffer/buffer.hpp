@@ -1270,8 +1270,6 @@ namespace XXX_NAMESPACE
         template <typename T, std::size_t D, data_layout L, typename Enabled = void>
 		class accessor
 		{
-            //using T_fundamental = typename traits<typename traits<T>::proxy_type>::fundamental_type;
-            //using T_internal = typename std::conditional<L == data_layout::SoA, T_fundamental, T>::type;
             using T_internal = typename std::conditional<L == data_layout::SoA, typename traits<T>::public_member_ptr_type, T>::type;
 			//! Base pointer
 			T_internal* ptr;
@@ -1290,8 +1288,6 @@ namespace XXX_NAMESPACE
             accessor<T, D - 1, L> operator[] (const std::uint32_t i)
             {
                 const std::uint32_t offset = n.reduce([](std::uint32_t product, const std::uint32_t x) { return product * x; }, i * n_innermost, D - 1);
-                std::cout << "n_innermost=" << n_innermost << std::endl;
-                std::cout << "offset=" << offset << std::endl;
 
                 return accessor<T, D - 1, L>(&ptr[offset], n);
             }
@@ -1340,7 +1336,8 @@ namespace XXX_NAMESPACE
 
             proxy_type operator[] (const std::uint32_t i)
             {
-                return proxy_type(&ptr[i], n[0]);
+                //return proxy_type(&ptr[i], n[0]);
+                return proxy_type(ptr, i, n[0]);
             }
 		};
 	}
@@ -1370,7 +1367,7 @@ namespace XXX_NAMESPACE
 			size(size),
             num_elements(size.reduce([](std::uint32_t product, const std::uint32_t x) { return product * x; }, 1))
 		{
-			const std::uint32_t type_scaling_factor = sizeof(T) / sizeof(T_internal);
+			const std::uint32_t type_scaling_factor = (L == data_layout::SoA && provides_proxy_type<T>::value ? internal::traits<T>::sizeof_type : 1);
 			std::cout << "INFO from buffer() : allocate " << num_elements << " elements of size " << sizeof(T_internal) << " with type_scaling_factor " << type_scaling_factor << std::endl;
 
             memory.reserve(num_elements * type_scaling_factor);
@@ -1395,16 +1392,12 @@ namespace XXX_NAMESPACE
 			return read[idx];
 		}
 
-        template <typename RT>
-        class DEBUG;
-
         void print() const
         {
+            /*
             using ptr_type = typename std::conditional<L == data_layout::SoA, typename internal::traits<T>::fundamental_type, T>::type;
             constexpr std::uint32_t type_scaling_factor = sizeof(T) / sizeof(ptr_type);
             const ptr_type* ptr = &memory[0];
-
-            //DEBUG<ptr_type> y;
 
             for (std::uint32_t i = 0; i < (num_elements * type_scaling_factor); ++i)
             {
@@ -1416,6 +1409,30 @@ namespace XXX_NAMESPACE
                 std::cout << ptr[i] << ", ";
             }
             std::cout << std::endl;
+            */
+           /*
+            using ptr_type = typename std::conditional<L == data_layout::SoA, std::uint8_t, T>::type;
+            constexpr std::uint32_t type_scaling_factor = (L == data_layout::SoA && provides_proxy_type<T>::value ? internal::traits<T>::sizeof_type : 1);
+            const ptr_type* ptr = &memory[0];
+
+            for (std::uint32_t i = 0; i < (num_elements * type_scaling_factor); ++i)
+            {
+                if (i > 0 && (i % size[0]) == 0)
+                {
+                    std::cout << std::endl;
+                }
+
+                if (L == data_layout::SoA)
+                {
+                    //std::cout << static_cast<std::int32_t>(ptr[i]) << ", ";
+                }
+                else
+                {
+                    std::cout << ptr[i] << ", ";
+                }
+            }
+            std::cout << std::endl;
+            */
         }
 	};
 }
