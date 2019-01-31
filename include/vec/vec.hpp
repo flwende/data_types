@@ -1,73 +1,237 @@
-// Copyright (c) 2017-2018 Florian Wende (flwende@gmail.com)
+// Copyright (c) 2017-2019 Florian Wende (flwende@gmail.com)
 //
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(VEC_HPP)
-#define VEC_HPP
-
-#if defined(HAVE_SYCL)
-#include <CL/sycl.hpp>
-#endif
+#if !defined(VEC_VEC_HPP)
+#define VEC_VEC_HPP
 
 #include <cstdint>
 #include <type_traits>
-#include <utility>
-#include <immintrin.h>
+
+#if !defined(XXX_NAMESPACE)
+#define XXX_NAMESPACE fw
+#endif
 
 #if !defined(VEC_NAMESPACE)
-#if !defined(XXX_NAMESPACE)
-#define VEC_NAMESPACE fw
-#else
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
-#endif
 
-#include "../sarray/sarray.hpp"
-#include "../simd/simd.hpp"
 #include "../misc/misc_math.hpp"
+#include "../traits/traits.hpp"
 
 namespace VEC_NAMESPACE
 {
-    template <typename T, std::size_t D>
-    struct vec;
-
-    template <typename T_1, typename T_2, typename T_3>
-    struct A;
-
+    // some forward declarations
     namespace internal
     {
-        template <typename T>
-        constexpr T greatest_common_divisor(T a, T b)
-        {
-            static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
-
-            while (true)
-            {
-                if (a == 0) return b;
-
-                b %= a;
-                if (b == 0) return a;
-
-                a %= b;
-            }
-
-            return 0;
-        }
-
-        template <typename T>
-        constexpr T least_common_multiple(T a, T b)
-        {
-            return (a * b) / greatest_common_divisor(a, b);
-        }
-
         template <typename T, std::size_t D>
-        struct vec_proxy;
-
-        template <typename T_1, typename T_2, typename T_3>
-        struct A_proxy;
+        class vec_proxy;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//! \brief A simple vector with D components of the same type
+	//!
+	//! \tparam T data type
+	//! \tparam D dimension
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename T, std::size_t D>
+    class vec;
+
+    //! \brief D = 1 specialization with component x
+	//!
+	//! \tparam T data type
+    template <typename T>
+	class vec<T, 1>
+	{
+		static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
+		static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
+        static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
+        static_assert(!std::is_const<T>::value, "error: T is const -> not allowed");
+
+	public:
+
+        using type = vec<T, 1>;
+        using proxy_type = typename internal::vec_proxy<T, 1>;
+        //! Remember the template type parameter T
+        using element_type = T;
+        //! Remember the template parameter D (=1)
+		static constexpr std::size_t d = 1;
+
+        T x;
+
+        //! Constructors
+		vec(const T x = 0)
+            :
+            x(x) {}
+
+		template <typename X>
+		vec(const vec<X, 1>& v)
+            :
+            x(v.x) {}
+
+		template <typename X>
+		vec(const internal::vec_proxy<X, 1>& vp)
+            :
+            x(vp.x) {}
+        
+        //! Some operators
+        inline vec operator-()
+        {
+            return vec(-x);
+        }
+
+    #define MACRO(OP, IN_T)                         \
+        template <typename X>                       \
+		vec& operator OP (const IN_T<X, 1>& v)      \
+		{                                           \
+			x OP v.x;                               \
+			return *this;                           \
+		}                                           \
+        
+        MACRO(=, vec)
+        MACRO(+=, vec)
+        MACRO(-=, vec)
+        MACRO(*=, vec)
+        MACRO(/=, vec)
+
+        MACRO(=, internal::vec_proxy)
+        MACRO(+=, internal::vec_proxy)
+        MACRO(-=, internal::vec_proxy)
+        MACRO(*=, internal::vec_proxy)
+        MACRO(/=, internal::vec_proxy)
+
+    #undef MACRO
+
+    #define MACRO(OP)                               \
+		template <typename X>                       \
+		vec& operator OP (const X x)                \
+		{                                           \
+			x OP x;                                 \
+			return *this;                           \
+		}                                           \
+
+        MACRO(=)
+        MACRO(+=)
+        MACRO(-=)
+        MACRO(*=)
+        MACRO(/=)
+
+    #undef MACRO
+
+        //! \brief Return the Euclidean norm of the vector
+		//!
+		//! \return Euclidean norm
+		inline T length() const
+		{
+			return std::abs(x);
+		}
+	};
+
+    //! \brief D = 2 specialization with component x
+	//!
+	//! \tparam T data type
+    template <typename T>
+	class vec<T, 2>
+	{
+		static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
+		static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
+        static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
+        static_assert(!std::is_const<T>::value, "error: T is const -> not allowed");
+
+	public:
+
+        using type = vec<T, 2>;
+        using proxy_type = typename internal::vec_proxy<T, 2>;
+        //! Remember the template type parameter T
+        using element_type = T;
+        //! Remember the template parameter D (=2)
+		static constexpr std::size_t d = 2;
+
+        T x;
+		T y;
+
+        //! Constructors
+		vec(const T xy = 0) 
+            :
+            x(xy),
+            y(xy) {}
+
+		vec(const T x, const T y)
+            :
+            x(x),
+            y(y) {}
+
+		template <typename X>
+		vec(const vec<X, 2>& v)
+            :
+            x(v.x),
+            y(v.y) {}
+
+		template <typename X>
+		vec(const internal::vec_proxy<X, 2>& vp)
+            :
+            x(vp.x),
+            y(vp.y) {}
+        
+        //! Some operators
+        inline vec operator-()
+        {
+            return vec(-x, -y);
+        }
+
+    #define MACRO(OP, IN_T)                         \
+        template <typename X>                       \
+		vec& operator OP (const IN_T<X, 2>& v)      \
+		{                                           \
+			x OP v.x;                               \
+			y OP v.y;                               \
+			return *this;                           \
+		}                                           \
+        
+        MACRO(=, vec)
+        MACRO(+=, vec)
+        MACRO(-=, vec)
+        MACRO(*=, vec)
+        MACRO(/=, vec)
+
+        MACRO(=, internal::vec_proxy)
+        MACRO(+=, internal::vec_proxy)
+        MACRO(-=, internal::vec_proxy)
+        MACRO(*=, internal::vec_proxy)
+        MACRO(/=, internal::vec_proxy)
+
+    #undef MACRO
+
+    #define MACRO(OP)                               \
+		template <typename X>                       \
+		vec& operator OP (const X xy)               \
+		{                                           \
+			x OP xy;                                \
+			y OP xy;                                \
+			return *this;                           \
+		}                                           \
+
+        MACRO(=)
+        MACRO(+=)
+        MACRO(-=)
+        MACRO(*=)
+        MACRO(/=)
+
+    #undef MACRO
+
+        //! \brief Return the Euclidean norm of the vector
+		//!
+		//! \return Euclidean norm
+		inline T length() const
+		{
+			return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y);
+		}
+	};
+    
+    //! \brief D = 3 specialization with component x
+	//!
+	//! \tparam T data type
     template <typename T>
 	class vec<T, 3>
 	{
@@ -80,49 +244,112 @@ namespace VEC_NAMESPACE
 
         using type = vec<T, 3>;
         using proxy_type = typename internal::vec_proxy<T, 3>;
+        //! Remember the template type parameter T
+        using element_type = T;
+        //! Remember the template parameter D (=3)
 		static constexpr std::size_t d = 3;
 
-		vec() : x(0), y(0), z(0) {}
-		vec(const T xyz) : x(xyz), y(xyz), z(xyz) {}
-		vec(const T x, const T y, const T z) : x(x), y(y), z(z) {}
-
-		template <typename X>
-		vec(const vec<X, 3>& v) : x(v.x), y(v.y), z(v.z) {}
-        
-		template <typename X>
-		vec(const internal::vec_proxy<X, 3>& vp) : x(vp.x), y(vp.y), z(vp.z) {}
-        
-		template <typename X>
-		vec& operator+=(const vec<X, 3>& v)
-		{
-			x += v.x;
-			y += v.y;
-			z += v.z;
-			return *this;	
-		}
-        
-        template <typename X>
-		vec& operator+=(const internal::vec_proxy<X, 3>& vp)
-		{
-			x += vp.x;
-			y += vp.y;
-			z += vp.z;
-			return *this;	
-		}
-        
-		template <typename X>
-		vec& operator+=(const X xyz)
-		{
-			x += xyz;
-			y += xyz;
-			z += xyz;
-			return *this;
-		}
-
-		T x;
+        T x;
 		T y;
 		T z;
+
+        //! Constructors
+		vec(const T xyz = 0)
+            :
+            x(xyz),
+            y(xyz),
+            z(xyz) {}
+
+		vec(const T x, const T y, const T z)
+            :
+            x(x),
+            y(y),
+            z(z) {}
+
+		template <typename X>
+		vec(const vec<X, 3>& v)
+            :
+            x(v.x),
+            y(v.y),
+            z(v.z) {}
+
+		template <typename X>
+		vec(const internal::vec_proxy<X, 3>& vp)
+            :
+            x(vp.x),
+            y(vp.y),
+            z(vp.z) {}
+        
+        //! Some operators
+        inline vec operator-()
+        {
+            return vec(-x, -y, -z);
+        }
+
+    #define MACRO(OP, IN_T)                         \
+        template <typename X>                       \
+		vec& operator OP (const IN_T<X, 3>& v)      \
+		{                                           \
+			x OP v.x;                               \
+			y OP v.y;                               \
+			z OP v.z;                               \
+			return *this;                           \
+		}                                           \
+        
+        MACRO(=, vec)
+        MACRO(+=, vec)
+        MACRO(-=, vec)
+        MACRO(*=, vec)
+        MACRO(/=, vec)
+
+        MACRO(=, internal::vec_proxy)
+        MACRO(+=, internal::vec_proxy)
+        MACRO(-=, internal::vec_proxy)
+        MACRO(*=, internal::vec_proxy)
+        MACRO(/=, internal::vec_proxy)
+
+    #undef MACRO
+
+    #define MACRO(OP)                               \
+		template <typename X>                       \
+		vec& operator OP (const X xyz)              \
+		{                                           \
+			x OP xyz;                               \
+			y OP xyz;                               \
+			z OP xyz;                               \
+			return *this;                           \
+		}                                           \
+
+        MACRO(=)
+        MACRO(+=)
+        MACRO(-=)
+        MACRO(*=)
+        MACRO(/=)
+
+    #undef MACRO
+
+        //! \brief Return the Euclidean norm of the vector
+		//!
+		//! \return Euclidean norm
+		inline T length() const
+		{
+			return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
+		}
 	};
+
+    template <typename T>
+	std::ostream& operator<<(std::ostream& os, const vec<T, 1>& v)
+	{
+		os << "(" << v.x << ")";
+		return os;
+	}
+
+    template <typename T>
+	std::ostream& operator<<(std::ostream& os, const vec<T, 2>& v)
+	{
+		os << "(" << v.x << "," << v.y << ")";
+		return os;
+	}
 
 	template <typename T>
 	std::ostream& operator<<(std::ostream& os, const vec<T, 3>& v)
@@ -130,564 +357,25 @@ namespace VEC_NAMESPACE
 		os << "(" << v.x << "," << v.y << "," << v.z << ")";
 		return os;
 	}
+}
 
-    namespace internal
-    {   
-        template <typename T>
-		class vec_proxy<T, 3>
-		{
-			static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
-			static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
-            static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
+#include "vec_proxy.hpp"
+#include "vec_math.hpp"
 
-        public:
-
-            // some meta data: to be generated by the proxy generator
-            using type = vec_proxy<T, 3>;
-            using const_type = vec_proxy<const T, 3>;
-            using T_unqualified = typename std::remove_cv<T>::type;
-            static constexpr std::size_t d = 3;
-
-            /* if inhomogeneoues
-            struct memory
-            {
-                using T_1 = T;
-                using T_2 = T;
-                using T_3 = T;
-
-                // some meta data: to be generated by the proxy generator
-                static constexpr bool is_homogeneous = (sizeof(T_1) == sizeof(T_2) && sizeof(T_1) == sizeof(T_3));
-                static constexpr std::size_t size_largest_type = std::max(sizeof(T_1), std::max(sizeof(T_2), sizeof(T_3)));
-                static constexpr std::size_t size_rest = 
-                    (sizeof(T_1) == size_largest_type ? 0UL : sizeof(T_1)) +
-                    (sizeof(T_2) == size_largest_type ? 0UL : sizeof(T_2)) +
-                    (sizeof(T_3) == size_largest_type ? 0UL : sizeof(T_3));
-                // relation to the greatest common divisor: lcm(a, b) = (a * b) / gcd(a, b)                                                     
-                static constexpr std::size_t record_padding_factor = least_common_multiple(size_largest_type, size_rest) / std::max(1UL, size_rest);
-                static constexpr std::size_t record_size = sizeof(T_1) + sizeof(T_2) + sizeof(T_3);
-
-                static constexpr std::size_t unit_factor_T_1 = size_largest_type / sizeof(T_1);
-                static constexpr std::size_t unit_factor_T_2 = size_largest_type / sizeof(T_2);
-                static constexpr std::size_t unit_factor_T_3 = size_largest_type / sizeof(T_3);
-
-                const std::size_t num_units;
-                T_1* __restrict__ p_1;
-                T_2* __restrict__ p_2;
-                T_3* __restrict__ p_3;
-
-                memory(std::uint8_t* __restrict__ ptr, const std::size_t n_innermost)
-                    :
-                    num_units((n_innermost * (sizeof(T_1) + sizeof(T_2) + sizeof(T_3))) / size_largest_type),
-                    p_1(reinterpret_cast<T_1*>(&ptr[0])),
-                    p_2(reinterpret_cast<T_2*>(&ptr[n_innermost * sizeof(T_1)])),
-                    p_3(reinterpret_cast<T_3*>(&ptr[n_innermost * (sizeof(T_1) + sizeof(T_2))])) 
-                { ; }
-
-
-                memory(const typename vec_proxy<unqualified_type, 3>::memory& m)
-                    :
-                    num_units(m.num_units),
-                    p_1(m.p_1),
-                    p_2(m.p_2),
-                    p_3(m.p_3)
-                { ; }
-
-                memory(const typename vec_proxy<const unqualified_type, 3>::memory& m)
-                    :
-                    num_units(m.num_units),
-                    p_1(m.p_1),
-                    p_2(m.p_2),
-                    p_3(m.p_3)
-                { ; }
-
-                memory(const memory& m, const std::size_t slice_idx, const std::size_t idx)
-                    :
-                    num_units(m.num_units),
-                    p_1(&m.p_1[slice_idx * num_units * unit_factor_T_1 + idx]),
-                    p_2(&m.p_2[slice_idx * num_units * unit_factor_T_2 + idx]),
-                    p_3(&m.p_3[slice_idx * num_units * unit_factor_T_3 + idx])
-                { ; }
-
-                memory at(const std::size_t slice_idx, const std::size_t idx)
-                {
-                    return memory(*this, slice_idx, idx);
-                }
-
-                memory at(const std::size_t slice_idx, const std::size_t idx) const
-                {
-                    return memory(*this, slice_idx, idx);
-                }
-
-                // replace by internal alignment
-                static std::size_t padding(const std::size_t n, const std::size_t alignment = 16)
-                {
-                    // bytes: test for power of 2                                                             
-                    const std::size_t byte_padding_factor = std::max(1UL, alignment / size_largest_type);
-                    const std::size_t ratio = (is_homogeneous ? byte_padding_factor : least_common_multiple(record_padding_factor, byte_padding_factor));
-
-                    return ((n + ratio - 1) / ratio) * ratio;
-                }
-
-                template <std::size_t D>
-                static std::uint8_t* allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = 16)
-                {
-                    if (n[0] != padding(n[0], alignment))
-                    {
-                        std::cerr << "error in vec_proxy::memory::allocate : n[0] does not match alignment" << std::endl;
-                    }
-
-                    return reinterpret_cast<std::uint8_t*>(_mm_malloc(n.reduce_mul() * record_size, alignment));
-                }
-
-                static void deallocate(memory& m)
-                {
-                    if (m.p_1)
-                    {
-                        _mm_free(reinterpret_cast<std::uint8_t*>(m.p_1));
-                    }
-                }
-            };
-            */
-
-            struct memory
-            {
-                static constexpr std::size_t num_members = 3;
-                static constexpr std::size_t record_size = num_members * sizeof(T);
-                
-                const std::size_t n_innermost;
-                T* __restrict__ ptr;
-                
-                memory(T* __restrict__ ptr, const std::size_t n_innermost)
-                    :
-                    n_innermost(n_innermost),
-                    ptr(ptr)
-                { ; }
-
-
-                memory(const typename vec_proxy<T_unqualified, 3>::memory& m)
-                    :
-                    n_innermost(m.n_innermost),
-                    ptr(m.ptr)
-                { ; }
-
-                memory(const typename vec_proxy<const T_unqualified, 3>::memory& m)
-                    :
-                    n_innermost(m.n_innermost),
-                    ptr(m.ptr)
-                { ; }
-
-                memory(const memory& m, const std::size_t slice_idx, const std::size_t idx)
-                    :
-                    n_innermost(m.n_innermost),
-                    ptr(&m.ptr[slice_idx * num_members * n_innermost + idx])
-                { ; }
-
-                memory at(const std::size_t slice_idx, const std::size_t idx)
-                {
-                    return memory(*this, slice_idx, idx);
-                }
-
-                memory at(const std::size_t slice_idx, const std::size_t idx) const
-                {
-                    return memory(*this, slice_idx, idx);
-                }
-
-                // replace by internal alignment
-                static std::size_t padding(const std::size_t n, const std::size_t alignment = 16)
-                {
-                    // bytes: test for power of 2
-                    const std::size_t ratio = std::max(1UL, alignment / sizeof(T));
-
-                    return ((n + ratio - 1) / ratio) * ratio;
-                }
-
-                template <std::size_t D>
-                static T* allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = 16)
-                {
-                    if (n[0] != padding(n[0], alignment))
-                    {
-                        std::cerr << "error in vec_proxy::memory::allocate : n[0] does not match alignment" << std::endl;
-                    }
-
-                    return reinterpret_cast<T*>(_mm_malloc(n.reduce_mul() * record_size, alignment));
-                }
-
-                static void deallocate(memory& m)
-                {
-                    if (m.ptr)
-                    {
-                        _mm_free(m.ptr);
-                    }
-                }
-            };
-			
-		public:
-
-            /* if inhomogeneous
-            vec_proxy(memory m)
-                :
-                x(*(m.p_1)),
-                y(*(m.p_2)),
-                z(*(m.p_3))
-            { ; }
-            */
-            vec_proxy(memory m)
-                :
-                x(m.ptr[0 * m.n_innermost]),
-                y(m.ptr[1 * m.n_innermost]),
-                z(m.ptr[2 * m.n_innermost])
-            { ; }
-            
-			template <typename X>
-			vec_proxy& operator=(const X xyz)
-			{
-				x = xyz;
-				y = xyz;
-				z = xyz;
-				return *this;
-			}
-
-			template <typename X>
-			vec_proxy& operator+=(const vec<X, 3>& v)
-			{
-				x += v.x;
-				y += v.y;
-				z += v.z;
-				return *this;
-			}
-
-			template <typename X>
-			vec_proxy& operator+=(const vec_proxy<X, 3>& vp)
-			{
-				x += vp.x;
-				y += vp.y;
-				z += vp.z;
-				return *this;
-			}
-
-			template <typename X>
-			vec_proxy& operator+=(const X xyz)
-			{
-				x += xyz;
-				y += xyz;
-				z += xyz;
-				return *this;
-			}
-
-            T& x;
-			T& y;
-			T& z;
-		};
-
-		template <typename T>
-		std::ostream& operator<<(std::ostream& os, const vec_proxy<T, 3>& vp)
-		{
-			os << "(" << vp.x << "," << vp.y << "," << vp.z << ")";
-			return os;
-		}
-    }
-
-    template <typename T_1, typename T_2, typename T_3>
-    struct A
-    {
-        static_assert(std::is_fundamental<T_1>::value, "error: T_1 is not a fundamental data type");
-		static_assert(!std::is_void<T_1>::value, "error: T_1 is void -> not allowed");
-        static_assert(!std::is_volatile<T_1>::value, "error: T_1 is volatile -> not allowed");
-        static_assert(!std::is_const<T_1>::value, "error: T_1 is const -> not allowed");
-
-        static_assert(std::is_fundamental<T_2>::value, "error: T_2 is not a fundamental data type");
-		static_assert(!std::is_void<T_2>::value, "error: T_2 is void -> not allowed");
-        static_assert(!std::is_volatile<T_2>::value, "error: T_2 is volatile -> not allowed");
-        static_assert(!std::is_const<T_2>::value, "error: T_2 is const -> not allowed");
-
-        static_assert(std::is_fundamental<T_3>::value, "error: T_3 is not a fundamental data type");
-		static_assert(!std::is_void<T_3>::value, "error: T_3 is void -> not allowed");
-        static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
-        static_assert(!std::is_const<T_3>::value, "error: T_3 is const -> not allowed");
-
-        using type = A<T_1, T_2, T_3>;
-        using proxy_type = typename internal::A_proxy<T_1, T_2, T_3>;
-
-		A() : x(0), y(0), z(0) {}
-
-        template <typename X>
-		A(const X xyz) : x(xyz), y(xyz), z(xyz) {}
-		A(const T_1 x, const T_2 y, const T_3 z) : x(x), y(y), z(z) {}
-
-		template <typename X_1, typename X_2, typename X_3>
-		A(const A<X_1, X_2, X_3>& v) : x(v.x), y(v.y), z(v.z) {}
-        
-		template <typename X_1, typename X_2, typename X_3>
-		A(const internal::A_proxy<X_1, X_2, X_3>& vp) : x(vp.x), y(vp.y), z(vp.z) {}
-
-        T_1 x;
-        T_2 y;
-        T_3 z;
-    };
-
-    template <typename T_1, typename T_2, typename T_3>
-	std::ostream& operator<<(std::ostream& os, const A<T_1, T_2, T_3>& v)
-	{
-		os << "(" << static_cast<std::uint64_t>(v.x) << "," << static_cast<std::uint64_t>(v.y) << "," << static_cast<std::uint64_t>(v.z) << ")";
-		return os;
-	}
-
+namespace XXX_NAMESPACE
+{
     namespace internal
     {
-        template <typename T_1, typename T_2, typename T_3>
-        struct A_proxy
-        {
-            static_assert(std::is_fundamental<T_1>::value, "error: T_1 is not a fundamental data type");
-            static_assert(!std::is_void<T_1>::value, "error: T_1 is void -> not allowed");
-            static_assert(!std::is_volatile<T_1>::value, "error: T_1 is volatile -> not allowed");
-
-            static_assert(std::is_fundamental<T_2>::value, "error: T_2 is not a fundamental data type");
-            static_assert(!std::is_void<T_2>::value, "error: T_2 is void -> not allowed");
-            static_assert(!std::is_volatile<T_2>::value, "error: T_2 is volatile -> not allowed");
-
-            static_assert(std::is_fundamental<T_3>::value, "error: T_3 is not a fundamental data type");
-            static_assert(!std::is_void<T_3>::value, "error: T_3 is void -> not allowed");
-            static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
-
-            // some meta data: to be generated by the proxy generator
-            using type = A_proxy<T_1, T_2, T_3>;
-            using const_type = A_proxy<const T_1, const T_2, const T_3>;
-            using T_1_unqualified = typename std::remove_cv<T_1>::type;
-            using T_2_unqualified = typename std::remove_cv<T_2>::type;
-            using T_3_unqualified = typename std::remove_cv<T_3>::type;
-
-            struct memory
-            {
-                // some meta data: to be generated by the proxy generator
-                static constexpr bool is_homogeneous = (sizeof(T_1) == sizeof(T_2) && sizeof(T_1) == sizeof(T_3));
-                static constexpr std::size_t size_largest_type = std::max(sizeof(T_1), std::max(sizeof(T_2), sizeof(T_3)));
-                static constexpr std::size_t size_rest = 
-                    (sizeof(T_1) == size_largest_type ? 0UL : sizeof(T_1)) +
-                    (sizeof(T_2) == size_largest_type ? 0UL : sizeof(T_2)) +
-                    (sizeof(T_3) == size_largest_type ? 0UL : sizeof(T_3));
-                // relation to the greatest common divisor: lcm(a, b) = (a * b) / gcd(a, b)                                                     
-                static constexpr std::size_t record_padding_factor = least_common_multiple(size_largest_type, size_rest) / std::max(1UL, size_rest);
-                static constexpr std::size_t record_size = sizeof(T_1) + sizeof(T_2) + sizeof(T_3);
-
-                static constexpr std::size_t unit_factor_T_1 = size_largest_type / sizeof(T_1);
-                static constexpr std::size_t unit_factor_T_2 = size_largest_type / sizeof(T_2);
-                static constexpr std::size_t unit_factor_T_3 = size_largest_type / sizeof(T_3);
-
-                const std::size_t num_units;
-                T_1* __restrict__ ptr_1;
-                T_2* __restrict__ ptr_2;
-                T_3* __restrict__ ptr_3;
-
-                memory(std::uint8_t* __restrict__ ptr, const std::size_t n_innermost)
-                    :
-                    num_units((n_innermost * (sizeof(T_1) + sizeof(T_2) + sizeof(T_3))) / size_largest_type),
-                    ptr_1(reinterpret_cast<T_1*>(&ptr[0])),
-                    ptr_2(reinterpret_cast<T_2*>(&ptr[n_innermost * sizeof(T_1)])),
-                    ptr_3(reinterpret_cast<T_3*>(&ptr[n_innermost * (sizeof(T_1) + sizeof(T_2))])) 
-                { ; }
-
-
-                memory(const typename A_proxy<T_1_unqualified, T_2_unqualified, T_3_unqualified>::memory& m)
-                    :
-                    num_units(m.num_units),
-                    ptr_1(m.ptr_1),
-                    ptr_2(m.ptr_2),
-                    ptr_3(m.ptr_3)
-                { ; }
-
-                memory(const typename A_proxy<const T_1_unqualified, const T_2_unqualified, const T_3_unqualified>::memory& m)
-                    :
-                    num_units(m.num_units),
-                    ptr_1(m.ptr_1),
-                    ptr_2(m.ptr_2),
-                    ptr_3(m.ptr_3)
-                { ; }
-
-                memory(const memory& m, const std::size_t slice_idx, const std::size_t idx)
-                    :
-                    num_units(m.num_units),
-                    ptr_1(&m.ptr_1[slice_idx * num_units * unit_factor_T_1 + idx]),
-                    ptr_2(&m.ptr_2[slice_idx * num_units * unit_factor_T_2 + idx]),
-                    ptr_3(&m.ptr_3[slice_idx * num_units * unit_factor_T_3 + idx])
-                { ; }
-
-                memory at(const std::size_t slice_idx, const std::size_t idx)
-                {
-                    return memory(*this, slice_idx, idx);
-                }
-
-                memory at(const std::size_t slice_idx, const std::size_t idx) const
-                {
-                    return memory(*this, slice_idx, idx);
-                }
-
-                // replace by internal alignment
-                static std::size_t padding(const std::size_t n, const std::size_t alignment = 16)
-                {
-                    // bytes: test for power of 2                                                             
-                    const std::size_t byte_padding_factor = std::max(1UL, alignment / size_largest_type);
-                    const std::size_t ratio = (is_homogeneous ? byte_padding_factor : least_common_multiple(record_padding_factor, byte_padding_factor));
-
-                    return ((n + ratio - 1) / ratio) * ratio;
-                }
-
-                template <std::size_t D>
-                static std::uint8_t* allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = 16)
-                {
-                    if (n[0] != padding(n[0], alignment))
-                    {
-                        std::cerr << "error in vec_proxy::memory::allocate : n[0] does not match alignment" << std::endl;
-                    }
-
-                    return reinterpret_cast<std::uint8_t*>(_mm_malloc(n.reduce_mul() * record_size, alignment));
-                }
-
-                static void deallocate(memory& m)
-                {
-                    if (m.ptr_1)
-                    {
-                        _mm_free(reinterpret_cast<std::uint8_t*>(m.ptr_1));
-                    }
-                }
-            };
-
-            A_proxy(memory m)
-                :
-                x(*(m.ptr_1)),
-                y(*(m.ptr_2)),
-                z(*(m.ptr_3))
-            { ; }
-
-            template <typename X>
-			A_proxy& operator=(const X xyz)
-			{
-				x = xyz;
-				y = xyz;
-				z = xyz;
-				return *this;
-			}
-
-            T_1& x;
-            T_2& y;
-            T_3& z;
-        };
-
-        template <typename T_1, typename T_2, typename T_3>
-        std::ostream& operator<<(std::ostream& os, const A_proxy<T_1, T_2, T_3>& vp)
-        {
-            os << "(" << static_cast<std::uint64_t>(vp.x) << "," << static_cast<std::uint64_t>(vp.y) << "," << static_cast<std::uint64_t>(vp.z) << ")";
-            return os;
-        }
-    }
-
-    namespace internal
-    {
-        template <typename T>
-        struct provides_proxy_type
-        {
-            static constexpr bool value = false;
-        };
-
         template <typename T, std::size_t D>
-        struct provides_proxy_type<vec<T, D>>
+        struct provides_proxy_type<VEC_NAMESPACE::vec<T, D>>
         {
             static constexpr bool value = true;
         };
 
         template <typename T, std::size_t D>
-        struct provides_proxy_type<const vec<T, D>>
+        struct provides_proxy_type<const VEC_NAMESPACE::vec<T, D>>
         {
             static constexpr bool value = true;
-        };
-
-        template <typename T_1, typename T_2, typename T_3>
-        struct provides_proxy_type<A<T_1, T_2, T_3>>
-        {
-            static constexpr bool value = true;
-        };
-
-        template <typename T_1, typename T_2, typename T_3>
-        struct provides_proxy_type<const A<T_1, T_2, T_3>>
-        {
-            static constexpr bool value = true;
-        };
-
-        template <typename T>
-        struct memory
-        {
-            using type = T;
-
-            const std::size_t n_innermost;
-            T* __restrict__ ptr;
-
-            memory(T* __restrict__ ptr, const std::size_t n_innermost)
-                :
-                n_innermost(n_innermost),
-                ptr(ptr)
-            { ; }
-
-            template <typename TT>
-            memory(const memory<TT>& m)
-                :
-                n_innermost(m.n_innermost),
-                ptr(reinterpret_cast<T*>(m.ptr))
-            { ; }
-
-            T& at(const std::size_t slice_idx, const std::size_t idx)
-            {
-                return ptr[n_innermost * slice_idx + idx];
-            }
-
-            const T& at(const std::size_t slice_idx, const std::size_t idx) const
-            {
-                return ptr[n_innermost * slice_idx + idx];
-            }
-
-            // replace by internal alignment
-            static std::size_t padding(const std::size_t n, const std::size_t alignment = 16)
-            {
-                return n;
-            }
-
-            template <std::size_t D>
-            static T* allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = 16)
-            {
-                if (n[0] != padding(n[0], alignment))
-                {
-                    std::cerr << "error in memory::allocate : n[0] does not match alignment" << std::endl;
-                }
-
-                return reinterpret_cast<T*>(_mm_malloc(n.reduce_mul() * sizeof(T), alignment));
-            }
-
-            static void deallocate(memory& m)
-            {
-                if (m.ptr)
-                {
-                    _mm_free(m.ptr);
-                }
-            }
-        };
-
-
-        template <typename T, data_layout L, typename Enabled = void>
-        struct traits
-        {
-            using type = T;
-            using const_type = const T;
-            using proxy_type = T;
-
-            using memory = typename std::conditional<std::is_const<T>::value, const typename internal::memory<T>, typename internal::memory<T>>::type;
-        };
-
-        template <typename T>
-        struct traits<T, data_layout::SoA, typename std::enable_if<provides_proxy_type<T>::value>::type>
-        {
-            using type = T;
-            using const_type = const T;
-            using proxy_type = typename std::conditional<std::is_const<T>::value, typename T::proxy_type::const_type, typename T::proxy_type>::type;
-
-            using memory = typename std::conditional<std::is_const<T>::value, const typename proxy_type::memory, typename proxy_type::memory>::type;
         };
     }
 }
