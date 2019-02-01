@@ -26,7 +26,7 @@ using namespace fw;
         for (std::size_t i = 0; i < x.n[0]; ++i)
         {
             #if defined(ELEMENT_ACCESS)
-            a_x[i].x = std::exp(a_x[i].x);
+            a_x[i].y = std::exp(a_x[i].y);
             #else
             a_x[i] = fw::exp(a_x[i]);
             #endif
@@ -80,7 +80,7 @@ using namespace fw;
         for (std::size_t i = 0; i < x.n[0]; ++i)
         {
             #if defined(ELEMENT_ACCESS)
-            a_x[i].x = std::log(a_x[i].x);
+            a_x[i].y = std::log(a_x[i].y);
             #else
             a_x[i] = fw::log(a_x[i]);
             #endif
@@ -134,7 +134,7 @@ using namespace fw;
         for (std::size_t i = 0; i < x.n[0]; ++i)
         {
             #if defined(ELEMENT_ACCESS)
-            a_x[i].x = std::exp(a_x[i].x);
+            a_x[i].y = std::exp(a_x[i].y);
             #else
             a_x[i] = fw::exp(a_x[i]);
             #endif
@@ -188,7 +188,7 @@ using namespace fw;
         for (std::size_t i = 0; i < x.n[0]; ++i)
         {
             #if defined(ELEMENT_ACCESS)
-            a_x[i].x = std::log(a_x[i].x);
+            a_x[i].y = std::log(a_x[i].y);
             #else
             a_x[i] = fw::log(a_x[i]);
             #endif

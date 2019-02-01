@@ -93,7 +93,26 @@ namespace AUXILIARY_NAMESPACE
     //! \brief Definition of some math functions and constants for different FP types
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     template <typename T>
-    struct math;
+    struct math
+    {
+        static constexpr T one = static_cast<T>(1.0);
+        static constexpr T minus_one = static_cast<T>(-1.0);
+
+        static T sqrt(const T x)
+        {
+            return std::sqrt(x);
+        }
+
+        static T log(const T x)
+        {
+            return std::log(x);
+        }
+
+        static T exp(const T x)
+        {
+            return std::exp(x);
+        }
+    };
 
     //! \brief Specialization with T = float
     template <>

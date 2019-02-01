@@ -12,7 +12,7 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#if !defined(MISC_NAMESPACE)
+#if !defined(AUXILIARY_NAMESPACE_NAMESPACE)
 #define AUXILIARY_NAMESPACE XXX_NAMESPACE
 #endif
 

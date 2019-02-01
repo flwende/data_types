@@ -11,11 +11,16 @@ constexpr std::size_t NX_DEFAULT = 128;
 constexpr std::size_t NY_DEFAULT = 128;
 constexpr std::size_t NZ_DEFAULT = 128;
 
+#if defined(CHECK_RESULTS)
+constexpr std::size_t WARMUP = 0;
+constexpr std::size_t MEASUREMENT = 1;
+#else
 constexpr std::size_t WARMUP = 10;
 constexpr std::size_t MEASUREMENT = 100;
+#endif
 
-constexpr double SPREAD = 0.2;
-constexpr double OFFSET = 0.9;
+constexpr double SPREAD = 0.5;
+constexpr double OFFSET = 1.0;
 
 int main(int argc, char** argv)
 {
@@ -44,10 +49,10 @@ int main(int argc, char** argv)
 
         for (std::size_t x = 0; x < nx; ++x)
         {
-            type s_1 = static_cast<type>(drand48() * SPREAD + OFFSET);
-            type s_2 = static_cast<type>(drand48() * SPREAD + OFFSET);
-            type s_3 = static_cast<type>(drand48() * SPREAD + OFFSET);
-            a_buf[x] = {s_1 * value, s_2 * value, s_3 * value};
+            const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+            const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+            const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+            a_buf[x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
             a_buf_original[x] = a_buf[x];
         }
 
@@ -68,8 +73,18 @@ int main(int argc, char** argv)
         bool not_passed = false;
         for (std::size_t i = 0; i < nx; ++i)
         {
-            const double x_0[3] = {a_buf[i].x, a_buf[i].y, a_buf[i].z};
-            const double x_1[3] = {a_buf_original[i].x, a_buf_original[i].y, a_buf_original[i].z};
+            const double x_0[3] = {static_cast<double>(a_buf[i].x), static_cast<double>(a_buf[i].y), static_cast<double>(a_buf[i].z)};
+            #if defined(ELEMENT_ACCESS)
+            const double x_1[3] = {
+                static_cast<double>(a_buf_original[i].x), 
+                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(a_buf_original[i].y))))),
+                static_cast<double>(a_buf_original[i].z)};
+            #else
+            const double x_1[3] = {
+                static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(a_buf_original[i].x))))), 
+                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(a_buf_original[i].y))))),
+                static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(a_buf_original[i].z)))))};
+            #endif
 
             for (std::size_t ii = 0; ii < 3; ++ii)
             {
@@ -103,10 +118,10 @@ int main(int argc, char** argv)
             {
                 for (std::size_t x = 0; x < nx; ++x)
                 {
-                    type s_1 = static_cast<type>(drand48() * SPREAD + OFFSET);
-                    type s_2 = static_cast<type>(drand48() * SPREAD + OFFSET);
-                    type s_3 = static_cast<type>(drand48() * SPREAD + OFFSET);
-                    a_buf[z][y][x] = {s_1 * value, s_2 * value, s_3 * value};
+                    const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+                    const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+                    const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+                    a_buf[z][y][x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
                     a_buf_original[z][y][x] = a_buf[z][y][x];
                 }
             }
@@ -133,8 +148,18 @@ int main(int argc, char** argv)
             {
                 for (std::size_t i = 0; i < nx; ++i)
                 {
-                    const double x_0[3] = {a_buf[k][j][i].x, a_buf[k][j][i].y, a_buf[k][j][i].z};
-                    const double x_1[3] = {a_buf_original[k][j][i].x, a_buf_original[k][j][i].y, a_buf_original[k][j][i].z};
+                    const double x_0[3] = {static_cast<double>(a_buf[k][j][i].x), static_cast<double>(a_buf[k][j][i].y), static_cast<double>(a_buf[k][j][i].z)};
+                    #if defined(ELEMENT_ACCESS)
+                    const double x_1[3] = {
+                        static_cast<double>(a_buf_original[k][j][i].x), 
+                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(a_buf_original[k][j][i].y))))),
+                        static_cast<double>(a_buf_original[k][j][i].z)};
+                    #else
+                    const double x_1[3] = {
+                        static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(a_buf_original[k][j][i].x))))), 
+                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(a_buf_original[k][j][i].y))))),
+                        static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(a_buf_original[k][j][i].z)))))};
+                    #endif
 
                     for (std::size_t ii = 0; ii < 3; ++ii)
                     {

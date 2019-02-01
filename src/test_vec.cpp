@@ -2,19 +2,23 @@
 #include <cstdlib>
 #include <cstdint>
 #include <buffer/buffer.hpp>
+#include <vec/vec.hpp>
+#include <tuple/tuple.hpp>
 
 using namespace VEC_NAMESPACE;
+using namespace TUPLE_NAMESPACE;
 
-constexpr data_layout layout = data_layout::SoA;
+//constexpr data_layout layout = data_layout::SoA;
+constexpr data_layout layout = data_layout::AoS;
 
 using type = double;
 
 //constexpr std::size_t scale = 3;
 //using vtype = vec<type, scale>;
-using vtype = tuple<std::uint16_t, std::int64_t, std::uint32_t>;
+using vtype = fw::tuple<std::uint16_t, std::int64_t, std::uint32_t>;
 constexpr std::size_t scale = 14;
 
-using buffer_type = buffer<vtype, 2, layout>;
+using buffer_type = fw::buffer<vtype, 2, layout>;
 
 int main(int argc, char** argv)
 {
