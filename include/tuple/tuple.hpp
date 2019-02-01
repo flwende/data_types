@@ -19,7 +19,7 @@
 
 #include "../misc/misc_math.hpp"
 #include "../misc/misc_memory.hpp"
-#include "../traits/traits.hpp"
+#include "../common/traits.hpp"
 
 namespace TUPLE_NAMESPACE
 {

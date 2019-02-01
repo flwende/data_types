@@ -14,7 +14,7 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../traits/traits.hpp"
+#include "../common/traits.hpp"
 
 namespace VEC_NAMESPACE
 {

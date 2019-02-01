@@ -18,7 +18,7 @@
 #endif
 
 #include "../misc/misc_math.hpp"
-#include "../traits/traits.hpp"
+#include "../common/traits.hpp"
 
 namespace VEC_NAMESPACE
 {
