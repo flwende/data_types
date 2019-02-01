@@ -33,12 +33,12 @@ namespace TUPLE_NAMESPACE
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief A simple tuple with 3 components of different type
-	//!
-	//! \tparam T_1 data type
+    //! \brief A simple tuple with 3 components of different type
+    //!
+    //! \tparam T_1 data type
     //! \tparam T_2 data type
     //! \tparam T_3 data type
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     template <typename T_1, typename T_2, typename T_3>
     class tuple;
 
@@ -46,19 +46,19 @@ namespace TUPLE_NAMESPACE
     class tuple
     {
         static_assert(std::is_fundamental<T_1>::value, "error: T_1 is not a fundamental data type");
-		static_assert(!std::is_void<T_1>::value, "error: T_1 is void -> not allowed");
+        static_assert(!std::is_void<T_1>::value, "error: T_1 is void -> not allowed");
         static_assert(!std::is_volatile<T_1>::value, "error: T_1 is volatile -> not allowed");
         static_assert(!std::is_const<T_1>::value, "error: T_1 is const -> not allowed");
 
         static_assert(std::is_fundamental<T_2>::value, "error: T_2 is not a fundamental data type");
-		static_assert(!std::is_void<T_2>::value, "error: T_2 is void -> not allowed");
+        static_assert(!std::is_void<T_2>::value, "error: T_2 is void -> not allowed");
         static_assert(!std::is_volatile<T_2>::value, "error: T_2 is volatile -> not allowed");
         static_assert(!std::is_const<T_2>::value, "error: T_2 is const -> not allowed");
 
         static_assert(std::is_fundamental<T_3>::value, "error: T_3 is not a fundamental data type");
-		static_assert(!std::is_void<T_3>::value, "error: T_3 is void -> not allowed");
+        static_assert(!std::is_void<T_3>::value, "error: T_3 is void -> not allowed");
         static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
-        static_assert(!std::is_const<T_3>::value, "error: T_3 is const -> not allowed");
+static_assert(!std::is_const<T_3>::value, "error: T_3 is const -> not allowed");
 
     public:
 
@@ -69,17 +69,17 @@ namespace TUPLE_NAMESPACE
         T_2 y;
         T_3 z;
 
-		tuple() : x(0), y(0), z(0) {}
+        tuple() : x(0), y(0), z(0) {}
 
         template <typename X>
-		tuple(const X xyz) : x(xyz), y(xyz), z(xyz) {}
-		tuple(const T_1 x, const T_2 y, const T_3 z) : x(x), y(y), z(z) {}
+        tuple(const X xyz) : x(xyz), y(xyz), z(xyz) {}
+        tuple(const T_1 x, const T_2 y, const T_3 z) : x(x), y(y), z(z) {}
 
-		template <typename X_1, typename X_2, typename X_3>
-		tuple(const tuple<X_1, X_2, X_3>& t) : x(t.x), y(t.y), z(t.z) {}
+        template <typename X_1, typename X_2, typename X_3>
+        tuple(const tuple<X_1, X_2, X_3>& t) : x(t.x), y(t.y), z(t.z) {}
         
-		template <typename X_1, typename X_2, typename X_3>
-		tuple(const internal::tuple_proxy<X_1, X_2, X_3>& tp) : x(tp.x), y(tp.y), z(tp.z) {}
+        template <typename X_1, typename X_2, typename X_3>
+        tuple(const internal::tuple_proxy<X_1, X_2, X_3>& tp) : x(tp.x), y(tp.y), z(tp.z) {}
 
         //! Some operators
         inline tuple operator-() const
@@ -131,11 +131,11 @@ namespace TUPLE_NAMESPACE
     };
 
     template <typename T_1, typename T_2, typename T_3>
-	std::ostream& operator<<(std::ostream& os, const tuple<T_1, T_2, T_3>& v)
-	{
-		os << "(" << static_cast<std::uint64_t>(v.x) << "," << static_cast<std::uint64_t>(v.y) << "," << static_cast<std::uint64_t>(v.z) << ")";
-		return os;
-	}
+    std::ostream& operator<<(std::ostream& os, const tuple<T_1, T_2, T_3>& v)
+    {
+        os << "(" << static_cast<std::uint64_t>(v.x) << "," << static_cast<std::uint64_t>(v.y) << "," << static_cast<std::uint64_t>(v.z) << ")";
+        return os;
+    }
 }
 
 #include "tuple_proxy.hpp"
