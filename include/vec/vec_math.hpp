@@ -14,7 +14,7 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../common/traits.hpp"
+#include "vec.hpp"
 
 namespace VEC_NAMESPACE
 {
@@ -91,19 +91,19 @@ namespace VEC_NAMESPACE
     template <typename T>                                                                                                                   \
     inline vec<T, 1> OP (IN_T<T, 1>& v)                                                                                                            \
     {                                                                                                                                       \
-        return vec<T, 1>(MISC_NAMESPACE::math<T>:: OP (v.x));                                                                               \
+        return vec<T, 1>(AUXILIARY_NAMESPACE::math<T>:: OP (v.x));                                                                               \
     }                                                                                                                                       \
                                                                                                                                             \
     template <typename T>                                                                                                                   \
     inline vec<T, 2> OP (IN_T<T, 2>& v)                                                                                                            \
     {                                                                                                                                       \
-        return vec<T, 2>(MISC_NAMESPACE::math<T>:: OP (v.x), MISC_NAMESPACE::math<T>:: OP (v.y));                                           \
+        return vec<T, 2>(AUXILIARY_NAMESPACE::math<T>:: OP (v.x), AUXILIARY_NAMESPACE::math<T>:: OP (v.y));                                           \
     }                                                                                                                                       \
                                                                                                                                             \
     template <typename T>                                                                                                                   \
     inline vec<T, 3> OP (IN_T<T, 3>& v)                                                                                                            \
     {                                                                                                                                       \
-        return vec<T, 3>(MISC_NAMESPACE::math<T>:: OP (v.x), MISC_NAMESPACE::math<T>:: OP (v.y), MISC_NAMESPACE::math<T>:: OP (v.z));       \
+        return vec<T, 3>(AUXILIARY_NAMESPACE::math<T>:: OP (v.x), AUXILIARY_NAMESPACE::math<T>:: OP (v.y), AUXILIARY_NAMESPACE::math<T>:: OP (v.z));       \
     }                                                                                                                                       \
 
 #define MACRO_QUALIFIED(OP, IN_T)                                                                                                           \

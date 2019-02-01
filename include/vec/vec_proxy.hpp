@@ -14,8 +14,6 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../misc/misc_memory.hpp"
-
 namespace VEC_NAMESPACE
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +71,7 @@ namespace VEC_NAMESPACE
             // replace by internal alignment
             static std::size_t padding(const std::size_t n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
             {
-                if (!MISC_NAMESPACE::is_power_of<2>(alignment))
+                if (!AUXILIARY_NAMESPACE::is_power_of<2>(alignment))
                 {
                     std::cerr << "warning: alignment is not a power of 2" << std::endl;
                     return n;
@@ -330,7 +328,7 @@ namespace VEC_NAMESPACE
             //! \return Euclidean norm
             inline T length() const
             {
-                return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y);
+                return AUXILIARY_NAMESPACE::math<T>::sqrt(x * x + y * y);
             }
 		};
 
@@ -456,7 +454,7 @@ namespace VEC_NAMESPACE
             //! \return Euclidean norm
             inline T length() const
             {
-                return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
+                return AUXILIARY_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
             }
 
             T& x;

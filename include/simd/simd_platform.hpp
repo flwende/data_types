@@ -7,6 +7,7 @@
 #define SIMD_SIMD_PLATFORM_HPP
 
 #include <cstdint>
+#include <immintrin.h>
 
 #if defined(__AVX512F__)
     #define SIMD_WIDTH_NATIVE_64BIT 8
@@ -47,7 +48,7 @@ namespace SIMD_NAMESPACE
     namespace simd
     {
         //! Memory alignment
-        static constexpr size_t alignment = SIMD_ALIGNMENT;
+        static constexpr std::size_t alignment = SIMD_ALIGNMENT;
 
         //! \brief Test for which fundamental data types there is SIMD equivalents
         //!

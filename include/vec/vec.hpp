@@ -7,7 +7,7 @@
 #define VEC_VEC_HPP
 
 #include <cstdint>
-#include <type_traits>
+#include <iostream>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -17,7 +17,7 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../misc/misc_math.hpp"
+#include "../auxiliary/math.hpp"
 #include "../common/traits.hpp"
 
 namespace VEC_NAMESPACE
@@ -225,7 +225,7 @@ namespace VEC_NAMESPACE
         //! \return Euclidean norm
         inline T length() const
         {
-            return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y);
+            return AUXILIARY_NAMESPACE::math<T>::sqrt(x * x + y * y);
         }
     };
     
@@ -333,7 +333,7 @@ namespace VEC_NAMESPACE
         //! \return Euclidean norm
         inline T length() const
         {
-            return MISC_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
+            return AUXILIARY_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
         }
     };
 

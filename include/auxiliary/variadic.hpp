@@ -3,18 +3,20 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(MISC_MISC_VARIADIC_HPP)
-#define MISC_MISC_VARIADIC_HPP
+#if !defined(AUXILIARY_VARIADIC_HPP)
+#define AUXILIARY_VARIADIC_HPP
+
+#include <cstdint>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
 
 #if !defined(MISC_NAMESPACE)
-#define MISC_NAMESPACE XXX_NAMESPACE
+#define AUXILIARY_NAMESPACE XXX_NAMESPACE
 #endif
 
-namespace MISC_NAMESPACE
+namespace AUXILIARY_NAMESPACE
 {
     namespace variadic
     {
@@ -37,7 +39,7 @@ namespace MISC_NAMESPACE
         //! \tparam T data type (head)
         //! \tparam Args variadic argument list (tail)
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <std::int32_t N, typename T, typename ... Args>
+        template <std::size_t N, typename T, typename ... Args>
         struct argument
         {
             //! Data type of the N-th argument

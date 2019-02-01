@@ -7,6 +7,7 @@
 #define TUPLE_TUPLE_HPP
 
 #include <cstdint>
+#include <iostream>
 #include <type_traits>
 
 #if !defined(XXX_NAMESPACE)
@@ -17,9 +18,10 @@
 #define TUPLE_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../misc/misc_math.hpp"
-#include "../misc/misc_memory.hpp"
+#include "../auxiliary/math.hpp"
 #include "../common/traits.hpp"
+#include "../sarray/sarray.hpp"
+#include "../simd/simd.hpp"
 
 namespace TUPLE_NAMESPACE
 {
@@ -122,7 +124,7 @@ namespace TUPLE_NAMESPACE
                     (sizeof(T_2) == size_largest_type ? 0UL : sizeof(T_2)) +
                     (sizeof(T_3) == size_largest_type ? 0UL : sizeof(T_3));
                 // relation to the greatest common divisor: lcm(a, b) = (a * b) / gcd(a, b)                                                     
-                static constexpr std::size_t record_padding_factor = MISC_NAMESPACE::least_common_multiple(size_largest_type, size_rest) / std::max(1UL, size_rest);
+                static constexpr std::size_t record_padding_factor = AUXILIARY_NAMESPACE::least_common_multiple(size_largest_type, size_rest) / std::max(1UL, size_rest);
                 static constexpr std::size_t record_size = sizeof(T_1) + sizeof(T_2) + sizeof(T_3);
 
                 static constexpr std::size_t unit_factor_T_1 = size_largest_type / sizeof(T_1);
@@ -180,14 +182,14 @@ namespace TUPLE_NAMESPACE
                 // replace by internal alignment
                 static std::size_t padding(const std::size_t n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
                 {
-                    if (!MISC_NAMESPACE::is_power_of<2>(alignment))
+                    if (!AUXILIARY_NAMESPACE::is_power_of<2>(alignment))
                     {
                         std::cerr << "warning: alignment is not a power of 2" << std::endl;
                         return n;
                     }
 
                     const std::size_t byte_padding_factor = std::max(1UL, alignment / size_largest_type);
-                    const std::size_t ratio = (is_homogeneous ? byte_padding_factor : MISC_NAMESPACE::least_common_multiple(record_padding_factor, byte_padding_factor));
+                    const std::size_t ratio = (is_homogeneous ? byte_padding_factor : AUXILIARY_NAMESPACE::least_common_multiple(record_padding_factor, byte_padding_factor));
 
                     return ((n + ratio - 1) / ratio) * ratio;
                 }

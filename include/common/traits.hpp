@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(TRAITS_TRAITS_HPP)
-#define TRAITS_TRAITS_HPP
+#if !defined(COMMON_TRAITS_HPP)
+#define COMMON_TRAITS_HPP
 
 #include <type_traits>
 
@@ -12,7 +12,8 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include "../misc/misc_memory.hpp"
+#include "data_layout.hpp"
+#include "memory.hpp"
 
 namespace XXX_NAMESPACE
 {
@@ -43,7 +44,7 @@ namespace XXX_NAMESPACE
             using const_type = const T;
             using proxy_type = T;
 
-            using memory = typename std::conditional<std::is_const<T>::value, const typename MISC_NAMESPACE::memory<T>, typename MISC_NAMESPACE::memory<T>>::type;
+            using memory = typename std::conditional<std::is_const<T>::value, const typename XXX_NAMESPACE::memory<T>, typename XXX_NAMESPACE::memory<T>>::type;
         };
 
         template <typename T>

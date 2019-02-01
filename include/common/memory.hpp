@@ -3,24 +3,20 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(MISC_MISC_MEMORY_HPP)
-#define MISC_MISC_MEMORY_HPP
+#if !defined(COMMON_MEMORY_HPP)
+#define COMMON_MEMORY_HPP
 
 #include <cstdint>
-#include <immintrin.h>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
 
-#if !defined(MISC_NAMESPACE)
-#define MISC_NAMESPACE XXX_NAMESPACE
-#endif
-
+#include "../auxiliary/math.hpp"
 #include "../sarray/sarray.hpp"
 #include "../simd/simd.hpp"
 
-namespace MISC_NAMESPACE
+namespace XXX_NAMESPACE
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     //! \brief A simple memory manager
@@ -66,13 +62,13 @@ namespace MISC_NAMESPACE
 
         static std::size_t padding(const std::size_t n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
         {
-            if (!MISC_NAMESPACE::is_power_of<2>(alignment))
+            if (!AUXILIARY_NAMESPACE::is_power_of<2>(alignment))
             {
                 std::cerr << "warning: alignment is not a power of 2" << std::endl;
                 return n;
             }
 
-            const std::size_t ratio = MISC_NAMESPACE::least_common_multiple(alignment, sizeof(T)) / sizeof(T);
+            const std::size_t ratio = AUXILIARY_NAMESPACE::least_common_multiple(alignment, sizeof(T)) / sizeof(T);
 
             return ((n + ratio - 1) / ratio) * ratio;
         }

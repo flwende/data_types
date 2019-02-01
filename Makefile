@@ -26,6 +26,11 @@ obj/kernel.o: src/kernel.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 	$(CXX) $(CXXFLAGS) -S $<
 
+test_include: obj/test_include.o
+
+obj/test_include.o: src/test_include.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
 clean:
 	rm -f *~ obj/*.o bin/test_buffer.x
 

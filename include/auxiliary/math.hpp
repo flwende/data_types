@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(MISC_MISC_MATH_HPP)
-#define MISC_MISC_MATH_HPP
+#if !defined(AUXILIARY_MATH_HPP)
+#define AUXILIARY_MATH_HPP
 
 #include <cmath>
 #include <cstdint>
@@ -14,11 +14,11 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#if !defined(MISC_NAMESPACE)
-#define MISC_NAMESPACE XXX_NAMESPACE
+#if !defined(AUXILIARY_NAMESPACE)
+#define AUXILIARY_NAMESPACE XXX_NAMESPACE
 #endif
 
-namespace MISC_NAMESPACE
+namespace AUXILIARY_NAMESPACE
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     //! \brief Greatest common divisor (gcd)

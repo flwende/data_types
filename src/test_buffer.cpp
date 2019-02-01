@@ -1,14 +1,10 @@
-// Copyright (c) 2017-2018 Florian Wende (flwende@gmail.com)
+// Copyright (c) 2017-2019 Florian Wende (flwende@gmail.com)
 //
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#include <iostream>
-#include <cstdlib>
 #include <cstdint>
-#include <cmath>
-#include <omp.h>
-
+#include <iostream>
 #include <kernel.hpp>
 
 constexpr std::size_t NX_DEFAULT = 128;
@@ -52,7 +48,6 @@ int main(int argc, char** argv)
             type s_2 = static_cast<type>(drand48() * SPREAD + OFFSET);
             type s_3 = static_cast<type>(drand48() * SPREAD + OFFSET);
             a_buf[x] = {s_1 * value, s_2 * value, s_3 * value};
-            //a_buf[x] = element_type(s_1 * value, s_2 * value, s_3 * value);
             a_buf_original[x] = a_buf[x];
         }
 
