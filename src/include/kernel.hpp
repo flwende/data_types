@@ -9,76 +9,36 @@
 #include <buffer/buffer.hpp>
 
 // data types and layout
-using real_t = float;
-//constexpr fw::buffer_type Buffer_type = fw::buffer_type::host;
-constexpr fw::buffer_type Buffer_type = fw::buffer_type::host_device; 
-//constexpr fw::data_layout Data_layout = fw::data_layout::SoA;
-constexpr fw::data_layout Data_layout = fw::data_layout::AoS;
+//using type = float;
+using type = double;
+using element_type = fw::vec<type, 3>;
 
-#if defined(__INTEL_SDLT)
-	#include <sdlt/sdlt.h>
-	typedef struct
-	{
-		real_t x;
-		real_t y;
-		real_t z;
-	} sdlt_real3_t;
-
-	SDLT_PRIMITIVE(sdlt_real3_t, x, y, z)
-
-	inline sdlt_real3_t exp(const sdlt_real3_t& x)
-	{
-		sdlt_real3_t y;
-		y.x = fw::math<real_t>::exp(x.x);
-		y.y = fw::math<real_t>::exp(x.y);
-		y.z = fw::math<real_t>::exp(x.z);
-		return y;
-	}
-
-	inline sdlt_real3_t log(const sdlt_real3_t& x)
-	{
-		sdlt_real3_t y;
-		y.x = fw::math<real_t>::log(x.x);
-		y.y = fw::math<real_t>::log(x.y);
-		y.z = fw::math<real_t>::log(x.z);
-		return y;
-	}
-
-	using real3_t = sdlt_real3_t;
-
-	template <typename T, std::size_t D>
-	using buffer_type = sdlt::soa1d_container<T>;
-
-#else
-	using real3_t = fw::vec<real_t, 3>;
-
-	template <typename T, std::size_t D>
-	using buffer_type = fw::buffer<T, D, Buffer_type, Data_layout>;
+#if defined(AOS_LAYOUT)
+constexpr fw::data_layout layout = fw::data_layout::AoS;
+#elif defined(SOA_LAYOUT)
+constexpr fw::data_layout layout = fw::data_layout::SoA;
 #endif
+
+template <typename T, std::size_t D>
+using buffer_type = fw::buffer<T, D, layout>;
 
 // prototypes
 template <typename T>
 struct kernel
 {
+#if defined(AOS_LAYOUT)
 	template <std::size_t D>
-	static double exp(fw::buffer<T, D, fw::buffer_type::host, fw::data_layout::AoS>& x);
+	static double exp(fw::buffer<T, D, fw::data_layout::AoS>& x);
+
+    template <std::size_t D>
+	static double log(fw::buffer<T, D, fw::data_layout::AoS>& x);
+#elif defined(SOA_LAYOUT)
+	template <std::size_t D>
+	static double exp(fw::buffer<T, D, fw::data_layout::SoA>& x);
 
 	template <std::size_t D>
-	static double exp(fw::buffer<T, D, fw::buffer_type::host, fw::data_layout::SoA>& x);
-
-	template <std::size_t D>
-	static double log(fw::buffer<T, D, fw::buffer_type::host, fw::data_layout::AoS>& x);
-
-	template <std::size_t D>
-	static double log(fw::buffer<T, D, fw::buffer_type::host, fw::data_layout::SoA>& x);
-
-	#if defined(HAVE_SYCL)
-	template <std::size_t D>
-	static double exp(fw::buffer<T, D, fw::buffer_type::host_device, fw::data_layout::AoS>& x);
-
-	template <std::size_t D>
-	static double exp(fw::buffer<T, D, fw::buffer_type::host_device, fw::data_layout::SoA>& x);
-	#endif
+	static double log(fw::buffer<T, D, fw::data_layout::SoA>& x);
+#endif
 };
 
 #endif

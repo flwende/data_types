@@ -63,7 +63,7 @@ namespace MISC_NAMESPACE
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //! \brief Power of 2 test
+    //! \brief Power of N test
     //!
     //! \tparam N base
     //! \tparam T must be an unsigned integer
@@ -77,7 +77,7 @@ namespace MISC_NAMESPACE
         static_assert(N > 0, "error: N must be at least 1");
 
         if (x == 1 || x == N) return true;
-        if (x < N || N == 1) return false;
+        if (x <= 0 || x < N || N == 1) return false;
 
         while (true)
         {

@@ -23,196 +23,149 @@ constexpr double OFFSET = 0.9;
 
 int main(int argc, char** argv)
 {
-	// command line arguments
-	std::size_t dim = 0;
-	const std::size_t nx = (argc > 1 ? atoi(argv[++dim]) : NX_DEFAULT);
-	const std::size_t ny = (argc > 2 ? atoi(argv[++dim]) : NY_DEFAULT);
-	const std::size_t nz = (argc > 3 ? atoi(argv[++dim]) : NZ_DEFAULT);
-	const std::size_t print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, 12UL));
+    // command line arguments
+    std::size_t dim = 0;
+    const std::size_t nx = (argc > 1 ? atoi(argv[++dim]) : NX_DEFAULT);
+    const std::size_t ny = (argc > 2 ? atoi(argv[++dim]) : NY_DEFAULT);
+    const std::size_t nz = (argc > 3 ? atoi(argv[++dim]) : NZ_DEFAULT);
+    const std::size_t print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, 12UL));
 
-	#if defined(HAVE_SYCL)
-		fw::buffer<real3_t, 2, fw::buffer_type::host_device, fw::data_layout::SoA> my_buffer({nx, ny});
-		//fw::buffer<real3_t, 2, fw::buffer_type::host_device, fw::data_layout::AoS> my_buffer({nx, ny});
-		auto my_accessor = my_buffer.read_write();
-		for (std::size_t j = 0; j < ny; ++j)
-		{
-			for (std::size_t i = 0; i < nx; ++i)
-			{
-				my_accessor[j][i] = 0;
-			}
-		}
-		double time = omp_get_wtime();
-		my_buffer.memcpy_h2d();
-		kernel<real3_t>::exp<2>(my_buffer);
-		my_buffer.memcpy_d2h();
-		time = omp_get_wtime() - time;
-		const real_t* ptr = &(my_accessor[0][0].x);
-		for (std::size_t i = 0; i < (3 * nx * ny); ++i)
-		{
-			std::cout << ptr[i] << " ";
-		}
-		std::cout << std::endl;
-		std::cout << "elapsed time: " << time * 1.0E3 << " ms" << std::endl;
-	#else
-		// initialization
-		srand48(nx);
-		const real_t value = static_cast<real_t>(drand48() * 10.0);
-		std::cout << "initial value = " << value << std::endl;
+    // initialization
+    srand48(nx);
+    const type value = static_cast<type>(drand48() * 10.0);
+    std::cout << "initial value = " << value << std::endl;
 
-		// benchmark
-		double time = 0.0;
+    // benchmark
+    double time = 0.0;
 
-		if (dim == 1)
-		{
-			buffer_type<real3_t, 1> buf(nx);
-			buffer_type<real3_t, 1> buf_original(nx);
-			#if defined(__INTEL_SDLT)
-			auto a_buf = buf.access();
-			auto a_buf_original = buf_original.access();
-			#else
-			auto a_buf = buf.read_write();
-			auto a_buf_original = buf_original.read_write();
-			#endif
+    if (dim == 1)
+    {
+        buffer_type<element_type, 1> buf(nx);
+        buffer_type<element_type, 1> buf_original(nx);
+        
+        auto a_buf = buf.read_write();
+        auto a_buf_original = buf_original.read_write();
 
-			for (std::size_t x = 0; x < nx; ++x)
-			{
-				real_t s_1 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
-				real_t s_2 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
-				real_t s_3 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
-				a_buf[x] = {s_1 * value, s_2 * value, s_3 * value};
-				a_buf_original[x] = a_buf[x];
-			}
+        for (std::size_t x = 0; x < nx; ++x)
+        {
+            type s_1 = static_cast<type>(drand48() * SPREAD + OFFSET);
+            type s_2 = static_cast<type>(drand48() * SPREAD + OFFSET);
+            type s_3 = static_cast<type>(drand48() * SPREAD + OFFSET);
+            a_buf[x] = {s_1 * value, s_2 * value, s_3 * value};
+            //a_buf[x] = element_type(s_1 * value, s_2 * value, s_3 * value);
+            a_buf_original[x] = a_buf[x];
+        }
 
-			for (std::size_t n = 0; n < WARMUP; ++n)
-			{
-				#if defined(__INTEL_SDLT)
-				kernel<real3_t>::exp<1>(buf);
-				kernel<real3_t>::log<1>(buf);
-				#else
-				kernel<real3_t>::exp<1>(buf);
-				kernel<real3_t>::log<1>(buf);
-				#endif
-			}
+        for (std::size_t n = 0; n < WARMUP; ++n)
+        {
+            kernel<element_type>::exp<1>(buf);
+            kernel<element_type>::log<1>(buf);
+        }
 
-			for (std::size_t n = 0; n < MEASUREMENT; ++n)
-			{
-				#if defined(__INTEL_SDLT)
-				time += kernel<real3_t>::exp<1>(buf);
-				time += kernel<real3_t>::log<1>(buf);
-				#else
-				time += kernel<real3_t>::exp<1>(buf);
-				time += kernel<real3_t>::log<1>(buf);
-				#endif
-			}
+        for (std::size_t n = 0; n < MEASUREMENT; ++n)
+        {
+            time += kernel<element_type>::exp<1>(buf);
+            time += kernel<element_type>::log<1>(buf);
+        }
 
-			#if defined(CHECK_RESULTS)
-			const double max_abs_error = static_cast<real_t>(1.0E-4);
-			bool not_passed = false;
-			for (std::size_t i = 0; i < nx; ++i)
-			{
-				#if defined(__INTEL_SDLT)
-				real3_t _x_0 = a_buf[i];
-				real3_t _x_1 = a_buf_original[i];
-				const double x_0[3] = {_x_0.x, _x_0.y, _x_0.z};
-				const double x_1[3] = {_x_1.x, _x_1.y, _x_1.z};
-				#else
-				const double x_0[3] = {a_buf[i].x, a_buf[i].y, a_buf[i].z};
-				const double x_1[3] = {a_buf_original[i].x, a_buf_original[i].y, a_buf_original[i].z};
-				#endif
+        #if defined(CHECK_RESULTS)
+        const double max_abs_error = static_cast<type>(1.0E-4);
+        bool not_passed = false;
+        for (std::size_t i = 0; i < nx; ++i)
+        {
+            const double x_0[3] = {a_buf[i].x, a_buf[i].y, a_buf[i].z};
+            const double x_1[3] = {a_buf_original[i].x, a_buf_original[i].y, a_buf_original[i].z};
 
-				for (std::size_t ii = 0; ii < 3; ++ii)
-				{
-					const real_t abs_error = std::abs(x_1[ii] != static_cast<real_t>(0) ? (x_0[ii] - x_1[ii]) / x_1[ii] : x_0[ii] - x_1[ii]);
-					if (abs_error > max_abs_error)
-					{
-						std::cout << "error: " << x_0[ii] << " vs " << x_1[ii] << " (" << abs_error << ")" << std::endl;
-						not_passed = true;
-						break;
-					}
-				}
-				if (not_passed) break;
-			}
+            for (std::size_t ii = 0; ii < 3; ++ii)
+            {
+                const type abs_error = std::abs(x_1[ii] != static_cast<type>(0) ? (x_0[ii] - x_1[ii]) / x_1[ii] : x_0[ii] - x_1[ii]);
+                if (abs_error > max_abs_error)
+                {
+                    std::cout << "error: " << x_0[ii] << " vs " << x_1[ii] << " (" << abs_error << ")" << std::endl;
+                    not_passed = true;
+                    break;
+                }
+            }
+            if (not_passed) break;
+        }
 
-			if (!not_passed)
-			{
-				std::cout << "success!" << std::endl;
-			}
-			#endif
-		}
-		#if !defined(__INTEL_SDLT)
-		else if (dim == 3)
-		{
-			buffer_type<real3_t, 3> buf({nx, ny, nz});
-			buffer_type<real3_t, 3> buf_original({nx, ny, nz});
-			auto a_buf = buf.read_write();
-			auto a_buf_original = buf_original.read_write();
-			
-			for (std::size_t z = 0; z < nz; ++z)
-			{
-				for (std::size_t y = 0; y < ny; ++y)
-				{
-					for (std::size_t x = 0; x < nx; ++x)
-					{
-						real_t s_1 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
-						real_t s_2 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
-						real_t s_3 = static_cast<real_t>(drand48() * SPREAD + OFFSET);
-						a_buf[z][y][x] = {s_1 * value, s_2 * value, s_3 * value};
-						a_buf_original[z][y][x] = a_buf[z][y][x];
-					}
-				}
-			}
+        if (!not_passed)
+        {
+            std::cout << "success!" << std::endl;
+        }
+        #endif
+    }
+    else if (dim == 3)
+    {
+        buffer_type<element_type, 3> buf({nx, ny, nz});
+        buffer_type<element_type, 3> buf_original({nx, ny, nz});
+        auto a_buf = buf.read_write();
+        auto a_buf_original = buf_original.read_write();
+        
+        for (std::size_t z = 0; z < nz; ++z)
+        {
+            for (std::size_t y = 0; y < ny; ++y)
+            {
+                for (std::size_t x = 0; x < nx; ++x)
+                {
+                    type s_1 = static_cast<type>(drand48() * SPREAD + OFFSET);
+                    type s_2 = static_cast<type>(drand48() * SPREAD + OFFSET);
+                    type s_3 = static_cast<type>(drand48() * SPREAD + OFFSET);
+                    a_buf[z][y][x] = {s_1 * value, s_2 * value, s_3 * value};
+                    a_buf_original[z][y][x] = a_buf[z][y][x];
+                }
+            }
+        }
 
-			for (std::size_t n = 0; n < WARMUP; ++n)
-			{
-				kernel<real3_t>::exp<3>(buf);
-				kernel<real3_t>::log<3>(buf);
-			}
+        for (std::size_t n = 0; n < WARMUP; ++n)
+        {
+            kernel<element_type>::exp<3>(buf);
+            kernel<element_type>::log<3>(buf);
+        }
 
-			for (std::size_t n = 0; n < MEASUREMENT; ++n)
-			{
-				time += kernel<real3_t>::exp<3>(buf);
-				time += kernel<real3_t>::log<3>(buf);
-			}
+        for (std::size_t n = 0; n < MEASUREMENT; ++n)
+        {
+            time += kernel<element_type>::exp<3>(buf);
+            time += kernel<element_type>::log<3>(buf);
+        }
 
-			#if defined(CHECK_RESULTS)
-			const double max_abs_error = static_cast<real_t>(1.0E-4);
-			bool not_passed = false;
-			for (std::size_t k = 0; k < nz; ++k)
-			{
-				for (std::size_t j = 0; j < ny; ++j)
-				{
-					for (std::size_t i = 0; i < nx; ++i)
-					{
-						const double x_0[3] = {a_buf[k][j][i].x, a_buf[k][j][i].y, a_buf[k][j][i].z};
-						const double x_1[3] = {a_buf_original[k][j][i].x, a_buf_original[k][j][i].y, a_buf_original[k][j][i].z};
+        #if defined(CHECK_RESULTS)
+        const double max_abs_error = static_cast<type>(1.0E-4);
+        bool not_passed = false;
+        for (std::size_t k = 0; k < nz; ++k)
+        {
+            for (std::size_t j = 0; j < ny; ++j)
+            {
+                for (std::size_t i = 0; i < nx; ++i)
+                {
+                    const double x_0[3] = {a_buf[k][j][i].x, a_buf[k][j][i].y, a_buf[k][j][i].z};
+                    const double x_1[3] = {a_buf_original[k][j][i].x, a_buf_original[k][j][i].y, a_buf_original[k][j][i].z};
 
-						for (std::size_t ii = 0; ii < 3; ++ii)
-						{
-							const real_t abs_error = std::abs(x_1[ii] != static_cast<real_t>(0) ? (x_0[ii] - x_1[ii]) / x_1[ii] : x_0[ii] - x_1[ii]);
-							if (abs_error > max_abs_error)
-							{
-								std::cout << "error: " << x_0[ii] << " vs " << x_1[ii] << " (" << abs_error << ")" << std::endl;
-								not_passed = true;
-								break;
-							}
-						}
-						if (not_passed) break;
-					}
-					if (not_passed) break;
-				}
-				if (not_passed) break;
-			}
+                    for (std::size_t ii = 0; ii < 3; ++ii)
+                    {
+                        const type abs_error = std::abs(x_1[ii] != static_cast<type>(0) ? (x_0[ii] - x_1[ii]) / x_1[ii] : x_0[ii] - x_1[ii]);
+                        if (abs_error > max_abs_error)
+                        {
+                            std::cout << "error: " << x_0[ii] << " vs " << x_1[ii] << " (" << abs_error << ")" << std::endl;
+                            not_passed = true;
+                            break;
+                        }
+                    }
+                    if (not_passed) break;
+                }
+                if (not_passed) break;
+            }
+            if (not_passed) break;
+        }
 
-			if (!not_passed)
-			{
-				std::cout << "success!" << std::endl;
-			}
-			#endif
-		}
-		#endif
+        if (!not_passed)
+        {
+            std::cout << "success!" << std::endl;
+        }
+        #endif
+    }
 
-		std::cout << "elapsed time = " << (time / MEASUREMENT) * 1.0E3 << " ms" << std::endl;
-	#endif
+    std::cout << "elapsed time = " << (time / MEASUREMENT) * 1.0E3 << " ms" << std::endl;
 
-	return 0;
+    return 0;
 }

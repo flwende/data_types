@@ -143,13 +143,37 @@ namespace VEC_NAMESPACE
                 :
                 x(v.x) {}
 
-        #define MACRO(OP, IN_T)                                         \
-            template <typename X>                                       \
-            vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<X, 1>& v) \
-            {                                                           \
-                x OP v.x;                                               \
-				return *this;                                           \
-            }                                                           \
+            inline VEC_NAMESPACE::vec<T_unqualified, 1>  operator-() const
+            {
+                return VEC_NAMESPACE::vec<T_unqualified, 1>(-x);
+            }
+
+        #define MACRO(OP, IN_T)                                                 \
+            inline vec_proxy& operator OP (VEC_NAMESPACE::IN_T<T, 1>& v)        \
+            {                                                                   \
+                x OP v.x;                                                       \
+				return *this;                                                   \
+            }                                                                   \
+                                                                                \
+            inline vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<T, 1>& v)  \
+            {                                                                   \
+                x OP v.x;                                                       \
+				return *this;                                                   \
+            }                                                                   \
+                                                                                \
+            template <typename X>                                               \
+            inline vec_proxy& operator OP (VEC_NAMESPACE::IN_T<X, 1>& v)        \
+            {                                                                   \
+                x OP v.x;                                                       \
+				return *this;                                                   \
+            }                                                                   \
+                                                                                \
+            template <typename X>                                               \
+            inline vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<X, 1>& v)  \
+            {                                                                   \
+                x OP v.x;                                                       \
+				return *this;                                                   \
+            }                                                                   \
 
             MACRO(=, vec)
             MACRO(+=, vec)
@@ -165,13 +189,13 @@ namespace VEC_NAMESPACE
 
         #undef MACRO
 
-        #define MACRO(OP)                                               \
-			template <typename X>                                       \
-			vec_proxy& operator OP (const X x)                          \
-			{                                                           \
-				x OP x;                                                 \
-				return *this;                                           \
-			}                                                           \
+        #define MACRO(OP)                                                       \
+			template <typename X>                                               \
+			inline vec_proxy& operator OP (const X x)                           \
+			{                                                                   \
+				x OP x;                                                         \
+				return *this;                                                   \
+			}                                                                   \
 
             MACRO(=)
             MACRO(+=)
@@ -234,14 +258,41 @@ namespace VEC_NAMESPACE
                 x(v.x),
                 y(v.y) {}
 
-        #define MACRO(OP, IN_T)                                         \
-            template <typename X>                                       \
-            vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<X, 2>& v) \
-            {                                                           \
-                x OP v.x;                                               \
-				y OP v.y;                                               \
-				return *this;                                           \
-            }                                                           \
+            inline VEC_NAMESPACE::vec<T_unqualified, 2>  operator-() const
+            {
+                return VEC_NAMESPACE::vec<T_unqualified, 2>(-x, -y);
+            }
+
+        #define MACRO(OP, IN_T)                                                 \
+            inline vec_proxy& operator OP (VEC_NAMESPACE::IN_T<T, 2>& v)        \
+            {                                                                   \
+                x OP v.x;                                                       \
+                y OP v.y;                                                       \
+				return *this;                                                   \
+            }                                                                   \
+                                                                                \
+            inline vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<T, 2>& v)  \
+            {                                                                   \
+                x OP v.x;                                                       \
+                y OP v.y;                                                       \
+				return *this;                                                   \
+            }                                                                   \
+                                                                                \
+            template <typename X>                                               \
+            inline vec_proxy& operator OP (VEC_NAMESPACE::IN_T<X, 2>& v)        \
+            {                                                                   \
+                x OP v.x;                                                       \
+                y OP v.y;                                                       \
+				return *this;                                                   \
+            }                                                                   \
+                                                                                \
+            template <typename X>                                               \
+            inline vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<X, 2>& v)  \
+            {                                                                   \
+                x OP v.x;                                                       \
+                y OP v.y;                                                       \
+				return *this;                                                   \
+            }                                                                   \
 
             MACRO(=, vec)
             MACRO(+=, vec)
@@ -257,14 +308,14 @@ namespace VEC_NAMESPACE
 
         #undef MACRO
 
-        #define MACRO(OP)                                               \
-			template <typename X>                                       \
-			vec_proxy& operator OP (const X xy)                         \
-			{                                                           \
-				x OP xy;                                                \
-				y OP xy;                                                \
-				return *this;                                           \
-			}                                                           \
+        #define MACRO(OP)                                                       \
+			template <typename X>                                               \
+			inline vec_proxy& operator OP (const X xy)                          \
+			{                                                                   \
+				x OP xy;                                                        \
+                y OP xy;                                                        \
+				return *this;                                                   \
+			}                                                                   \
 
             MACRO(=)
             MACRO(+=)
@@ -328,24 +379,45 @@ namespace VEC_NAMESPACE
                 y(v.y),
                 z(v.z) {}
 
-        #define MACRO(OP, IN_T)                                         \
-            template <typename X>                                       \
-            vec_proxy& operator OP (VEC_NAMESPACE::IN_T<X, 3>& v)       \
-            {                                                           \
-                x OP v.x;                                               \
-				y OP v.y;                                               \
-				z OP v.z;                                               \
-				return *this;                                           \
-            }                                                           \
-                                                                        \
-            template <typename X>                                       \
-            vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<X, 3>& v) \
-            {                                                           \
-                x OP v.x;                                               \
-				y OP v.y;                                               \
-				z OP v.z;                                               \
-				return *this;                                           \
-            }                                                           \
+            inline VEC_NAMESPACE::vec<T_unqualified, 3>  operator-() const
+            {
+                return VEC_NAMESPACE::vec<T_unqualified, 3>(-x, -y, -z);
+            }
+            
+        #define MACRO(OP, IN_T)                                                 \
+            inline vec_proxy& operator OP (VEC_NAMESPACE::IN_T<T, 3>& v)        \
+            {                                                                   \
+                x OP v.x;                                                       \
+                y OP v.y;                                                       \
+                z OP v.z;                                                       \
+				return *this;                                                   \
+            }                                                                   \
+                                                                                \
+            inline vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<T, 3>& v)  \
+            {                                                                   \
+                x OP v.x;                                                       \
+                y OP v.y;                                                       \
+                z OP v.z;                                                       \
+				return *this;                                                   \
+            }                                                                   \
+                                                                                \
+            template <typename X>                                               \
+            inline vec_proxy& operator OP (VEC_NAMESPACE::IN_T<X, 3>& v)        \
+            {                                                                   \
+                x OP v.x;                                                       \
+                y OP v.y;                                                       \
+                z OP v.z;                                                       \
+				return *this;                                                   \
+            }                                                                   \
+                                                                                \
+            template <typename X>                                               \
+            inline vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<X, 3>& v)  \
+            {                                                                   \
+                x OP v.x;                                                       \
+                y OP v.y;                                                       \
+                z OP v.z;                                                       \
+				return *this;                                                   \
+            }                                                                   \
 
             MACRO(=, vec)
             MACRO(+=, vec)
@@ -361,15 +433,15 @@ namespace VEC_NAMESPACE
 
         #undef MACRO
 
-        #define MACRO(OP)                                               \
-			template <typename X>                                       \
-			vec_proxy& operator OP (const X xyz)                        \
-			{                                                           \
-				x OP xyz;                                               \
-				y OP xyz;                                               \
-				z OP xyz;                                               \
-				return *this;                                           \
-			}                                                           \
+        #define MACRO(OP)                                                       \
+			template <typename X>                                               \
+			inline vec_proxy& operator OP (const X xyz)                         \
+			{                                                                   \
+				x OP xyz;                                                       \
+                y OP xyz;                                                       \
+                z OP xyz;                                                       \
+				return *this;                                                   \
+			}                                                                   \
 
             MACRO(=)
             MACRO(+=)

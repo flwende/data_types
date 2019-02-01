@@ -14,7 +14,7 @@
     #define SIMD_WIDTH_NATIVE_16BIT 32
     #define SIMD_WIDTH_NATIVE_8BIT 64
     #define SIMD_ALIGNMENT 64
-#elif defined(__AVX__)
+#elif defined(__AVX__) || defined(__AVX2__)
     #define SIMD_WIDTH_NATIVE_64BIT 4
     #define SIMD_WIDTH_NATIVE_32BIT 8
     #define SIMD_WIDTH_NATIVE_16BIT 16
@@ -92,16 +92,16 @@ namespace SIMD_NAMESPACE
             static_assert(implementation<T>::available, "error: there is no implementation for data type T");
         };
 
-    #define MACRO(T, SW)                                \
+    #define MACRO(TYPE, SW)                             \
         template <>                                     \
-        struct type<T>                                  \
+        struct type<TYPE>                               \
         {                                               \
             static constexpr std::size_t width = SW;    \
         };                                              \
 
-    #define MACRO_C(T, SW)                              \
-        MACRO(T, SW)                                    \
-        MACRO(const T, SW)                              \
+    #define MACRO_C(TYPE, SW)                           \
+        MACRO(TYPE, SW)                                 \
+        MACRO(const TYPE, SW)                           \
 
         MACRO_C(double, SIMD_WIDTH_NATIVE_64BIT)
         MACRO_C(float, SIMD_WIDTH_NATIVE_32BIT)

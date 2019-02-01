@@ -22,6 +22,17 @@
 
 namespace MISC_NAMESPACE
 {
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //! \brief A simple memory manager
+    //!
+    //! Note: it is not a manager in the sense of explicitly providing memory, but more a wrapper type
+    //! with some additional functionality regarding memory (de)allocation and accessing it in the multi-
+    //! dimensional case with different data layouts: here AoS!
+    //!
+    //! THE POINTER MANAGED BY THIS CLASS IS EXTERNAL!
+    //! 
+    //! \tparam T type of the data being managed
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
     template <typename T>
     struct memory
     {
@@ -53,11 +64,17 @@ namespace MISC_NAMESPACE
             return ptr[n_innermost * slice_idx + idx];
         }
 
-        // replace by internal alignment
         static std::size_t padding(const std::size_t n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
         {
-            // FIX
-            return n;
+            if (!MISC_NAMESPACE::is_power_of<2>(alignment))
+            {
+                std::cerr << "warning: alignment is not a power of 2" << std::endl;
+                return n;
+            }
+
+            const std::size_t ratio = MISC_NAMESPACE::least_common_multiple(alignment, sizeof(T)) / sizeof(T);
+
+            return ((n + ratio - 1) / ratio) * ratio;
         }
 
         template <std::size_t D>

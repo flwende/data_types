@@ -6,7 +6,9 @@
 #if !defined(SARRAY_SARRAY_HPP)
 #define SARRAY_SARRAY_HPP
 
+#include <array>
 #include <cstdint>
+#include <iostream>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -27,6 +29,8 @@ namespace XXX_NAMESPACE
         friend class sarray;
      
         T data[D];
+
+
 
     public:
 
@@ -59,6 +63,17 @@ namespace XXX_NAMESPACE
             for (std::size_t i = i_max; i < D; ++i)
             {
                 data[i] = static_cast<T>(0);
+            }
+        }
+
+        //! \brief Construct from std::array
+        //!
+        //! \param x an std::array object
+        sarray(const std::array<T, D>& x) 
+        {
+            for (std::size_t i = 0; i < D; ++i)
+            {
+                data[i] = x[i];
             }
         }
 
@@ -163,6 +178,17 @@ namespace XXX_NAMESPACE
             return reduce([&](const std::size_t product, const std::size_t element) { return (product * element); }, 1);
         }
     };
+
+    template <typename T, std::size_t D>
+    std::ostream& operator<<(std::ostream& os, sarray<T, D>& x)
+    {
+        for (std::size_t i = 0; i < D; ++i)
+        {
+            os << x[i] << ((i + 1) < D ? " " : "");
+        }
+
+        return os;
+    }
 }
 
 #endif
