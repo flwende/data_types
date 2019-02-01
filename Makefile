@@ -10,9 +10,9 @@ CXXFLAGS = -O3 -std=c++14 -mavx2 -fopenmp -fopenmp-simd -ftree-vectorize -ffast-
 LDFLAGS = -O2 -fopenmp
 
 CXXFLAGS += -DCHECK_RESULTS
-#CXXFLAGS += -DAOS_LAYOUT
-CXXFLAGS += -DSOA_LAYOUT
-CXXFLAGS += -DELEMENT_ACCESS
+CXXFLAGS += -DAOS_LAYOUT
+#CXXFLAGS += -DSOA_LAYOUT
+#CXXFLAGS += -DELEMENT_ACCESS
 
 target: bin/test_buffer.x
 

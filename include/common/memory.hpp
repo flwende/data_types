@@ -40,15 +40,13 @@ namespace XXX_NAMESPACE
         memory(T* __restrict__ ptr, const std::size_t n_innermost)
             :
             n_innermost(n_innermost),
-            ptr(ptr)
-        { ; }
+            ptr(ptr) {}
 
         template <typename TT>
         memory(const memory<TT>& m)
             :
             n_innermost(m.n_innermost),
-            ptr(reinterpret_cast<T*>(m.ptr))
-        { ; }
+            ptr(reinterpret_cast<T*>(m.ptr)) {}
 
         T& at(const std::size_t slice_idx, const std::size_t idx)
         {

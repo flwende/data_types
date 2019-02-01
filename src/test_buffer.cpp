@@ -64,7 +64,7 @@ int main(int argc, char** argv)
         }
 
         #if defined(CHECK_RESULTS)
-        const double max_abs_error = static_cast<type>(1.0E-4);
+        const double max_abs_error = static_cast<type>(1.0E-9);
         bool not_passed = false;
         for (std::size_t i = 0; i < nx; ++i)
         {
@@ -125,7 +125,7 @@ int main(int argc, char** argv)
         }
 
         #if defined(CHECK_RESULTS)
-        const double max_abs_error = static_cast<type>(1.0E-4);
+        const double max_abs_error = static_cast<type>(1.0E-9);
         bool not_passed = false;
         for (std::size_t k = 0; k < nz; ++k)
         {

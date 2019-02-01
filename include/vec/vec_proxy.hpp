@@ -16,16 +16,16 @@
 
 namespace VEC_NAMESPACE
 {
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//! \brief A proxy data type for vec<T, D>
-	//!
-	//! This data type is returned by buffer<T, D, Layout, Alignment>::operator[]() if D = 1 and Layout=SoA.
-	//! It holds references to component(s) x [,y [and z]] in main memory, so that data access via,
-	//! e.g. obj[ ]..[ ].x, is possible.
-	//!
-	//! \tparam T data type
-	//! \tparam D dimension
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //! \brief A proxy data type for vec<T, D>
+    //!
+    //! This data type is returned by accessor<T, D, Layout>::operator[] if D = 1 and SoA data layout.
+    //! It holds references to component(s) x [,y [and z]], so that data access via,
+    //! e.g. obj[ ]..[ ].x, is possible.
+    //!
+    //! \tparam T data type
+    //! \tparam D dimension
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     namespace internal
     {
         template <typename T, std::size_t D>
@@ -68,7 +68,6 @@ namespace VEC_NAMESPACE
                 return vec_memory(*this, slice_idx, idx);
             }
 
-            // replace by internal alignment
             static std::size_t padding(const std::size_t n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
             {
                 if (!AUXILIARY_NAMESPACE::is_power_of<2>(alignment))
@@ -77,7 +76,7 @@ namespace VEC_NAMESPACE
                     return n;
                 }
                 
-                const std::size_t ratio = std::max(1UL, alignment / sizeof(T));
+                const std::size_t ratio = AUXILIARY_NAMESPACE::least_common_multiple(alignment, sizeof(T)) / sizeof(T);
 
                 return ((n + ratio - 1) / ratio) * ratio;
             }
@@ -103,13 +102,13 @@ namespace VEC_NAMESPACE
         };
 
         //! \brief D = 1 specialization with component x
-		//!
-		//! \tparam T data type
+        //!
+        //! \tparam T data type
         template <typename T>
-		class vec_proxy<T, 1>
-		{
-			static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
-			static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
+        class vec_proxy<T, 1>
+        {
+            static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
+            static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
         public:
@@ -150,27 +149,27 @@ namespace VEC_NAMESPACE
             inline vec_proxy& operator OP (VEC_NAMESPACE::IN_T<T, 1>& v)        \
             {                                                                   \
                 x OP v.x;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
                                                                                 \
             inline vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<T, 1>& v)  \
             {                                                                   \
                 x OP v.x;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
                                                                                 \
             template <typename X>                                               \
             inline vec_proxy& operator OP (VEC_NAMESPACE::IN_T<X, 1>& v)        \
             {                                                                   \
                 x OP v.x;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
                                                                                 \
             template <typename X>                                               \
             inline vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<X, 1>& v)  \
             {                                                                   \
                 x OP v.x;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
 
             MACRO(=, vec)
@@ -188,12 +187,12 @@ namespace VEC_NAMESPACE
         #undef MACRO
 
         #define MACRO(OP)                                                       \
-			template <typename X>                                               \
-			inline vec_proxy& operator OP (const X x)                           \
-			{                                                                   \
-				x OP x;                                                         \
-				return *this;                                                   \
-			}                                                                   \
+            template <typename X>                                               \
+            inline vec_proxy& operator OP (const X x)                           \
+            {                                                                   \
+                x OP x;                                                         \
+                return *this;                                                   \
+            }                                                                   \
 
             MACRO(=)
             MACRO(+=)
@@ -210,16 +209,16 @@ namespace VEC_NAMESPACE
             {
                 return std::abs(x);
             }
-		};
+        };
 
         //! \brief D = 2 specialization with component x
-		//!
-		//! \tparam T data type
+        //!
+        //! \tparam T data type
         template <typename T>
-		class vec_proxy<T, 2>
-		{
-			static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
-			static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
+        class vec_proxy<T, 2>
+        {
+            static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
+            static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
         public:
@@ -234,7 +233,7 @@ namespace VEC_NAMESPACE
             using memory = typename internal::vec_memory<T, 2>;
 
             T& x;
-			T& y;
+            T& y;
 
             vec_proxy(memory m)
                 :
@@ -266,14 +265,14 @@ namespace VEC_NAMESPACE
             {                                                                   \
                 x OP v.x;                                                       \
                 y OP v.y;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
                                                                                 \
             inline vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<T, 2>& v)  \
             {                                                                   \
                 x OP v.x;                                                       \
                 y OP v.y;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
                                                                                 \
             template <typename X>                                               \
@@ -281,7 +280,7 @@ namespace VEC_NAMESPACE
             {                                                                   \
                 x OP v.x;                                                       \
                 y OP v.y;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
                                                                                 \
             template <typename X>                                               \
@@ -289,7 +288,7 @@ namespace VEC_NAMESPACE
             {                                                                   \
                 x OP v.x;                                                       \
                 y OP v.y;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
 
             MACRO(=, vec)
@@ -307,13 +306,13 @@ namespace VEC_NAMESPACE
         #undef MACRO
 
         #define MACRO(OP)                                                       \
-			template <typename X>                                               \
-			inline vec_proxy& operator OP (const X xy)                          \
-			{                                                                   \
-				x OP xy;                                                        \
+            template <typename X>                                               \
+            inline vec_proxy& operator OP (const X xy)                          \
+            {                                                                   \
+                x OP xy;                                                        \
                 y OP xy;                                                        \
-				return *this;                                                   \
-			}                                                                   \
+                return *this;                                                   \
+            }                                                                   \
 
             MACRO(=)
             MACRO(+=)
@@ -330,16 +329,16 @@ namespace VEC_NAMESPACE
             {
                 return AUXILIARY_NAMESPACE::math<T>::sqrt(x * x + y * y);
             }
-		};
+        };
 
         //! \brief D = 3 specialization with component x
-		//!
-		//! \tparam T data type
+        //!
+        //! \tparam T data type
         template <typename T>
-		class vec_proxy<T, 3>
-		{
-			static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
-			static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
+        class vec_proxy<T, 3>
+        {
+            static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
+            static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
         public:
@@ -388,7 +387,7 @@ namespace VEC_NAMESPACE
                 x OP v.x;                                                       \
                 y OP v.y;                                                       \
                 z OP v.z;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
                                                                                 \
             inline vec_proxy& operator OP (const VEC_NAMESPACE::IN_T<T, 3>& v)  \
@@ -396,7 +395,7 @@ namespace VEC_NAMESPACE
                 x OP v.x;                                                       \
                 y OP v.y;                                                       \
                 z OP v.z;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
                                                                                 \
             template <typename X>                                               \
@@ -405,7 +404,7 @@ namespace VEC_NAMESPACE
                 x OP v.x;                                                       \
                 y OP v.y;                                                       \
                 z OP v.z;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
                                                                                 \
             template <typename X>                                               \
@@ -414,7 +413,7 @@ namespace VEC_NAMESPACE
                 x OP v.x;                                                       \
                 y OP v.y;                                                       \
                 z OP v.z;                                                       \
-				return *this;                                                   \
+                return *this;                                                   \
             }                                                                   \
 
             MACRO(=, vec)
@@ -432,14 +431,14 @@ namespace VEC_NAMESPACE
         #undef MACRO
 
         #define MACRO(OP)                                                       \
-			template <typename X>                                               \
-			inline vec_proxy& operator OP (const X xyz)                         \
-			{                                                                   \
-				x OP xyz;                                                       \
+            template <typename X>                                               \
+            inline vec_proxy& operator OP (const X xyz)                         \
+            {                                                                   \
+                x OP xyz;                                                       \
                 y OP xyz;                                                       \
                 z OP xyz;                                                       \
-				return *this;                                                   \
-			}                                                                   \
+                return *this;                                                   \
+            }                                                                   \
 
             MACRO(=)
             MACRO(+=)
@@ -458,30 +457,30 @@ namespace VEC_NAMESPACE
             }
 
             T& x;
-			T& y;
-			T& z;
-		};
-
-		template <typename T>
-		std::ostream& operator<<(std::ostream& os, const vec_proxy<T, 1>& vp)
-		{
-			os << "(" << vp.x << ")";
-			return os;
-		}
+            T& y;
+            T& z;
+        };
 
         template <typename T>
-		std::ostream& operator<<(std::ostream& os, const vec_proxy<T, 2>& vp)
-		{
-			os << "(" << vp.x << "," << vp.y << ")";
-			return os;
-		}
+        std::ostream& operator<<(std::ostream& os, const vec_proxy<T, 1>& vp)
+        {
+            os << "(" << vp.x << ")";
+            return os;
+        }
 
         template <typename T>
-		std::ostream& operator<<(std::ostream& os, const vec_proxy<T, 3>& vp)
-		{
-			os << "(" << vp.x << "," << vp.y << "," << vp.z << ")";
-			return os;
-		}
+        std::ostream& operator<<(std::ostream& os, const vec_proxy<T, 2>& vp)
+        {
+            os << "(" << vp.x << "," << vp.y << ")";
+            return os;
+        }
+
+        template <typename T>
+        std::ostream& operator<<(std::ostream& os, const vec_proxy<T, 3>& vp)
+        {
+            os << "(" << vp.x << "," << vp.y << "," << vp.z << ")";
+            return os;
+        }
     }
 }
 

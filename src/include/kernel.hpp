@@ -28,17 +28,17 @@ template <typename T>
 struct kernel
 {
 #if defined(AOS_LAYOUT)
-	template <std::size_t D>
-	static double exp(fw::buffer<T, D, fw::data_layout::AoS>& x);
+    template <std::size_t D>
+    static double exp(fw::buffer<T, D, fw::data_layout::AoS>& x);
 
     template <std::size_t D>
-	static double log(fw::buffer<T, D, fw::data_layout::AoS>& x);
+    static double log(fw::buffer<T, D, fw::data_layout::AoS>& x);
 #elif defined(SOA_LAYOUT)
-	template <std::size_t D>
-	static double exp(fw::buffer<T, D, fw::data_layout::SoA>& x);
+    template <std::size_t D>
+    static double exp(fw::buffer<T, D, fw::data_layout::SoA>& x);
 
-	template <std::size_t D>
-	static double log(fw::buffer<T, D, fw::data_layout::SoA>& x);
+    template <std::size_t D>
+    static double log(fw::buffer<T, D, fw::data_layout::SoA>& x);
 #endif
 };
 

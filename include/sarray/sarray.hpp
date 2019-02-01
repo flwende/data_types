@@ -38,14 +38,18 @@ namespace XXX_NAMESPACE
         static constexpr std::size_t size = D;
 
         //! \brief Standard constructor
-        sarray() : data{} { ; }
+        sarray() 
+            : 
+            data{} {}
 
         //! \brief Constructor taking D (or less) arguments to initialize the array
         //!
         //! \tparam Args variadic template type parameter list
         //! \param args parameters
         template <typename ... Args>
-        sarray(const Args ... args) : data{ static_cast<T>(std::move(args)) ... } { ; }
+        sarray(const Args ... args) 
+            : 
+            data{ static_cast<T>(std::move(args)) ... } {}
 
         //! \brief Copy constructor
         //!
@@ -60,6 +64,7 @@ namespace XXX_NAMESPACE
             {
                 data[i] = x.data[i];
             }
+
             for (std::size_t i = i_max; i < D; ++i)
             {
                 data[i] = static_cast<T>(0);
@@ -150,10 +155,12 @@ namespace XXX_NAMESPACE
         inline bool operator==(const sarray& rhs) const
         {
             bool is_same = true;
+
             for (std::size_t i = 0; i < D; ++i)
             {
                 is_same &= (data[i] == rhs.data[i]);
             }
+
             return is_same;
         }
 
@@ -166,10 +173,12 @@ namespace XXX_NAMESPACE
         inline T reduce(F func, const T r_0) const
         {
             T r = r_0;
+
             for (std::size_t i = 0; i < D; ++i)
             {
                 r = func(r, data[i]);
             }
+            
             return r;
         }
 

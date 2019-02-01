@@ -57,15 +57,21 @@ namespace XXX_NAMESPACE
             //! \param data pointer-like memory reference
             //! \param n extent of the D-dimensional array
             //! \param num_stabs the offset in units of 'innermost dimension n[0]'
-            accessor(memory& data, const sarray<std::size_t, D>& n, const std::size_t num_stabs = 0) : data(data), n(n), num_stabs(num_stabs) { ; }
+            accessor(memory& data, const sarray<std::size_t, D>& n, const std::size_t num_stabs = 0) 
+                : 
+                data(data), 
+                n(n), 
+                num_stabs(num_stabs) {}
 
             inline accessor<T, D - 1, L> operator[] (const std::size_t idx) const
             {
                 std::size_t reduction = idx;
+
                 for (std::size_t i = 1; i < (D - 1); ++i)
                 {
                     reduction *= n[i];
-                }                
+                }               
+
                 return accessor<T, D - 1, L>(data, n, num_stabs + reduction);
             }
         };
@@ -84,7 +90,11 @@ namespace XXX_NAMESPACE
             //!
             //! \param ptr base pointer
             //! \param n extent of the D-dimensional array
-            accessor(memory& data, const sarray<std::size_t, 1>& n, const std::size_t num_stabs = 0) : data(data), n(n), num_stabs(num_stabs) { ; }
+            accessor(memory& data, const sarray<std::size_t, 1>& n, const std::size_t num_stabs = 0) 
+                : 
+                data(data), 
+                n(n), 
+                num_stabs(num_stabs) {}
 
             inline T& operator[] (const std::size_t idx)
             {
@@ -112,7 +122,11 @@ namespace XXX_NAMESPACE
             //!
             //! \param ptr base pointer
             //! \param n extent of the D-dimensional array
-            accessor(memory& data, const sarray<std::size_t, 1>& n, const std::size_t num_stabs = 0) : data(data), n(n), num_stabs(num_stabs) { ; }
+            accessor(memory& data, const sarray<std::size_t, 1>& n, const std::size_t num_stabs = 0) 
+                : 
+                data(data), 
+                n(n), 
+                num_stabs(num_stabs) {}
 
             inline proxy_type operator[] (const std::size_t idx)
             {
@@ -178,22 +192,23 @@ namespace XXX_NAMESPACE
         using memory = typename internal::traits<X, L>::memory;
 
     public:
+
+        const sarray<std::size_t, D> n;
         const sarray<std::size_t, D> n_internal;
+
     private:
+
         memory<element_type> data;
         memory<const_element_type> const_data;
         
     public:
 
-        const sarray<std::size_t, D> n;
-
         buffer(const sarray<std::size_t, D>& n, const bool intialize_to_zero = false)
             :
+            n(n),
             n_internal(n.replace(memory<element_type>::padding(n[0], alignment), 0)),
             data(memory<element_type>::allocate(n_internal, alignment), n_internal[0]),
-            const_data(data),
-            n(n)
-        { ; }
+            const_data(data) {}
         
         ~buffer()
         {
