@@ -208,6 +208,7 @@ namespace XXX_NAMESPACE
     // define N-dimensional homogeneous structured type
     namespace
     {
+        // defines 'template <T, N> struct type_gen {..};'
         MACRO_VARIADIC_TYPE_GEN(XXX_NAMESPACE::multi_pointer);
     }
 
