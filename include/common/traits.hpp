@@ -44,7 +44,7 @@ namespace XXX_NAMESPACE
             using const_type = const T;
             using proxy_type = T;
 
-            using memory = typename std::conditional<std::is_const<T>::value, const typename XXX_NAMESPACE::memory<T>, typename XXX_NAMESPACE::memory<T>>::type;
+            using base_pointer = typename std::conditional<std::is_const<T>::value, const typename XXX_NAMESPACE::pointer<T>, typename XXX_NAMESPACE::pointer<T>>::type;
         };
 
         template <typename T>
@@ -54,7 +54,7 @@ namespace XXX_NAMESPACE
             using const_type = const T;
             using proxy_type = typename std::conditional<std::is_const<T>::value, typename T::proxy_type::const_type, typename T::proxy_type>::type;
 
-            using memory = typename std::conditional<std::is_const<T>::value, const typename proxy_type::memory, typename proxy_type::memory>::type;
+            using base_pointer = typename std::conditional<std::is_const<T>::value, const typename proxy_type::base_pointer, typename proxy_type::base_pointer>::type;
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

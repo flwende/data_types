@@ -28,79 +28,6 @@ namespace VEC_NAMESPACE
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     namespace internal
     {
-        template <typename T, std::size_t D>
-        struct vec_memory
-        {
-            using T_unqualified = typename std::remove_cv<T>::type;
-            static constexpr std::size_t num_members = D;
-            static constexpr std::size_t record_size = num_members * sizeof(T);
-            
-            const std::size_t n_innermost;
-            T* __restrict__ ptr;
-            
-            vec_memory(T* __restrict__ ptr, const std::size_t n_innermost) 
-                :
-                n_innermost(n_innermost),
-                ptr(ptr) {}
-
-            vec_memory(const typename vec_proxy<T_unqualified, D>::memory& m)
-                :
-                n_innermost(m.n_innermost),
-                ptr(m.ptr) {}
-
-            vec_memory(const typename vec_proxy<const T_unqualified, D>::memory& m)
-                : 
-                n_innermost(m.n_innermost),
-                ptr(m.ptr) {}
-
-            vec_memory(const vec_memory& m, const std::size_t slice_idx, const std::size_t idx)
-                :
-                n_innermost(m.n_innermost),
-                ptr(&m.ptr[slice_idx * num_members * n_innermost + idx]) {}
-
-            vec_memory at(const std::size_t slice_idx, const std::size_t idx)
-            {
-                return vec_memory(*this, slice_idx, idx);
-            }
-
-            vec_memory at(const std::size_t slice_idx, const std::size_t idx) const
-            {
-                return vec_memory(*this, slice_idx, idx);
-            }
-
-            static std::size_t padding(const std::size_t n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
-            {
-                if (!AUXILIARY_NAMESPACE::is_power_of<2>(alignment))
-                {
-                    std::cerr << "warning: alignment is not a power of 2" << std::endl;
-                    return n;
-                }
-                
-                const std::size_t ratio = AUXILIARY_NAMESPACE::least_common_multiple(alignment, sizeof(T)) / sizeof(T);
-
-                return ((n + ratio - 1) / ratio) * ratio;
-            }
-
-            template <std::size_t DD>
-            static T* allocate(const sarray<std::size_t, DD>& n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
-            {
-                if (n[0] != padding(n[0], alignment))
-                {
-                    std::cerr << "error in vec_proxy::vec_memory::allocate : n[0] does not match alignment" << std::endl;
-                }
-
-                return reinterpret_cast<T*>(_mm_malloc(n.reduce_mul() * record_size, alignment));
-            }
-
-            static void deallocate(vec_memory& m)
-            {
-                if (m.ptr)
-                {
-                    _mm_free(m.ptr);
-                }
-            }
-        };
-
         //! \brief D = 1 specialization with component x
         //!
         //! \tparam T data type
@@ -120,13 +47,13 @@ namespace VEC_NAMESPACE
             using element_type = T;
             //! Remember the template parameter D (=1)
             static constexpr std::size_t d = 1;
-            using memory = typename internal::vec_memory<T, 1>;
+            using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 1>;
 
             T& x;
 
-            vec_proxy(memory m)
+            vec_proxy(base_pointer m)
                 :
-                x(m.ptr) {}
+                x(m.base) {}
 
             vec_proxy(const vec_proxy& vp)
                 :
@@ -230,15 +157,15 @@ namespace VEC_NAMESPACE
             using element_type = T;
             //! Remember the template parameter D (=2)
             static constexpr std::size_t d = 2;
-            using memory = typename internal::vec_memory<T, 2>;
+            using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 2>;
 
             T& x;
             T& y;
 
-            vec_proxy(memory m)
+            vec_proxy(base_pointer m)
                 :
-                x(m.ptr[0 * m.n_innermost]),
-                y(m.ptr[1 * m.n_innermost]) {}
+                x(m.base[0 * m.n_innermost]),
+                y(m.base[1 * m.n_innermost]) {}
 
             vec_proxy(const vec_proxy& vp)
                 :
@@ -350,13 +277,13 @@ namespace VEC_NAMESPACE
             using element_type = T;
             //! Remember the template parameter D (=3)
             static constexpr std::size_t d = 3;
-            using memory = typename internal::vec_memory<T, 3>;
+            using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 3>;
 
-            vec_proxy(memory m)
+            vec_proxy(base_pointer m)
                 :
-                x(m.ptr[0 * m.n_innermost]),
-                y(m.ptr[1 * m.n_innermost]),
-                z(m.ptr[2 * m.n_innermost]) {}
+                x(m.base[0 * m.n_innermost]),
+                y(m.base[1 * m.n_innermost]),
+                z(m.base[2 * m.n_innermost]) {}
 
             vec_proxy(const vec_proxy& vp)
                 :

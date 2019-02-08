@@ -30,15 +30,13 @@ namespace XXX_NAMESPACE
      
         T data[D];
 
-
-
     public:
 
         using element_type = T;
         static constexpr std::size_t size = D;
 
         //! \brief Standard constructor
-        sarray() 
+        constexpr sarray() 
             : 
             data{} {}
 
@@ -47,7 +45,7 @@ namespace XXX_NAMESPACE
         //! \tparam Args variadic template type parameter list
         //! \param args parameters
         template <typename ... Args>
-        sarray(const Args ... args) 
+        constexpr sarray(const Args ... args) 
             : 
             data{ static_cast<T>(std::move(args)) ... } {}
 
@@ -56,7 +54,7 @@ namespace XXX_NAMESPACE
         //! \tparam X array size
         //! \param x an sarray object of type T with size X
         template <std::size_t X>
-        sarray(const sarray<T, X>& x)
+        constexpr sarray(const sarray<T, X>& x)
         {
             constexpr std::size_t i_max = (X < D ? X : D);
 
@@ -74,7 +72,7 @@ namespace XXX_NAMESPACE
         //! \brief Construct from std::array
         //!
         //! \param x an std::array object
-        sarray(const std::array<T, D>& x) 
+        constexpr sarray(const std::array<T, D>& x) 
         {
             for (std::size_t i = 0; i < D; ++i)
             {
@@ -86,7 +84,7 @@ namespace XXX_NAMESPACE
         //!
         //! \param idx element index
         //! \return reference to the element
-        inline T& operator[](const std::size_t idx)
+        constexpr inline T& operator[](const std::size_t idx)
         {
             return data[idx];
         }
@@ -95,7 +93,7 @@ namespace XXX_NAMESPACE
         //!
         //! \param idx element index
         //! \return const reference to the element
-        inline const T& operator[](const std::size_t idx) const
+        constexpr inline const T& operator[](const std::size_t idx) const
         {
             return data[idx];
         }
@@ -105,7 +103,7 @@ namespace XXX_NAMESPACE
         //! \param x replacement
         //! \param idx element index
         //! \return an sarray object
-        sarray<T, D> replace(const T x, const std::size_t idx) const 
+        constexpr sarray<T, D> replace(const T x, const std::size_t idx) const 
         {
             sarray<T, D> result = *this;
 
@@ -124,7 +122,7 @@ namespace XXX_NAMESPACE
         //! \param x element to be inserted
         //! \param idx element index
         //! \return an sarray object
-        sarray<T, D> insert_and_chop(const T x, const std::size_t idx = 0) const
+        constexpr sarray<T, D> insert_and_chop(const T x, const std::size_t idx = 0) const
         {
             if (idx >= D) return *this;
 
@@ -152,7 +150,7 @@ namespace XXX_NAMESPACE
         //!
         //! \param rhs
         //! \return result of the element-wise comparison of the sarray contents
-        inline bool operator==(const sarray& rhs) const
+        constexpr inline bool operator==(const sarray& rhs) const
         {
             bool is_same = true;
 
@@ -170,7 +168,7 @@ namespace XXX_NAMESPACE
         //! \param r_0 start value for the reduction
         //! \return reduction
         template <typename F>
-        inline T reduce(F func, const T r_0) const
+        constexpr inline T reduce(F func, const T r_0) const
         {
             T r = r_0;
 
@@ -182,7 +180,7 @@ namespace XXX_NAMESPACE
             return r;
         }
 
-        inline T reduce_mul() const
+        constexpr inline T reduce_mul() const
         {
             return reduce([&](const std::size_t product, const std::size_t element) { return (product * element); }, 1);
         }

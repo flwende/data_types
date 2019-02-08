@@ -19,6 +19,7 @@
 #endif
 
 #include "../auxiliary/math.hpp"
+#include "../auxiliary/variadic.hpp"
 #include "../common/traits.hpp"
 #include "../sarray/sarray.hpp"
 #include "../simd/simd.hpp"
@@ -133,7 +134,7 @@ namespace TUPLE_NAMESPACE
     template <typename T_1, typename T_2, typename T_3>
     std::ostream& operator<<(std::ostream& os, const tuple<T_1, T_2, T_3>& v)
     {
-        os << "(" << static_cast<std::uint64_t>(v.x) << "," << static_cast<std::uint64_t>(v.y) << "," << static_cast<std::uint64_t>(v.z) << ")";
+        os << "(" << v.x << "," << v.y << "," << v.z << ")";
         return os;
     }
 }

@@ -18,6 +18,8 @@
 #define AUXILIARY_NAMESPACE XXX_NAMESPACE
 #endif
 
+#include "../sarray/sarray.hpp"
+
 namespace AUXILIARY_NAMESPACE
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,6 +89,27 @@ namespace AUXILIARY_NAMESPACE
         }
 
         return true;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //! \brief Prefix sum calculation
+    //!
+    //! \tparam T data type
+    //! \tparam N array extent
+    //! \param x argument
+    //! \return prefix sum
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    template <typename T, std::size_t N>
+    constexpr AUXILIARY_NAMESPACE::sarray<T, N> prefix_sum(const AUXILIARY_NAMESPACE::sarray<T, N>& x)
+    {
+        AUXILIARY_NAMESPACE::sarray<T, N> y{0};
+
+        for (std::size_t i = 1; i < N; ++i)
+        {
+            y[i] = y[i - 1] + x[i - 1];
+        }
+
+        return y;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////

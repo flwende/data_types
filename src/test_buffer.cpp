@@ -69,9 +69,12 @@ int main(int argc, char** argv)
         }
 
         #if defined(CHECK_RESULTS)
-        const double max_abs_error = static_cast<type>(1.0E-9);
+        auto a_print = buf.read();
+        const double max_abs_error = static_cast<type>(1.0E-6);
+        const std::size_t print_num_elements = 128;
         bool not_passed = false;
-        for (std::size_t i = 0; i < nx; ++i)
+
+        for (std::size_t i = 0, e = 0; i < nx; ++i, ++e)
         {
             const double x_0[3] = {static_cast<double>(a_buf[i].x), static_cast<double>(a_buf[i].y), static_cast<double>(a_buf[i].z)};
             #if defined(ELEMENT_ACCESS)
@@ -94,6 +97,11 @@ int main(int argc, char** argv)
                     std::cout << "error: " << x_0[ii] << " vs " << x_1[ii] << " (" << abs_error << ")" << std::endl;
                     not_passed = true;
                     break;
+                }
+
+                if (e < print_num_elements)
+                {
+                    std::cout << a_print[i] << std::endl;
                 }
             }
             if (not_passed) break;
@@ -140,13 +148,16 @@ int main(int argc, char** argv)
         }
 
         #if defined(CHECK_RESULTS)
-        const double max_abs_error = static_cast<type>(1.0E-9);
+        auto a_print = buf.read();
+        const double max_abs_error = static_cast<type>(1.0E-6);
+        const std::size_t print_num_elements = 128;
         bool not_passed = false;
-        for (std::size_t k = 0; k < nz; ++k)
+
+        for (std::size_t k = 0, e = 0; k < nz; ++k)
         {
             for (std::size_t j = 0; j < ny; ++j)
             {
-                for (std::size_t i = 0; i < nx; ++i)
+                for (std::size_t i = 0; i < nx; ++i, ++e)
                 {
                     const double x_0[3] = {static_cast<double>(a_buf[k][j][i].x), static_cast<double>(a_buf[k][j][i].y), static_cast<double>(a_buf[k][j][i].z)};
                     #if defined(ELEMENT_ACCESS)
@@ -172,6 +183,11 @@ int main(int argc, char** argv)
                         }
                     }
                     if (not_passed) break;
+
+                    if (e < print_num_elements)
+                    {
+                        std::cout << a_print[k][j][i] << std::endl;
+                    }
                 }
                 if (not_passed) break;
             }

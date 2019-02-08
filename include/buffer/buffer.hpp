@@ -30,9 +30,9 @@ namespace XXX_NAMESPACE
         //! 
         //! Idea: all memory is allocated as a contiguous set of stabs (innermost dimension n[0] with padding).
         //! For D > 1, the number of stabs is determined as the reduction over all indices, but without accounting for
-        //! the innermost dimension: [k][j][i] -> '(k * n[1] + j) * n[0] + i' -> 'num_stabs = k * n[1] + j'
+        //! the innermost dimension: [k][j][i] -> '(k * n[1] + j) * n[0] + i' -> 'stab_idx = k * n[1] + j'
         //! The 'memory' type holds a base-pointer-like memory reference to [0][0]..[0] and can deduce the final
-        //! memory reference from 'num_stabs', 'n[0]' and 'i'.
+        //! memory reference from 'stab_idx', 'n[0]' and 'i'.
         //! The result (recursion anchor, D=1) of the array subscript operator chaining is either a reference of type 
         //! 'T' in case of the AoS data layout or if there is no proxy type available with the SoA data layout, or
         //! a proxy type that is initialized through the final memory reference type in case of SoA.
@@ -45,10 +45,10 @@ namespace XXX_NAMESPACE
         template <typename T, std::size_t D, data_layout L, typename Enabled = void>
         class accessor
         {
-            using memory = typename internal::traits<T, L>::memory;
-            memory& data;
+            using base_pointer = typename internal::traits<T, L>::base_pointer;
+            base_pointer& data;
             const sarray<std::size_t, D>& n;
-            const std::size_t num_stabs;
+            const std::size_t stab_idx;
 
         public:
 
@@ -56,33 +56,33 @@ namespace XXX_NAMESPACE
             //!
             //! \param data pointer-like memory reference
             //! \param n extent of the D-dimensional array
-            //! \param num_stabs the offset in units of 'innermost dimension n[0]'
-            accessor(memory& data, const sarray<std::size_t, D>& n, const std::size_t num_stabs = 0) 
+            //! \param stab_idx the offset in units of 'innermost dimension n[0]'
+            accessor(base_pointer& data, const sarray<std::size_t, D>& n, const std::size_t stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
-                num_stabs(num_stabs) {}
+                stab_idx(stab_idx) {}
 
             inline accessor<T, D - 1, L> operator[] (const std::size_t idx) const
             {
-                std::size_t reduction = idx;
+                std::size_t delta = idx;
 
                 for (std::size_t i = 1; i < (D - 1); ++i)
                 {
-                    reduction *= n[i];
+                    delta *= n[i];
                 }               
 
-                return accessor<T, D - 1, L>(data, n, num_stabs + reduction);
+                return accessor<T, D - 1, L>(data, n, stab_idx + delta);
             }
         };
 
         template <typename T, data_layout L, typename Enabled>
         class accessor<T, 1, L, Enabled>
         {
-            using memory = typename internal::traits<T, L>::memory;
-            memory& data;
+            using base_pointer = typename internal::traits<T, L>::base_pointer;
+            base_pointer& data;
             const sarray<std::size_t, 1>& n;
-            const std::size_t num_stabs;
+            const std::size_t stab_idx;
 
         public:
 
@@ -90,31 +90,31 @@ namespace XXX_NAMESPACE
             //!
             //! \param ptr base pointer
             //! \param n extent of the D-dimensional array
-            accessor(memory& data, const sarray<std::size_t, 1>& n, const std::size_t num_stabs = 0) 
+            accessor(base_pointer& data, const sarray<std::size_t, 1>& n, const std::size_t stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
-                num_stabs(num_stabs) {}
+                stab_idx(stab_idx) {}
 
             inline T& operator[] (const std::size_t idx)
             {
-                return data.at(num_stabs, idx);
+                return data.at(stab_idx, idx);
             }
 
             inline const T& operator[] (const std::size_t idx) const
             {
-                return data.at(num_stabs, idx);
+                return data.at(stab_idx, idx);
             }
         };
 
         template <typename T>
         class accessor<T, 1, data_layout::SoA, typename std::enable_if<internal::provides_proxy_type<T>::value>::type>
         {
-            using memory = typename internal::traits<T, data_layout::SoA>::memory;
+            using base_pointer = typename internal::traits<T, data_layout::SoA>::base_pointer;
             using proxy_type = typename internal::traits<T, data_layout::SoA>::proxy_type;
-            memory& data;
+            base_pointer& data;
             const sarray<std::size_t, 1>& n;
-            const std::size_t num_stabs;
+            const std::size_t stab_idx;
 
         public:
 
@@ -122,20 +122,20 @@ namespace XXX_NAMESPACE
             //!
             //! \param ptr base pointer
             //! \param n extent of the D-dimensional array
-            accessor(memory& data, const sarray<std::size_t, 1>& n, const std::size_t num_stabs = 0) 
+            accessor(base_pointer& data, const sarray<std::size_t, 1>& n, const std::size_t stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
-                num_stabs(num_stabs) {}
+                stab_idx(stab_idx) {}
 
             inline proxy_type operator[] (const std::size_t idx)
             {
-                return proxy_type(data.at(num_stabs, idx));
+                return proxy_type(data.at(stab_idx, idx));
             }
 
             inline proxy_type operator[] (const std::size_t idx) const
             {
-                return proxy_type(data.at(num_stabs, idx));
+                return proxy_type(data.at(stab_idx, idx));
             }
         };
     }
@@ -189,7 +189,7 @@ namespace XXX_NAMESPACE
         using const_element_type = typename internal::traits<element_type, L>::const_type;
 
         template <typename X>
-        using memory = typename internal::traits<X, L>::memory;
+        using base_pointer = typename internal::traits<X, L>::base_pointer;
 
     public:
 
@@ -198,21 +198,21 @@ namespace XXX_NAMESPACE
 
     private:
 
-        memory<element_type> data;
-        memory<const_element_type> const_data;
+        base_pointer<element_type> data;
+        base_pointer<const_element_type> const_data;
         
     public:
 
         buffer(const sarray<std::size_t, D>& n, const bool intialize_to_zero = false)
             :
             n(n),
-            n_internal(n.replace(memory<element_type>::padding(n[0], alignment), 0)),
-            data(memory<element_type>::allocate(n_internal, alignment), n_internal[0]),
+            n_internal(n.replace(base_pointer<element_type>::padding(n[0], alignment), 0)),
+            data(base_pointer<element_type>::allocate(n_internal, alignment), n_internal[0]),
             const_data(data) {}
         
         ~buffer()
         {
-            memory<element_type>::deallocate(data);
+            base_pointer<element_type>::deallocate(data);
         }
 
         inline internal::accessor<element_type, D, L> read_write()
