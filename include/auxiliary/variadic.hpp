@@ -107,7 +107,7 @@ namespace AUXILIARY_NAMESPACE
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //! \brief Generate a variadic type with up to 'FW_SEQ_MAX_N' (currently) template parameters
+        //! \brief Generate a variadic type with up to 'FW_SEQ_MAX_N' template parameters
         //!
         //! Remove from a parameter pack (T_front ..., T_tail ...) 'M = |T_front ...| = (FW_SEQ_MAX_N - N) >= 0'
         //! parameters in a recursive way, and take the remaining parameter pack (T_tail ...) of length 'N' to 
