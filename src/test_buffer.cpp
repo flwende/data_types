@@ -44,16 +44,13 @@ int main(int argc, char** argv)
         buffer_type<element_type, 1> buf(nx);
         buffer_type<element_type, 1> buf_original(nx);
         
-        auto a_buf = buf.read_write();
-        auto a_buf_original = buf_original.read_write();
-
         for (std::size_t x = 0; x < nx; ++x)
         {
             const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
             const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
             const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
-            a_buf[x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
-            a_buf_original[x] = a_buf[x];
+            buf[x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+            buf_original[x] = buf[x];
         }
 
         for (std::size_t n = 0; n < WARMUP; ++n)
@@ -69,24 +66,23 @@ int main(int argc, char** argv)
         }
 
         #if defined(CHECK_RESULTS)
-        auto a_print = buf.read();
         const double max_abs_error = static_cast<type>(1.0E-6);
         const std::size_t print_num_elements = 128;
         bool not_passed = false;
 
         for (std::size_t i = 0, e = 0; i < nx; ++i, ++e)
         {
-            const double x_0[3] = {static_cast<double>(a_buf[i].x), static_cast<double>(a_buf[i].y), static_cast<double>(a_buf[i].z)};
+            const double x_0[3] = {static_cast<double>(buf[i].x), static_cast<double>(buf[i].y), static_cast<double>(buf[i].z)};
             #if defined(ELEMENT_ACCESS)
             const double x_1[3] = {
-                static_cast<double>(a_buf_original[i].x), 
-                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(a_buf_original[i].y))))),
-                static_cast<double>(a_buf_original[i].z)};
+                static_cast<double>(buf_original[i].x), 
+                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(buf_original[i].y))))),
+                static_cast<double>(buf_original[i].z)};
             #else
             const double x_1[3] = {
-                static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(a_buf_original[i].x))))), 
-                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(a_buf_original[i].y))))),
-                static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(a_buf_original[i].z)))))};
+                static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(buf_original[i].x))))), 
+                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(buf_original[i].y))))),
+                static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(buf_original[i].z)))))};
             #endif
 
             for (std::size_t ii = 0; ii < 3; ++ii)
@@ -101,7 +97,7 @@ int main(int argc, char** argv)
 
                 if (e < print_num_elements)
                 {
-                    std::cout << a_print[i] << std::endl;
+                    std::cout << buf[i] << std::endl;
                 }
             }
             if (not_passed) break;
@@ -117,8 +113,6 @@ int main(int argc, char** argv)
     {
         buffer_type<element_type, 3> buf({nx, ny, nz});
         buffer_type<element_type, 3> buf_original({nx, ny, nz});
-        auto a_buf = buf.read_write();
-        auto a_buf_original = buf_original.read_write();
         
         for (std::size_t z = 0; z < nz; ++z)
         {
@@ -129,8 +123,8 @@ int main(int argc, char** argv)
                     const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                     const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                     const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
-                    a_buf[z][y][x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
-                    a_buf_original[z][y][x] = a_buf[z][y][x];
+                    buf[z][y][x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                    buf_original[z][y][x] = buf[z][y][x];
                 }
             }
         }
@@ -148,7 +142,6 @@ int main(int argc, char** argv)
         }
 
         #if defined(CHECK_RESULTS)
-        auto a_print = buf.read();
         const double max_abs_error = static_cast<type>(1.0E-6);
         const std::size_t print_num_elements = 128;
         bool not_passed = false;
@@ -159,17 +152,17 @@ int main(int argc, char** argv)
             {
                 for (std::size_t i = 0; i < nx; ++i, ++e)
                 {
-                    const double x_0[3] = {static_cast<double>(a_buf[k][j][i].x), static_cast<double>(a_buf[k][j][i].y), static_cast<double>(a_buf[k][j][i].z)};
+                    const double x_0[3] = {static_cast<double>(buf[k][j][i].x), static_cast<double>(buf[k][j][i].y), static_cast<double>(buf[k][j][i].z)};
                     #if defined(ELEMENT_ACCESS)
                     const double x_1[3] = {
-                        static_cast<double>(a_buf_original[k][j][i].x), 
-                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(a_buf_original[k][j][i].y))))),
-                        static_cast<double>(a_buf_original[k][j][i].z)};
+                        static_cast<double>(buf_original[k][j][i].x), 
+                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(buf_original[k][j][i].y))))),
+                        static_cast<double>(buf_original[k][j][i].z)};
                     #else
                     const double x_1[3] = {
-                        static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(a_buf_original[k][j][i].x))))), 
-                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(a_buf_original[k][j][i].y))))),
-                        static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(a_buf_original[k][j][i].z)))))};
+                        static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(buf_original[k][j][i].x))))), 
+                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(buf_original[k][j][i].y))))),
+                        static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(buf_original[k][j][i].z)))))};
                     #endif
 
                     for (std::size_t ii = 0; ii < 3; ++ii)
@@ -186,7 +179,7 @@ int main(int argc, char** argv)
 
                     if (e < print_num_elements)
                     {
-                        std::cout << a_print[k][j][i] << std::endl;
+                        std::cout << buf[k][j][i] << std::endl;
                     }
                 }
                 if (not_passed) break;

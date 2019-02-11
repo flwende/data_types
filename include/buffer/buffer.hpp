@@ -220,10 +220,34 @@ namespace XXX_NAMESPACE
             return internal::accessor<element_type, D, L>(data, n_internal);
         }
 
-        internal::accessor<const_element_type, D, L> read() const 
+        inline internal::accessor<const_element_type, D, L> read() const 
         {
             return internal::accessor<const_element_type, D, L>(const_data, n_internal);
-        }  
+        }
+
+        using dm1_accessor_type = internal::accessor<element_type, D - 1, L>;
+        using const_dm1_accessor_type = internal::accessor<const_element_type, D - 1, L>;
+        using proxy_type = typename internal::traits<element_type, L>::proxy_type;
+        using const_proxy_type = typename internal::traits<const_element_type, L>::proxy_type;
+        static constexpr bool return_type_is_proxy = (L == data_layout::SoA && internal::provides_proxy_type<element_type>::value);
+
+        using return_type = typename std::conditional<D == 1,
+            typename std::conditional<return_type_is_proxy, proxy_type, element_type&>::type, 
+            dm1_accessor_type>::type;
+
+        using const_return_type = typename std::conditional<D == 1, 
+            typename std::conditional<return_type_is_proxy, const_proxy_type, const_element_type&>::type, 
+            const_dm1_accessor_type>::type;
+        
+        inline return_type operator[] (const std::size_t idx)
+        {
+            return read_write()[idx];
+        }
+
+        inline const_return_type operator[] (const std::size_t idx) const
+        {
+            return read()[idx];
+        }
     };
 }
 #endif

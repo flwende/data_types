@@ -17,8 +17,6 @@ using namespace fw;
     {
         double time = omp_get_wtime();
         
-        auto a_x = x.read_write();
-
         #if defined(__INTEL_COMPILER)
         #pragma forceinline recursive
         #pragma omp simd
@@ -26,9 +24,9 @@ using namespace fw;
         for (std::size_t i = 0; i < x.n[0]; ++i)
         {
             #if defined(ELEMENT_ACCESS)
-            a_x[i].y = std::exp(a_x[i].y);
+            x[i].y = 2.0;//std::exp(x[i].y);
             #else
-            a_x[i] = fw::exp(a_x[i]);
+            x[i] = fw::exp(x[i]);
             #endif
         }
 
@@ -40,8 +38,6 @@ using namespace fw;
     double kernel<element_type>::exp<3>(fw::buffer<element_type, 3, fw::data_layout::AoS>& x)
     {
         double time = omp_get_wtime();
-
-        auto a_x = x.read_write();	
         
         for (std::size_t k = 0; k < x.n[2]; ++k)
         {
@@ -54,9 +50,9 @@ using namespace fw;
                 for (std::size_t i = 0; i < x.n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
-                    a_x[k][j][i].y = std::exp(a_x[k][j][i].y);
+                    x[k][j][i].y = std::exp(x[k][j][i].y);
                     #else
-                    a_x[k][j][i] = fw::exp(a_x[k][j][i]);
+                    x[k][j][i] = fw::exp(x[k][j][i]);
                     #endif
                 }
             }
@@ -71,8 +67,6 @@ using namespace fw;
     {
         double time = omp_get_wtime();
         
-        auto a_x = x.read_write();
-        
         #if defined(__INTEL_COMPILER)
         #pragma forceinline recursive
         #pragma omp simd
@@ -80,9 +74,9 @@ using namespace fw;
         for (std::size_t i = 0; i < x.n[0]; ++i)
         {
             #if defined(ELEMENT_ACCESS)
-            a_x[i].y = std::log(a_x[i].y);
+            x[i].y = std::log(x[i].y);
             #else
-            a_x[i] = fw::log(a_x[i]);
+            x[i] = fw::log(x[i]);
             #endif
         }
 
@@ -95,8 +89,6 @@ using namespace fw;
     {
         double time = omp_get_wtime();
 
-        auto a_x = x.read_write();	
-        
         for (std::size_t k = 0; k < x.n[2]; ++k)
         {
             for (std::size_t j = 0; j < x.n[1]; ++j)
@@ -108,9 +100,9 @@ using namespace fw;
                 for (std::size_t i = 0; i < x.n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
-                    a_x[k][j][i].y = std::log(a_x[k][j][i].y);
+                    x[k][j][i].y = std::log(x[k][j][i].y);
                     #else
-                    a_x[k][j][i] = fw::log(a_x[k][j][i]);
+                    x[k][j][i] = fw::log(x[k][j][i]);
                     #endif
                 }
             }
@@ -124,8 +116,6 @@ using namespace fw;
     double kernel<element_type>::exp<1>(fw::buffer<element_type, 1, fw::data_layout::SoA>& x)
     {
         double time = omp_get_wtime();
-        
-        auto a_x = x.read_write();
 
         #if defined(__INTEL_COMPILER)
         #pragma forceinline recursive
@@ -134,9 +124,9 @@ using namespace fw;
         for (std::size_t i = 0; i < x.n[0]; ++i)
         {
             #if defined(ELEMENT_ACCESS)
-            a_x[i].y = std::exp(a_x[i].y);
+            x[i].y = std::exp(x[i].y);
             #else
-            a_x[i] = fw::exp(a_x[i]);
+            x[i] = fw::exp(x[i]);
             #endif
         }
 
@@ -147,9 +137,7 @@ using namespace fw;
     template <>
     double kernel<element_type>::exp<3>(fw::buffer<element_type, 3, fw::data_layout::SoA>& x)
     {
-        double time = omp_get_wtime();
-
-        auto a_x = x.read_write();	
+        double time = omp_get_wtime();	
 
         for (std::size_t k = 0; k < x.n[2]; ++k)
         {
@@ -162,9 +150,9 @@ using namespace fw;
                 for (std::size_t i = 0; i < x.n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
-                    a_x[k][j][i].y = std::exp(a_x[k][j][i].y);
+                    x[k][j][i].y = std::exp(x[k][j][i].y);
                     #else
-                    a_x[k][j][i] = fw::exp(a_x[k][j][i]);
+                    x[k][j][i] = fw::exp(x[k][j][i]);
                     #endif
                 }
             }
@@ -179,8 +167,6 @@ using namespace fw;
     {
         double time = omp_get_wtime();
         
-        auto a_x = x.read_write();
-
         #if defined(__INTEL_COMPILER)
         #pragma forceinline recursive
         #pragma omp simd
@@ -188,9 +174,9 @@ using namespace fw;
         for (std::size_t i = 0; i < x.n[0]; ++i)
         {
             #if defined(ELEMENT_ACCESS)
-            a_x[i].y = std::log(a_x[i].y);
+            x[i].y = std::log(x[i].y);
             #else
-            a_x[i] = fw::log(a_x[i]);
+            x[i] = fw::log(x[i]);
             #endif
         }
 
@@ -204,8 +190,6 @@ using namespace fw;
     {
         double time = omp_get_wtime();
 
-        auto a_x = x.read_write();	
-        
         for (std::size_t k = 0; k < x.n[2]; ++k)
         {
             for (std::size_t j = 0; j < x.n[1]; ++j)
@@ -217,9 +201,9 @@ using namespace fw;
                 for (std::size_t i = 0; i < x.n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
-                    a_x[k][j][i].y = std::log(a_x[k][j][i].y);
+                    x[k][j][i].y = std::log(x[k][j][i].y);
                     #else
-                    a_x[k][j][i] = fw::log(a_x[k][j][i]);
+                    x[k][j][i] = fw::log(x[k][j][i]);
                     #endif
                 }
             }
