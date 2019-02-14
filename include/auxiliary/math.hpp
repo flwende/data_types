@@ -139,29 +139,6 @@ namespace AUXILIARY_NAMESPACE
 
     //! \brief Specialization with T = float
     template <>
-    struct math<double>
-    {
-        static constexpr double one = 1.0;
-        static constexpr double minus_one = -1.0;
-
-        static double sqrt(const double x)
-        {
-            return std::sqrt(x);
-        }
-
-        static double log(const double x)
-        {
-            return std::log(x);
-        }
-
-        static double exp(const double x)
-        {
-            return std::exp(x);
-        }
-    };
-
-    //! \brief Specialization with T = float
-    template <>
     struct math<float>
     {
         static constexpr float one = 1.0F;
