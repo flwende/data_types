@@ -14,6 +14,8 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
+#include "../common/data_layout.hpp"
+
 namespace VEC_NAMESPACE
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -38,6 +40,9 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
+            template <typename X, std::size_t D, data_layout L, typename Enabled>
+            friend class accessor;
+
         public:
 
             using type = vec_proxy<T, 1>;
@@ -51,21 +56,13 @@ namespace VEC_NAMESPACE
 
             T& x;
 
+        private:
+
             vec_proxy(base_pointer m)
                 :
                 x(m.base) {}
 
-            vec_proxy(const vec_proxy& vp)
-                :
-                x(vp.x) {}
-
-            vec_proxy(VEC_NAMESPACE::vec<T_unqualified, 1>& v)
-                :
-                x(v.x) {}
-
-            vec_proxy(const VEC_NAMESPACE::vec<T_unqualified, 1>& v)
-                :
-                x(v.x) {}
+        public:
 
             inline VEC_NAMESPACE::vec<T_unqualified, 1>  operator-() const
             {
@@ -148,6 +145,9 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
+            template <typename X, std::size_t D, data_layout L, typename Enabled>
+            friend class accessor;
+
         public:
 
             using type = vec_proxy<T, 2>;
@@ -162,25 +162,14 @@ namespace VEC_NAMESPACE
             T& x;
             T& y;
 
+        private:
+
             vec_proxy(base_pointer m)
                 :
                 x(m.base[0 * m.n_innermost]),
                 y(m.base[1 * m.n_innermost]) {}
 
-            vec_proxy(const vec_proxy& vp)
-                :
-                x(vp.x),
-                y(vp.y) {}
-
-            vec_proxy(VEC_NAMESPACE::vec<T_unqualified, 2>& v)
-                :
-                x(v.x),
-                y(v.y) {}
-
-            vec_proxy(const VEC_NAMESPACE::vec<T_unqualified, 2>& v)
-                :
-                x(v.x),
-                y(v.y) {}
+        public:
 
             inline VEC_NAMESPACE::vec<T_unqualified, 2>  operator-() const
             {
@@ -268,6 +257,9 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
+            template <typename X, std::size_t D, data_layout L, typename Enabled>
+            friend class accessor;
+
         public:
 
             using type = vec_proxy<T, 3>;
@@ -279,29 +271,19 @@ namespace VEC_NAMESPACE
             static constexpr std::size_t d = 3;
             using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 3>;
 
+            T& x;
+            T& y;
+            T& z;
+
+        private:
+
             vec_proxy(base_pointer m)
                 :
                 x(m.base[0 * m.n_innermost]),
                 y(m.base[1 * m.n_innermost]),
                 z(m.base[2 * m.n_innermost]) {}
 
-            vec_proxy(const vec_proxy& vp)
-                :
-                x(vp.x),
-                y(vp.y),
-                z(vp.z) {}
-
-            vec_proxy(VEC_NAMESPACE::vec<T_unqualified, 3>& v)
-                :
-                x(v.x),
-                y(v.y),
-                z(v.z) {}
-
-            vec_proxy(const VEC_NAMESPACE::vec<T_unqualified, 3>& v)
-                :
-                x(v.x),
-                y(v.y),
-                z(v.z) {}
+        public:
 
             inline VEC_NAMESPACE::vec<T_unqualified, 3>  operator-() const
             {
@@ -382,10 +364,6 @@ namespace VEC_NAMESPACE
             {
                 return AUXILIARY_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
             }
-
-            T& x;
-            T& y;
-            T& z;
         };
 
         template <typename T>

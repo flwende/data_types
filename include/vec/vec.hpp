@@ -279,7 +279,7 @@ namespace VEC_NAMESPACE
             x(vp.x),
             y(vp.y),
             z(vp.z) {}
-        
+      
         //! Some operators
         inline vec operator-() const
         {
