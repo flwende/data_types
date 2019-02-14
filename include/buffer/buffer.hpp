@@ -201,6 +201,16 @@ namespace XXX_NAMESPACE
         base_pointer<element_type> data;
         base_pointer<const_element_type> const_data;
         
+        inline internal::accessor<element_type, D, L> read_write()
+        {
+            return internal::accessor<element_type, D, L>(data, n_internal);
+        }
+
+        inline internal::accessor<const_element_type, D, L> read() const 
+        {
+            return internal::accessor<const_element_type, D, L>(const_data, n_internal);
+        }
+
     public:
 
         buffer(const sarray<std::size_t, D>& n, const bool intialize_to_zero = false)
@@ -213,16 +223,6 @@ namespace XXX_NAMESPACE
         ~buffer()
         {
             base_pointer<element_type>::deallocate(data);
-        }
-
-        inline internal::accessor<element_type, D, L> read_write()
-        {
-            return internal::accessor<element_type, D, L>(data, n_internal);
-        }
-
-        inline internal::accessor<const_element_type, D, L> read() const 
-        {
-            return internal::accessor<const_element_type, D, L>(const_data, n_internal);
         }
 
         using dm1_accessor_type = internal::accessor<element_type, D - 1, L>;
