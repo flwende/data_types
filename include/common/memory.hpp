@@ -35,28 +35,28 @@ namespace XXX_NAMESPACE
     {
         using type = T;
 
-        const std::size_t n_innermost;
-        T* __restrict__ base;
+        const std::size_t n_0;
+        T* __restrict__ ptr;
 
-        pointer(T* __restrict__ base, const std::size_t n_innermost)
+        pointer(T* __restrict__ ptr, const std::size_t n_0)
             :
-            n_innermost(n_innermost),
-            base(base) {}
+            n_0(n_0),
+            ptr(ptr) {}
 
         template <typename TT>
-        pointer(const pointer<TT>& m)
+        pointer(const pointer<TT>& p)
             :
-            n_innermost(m.n_innermost),
-            base(reinterpret_cast<T*>(m.base)) {}
+            n_0(p.n_0),
+            ptr(reinterpret_cast<T*>(p.ptr)) {}
 
         T& at(const std::size_t stab_idx, const std::size_t idx)
         {
-            return base[n_innermost * stab_idx + idx];
+            return ptr[n_0 * stab_idx + idx];
         }
 
         const T& at(const std::size_t stab_idx, const std::size_t idx) const
         {
-            return base[n_innermost * stab_idx + idx];
+            return ptr[n_0 * stab_idx + idx];
         }
 
         static std::size_t padding(const std::size_t n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
@@ -83,11 +83,11 @@ namespace XXX_NAMESPACE
             return reinterpret_cast<T*>(_mm_malloc(n.reduce_mul() * sizeof(T), alignment));
         }
 
-        static void deallocate(pointer& m)
+        static void deallocate(pointer& p)
         {
-            if (m.base)
+            if (p.ptr)
             {
-                _mm_free(m.base);
+                _mm_free(p.ptr);
             }
         }
     };
@@ -120,43 +120,43 @@ namespace XXX_NAMESPACE
         static_assert(N > 0, "error: no template arguments specified");
 
         // all members have the same type: get this type
-        using base_type = typename AUXILIARY_NAMESPACE::variadic::argument<0, T ...>::type;
+        using ptr_type = typename AUXILIARY_NAMESPACE::variadic::argument<0, T ...>::type;
 
         // check if all types are the same
-        static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::fold([](const bool result, const bool is_same) constexpr { return result && is_same; }, true, std::is_same<base_type, T>::value ...);
+        static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::fold([](const bool result, const bool is_same) constexpr { return result && is_same; }, true, std::is_same<ptr_type, T>::value ...);
         static_assert(is_homogeneous, "error: use the inhomogeneous multi pointer instead");
 
         // size of the homogeneous structured type
-        static constexpr std::size_t record_size = N * sizeof(base_type);
+        static constexpr std::size_t record_size = N * sizeof(ptr_type);
 
     public:
 
         // base pointer and extent of the innermost dimension (w.r.t. a multidimensional field declaration)
-        const std::size_t n_innermost;
-        base_type* __restrict__ base;
+        const std::size_t n_0;
+        ptr_type* __restrict__ ptr;
 
         // constructor: from external base pointer and innermist dimension
-        multi_pointer(base_type* __restrict__ base, const std::size_t n_innermost)
+        multi_pointer(ptr_type* __restrict__ ptr, const std::size_t n_0)
             :
-            n_innermost(n_innermost),
-            base(base) {}
+            n_0(n_0),
+            ptr(ptr) {}
 
         // constructor: from an existing multi_pointer and a stab index (stab_idx) and an intra-stab index (idx)
-        multi_pointer(const multi_pointer& m, const std::size_t stab_idx, const std::size_t idx)
+        multi_pointer(const multi_pointer& mp, const std::size_t stab_idx, const std::size_t idx)
             :
-            n_innermost(m.n_innermost),
-            base(&m.base[stab_idx * N * n_innermost + idx]) {}
+            n_0(mp.n_0),
+            ptr(&mp.ptr[stab_idx * N * n_0 + idx]) {}
 
         // copy constructors
-        multi_pointer(const multi_pointer<typename std::remove_cv<T>::type ...>& m)
+        multi_pointer(const multi_pointer<typename std::remove_cv<T>::type ...>& mp)
             :
-            n_innermost(m.n_innermost),
-            base(reinterpret_cast<base_type*>(m.base)) {}
+            n_0(mp.n_0),
+            ptr(reinterpret_cast<ptr_type*>(mp.ptr)) {}
 
-        multi_pointer(const multi_pointer<const typename std::remove_cv<T>::type ...>& m)
+        multi_pointer(const multi_pointer<const typename std::remove_cv<T>::type ...>& mp)
             :
-            n_innermost(m.n_innermost),
-            base(reinterpret_cast<base_type*>(m.base)) {}
+            n_0(mp.n_0),
+            ptr(reinterpret_cast<ptr_type*>(mp.ptr)) {}
 
         // get a new multi_pointer shifted by stab_idx and idx
         multi_pointer at(const std::size_t stab_idx, const std::size_t idx)
@@ -178,29 +178,29 @@ namespace XXX_NAMESPACE
                 return n;
             }
 
-            const std::size_t ratio = AUXILIARY_NAMESPACE::least_common_multiple(alignment, sizeof(base_type)) / sizeof(base_type);
+            const std::size_t ratio = AUXILIARY_NAMESPACE::least_common_multiple(alignment, sizeof(ptr_type)) / sizeof(ptr_type);
             
             return ((n + ratio - 1) / ratio) * ratio;
         }
 
         // allocate a contigous chunk of memory for a field of size 'n' (d-dimensional)
         template <std::size_t D>
-        static base_type* allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
+        static ptr_type* allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
         {
             if (n[0] != padding(n[0], alignment))
             {
                 std::cerr << "error in vec_proxy::pointer::allocate : n[0] does not match alignment" << std::endl;
             }
 
-            return reinterpret_cast<base_type*>(_mm_malloc(n.reduce_mul() * record_size, alignment));
+            return reinterpret_cast<ptr_type*>(_mm_malloc(n.reduce_mul() * record_size, alignment));
         }
 
         // deallocate memory
-        static void deallocate(multi_pointer& m)
+        static void deallocate(multi_pointer& mp)
         {
-            if (m.base)
+            if (mp.ptr)
             {
-                _mm_free(m.base);
+                _mm_free(mp.ptr);
             }
         }
     };
@@ -278,18 +278,18 @@ namespace XXX_NAMESPACE
         // (exclusive) prefix sum over the byte-sizes of the template arguments
         static constexpr size_array offset = AUXILIARY_NAMESPACE::prefix_sum(size_array{sizeof(T) ...});
     
-        // create a pointer tuple from a base pointer and the 'offset's for a field with extent of the innermost dimension 'n_innermost'
+        // create a pointer tuple from a base pointer and the 'offset's for a field with extent of the innermost dimension 'n_0'
         template <std::size_t ... I>
-        inline pointer_tuple make_pointer_tuple(std::uint8_t* __restrict__ base, const std::size_t n_innermost, std::index_sequence<I ...>)
+        inline pointer_tuple make_pointer_tuple(std::uint8_t* __restrict__ ptr, const std::size_t n_0, std::index_sequence<I ...>)
         {
-            return {reinterpret_cast<T* __restrict__>(&base[offset[I] * n_innermost]) ...};
+            return {reinterpret_cast<T* __restrict__>(&ptr[offset[I] * n_0]) ...};
         }
 
         // create a pointer tuple from an existing pointer tuple, a stab index (stab_idx) and an intra-stab index (idx)
         template <std::size_t ...I>
-        inline pointer_tuple make_pointer_tuple(const pointer_tuple& base, const std::size_t stab_idx, const std::size_t idx, std::index_sequence<I ...>)
+        inline pointer_tuple make_pointer_tuple(const pointer_tuple& ptr, const std::size_t stab_idx, const std::size_t idx, std::index_sequence<I ...>)
         {
-            return {reinterpret_cast<T* __restrict__>(std::get<I>(base)) + stab_idx * num_units * size_scaling_factor[I] + idx ...};
+            return {reinterpret_cast<T* __restrict__>(std::get<I>(ptr)) + stab_idx * num_units * size_scaling_factor[I] + idx ...};
         }
 
         // extent of the innermost dimension of the filed in units of largest type
@@ -298,30 +298,30 @@ namespace XXX_NAMESPACE
     public:
 
         // multiple base pointers
-        pointer_tuple base;
+        pointer_tuple ptr;
 
         // constructor: from external base pointer and innermist dimension
-        multi_pointer_inhomogeneous(std::uint8_t* __restrict__ base, const std::size_t n_innermost)
+        multi_pointer_inhomogeneous(std::uint8_t* __restrict__ ptr, const std::size_t n_0)
             :
-            num_units((n_innermost * record_size) / size_largest_type),
-            base(make_pointer_tuple(base, n_innermost, std::make_index_sequence<N>{})) {}
+            num_units((n_0 * record_size) / size_largest_type),
+            ptr(make_pointer_tuple(ptr, n_0, std::make_index_sequence<N>{})) {}
 
         // constructor: from an existing multi_pointer and a stab index (stab_idx) and an intra-stab index (idx)
-        multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous& m, const std::size_t stab_idx, const std::size_t idx)
+        multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous& mp, const std::size_t stab_idx, const std::size_t idx)
             :
-            num_units(m.num_units),
-            base(make_pointer_tuple(m.base, stab_idx, idx, std::make_index_sequence<N>{})) {}
+            num_units(mp.num_units),
+            ptr(make_pointer_tuple(mp.ptr, stab_idx, idx, std::make_index_sequence<N>{})) {}
 
         // copy constructors
-        multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous<typename std::remove_cv<T>::type ...>& m)
+        multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous<typename std::remove_cv<T>::type ...>& mp)
             :
-            num_units(m.num_units),
-            base(m.base) {}
+            num_units(mp.num_units),
+            ptr(mp.ptr) {}
 
-        multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous<const typename std::remove_cv<T>::type ...>& m)
+        multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous<const typename std::remove_cv<T>::type ...>& mp)
             :
-            num_units(m.num_units),
-            base(m.base) {}
+            num_units(mp.num_units),
+            ptr(mp.ptr) {}
 
         // get a new multi_pointer shifted by stab_idx and idx
         multi_pointer_inhomogeneous at(const std::size_t stab_idx, const std::size_t idx)
@@ -363,11 +363,11 @@ namespace XXX_NAMESPACE
         }
 
         // deallocate memory
-        static void deallocate(multi_pointer_inhomogeneous& m)
+        static void deallocate(multi_pointer_inhomogeneous& mp)
         {
-            if (std::get<0>(m.base))
+            if (std::get<0>(mp.ptr))
             {
-                _mm_free(reinterpret_cast<std::uint8_t*>(std::get<0>(m.base)));
+                _mm_free(reinterpret_cast<std::uint8_t*>(std::get<0>(mp.ptr)));
             }
         }
     };

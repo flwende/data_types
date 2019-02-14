@@ -58,9 +58,9 @@ namespace VEC_NAMESPACE
 
         private:
 
-            vec_proxy(base_pointer m)
+            vec_proxy(base_pointer base)
                 :
-                x(m.base) {}
+                x(base.ptr) {}
 
         public:
 
@@ -164,10 +164,10 @@ namespace VEC_NAMESPACE
 
         private:
 
-            vec_proxy(base_pointer m)
+            vec_proxy(base_pointer base)
                 :
-                x(m.base[0 * m.n_innermost]),
-                y(m.base[1 * m.n_innermost]) {}
+                x(base.ptr[0 * base.n_0]),
+                y(base.ptr[1 * base.n_0]) {}
 
         public:
 
@@ -277,11 +277,11 @@ namespace VEC_NAMESPACE
 
         private:
 
-            vec_proxy(base_pointer m)
+            vec_proxy(base_pointer base)
                 :
-                x(m.base[0 * m.n_innermost]),
-                y(m.base[1 * m.n_innermost]),
-                z(m.base[2 * m.n_innermost]) {}
+                x(base.ptr[0 * base.n_0]),
+                y(base.ptr[1 * base.n_0]),
+                z(base.ptr[2 * base.n_0]) {}
 
         public:
 

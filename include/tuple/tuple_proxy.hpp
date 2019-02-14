@@ -51,11 +51,11 @@ namespace TUPLE_NAMESPACE
             
         private:
 
-            tuple_proxy(base_pointer m)
+            tuple_proxy(base_pointer base)
                 :
-                x(*(std::get<0>(m.base))),
-                y(*(std::get<1>(m.base))),
-                z(*(std::get<2>(m.base))) {}
+                x(*(std::get<0>(base.ptr))),
+                y(*(std::get<1>(base.ptr))),
+                z(*(std::get<2>(base.ptr))) {}
 
         public:
             
