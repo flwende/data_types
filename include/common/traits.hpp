@@ -43,7 +43,6 @@ namespace XXX_NAMESPACE
             using type = T;
             using const_type = const T;
             using proxy_type = T;
-
             using base_pointer = typename std::conditional<std::is_const<T>::value, const typename XXX_NAMESPACE::pointer<T>, typename XXX_NAMESPACE::pointer<T>>::type;
         };
 
@@ -53,7 +52,6 @@ namespace XXX_NAMESPACE
             using type = T;
             using const_type = const T;
             using proxy_type = typename std::conditional<std::is_const<T>::value, typename T::proxy_type::const_type, typename T::proxy_type>::type;
-
             using base_pointer = typename std::conditional<std::is_const<T>::value, const typename proxy_type::base_pointer, typename proxy_type::base_pointer>::type;
         };
 
