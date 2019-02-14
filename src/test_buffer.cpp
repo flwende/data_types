@@ -19,8 +19,8 @@ constexpr std::size_t WARMUP = 10;
 constexpr std::size_t MEASUREMENT = 100;
 #endif
 
-constexpr double SPREAD = 0.5;
-constexpr double OFFSET = 1.0;
+constexpr double SPREAD = 5.0;
+constexpr double OFFSET = 10.0;
 
 int main(int argc, char** argv)
 {
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 
     // initialization
     srand48(nx);
-    const type value = static_cast<type>(drand48() * 10.0);
+    const type value = 1.0 + static_cast<type>(drand48() * 10.0);
     std::cout << "initial value = " << value << std::endl;
 
     // benchmark
