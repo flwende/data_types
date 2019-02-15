@@ -62,6 +62,10 @@ namespace VEC_NAMESPACE
                 :
                 x(base.ptr) {}
 
+            vec_proxy(vec_proxy& v) = delete;
+            vec_proxy(const vec_proxy& v) = delete;
+            vec_proxy(vec_proxy&& v) = delete;
+
         public:
 
             inline VEC_NAMESPACE::vec<T_unqualified, 1>  operator-() const
@@ -168,6 +172,10 @@ namespace VEC_NAMESPACE
                 :
                 x(base.ptr[0 * base.n_0]),
                 y(base.ptr[1 * base.n_0]) {}
+
+            vec_proxy(vec_proxy& v) = delete;
+            vec_proxy(const vec_proxy& v) = delete;
+            vec_proxy(vec_proxy&& v) = delete;                
 
         public:
 
@@ -282,6 +290,10 @@ namespace VEC_NAMESPACE
                 x(base.ptr[0 * base.n_0]),
                 y(base.ptr[1 * base.n_0]),
                 z(base.ptr[2 * base.n_0]) {}
+
+            vec_proxy(vec_proxy& v) = delete;
+            vec_proxy(const vec_proxy& v) = delete;
+            vec_proxy(vec_proxy&& v) = delete;
 
         public:
 

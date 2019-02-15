@@ -57,6 +57,10 @@ namespace TUPLE_NAMESPACE
                 y(*(std::get<1>(base.ptr))),
                 z(*(std::get<2>(base.ptr))) {}
 
+            tuple_proxy(tuple_proxy& v) = delete;
+            tuple_proxy(const tuple_proxy& v) = delete;
+            tuple_proxy(tuple_proxy&& v) = delete;
+
         public:
             
         #define MACRO(OP, IN_T)                                                                 \
