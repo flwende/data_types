@@ -9,7 +9,7 @@ INC = -I$(HOME)/opt/gnu-7.2.0/boost/include -I./include -I./src/include
 CXXFLAGS = -O3 -std=c++17 -mavx2 -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC)
 LDFLAGS = -O2 -fopenmp
 
-#CXXFLAGS += -DCHECK_RESULTS
+CXXFLAGS += -DCHECK_RESULTS
 #CXXFLAGS += -DAOS_LAYOUT
 CXXFLAGS += -DSOA_LAYOUT
 #CXXFLAGS += -DELEMENT_ACCESS

@@ -115,6 +115,22 @@ namespace XXX_NAMESPACE
         template <typename ... X>
         friend class multi_pointer;
 
+#if defined(__INTEL_COMPILER)
+        template <typename T_head, typename ... T_tail>
+        struct have_same_size
+        {
+            static constexpr bool value = (sizeof(T_head) == have_same_size<T_tail ...>::size);
+            static constexpr std::size_t size = (value ? sizeof(T_head) : 0);
+        };
+
+        template <typename T_head>
+        struct have_same_size<T_head>
+        {
+            static constexpr bool value = true;
+            static constexpr std::size_t size = sizeof(T_head);
+        };
+#endif
+
         // number of data members
         static constexpr std::size_t N = sizeof ... (T);
         static_assert(N > 0, "error: no template arguments specified");
@@ -123,7 +139,11 @@ namespace XXX_NAMESPACE
         using ptr_type = typename AUXILIARY_NAMESPACE::variadic::argument<0, T ...>::type;
 
         // check if all types are the same
+#if defined(__INTEL_COMPILER)
+        static constexpr bool is_homogeneous = have_same_size<T ...>::value;
+#else
         static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::fold([](const bool result, const bool is_same) constexpr { return result && is_same; }, true, std::is_same<ptr_type, T>::value ...);
+#endif
         static_assert(is_homogeneous, "error: use the inhomogeneous multi pointer instead");
 
         // size of the homogeneous structured type
@@ -235,6 +255,37 @@ namespace XXX_NAMESPACE
         template <typename ... X>
         friend class multi_pointer_inhomogeneous;
         
+#if defined(__INTEL_COMPILER)
+        template <typename T_head, typename ... T_tail>
+        struct size_info
+        {
+            static constexpr bool equal = (sizeof(T_head) == size_info<T_tail ...>::size);
+            static constexpr std::size_t size = (equal ? sizeof(T_head) : 0);
+            static constexpr std::size_t size_all = sizeof(T_head) + size_info<T_tail ...>::size_all;
+            static constexpr std::size_t max_size = std::max(sizeof(T_head), size_info<T_tail ...>::max_size);
+
+            static constexpr std::size_t get_size_rest(const std::size_t max_size, const std::size_t size_rest = 0)
+            {
+                return size_info<T_tail ...>::get_size_rest(max_size, size_rest + (sizeof(T_head) == max_size ? 0 : sizeof(T_head)));
+            }
+        };
+
+        template <typename T_head>
+        struct size_info<T_head>
+        {
+            static constexpr bool equal = true;
+            static constexpr std::size_t size = sizeof(T_head);
+            static constexpr std::size_t size_all = sizeof(T_head);
+            static constexpr std::size_t max_size = sizeof(T_head);
+
+            static constexpr std::size_t get_size_rest(const std::size_t max_size, const std::size_t size_rest = 0)
+            {
+                return (size_rest + (sizeof(T_head) == max_size ? 0 : sizeof(T_head)));
+            }
+        };
+#endif
+
+
         // number of data members
         static constexpr std::size_t N = sizeof ... (T);
         static_assert(N > 0, "error: no template arguments specified");
@@ -243,7 +294,11 @@ namespace XXX_NAMESPACE
         using head_type = typename AUXILIARY_NAMESPACE::variadic::argument<0, T ...>::type;
 
         // check if all types are the same: we don't want that here
+#if defined(__INTEL_COMPILER)
+        static constexpr bool is_homogeneous = size_info<T ...>::equal;
+#else
         static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::fold([](const bool result, const bool is_same) constexpr { return result && is_same; }, true, std::is_same<head_type, T>::value ...);
+#endif
         static_assert(!is_homogeneous, "error: use the homogeneous multi pointer instead");
 
         using size_array = XXX_NAMESPACE::sarray<std::size_t, N>;
@@ -251,22 +306,34 @@ namespace XXX_NAMESPACE
         using pointer_tuple = std::tuple<T* __restrict__ ...>;
         
         // find out the byte-size of the largest type
+#if defined(__INTEL_COMPILER)
+        static constexpr std::size_t size_largest_type = size_info<T ...>::max_size;
+#else
         static constexpr std::size_t size_largest_type = AUXILIARY_NAMESPACE::variadic::fold(
             [](const std::size_t max_size, const std::size_t argument_size) constexpr { return std::max(max_size, argument_size); }, 
             0, 
             sizeof(T) ...);
+#endif
 
         // determine the total byte-size of all data members that have a size different (smaller) than the largest type
+#if defined(__INTEL_COMPILER)
+        static constexpr std::size_t size_rest = size_info<T ...>::get_size_rest(size_largest_type);
+#else
         static constexpr std::size_t size_rest = AUXILIARY_NAMESPACE::variadic::fold(
             [](const std::size_t size, const std::size_t argument_size) constexpr { return size + argument_size; }, 
             0, 
             (size_largest_type == sizeof(T) ? 0 : sizeof(T)) ...);
+#endif
 
         // size of the inhomogeneous structured type
+#if defined(__INTEL_COMPILER)
+	static constexpr std::size_t record_size = size_info<T ...>::size_all;
+#else
         static constexpr std::size_t record_size = AUXILIARY_NAMESPACE::variadic::fold(
             [](const std::size_t size, const std::size_t argument_size) constexpr { return size + argument_size; }, 
             0, 
             sizeof(T) ...);
+#endif
 
         // determine the number of elements of the structured type that is needed so that their overall size
         // is an integral multiple of each data member type
