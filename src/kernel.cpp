@@ -24,7 +24,7 @@ using namespace fw;
         for (std::size_t i = 0; i < x.n[0]; ++i)
         {
             #if defined(ELEMENT_ACCESS)
-            x[i].y = 2.0;//std::exp(x[i].y);
+            x[i].y = std::exp(x[i].y);
             #else
             x[i] = fw::exp(x[i]);
             #endif
