@@ -3,7 +3,7 @@ LD = clang++
 
 INTELROOT = $(MKLROOT)/../compiler
 INC = -I./include -I./src/include
-CXXFLAGS = -O3 -std=c++17 -mavx2 -fopenmp=libiomp5 -fveclib=SVML -ftree-vectorize -ffast-math $(INC)
+CXXFLAGS = -O3 -std=c++17 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -fopenmp=libiomp5 -fveclib=SVML -ftree-vectorize -ffast-math $(INC)
 LDFLAGS = -O3 -fopenmp -L$(INTELROOT)/lib/intel64 -lsvml -lintlc
 
 #CXXFLAGS += -DCHECK_RESULTS
