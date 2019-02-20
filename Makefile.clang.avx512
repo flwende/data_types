@@ -3,7 +3,7 @@ LD = clang++
 
 INTELROOT = $(MKLROOT)/../compiler
 INC = -I./include -I./src/include
-CXXFLAGS = -O3 -std=c++17 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -fopenmp=libiomp5 -fveclib=SVML -ftree-vectorize -ffast-math $(INC)
+CXXFLAGS = -O3 -std=c++17 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -fopenmp=libiomp5 -fveclib=SVML -ftree-vectorize -ffast-math -Rpass=loop-vectorize $(INC)
 LDFLAGS = -O3 -fopenmp -L$(INTELROOT)/lib/intel64 -lsvml -lintlc
 
 #CXXFLAGS += -DCHECK_RESULTS
@@ -11,6 +11,7 @@ CXXFLAGS += -DAOS_LAYOUT
 #CXXFLAGS += -DSOA_LAYOUT
 #CXXFLAGS += -DELEMENT_ACCESS
 CXXFLAGS += -DINPLACE
+CXXFLAGS += -DVECTOR_PRODUCT
 
 target: bin/test_buffer.x
 
