@@ -41,28 +41,41 @@ int main(int argc, char** argv)
 
     if (dim == 1)
     {
-        buffer_type<element_type, 1> buf(nx);
-        buffer_type<element_type, 1> buf_original(nx);
+        buffer_type<element_type, 1> in_1(nx);
+        buffer_type<element_type, 1> out_1(nx);
+        buffer_type<element_type, 1> out_2(nx);
         
         for (std::size_t x = 0; x < nx; ++x)
         {
             const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
             const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
             const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
-            buf[x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
-            buf_original[x] = buf[x];
+            in_1[x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+            #if defined(INPLACE)
+            out_2[x] = in_1[x];
+            #endif
         }
 
         for (std::size_t n = 0; n < WARMUP; ++n)
         {
-            kernel<element_type>::exp<1>(buf);
-            kernel<element_type>::log<1>(buf);
+            #if defined(INPLACE)
+            kernel<element_type>::exp<1>(out_2, out_2);
+            kernel<element_type>::log<1>(out_2, out_2);
+            #else
+            kernel<element_type>::exp<1>(in_1, out_1);
+            kernel<element_type>::log<1>(out_1, out_2);
+            #endif
         }
 
         for (std::size_t n = 0; n < MEASUREMENT; ++n)
         {
-            time += kernel<element_type>::exp<1>(buf);
-            time += kernel<element_type>::log<1>(buf);
+            #if defined(INPLACE)
+            time += kernel<element_type>::exp<1>(out_2, out_2);
+            time += kernel<element_type>::log<1>(out_2, out_2);
+            #else
+            time += kernel<element_type>::exp<1>(in_1, out_1);
+            time += kernel<element_type>::log<1>(out_1, out_2);
+            #endif
         }
 
         #if defined(CHECK_RESULTS)
@@ -72,32 +85,32 @@ int main(int argc, char** argv)
 
         for (std::size_t i = 0, e = 0; i < nx; ++i, ++e)
         {
-            const double x_0[3] = {static_cast<double>(buf[i].x), static_cast<double>(buf[i].y), static_cast<double>(buf[i].z)};
+            const double tmp_1[3] = {static_cast<double>(out_2[i].x), static_cast<double>(out_2[i].y), static_cast<double>(out_2[i].z)};
             #if defined(ELEMENT_ACCESS)
-            const double x_1[3] = {
-                static_cast<double>(buf_original[i].x), 
-                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(buf_original[i].y))))),
-                static_cast<double>(buf_original[i].z)};
+            const double tmp_2[3] = {
+                static_cast<double>(in_1[i].x), 
+                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(in_1[i].y))))),
+                static_cast<double>(in_1[i].z)};
             #else
-            const double x_1[3] = {
-                static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(buf_original[i].x))))), 
-                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(buf_original[i].y))))),
-                static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(buf_original[i].z)))))};
+            const double tmp_2[3] = {
+                static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(in_1[i].x))))), 
+                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(in_1[i].y))))),
+                static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(in_1[i].z)))))};
             #endif
 
             for (std::size_t ii = 0; ii < 3; ++ii)
             {
-                const type abs_error = std::abs(x_1[ii] != static_cast<type>(0) ? (x_0[ii] - x_1[ii]) / x_1[ii] : x_0[ii] - x_1[ii]);
+                const type abs_error = std::abs(tmp_2[ii] != static_cast<type>(0) ? (tmp_1[ii] - tmp_2[ii]) / tmp_2[ii] : tmp_1[ii] - tmp_2[ii]);
                 if (abs_error > max_abs_error)
                 {
-                    std::cout << "error: " << x_0[ii] << " vs " << x_1[ii] << " (" << abs_error << ")" << std::endl;
+                    std::cout << "error: " << tmp_1[ii] << " vs " << tmp_2[ii] << " (" << abs_error << ")" << std::endl;
                     not_passed = true;
                     break;
                 }
 
                 if (e < print_num_elements)
                 {
-                    std::cout << buf[i] << std::endl;
+                    std::cout << in_1[i] << std::endl;
                 }
             }
             if (not_passed) break;
@@ -111,8 +124,9 @@ int main(int argc, char** argv)
     }
     else if (dim == 3)
     {
-        buffer_type<element_type, 3> buf({nx, ny, nz});
-        buffer_type<element_type, 3> buf_original({nx, ny, nz});
+        buffer_type<element_type, 3> in_1({nx, ny, nz});
+        buffer_type<element_type, 3> out_1({nx, ny, nz});
+        buffer_type<element_type, 3> out_2({nx, ny, nz});
         
         for (std::size_t z = 0; z < nz; ++z)
         {
@@ -123,22 +137,34 @@ int main(int argc, char** argv)
                     const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                     const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                     const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
-                    buf[z][y][x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
-                    buf_original[z][y][x] = buf[z][y][x];
+                    in_1[z][y][x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                    #if defined(INPLACE)
+                    out_2[z][y][x] = in_1[z][y][x];
+                    #endif
                 }
             }
         }
 
         for (std::size_t n = 0; n < WARMUP; ++n)
         {
-            kernel<element_type>::exp<3>(buf);
-            kernel<element_type>::log<3>(buf);
+            #if defined(INPLACE)
+            kernel<element_type>::exp<3>(out_2, out_2);
+            kernel<element_type>::log<3>(out_2, out_2);
+            #else
+            kernel<element_type>::exp<3>(in_1, out_1);
+            kernel<element_type>::log<3>(out_1, out_2);
+            #endif
         }
 
         for (std::size_t n = 0; n < MEASUREMENT; ++n)
         {
-            time += kernel<element_type>::exp<3>(buf);
-            time += kernel<element_type>::log<3>(buf);
+            #if defined(INPLACE)
+            time += kernel<element_type>::exp<3>(out_2, out_2);
+            time += kernel<element_type>::log<3>(out_2, out_2);
+            #else
+            time += kernel<element_type>::exp<3>(in_1, out_1);
+            time += kernel<element_type>::log<3>(out_1, out_2);
+            #endif
         }
 
         #if defined(CHECK_RESULTS)
@@ -152,25 +178,25 @@ int main(int argc, char** argv)
             {
                 for (std::size_t i = 0; i < nx; ++i, ++e)
                 {
-                    const double x_0[3] = {static_cast<double>(buf[k][j][i].x), static_cast<double>(buf[k][j][i].y), static_cast<double>(buf[k][j][i].z)};
+                    const double tmp_1[3] = {static_cast<double>(out_2[k][j][i].x), static_cast<double>(out_2[k][j][i].y), static_cast<double>(out_2[k][j][i].z)};
                     #if defined(ELEMENT_ACCESS)
-                    const double x_1[3] = {
-                        static_cast<double>(buf_original[k][j][i].x), 
-                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(buf_original[k][j][i].y))))),
-                        static_cast<double>(buf_original[k][j][i].z)};
+                    const double tmp_2[3] = {
+                        static_cast<double>(in_1[k][j][i].x), 
+                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(in_1[k][j][i].y))))),
+                        static_cast<double>(in_1[k][j][i].z)};
                     #else
-                    const double x_1[3] = {
-                        static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(buf_original[k][j][i].x))))), 
-                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(buf_original[k][j][i].y))))),
-                        static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(buf_original[k][j][i].z)))))};
+                    const double tmp_2[3] = {
+                        static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(in_1[k][j][i].x))))), 
+                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(in_1[k][j][i].y))))),
+                        static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(in_1[k][j][i].z)))))};
                     #endif
 
                     for (std::size_t ii = 0; ii < 3; ++ii)
                     {
-                        const type abs_error = std::abs(x_1[ii] != static_cast<type>(0) ? (x_0[ii] - x_1[ii]) / x_1[ii] : x_0[ii] - x_1[ii]);
+                        const type abs_error = std::abs(tmp_2[ii] != static_cast<type>(0) ? (tmp_1[ii] - tmp_2[ii]) / tmp_2[ii] : tmp_1[ii] - tmp_2[ii]);
                         if (abs_error > max_abs_error)
                         {
-                            std::cout << "error: " << x_0[ii] << " vs " << x_1[ii] << " (" << abs_error << ")" << std::endl;
+                            std::cout << "error: " << tmp_1[ii] << " vs " << tmp_2[ii] << " (" << abs_error << ")" << std::endl;
                             not_passed = true;
                             break;
                         }
@@ -179,7 +205,7 @@ int main(int argc, char** argv)
 
                     if (e < print_num_elements)
                     {
-                        std::cout << buf[k][j][i] << std::endl;
+                        std::cout << in_1[k][j][i] << std::endl;
                     }
                 }
                 if (not_passed) break;

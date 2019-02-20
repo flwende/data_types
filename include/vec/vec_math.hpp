@@ -88,22 +88,24 @@ namespace VEC_NAMESPACE
 #undef MACRO_UNQUALIFIED
 
 #define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
-    template <typename T>                                                                                                                   \
+    template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
     inline vec<T, 1> OP (IN_T<T, 1>& v)                                                                                                     \
     {                                                                                                                                       \
         return vec<T, 1>(AUXILIARY_NAMESPACE::math<T>:: OP (v.x));                                                                          \
     }                                                                                                                                       \
                                                                                                                                             \
-    template <typename T>                                                                                                                   \
+    template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
     inline vec<T, 2> OP (IN_T<T, 2>& v)                                                                                                     \
     {                                                                                                                                       \
         return vec<T, 2>(AUXILIARY_NAMESPACE::math<T>:: OP (v.x), AUXILIARY_NAMESPACE::math<T>:: OP (v.y));                                 \
     }                                                                                                                                       \
                                                                                                                                             \
-    template <typename T>                                                                                                                   \
-    inline vec<T, 3> OP (IN_T<T, 3>& v)                                                                                                     \
+    template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
+    inline vec<X, 3> OP (IN_T<T, 3>& v)                                                                                                     \
     {                                                                                                                                       \
-        return vec<T, 3>(AUXILIARY_NAMESPACE::math<T>:: OP (v.x), AUXILIARY_NAMESPACE::math<T>:: OP (v.y), AUXILIARY_NAMESPACE::math<T>:: OP (v.z));       \
+        return vec<X, 3>(AUXILIARY_NAMESPACE::math<X>:: OP (v.x),                                                                           \
+                         AUXILIARY_NAMESPACE::math<X>:: OP (v.y),                                                                           \
+                         AUXILIARY_NAMESPACE::math<X>:: OP (v.z));                                                                          \
     }                                                                                                                                       \
 
 #define MACRO_QUALIFIED(OP, IN_T)                                                                                                           \
