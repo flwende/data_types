@@ -18,6 +18,83 @@
 
 namespace TUPLE_NAMESPACE
 {
+#define MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                               \
+    template <typename T_1, typename T_2, typename T_3, typename T_4, typename T_5, typename T_6,                                           \
+              typename X_1 = typename XXX_NAMESPACE::internal::compare<T_1, T_4>::stronger_type_unqualified,                                \
+              typename X_2 = typename XXX_NAMESPACE::internal::compare<T_2, T_5>::stronger_type_unqualified,                                \
+              typename X_3 = typename XXX_NAMESPACE::internal::compare<T_3, T_6>::stronger_type_unqualified>                                \
+    inline tuple<X_1, X_2, X_3> operator OP (IN_T_1<T_1, T_2, T_3>& x_1, IN_T_2<T_4, T_5, T_6>& x_2)                                        \
+    {                                                                                                                                       \
+        tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \
+        y OP ## = x_2;                                                                                                                      \
+        return y;                                                                                                                           \
+    }                                                                                                                                       \
+
+#define MACRO_QUALIFIED(OP, IN_T_1, IN_T_2)                                                                                                 \
+    MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                                   \
+    MACRO_UNQUALIFIED(OP, const IN_T_1, IN_T_2)                                                                                             \
+    MACRO_UNQUALIFIED(OP, IN_T_1, const IN_T_2)                                                                                             \
+    MACRO_UNQUALIFIED(OP, const IN_T_1, const IN_T_2)                                                                                       \
+
+#define MACRO(OP, IN_T_1, IN_T_2)                                                                                                           \
+    MACRO_QUALIFIED(OP, IN_T_1, IN_T_1)                                                                                                     \
+    MACRO_QUALIFIED(OP, IN_T_2, IN_T_2)                                                                                                     \
+    MACRO_QUALIFIED(OP, IN_T_1, IN_T_2)                                                                                                     \
+    MACRO_QUALIFIED(OP, IN_T_2, IN_T_1)                                                                                                     \
+
+    MACRO(+, tuple, internal::tuple_proxy)
+    MACRO(-, tuple, internal::tuple_proxy)
+    MACRO(*, tuple, internal::tuple_proxy)
+    MACRO(/, tuple, internal::tuple_proxy)
+
+#undef MACRO
+#undef MACRO_QUALIFIED
+#undef MACRO_UNQUALIFIED
+
+#define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
+    template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
+              typename X_1 = typename XXX_NAMESPACE::internal::compare<T_1, T_4>::stronger_type_unqualified,                                \
+              typename X_2 = typename XXX_NAMESPACE::internal::compare<T_2, T_4>::stronger_type_unqualified,                                \
+              typename X_3 = typename XXX_NAMESPACE::internal::compare<T_3, T_4>::stronger_type_unqualified>                                \
+    inline tuple<X_1, X_2, X_3> operator OP (IN_T<T_1, T_2, T_3>& x_1, const T_4 x_2)                                                       \
+    {                                                                                                                                       \
+        tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \
+        y OP ## = x_2;                                                                                                                      \
+        return y;                                                                                                                           \
+    }                                                                                                                                       \
+                                                                                                                                            \
+    template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
+              typename X_1 = typename XXX_NAMESPACE::internal::compare<T_1, T_4>::stronger_type_unqualified,                                \
+              typename X_2 = typename XXX_NAMESPACE::internal::compare<T_2, T_4>::stronger_type_unqualified,                                \
+              typename X_3 = typename XXX_NAMESPACE::internal::compare<T_3, T_4>::stronger_type_unqualified>                                \
+    inline tuple<X_1, X_2, X_3> operator OP (const T_1 x_1, IN_T<T_2, T_3, T_4>& x_2)                                                       \
+    {                                                                                                                                       \
+        tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \
+        y OP ## = x_2;                                                                                                                      \
+        return y;                                                                                                                           \
+    }                                                                                                                                       \
+
+#define MACRO_QUALIFIED(OP, IN_T)                                                                                                           \
+    MACRO_UNQUALIFIED(OP, IN_T)                                                                                                             \
+    MACRO_UNQUALIFIED(OP, const IN_T)                                                                                                       \
+
+#define MACRO(OP, IN_T)                                                                                                                     \
+    MACRO_QUALIFIED(OP, IN_T)                                                                                                               \
+
+    MACRO(+, tuple)
+    MACRO(-, tuple)
+    MACRO(*, tuple)
+    MACRO(/, tuple)
+
+    MACRO(+, internal::tuple_proxy)
+    MACRO(-, internal::tuple_proxy)
+    MACRO(*, internal::tuple_proxy)
+    MACRO(/, internal::tuple_proxy)
+
+#undef MACRO
+#undef MACRO_QUALIFIED
+#undef MACRO_UNQUALIFIED
+
 #define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
     template <typename T_1, typename T_2, typename T_3,                                                                                     \
               typename X_1 = typename std::remove_cv<T_1>::type,                                                                            \

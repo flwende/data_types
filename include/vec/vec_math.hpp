@@ -18,7 +18,6 @@
 
 namespace VEC_NAMESPACE
 {
-
 #define MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                               \
     template <typename T_1, typename T_2, std::size_t D,                                                                                    \
               typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
