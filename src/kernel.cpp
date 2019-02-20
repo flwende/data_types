@@ -46,7 +46,7 @@ using namespace fw;
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
-                //#pragma omp simd
+                #pragma omp simd
                 for (std::size_t i = 0; i < x.n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
@@ -96,7 +96,7 @@ using namespace fw;
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
-                //#pragma omp simd
+                #pragma omp simd
                 for (std::size_t i = 0; i < x.n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)

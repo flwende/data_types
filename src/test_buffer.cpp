@@ -59,8 +59,8 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < WARMUP; ++n)
         {
             #if defined(INPLACE)
-            kernel<element_type>::exp<1>(out_2, out_2);
-            kernel<element_type>::log<1>(out_2, out_2);
+            kernel<element_type>::exp<1>(out_2);
+            kernel<element_type>::log<1>(out_2);
             #else
             kernel<element_type>::exp<1>(in_1, out_1);
             kernel<element_type>::log<1>(out_1, out_2);
@@ -70,8 +70,8 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < MEASUREMENT; ++n)
         {
             #if defined(INPLACE)
-            time += kernel<element_type>::exp<1>(out_2, out_2);
-            time += kernel<element_type>::log<1>(out_2, out_2);
+            time += kernel<element_type>::exp<1>(out_2);
+            time += kernel<element_type>::log<1>(out_2);
             #else
             time += kernel<element_type>::exp<1>(in_1, out_1);
             time += kernel<element_type>::log<1>(out_1, out_2);
@@ -148,8 +148,8 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < WARMUP; ++n)
         {
             #if defined(INPLACE)
-            kernel<element_type>::exp<3>(out_2, out_2);
-            kernel<element_type>::log<3>(out_2, out_2);
+            kernel<element_type>::exp<3>(out_2);
+            kernel<element_type>::log<3>(out_2);
             #else
             kernel<element_type>::exp<3>(in_1, out_1);
             kernel<element_type>::log<3>(out_1, out_2);
@@ -159,8 +159,8 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < MEASUREMENT; ++n)
         {
             #if defined(INPLACE)
-            time += kernel<element_type>::exp<3>(out_2, out_2);
-            time += kernel<element_type>::log<3>(out_2, out_2);
+            time += kernel<element_type>::exp<3>(out_2);
+            time += kernel<element_type>::log<3>(out_2);
             #else
             time += kernel<element_type>::exp<3>(in_1, out_1);
             time += kernel<element_type>::log<3>(out_1, out_2);
