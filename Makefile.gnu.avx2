@@ -7,14 +7,15 @@ CXXFLAGS = -O3 -std=c++17 -mavx2 -mfma -fopenmp -fopenmp-simd -ftree-vectorize -
 LDFLAGS = -O3 -fopenmp
 
 #GLIBCROOT = $(HOME)/opt/gnu-8.2.0/glibc-2.27
+#CXXFLAGS += -I$(GLIBCROOT)/include
 #LDFLAGS += -Wl,-rpath,$(GLIBCROOT)/lib -Wl,-dynamic-linker,$(GLIBCROOT)/lib/ld-linux-x86-64.so.2 -L$(GLIBCROOT)/lib
 
 #CXXFLAGS += -DCHECK_RESULTS
-#CXXFLAGS += -DAOS_LAYOUT
-CXXFLAGS += -DSOA_LAYOUT
+CXXFLAGS += -DAOS_LAYOUT
+#CXXFLAGS += -DSOA_LAYOUT
 #CXXFLAGS += -DELEMENT_ACCESS
 #CXXFLAGS += -DINPLACE
-#CXXFLAGS += -DVECTOR_PRODUCT
+CXXFLAGS += -DVECTOR_PRODUCT
 
 target: bin/test_buffer.x
 
