@@ -19,10 +19,15 @@
 namespace TUPLE_NAMESPACE
 {
 #define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
-    template <typename T_1, typename T_2, typename T_3>                                                                                     \
-    inline tuple<T_1, T_2, T_3> OP (IN_T<T_1, T_2, T_3>& t)                                                                                 \
+    template <typename T_1, typename T_2, typename T_3,                                                                                     \
+              typename X_1 = typename std::remove_cv<T_1>::type,                                                                            \
+              typename X_2 = typename std::remove_cv<T_2>::type,                                                                            \
+              typename X_3 = typename std::remove_cv<T_3>::type>                                                                            \
+    inline tuple<X_1, X_2, X_3> OP (IN_T<T_1, T_2, T_3>& t)                                                                                 \
     {                                                                                                                                       \
-        return tuple<T_1, T_2, T_3>(AUXILIARY_NAMESPACE::math<T_1>:: OP (t.x), AUXILIARY_NAMESPACE::math<T_2>:: OP (t.y), AUXILIARY_NAMESPACE::math<T_3>:: OP (t.z));   \
+        return tuple<X_1, X_2, X_3>(AUXILIARY_NAMESPACE::math<T_1>:: OP (t.x),                                                              \
+                                    AUXILIARY_NAMESPACE::math<T_2>:: OP (t.y),                                                              \
+                                    AUXILIARY_NAMESPACE::math<T_3>:: OP (t.z));                                                             \
     }                                                                                                                                       \
 
 #define MACRO_QUALIFIED(OP, IN_T)                                                                                                           \
