@@ -61,6 +61,9 @@ struct kernel
 
     template <std::size_t D>
     static double log(const fw::buffer<T, D, fw::data_layout::AoS>& x, fw::buffer<T, D, fw::data_layout::AoS>& y);
+
+    template <std::size_t D>
+    static double cross(const fw::buffer<T, D, fw::data_layout::AoS>& x_1, const fw::buffer<T, D, fw::data_layout::AoS>& x_2, fw::buffer<T, D, fw::data_layout::AoS>& y);
 #elif defined(SOA_LAYOUT)
     template <std::size_t D>
     static double exp(fw::buffer<T, D, fw::data_layout::SoA>& x);
@@ -73,6 +76,9 @@ struct kernel
 
     template <std::size_t D>
     static double log(const fw::buffer<T, D, fw::data_layout::SoA>& x, fw::buffer<T, D, fw::data_layout::SoA>& y);
+
+    template <std::size_t D>
+    static double cross(const fw::buffer<T, D, fw::data_layout::SoA>& x_1, const fw::buffer<T, D, fw::data_layout::SoA>& x_2, fw::buffer<T, D, fw::data_layout::SoA>& y);
 #endif
 };
 

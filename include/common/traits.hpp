@@ -67,21 +67,27 @@ namespace XXX_NAMESPACE
         struct compare
         {
             using stronger_type = typename std::conditional<(sizeof(T_1) > sizeof(T_2)), T_1, T_2>::type;
+            using stronger_type_unqualified = typename std::remove_cv<stronger_type>::type;
             using weaker_type = typename std::conditional<(sizeof(T_1) > sizeof(T_2)), T_2, T_1>::type;
+            using weaker_type_unqualified = typename std::remove_cv<weaker_type>::type;
         };
 
         template <typename T_1, typename T_2>
         struct compare<T_1, T_2, typename std::enable_if<std::is_floating_point<T_1>::value && !std::is_floating_point<T_2>::value>::type>
         {
             using stronger_type = T_1;
+            using stronger_type_unqualified = typename std::remove_cv<stronger_type>::type;
             using weaker_type = T_2;
+            using weaker_type_unqualified = typename std::remove_cv<weaker_type>::type;
         };
 
         template <typename T_1, typename T_2>
         struct compare<T_1, T_2, typename std::enable_if<!std::is_floating_point<T_1>::value && std::is_floating_point<T_2>::value>::type>
         {
             using stronger_type = T_2;
+            using stronger_type_unqualified = typename std::remove_cv<stronger_type>::type;
             using weaker_type = T_1;
+            using weaker_type_unqualified = typename std::remove_cv<weaker_type>::type;
         };
     }
 }

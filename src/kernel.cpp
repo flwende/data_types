@@ -210,6 +210,48 @@ using namespace fw;
         
         return (omp_get_wtime() - time);
     }
+
+    template <>
+    template <>
+    double kernel<element_type>::cross<1>(const fw::buffer<element_type, 1, fw::data_layout::AoS>& x_1, const fw::buffer<element_type, 1, fw::data_layout::AoS>& x_2, fw::buffer<element_type, 1, fw::data_layout::AoS>& y)
+    {
+        double time = omp_get_wtime();
+
+        #if defined(__INTEL_COMPILER)
+        #pragma forceinline recursive
+        #endif
+        #pragma omp simd        
+        for (std::size_t i = 0; i < x_1.n[0]; ++i)
+        {
+            y[i] = fw::cross(x_1[i], x_2[i]);
+        }
+
+        return (omp_get_wtime() - time);
+    }
+
+    template <>
+    template <>
+    double kernel<element_type>::cross<3>(const fw::buffer<element_type, 3, fw::data_layout::AoS>& x_1, const fw::buffer<element_type, 3, fw::data_layout::AoS>& x_2, fw::buffer<element_type, 3, fw::data_layout::AoS>& y)
+    {
+        double time = omp_get_wtime();
+
+        for (std::size_t k = 0; k < x_1.n[2]; ++k)
+        {
+            for (std::size_t j = 0; j < x_1.n[1]; ++j)
+            {
+                #if defined(__INTEL_COMPILER)
+                #pragma forceinline recursive
+                #endif
+                #pragma omp simd
+                for (std::size_t i = 0; i < x_1.n[0]; ++i)
+                {
+                    y[k][j][i] = fw::cross(x_1[k][j][i], x_2[k][j][i]);
+                }
+            }
+        }
+
+        return (omp_get_wtime() - time);
+    }
 #elif defined(SOA_LAYOUT)
     template <>
     template <>
@@ -384,32 +426,45 @@ using namespace fw;
         return (omp_get_wtime() - time);
     }
 
-
     template <>
     template <>
-    double kernel<element_type>::log<3>(const fw::buffer<element_type, 3, fw::data_layout::SoA>& x, fw::buffer<element_type, 3, fw::data_layout::SoA>& y)
+    double kernel<element_type>::cross<1>(const fw::buffer<element_type, 1, fw::data_layout::SoA>& x_1, const fw::buffer<element_type, 1, fw::data_layout::SoA>& x_2, fw::buffer<element_type, 1, fw::data_layout::SoA>& y)
     {
         double time = omp_get_wtime();
 
-        for (std::size_t k = 0; k < x.n[2]; ++k)
+        #if defined(__INTEL_COMPILER)
+        #pragma forceinline recursive
+        #endif
+        #pragma omp simd        
+        for (std::size_t i = 0; i < x_1.n[0]; ++i)
         {
-            for (std::size_t j = 0; j < x.n[1]; ++j)
+            y[i] = fw::cross(x_1[i], x_2[i]);
+        }
+
+        return (omp_get_wtime() - time);
+    }
+
+    template <>
+    template <>
+    double kernel<element_type>::cross<3>(const fw::buffer<element_type, 3, fw::data_layout::SoA>& x_1, const fw::buffer<element_type, 3, fw::data_layout::SoA>& x_2, fw::buffer<element_type, 3, fw::data_layout::SoA>& y)
+    {
+        double time = omp_get_wtime();
+
+        for (std::size_t k = 0; k < x_1.n[2]; ++k)
+        {
+            for (std::size_t j = 0; j < x_1.n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
-                #pragma omp simd                
-                for (std::size_t i = 0; i < x.n[0]; ++i)
+                #pragma omp simd
+                for (std::size_t i = 0; i < x_1.n[0]; ++i)
                 {
-                    #if defined(ELEMENT_ACCESS)
-                    y[k][j][i].y = std::log(x[k][j][i].y);
-                    #else
-                    y[k][j][i] = fw::log(x[k][j][i]);
-                    #endif
+                    y[k][j][i] = fw::cross(x_1[k][j][i], x_2[k][j][i]);
                 }
             }
         }
-        
+
         return (omp_get_wtime() - time);
     }
 #endif

@@ -1,6 +1,7 @@
 CXX = g++
 LD = g++
 
+INTELROOT = $(MKLROOT)/../compiler
 INC = -I./include -I./src/include
 CXXFLAGS = -O3 -std=c++17 -mavx2 -mfma -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC)
 LDFLAGS = -O3 -fopenmp
@@ -12,7 +13,8 @@ LDFLAGS = -O3 -fopenmp
 #CXXFLAGS += -DAOS_LAYOUT
 CXXFLAGS += -DSOA_LAYOUT
 #CXXFLAGS += -DELEMENT_ACCESS
-CXXFLAGS += -DINPLACE
+#CXXFLAGS += -DINPLACE
+CXXFLAGS += -DVECTOR_PRODUCT
 
 target: bin/test_buffer.x
 
@@ -23,6 +25,15 @@ obj/test_buffer.o: src/test_buffer.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/kernel.o: src/kernel.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -S $<
+
+test_include: obj/test_include.o
+
+obj/test_include.o: src/test_include.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/test_cross.o: src/test_cross.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 	$(CXX) $(CXXFLAGS) -S $<
 

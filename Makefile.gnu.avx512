@@ -4,6 +4,7 @@ LD = g++
 INTELROOT = $(MKLROOT)/../compiler
 INC = -I./include -I./src/include
 CXXFLAGS = -O3 -std=c++17 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -mfma -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC)
+LDFLAGS = -O3 -fopenmp
 
 #GLIBCROOT = $(HOME)/opt/gnu-8.2.0/glibc-2.27
 #LDFLAGS = -O3 -fopenmp -Wl,-rpath,$(GLIBCROOT)/lib -Wl,-dynamic-linker,$(GLIBCROOT)/lib/ld-linux-x86-64.so.2 -L$(GLIBCROOT)/lib
