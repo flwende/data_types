@@ -193,8 +193,8 @@ namespace XXX_NAMESPACE
 
     public:
 
-        const sarray<std::size_t, D> n;
-        const sarray<std::size_t, D> n_internal;
+        sarray<std::size_t, D> n;
+        sarray<std::size_t, D> n_internal;
 
     private:
 
@@ -223,6 +223,42 @@ namespace XXX_NAMESPACE
         ~buffer()
         {
             base_pointer<element_type>::deallocate(data);
+        }
+
+        void resize(const sarray<std::size_t, D>& n, const bool intialize_to_zero = false)
+        {
+            this->n = n;
+            this->n_internal = n.replace(base_pointer<element_type>::padding(n[0], alignment), 0);
+            
+            base_pointer<element_type>::deallocate(data);
+            data = base_pointer<element_type>(base_pointer<element_type>::allocate(n_internal, alignment), n_internal[0]);
+            const_data = base_pointer<const_element_type>(data);
+        }
+
+        void swap(buffer& b)
+        {
+            if (n != b.n)
+            {
+                std::cerr << "error: buffer swapping not possible because of different extents" << std::endl;
+                return;
+            }
+
+            const sarray<std::size_t, D> copy_n = n;
+            const sarray<std::size_t, D> copy_n_internal = n_internal;
+            base_pointer<element_type> copy_data = data;
+            base_pointer<const_element_type> copy_const_data = const_data;
+
+            n = b.n;
+            b.n = copy_n;
+
+            n_internal = b.n_internal;
+            b.n_internal = copy_n_internal;
+
+            data = b.data;
+            b.data = copy_data;
+
+            const_data = b.const_data;
+            b.const_data = copy_const_data;
         }
 
         using dm1_accessor_type = internal::accessor<element_type, D - 1, L>;
