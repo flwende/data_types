@@ -130,21 +130,21 @@ namespace VEC_NAMESPACE
 #undef MACRO_UNQUALIFIED
 
 #define MACRO_UNQUALIFIED(IN_T_1, IN_T_2)                                                                                                   \
-    template <typename T_1, typename T_2, std::size_t D,                                                                                    \
+    template <typename T_1, typename T_2,                                                                                                   \
               typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
     inline X dot_product(IN_T_1<T_1, 1>& x_1, IN_T_2<T_2, 1>& x_2)                                                                          \
     {                                                                                                                                       \
         return (x_1.x * x_2.x);                                                                                                             \
     }                                                                                                                                       \
                                                                                                                                             \
-    template <typename T_1, typename T_2, std::size_t D,                                                                                    \
+    template <typename T_1, typename T_2,                                                                                                   \
               typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
     inline X dot_product(IN_T_1<T_1, 2>& x_1, IN_T_2<T_2, 2>& x_2)                                                                          \
     {                                                                                                                                       \
         return (x_1.x * x_2.x + x_1.y * x_2.y);                                                                                             \
     }                                                                                                                                       \
                                                                                                                                             \
-    template <typename T_1, typename T_2, std::size_t D,                                                                                    \
+    template <typename T_1, typename T_2,                                                                                                   \
               typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
     inline X dot_product(IN_T_1<T_1, 3>& x_1, IN_T_2<T_2, 3>& x_2)                                                                          \
     {                                                                                                                                       \
