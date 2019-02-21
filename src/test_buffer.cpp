@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <vector>
 #include <kernel.hpp>
 
 constexpr std::size_t NX_DEFAULT = 128;
@@ -41,21 +42,26 @@ int main(int argc, char** argv)
 
     if (dim == 1)
     {
-        buffer_type<element_type, 1> in_1(nx);
+        std::vector<element_type> in_orig_1(nx);
+        std::vector<element_type> in_orig_2(nx);
+        buffer_type<element_type, 1> in_1, out_1, out_2;
         #if defined(VECTOR_PRODUCT)
-        buffer_type<element_type, 1> in_2(nx);
+        buffer_type<element_type, 1> in_2{{nx}};
         #endif
-        buffer_type<element_type, 1> out_1(nx);
-        buffer_type<element_type, 1> out_2(nx);
         
-        for (std::size_t x = 0; x < nx; ++x)
+        in_1.resize({nx});
+        out_1.resize({nx});
+        out_2.resize({nx});
+        
+        for (std::size_t i = 0; i < nx; ++i)
         {
             const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
             const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
             const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
-            in_1[x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+            in_orig_1[i] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+            in_1[i] = in_orig_1[i];
             #if defined(INPLACE)
-            out_2[x] = in_1[x];
+            out_2[i] = in_1[i];
             #endif
 
             #if defined(VECTOR_PRODUCT)
@@ -63,7 +69,8 @@ int main(int argc, char** argv)
                 const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                 const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                 const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
-                in_2[x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                in_orig_2[i] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                in_2[i] = in_orig_2[i];
             }
             #endif
         }
@@ -71,7 +78,7 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < WARMUP; ++n)
         {
             #if defined(VECTOR_PRODUCT)
-                kernel<element_type>::cross<1>(in_1, in_2, out_1);
+                kernel<element_type>::cross<1>(in_1, in_2, out_2);
             #else
                 #if defined(INPLACE)
                 kernel<element_type>::exp<1>(out_2);
@@ -86,7 +93,7 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < MEASUREMENT; ++n)
         {
             #if defined(VECTOR_PRODUCT)
-                time += kernel<element_type>::cross<1>(in_1, in_2, out_1);
+                time += kernel<element_type>::cross<1>(in_1, in_2, out_2);
             #else
                 #if defined(INPLACE)
                 time += kernel<element_type>::exp<1>(out_2);
@@ -106,16 +113,25 @@ int main(int argc, char** argv)
         for (std::size_t i = 0, e = 0; i < nx; ++i, ++e)
         {
             const double tmp_1[3] = {static_cast<double>(out_2[i].x), static_cast<double>(out_2[i].y), static_cast<double>(out_2[i].z)};
-            #if defined(ELEMENT_ACCESS)
-            const double tmp_2[3] = {
-                static_cast<double>(in_1[i].x), 
-                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(in_1[i].y))))),
-                static_cast<double>(in_1[i].z)};
+            const element_type tmp_x = in_orig_1[i];
+            #if defined(VECTOR_PRODUCT)
+                const element_type tmp_y = fw::exp(in_orig_2[i]);
+                const double tmp_2[3] = {
+                    static_cast<double>(0.5 + std::log(1.0 + (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y) * (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y))),
+                    static_cast<double>(0.5 + std::log(1.0 + (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z) * (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z))),
+                    static_cast<double>(0.5 + std::log(1.0 + (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x) * (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x)))};
             #else
-            const double tmp_2[3] = {
-                static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(in_1[i].x))))), 
-                static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(in_1[i].y))))),
-                static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(in_1[i].z)))))};
+                #if defined(ELEMENT_ACCESS)
+                const double tmp_2[3] = {
+                    static_cast<double>(tmp_x.x), 
+                    static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(tmp_x.y))))),
+                    static_cast<double>(tmp_x.z)};
+                #else
+                const double tmp_2[3] = {
+                    static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(tmp_x.x))))), 
+                    static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(tmp_x.y))))),
+                    static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(tmp_x.z)))))};
+                #endif
             #endif
 
             for (std::size_t ii = 0; ii < 3; ++ii)
@@ -127,10 +143,135 @@ int main(int argc, char** argv)
                     not_passed = true;
                     break;
                 }
+            }
+            if (not_passed) break;
+
+            if (e < print_num_elements)
+            {
+                std::cout << out_2[i] << std::endl;
+            }
+        }
+
+        if (!not_passed)
+        {
+            std::cout << "success!" << std::endl;
+        }
+        #endif
+    }
+    else if (dim == 2)
+    {
+        std::vector<element_type> in_orig_1(nx * ny);
+        std::vector<element_type> in_orig_2(nx * ny);
+        buffer_type<element_type, 2> in_1, out_1, out_2;
+        #if defined(VECTOR_PRODUCT)
+        buffer_type<element_type, 2> in_2{{nx, ny}};
+        #endif
+    
+        in_1.resize({nx, ny});
+        out_1.resize({nx, ny});
+        out_2.resize({nx, ny});
+        
+        for (std::size_t j = 0; j < ny; ++j)
+        {
+            for (std::size_t i = 0; i < nx; ++i)
+            {
+                const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+                const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+                const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+                in_orig_1[j * nx + i] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                in_1[j][i] = in_orig_1[j * nx + i];
+                #if defined(INPLACE)
+                out_2[j][i] = in_1[j][i];
+                #endif
+
+                #if defined(VECTOR_PRODUCT)
+                {
+                    const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+                    const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+                    const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+                    in_orig_2[j * nx + i] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                    in_2[j][i] = in_orig_2[j * nx + i];
+                }
+                #endif
+            }
+        }
+        
+        for (std::size_t n = 0; n < WARMUP; ++n)
+        {
+            #if defined(VECTOR_PRODUCT)
+                kernel<element_type>::cross<2>(in_1, in_2, out_2);
+            #else
+                #if defined(INPLACE)
+                kernel<element_type>::exp<2>(out_2);
+                kernel<element_type>::log<2>(out_2);
+                #else
+                kernel<element_type>::exp<2>(in_1, out_1);
+                kernel<element_type>::log<2>(out_1, out_2);
+                #endif
+            #endif
+        }
+
+        for (std::size_t n = 0; n < MEASUREMENT; ++n)
+        {
+            #if defined(VECTOR_PRODUCT)
+                time += kernel<element_type>::cross<2>(in_1, in_2, out_2);
+            #else
+                #if defined(INPLACE)
+                time += kernel<element_type>::exp<2>(out_2);
+                time += kernel<element_type>::log<2>(out_2);
+                #else
+                time += kernel<element_type>::exp<2>(in_1, out_1);
+                time += kernel<element_type>::log<2>(out_1, out_2);
+                #endif
+            #endif
+        }
+
+        #if defined(CHECK_RESULTS)
+        const double max_abs_error = static_cast<type>(1.0E-6);
+        const std::size_t print_num_elements = 128;
+        bool not_passed = false;
+
+        for (std::size_t j = 0, e = 0; j < ny; ++j)
+        {
+            for (std::size_t i = 0; i < nx; ++i, ++e)
+            {
+                const double tmp_1[3] = {static_cast<double>(out_2[j][i].x), static_cast<double>(out_2[j][i].y), static_cast<double>(out_2[j][i].z)};
+                const element_type tmp_x = in_orig_1[j * nx + i];
+                #if defined(VECTOR_PRODUCT)
+                    const element_type tmp_y = fw::exp(in_orig_2[j * nx + i]);
+                    const double tmp_2[3] = {
+                        static_cast<double>(0.5 + std::log(1.0 + (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y) * (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y))),
+                        static_cast<double>(0.5 + std::log(1.0 + (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z) * (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z))),
+                        static_cast<double>(0.5 + std::log(1.0 + (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x) * (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x)))};
+                #else
+                    #if defined(ELEMENT_ACCESS)
+                    const double tmp_2[3] = {
+                        static_cast<double>(tmp_x.x), 
+                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(tmp_x.y))))),
+                        static_cast<double>(tmp_x.z)};
+                    #else
+                    const double tmp_2[3] = {
+                        static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(tmp_x.x))))), 
+                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(tmp_x.y))))),
+                        static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(tmp_x.z)))))};
+                    #endif
+                #endif
+
+                for (std::size_t ii = 0; ii < 3; ++ii)
+                {
+                    const type abs_error = std::abs(tmp_2[ii] != static_cast<type>(0) ? (tmp_1[ii] - tmp_2[ii]) / tmp_2[ii] : tmp_1[ii] - tmp_2[ii]);
+                    if (abs_error > max_abs_error)
+                    {
+                        std::cout << "error: " << tmp_1[ii] << " vs " << tmp_2[ii] << " (" << abs_error << ")" << std::endl;
+                        not_passed = true;
+                        break;
+                    }
+                }
+                if (not_passed) break;
 
                 if (e < print_num_elements)
                 {
-                    std::cout << in_1[i] << std::endl;
+                    std::cout << out_2[j][i] << std::endl;
                 }
             }
             if (not_passed) break;
@@ -144,25 +285,30 @@ int main(int argc, char** argv)
     }
     else if (dim == 3)
     {
-        buffer_type<element_type, 3> in_1({nx, ny, nz});
+        std::vector<element_type> in_orig_1(nx * ny * nz);
+        std::vector<element_type> in_orig_2(nx * ny * nz);
+        buffer_type<element_type, 3> in_1, out_1, out_2;
         #if defined(VECTOR_PRODUCT)
-        buffer_type<element_type, 3> in_2({nx, ny, nz});
+        buffer_type<element_type, 3> in_2{{nx, ny, nz}};
         #endif
-        buffer_type<element_type, 3> out_1({nx, ny, nz});
-        buffer_type<element_type, 3> out_2({nx, ny, nz});
+    
+        in_1.resize({nx, ny, nz});
+        out_1.resize({nx, ny, nz});
+        out_2.resize({nx, ny, nz});
         
-        for (std::size_t z = 0; z < nz; ++z)
+        for (std::size_t k = 0; k < nz; ++k)
         {
-            for (std::size_t y = 0; y < ny; ++y)
+            for (std::size_t j = 0; j < ny; ++j)
             {
-                for (std::size_t x = 0; x < nx; ++x)
+                for (std::size_t i = 0; i < nx; ++i)
                 {
                     const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                     const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                     const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
-                    in_1[z][y][x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                    in_orig_1[k * nx * ny + j * nx + i] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                    in_1[k][j][i] = in_orig_1[k * nx * ny + j * nx + i];
                     #if defined(INPLACE)
-                    out_2[z][y][x] = in_1[z][y][x];
+                    out_2[k][j][i] = in_1[k][j][i];
                     #endif
 
                     #if defined(VECTOR_PRODUCT)
@@ -170,7 +316,8 @@ int main(int argc, char** argv)
                         const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                         const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                         const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
-                        in_2[z][y][x] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                        in_orig_2[k * nx * ny + j * nx + i] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                        in_2[k][j][i] = in_orig_2[k * nx * ny + j * nx + i];
                     }
                     #endif
                 }
@@ -180,7 +327,7 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < WARMUP; ++n)
         {
             #if defined(VECTOR_PRODUCT)
-                kernel<element_type>::cross<3>(in_1, in_2, out_1);
+                kernel<element_type>::cross<3>(in_1, in_2, out_2);
             #else
                 #if defined(INPLACE)
                 kernel<element_type>::exp<3>(out_2);
@@ -195,7 +342,7 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < MEASUREMENT; ++n)
         {
             #if defined(VECTOR_PRODUCT)
-                time += kernel<element_type>::cross<3>(in_1, in_2, out_1);
+                time += kernel<element_type>::cross<3>(in_1, in_2, out_2);
             #else
                 #if defined(INPLACE)
                 time += kernel<element_type>::exp<3>(out_2);
@@ -219,16 +366,25 @@ int main(int argc, char** argv)
                 for (std::size_t i = 0; i < nx; ++i, ++e)
                 {
                     const double tmp_1[3] = {static_cast<double>(out_2[k][j][i].x), static_cast<double>(out_2[k][j][i].y), static_cast<double>(out_2[k][j][i].z)};
-                    #if defined(ELEMENT_ACCESS)
-                    const double tmp_2[3] = {
-                        static_cast<double>(in_1[k][j][i].x), 
-                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(in_1[k][j][i].y))))),
-                        static_cast<double>(in_1[k][j][i].z)};
+                    const element_type tmp_x = in_orig_1[k * nx * ny + j * nx + i];
+                    #if defined(VECTOR_PRODUCT)
+                        const element_type tmp_y = fw::exp(in_orig_2[k * nx * ny + j * nx + i]);
+                        const double tmp_2[3] = {
+                            static_cast<double>(0.5 + std::log(1.0 + (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y) * (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y))),
+                            static_cast<double>(0.5 + std::log(1.0 + (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z) * (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z))),
+                            static_cast<double>(0.5 + std::log(1.0 + (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x) * (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x)))};
                     #else
-                    const double tmp_2[3] = {
-                        static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(in_1[k][j][i].x))))), 
-                        static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(in_1[k][j][i].y))))),
-                        static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(in_1[k][j][i].z)))))};
+                        #if defined(ELEMENT_ACCESS)
+                        const double tmp_2[3] = {
+                            static_cast<double>(tmp_x.x), 
+                            static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(tmp_x.y))))),
+                            static_cast<double>(tmp_x.z)};
+                        #else
+                        const double tmp_2[3] = {
+                            static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(tmp_x.x))))), 
+                            static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(tmp_x.y))))),
+                            static_cast<double>(static_cast<type_z>(std::log(static_cast<type_z>(std::exp(tmp_x.z)))))};
+                        #endif
                     #endif
 
                     for (std::size_t ii = 0; ii < 3; ++ii)
@@ -245,7 +401,7 @@ int main(int argc, char** argv)
 
                     if (e < print_num_elements)
                     {
-                        std::cout << in_1[k][j][i] << std::endl;
+                        std::cout << out_2[k][j][i] << std::endl;
                     }
                 }
                 if (not_passed) break;
