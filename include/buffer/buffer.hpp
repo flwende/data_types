@@ -7,6 +7,7 @@
 #define DATA_TYPES_BUFFER_HPP
 
 #include <cstdint>
+#include <memory>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -198,41 +199,88 @@ namespace XXX_NAMESPACE
 
     private:
 
-        base_pointer<element_type> data;
-        base_pointer<const_element_type> const_data;
+        std::unique_ptr<base_pointer<element_type>> data;
+        std::unique_ptr<base_pointer<const_element_type>> const_data;
         
         inline internal::accessor<element_type, D, L> read_write()
         {
-            return internal::accessor<element_type, D, L>(data, n_internal);
+            return internal::accessor<element_type, D, L>(*data, n_internal);
         }
 
         inline internal::accessor<const_element_type, D, L> read() const 
         {
-            return internal::accessor<const_element_type, D, L>(const_data, n_internal);
+            return internal::accessor<const_element_type, D, L>(*const_data, n_internal);
+        }
+
+        void set_data(const element_type& value)
+        {
+            if (!data.get()) return;
+
+            const std::size_t n_stabs = n_internal.reduce_mul(1);
+            
+            for (std::size_t i_s = 0; i_s < n_stabs; ++i_s)
+            {
+                base_pointer<element_type> data_stab = data->at(i_s);
+                internal::accessor<element_type, 1, L> stab(data_stab, n_internal);
+                
+                for (std::size_t i = 0; i < n_internal[0]; ++i)
+                {
+                    stab[i] = value;
+                }
+            }
         }
 
     public:
 
-        buffer(const sarray<std::size_t, D>& n, const bool intialize_to_zero = false)
+        buffer()
+            :
+            n(),
+            n_internal() {}
+            
+        buffer(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             :
             n(n),
             n_internal(n.replace(base_pointer<element_type>::padding(n[0], alignment), 0)),
-            data(base_pointer<element_type>::allocate(n_internal, alignment), n_internal[0]),
-            const_data(data) {}
+            data(std::make_unique<base_pointer<element_type>>(base_pointer<element_type>::allocate(n_internal, alignment), n_internal[0])),
+            const_data(std::make_unique<base_pointer<const_element_type>>(*data))
+        {
+            if (initialize_to_zero)
+            {
+                set_data({});
+            }
+        }
         
         ~buffer()
         {
-            base_pointer<element_type>::deallocate(data);
+            if (data.get())
+            {
+                base_pointer<element_type>::deallocate(*data);
+                delete data.release();
+            }
+
+            delete const_data.release();
         }
 
-        void resize(const sarray<std::size_t, D>& n, const bool intialize_to_zero = false)
+        void resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
         {
             this->n = n;
             this->n_internal = n.replace(base_pointer<element_type>::padding(n[0], alignment), 0);
-            
-            base_pointer<element_type>::deallocate(data);
-            data = base_pointer<element_type>(base_pointer<element_type>::allocate(n_internal, alignment), n_internal[0]);
-            const_data = base_pointer<const_element_type>(data);
+    
+            if (data.get())
+            {
+                base_pointer<element_type>::deallocate(*data);
+                delete data.release();
+            }
+
+            delete const_data.release();
+
+            data = std::make_unique<base_pointer<element_type>>(base_pointer<element_type>::allocate(n_internal, alignment), n_internal[0]);
+            const_data = std::make_unique<base_pointer<const_element_type>>(*data);
+
+            if (initialize_to_zero)
+            {
+                set_data({});
+            }
         }
 
         void swap(buffer& b)
@@ -243,22 +291,10 @@ namespace XXX_NAMESPACE
                 return;
             }
 
-            const sarray<std::size_t, D> copy_n = n;
-            const sarray<std::size_t, D> copy_n_internal = n_internal;
-            base_pointer<element_type> copy_data = data;
-            base_pointer<const_element_type> copy_const_data = const_data;
-
-            n = b.n;
-            b.n = copy_n;
-
-            n_internal = b.n_internal;
-            b.n_internal = copy_n_internal;
-
-            data = b.data;
-            b.data = copy_data;
-
-            const_data = b.const_data;
-            b.const_data = copy_const_data;
+            n.swap(b.n);
+            n_internal.swap(b.n_internal);
+            data.swap(b.data);
+            const_data.swap(b.const_data);
         }
 
         using dm1_accessor_type = internal::accessor<element_type, D - 1, L>;

@@ -49,6 +49,16 @@ namespace XXX_NAMESPACE
             n_0(p.n_0),
             ptr(reinterpret_cast<T*>(p.ptr)) {}
 
+        pointer at(const std::size_t stab_idx)
+        {
+            return pointer(&ptr[n_0 * stab_idx], n_0);
+        }
+
+        pointer<const T> at(const std::size_t stab_idx) const
+        {
+            return pointer<const T>(&ptr[n_0 * stab_idx], n_0);
+        }
+
         T& at(const std::size_t stab_idx, const std::size_t idx)
         {
             return ptr[n_0 * stab_idx + idx];
@@ -179,12 +189,12 @@ namespace XXX_NAMESPACE
             ptr(reinterpret_cast<ptr_type*>(mp.ptr)) {}
 
         // get a new multi_pointer shifted by stab_idx and idx
-        multi_pointer at(const std::size_t stab_idx, const std::size_t idx)
+        multi_pointer at(const std::size_t stab_idx, const std::size_t idx = 0)
         {
             return multi_pointer(*this, stab_idx, idx);
         }
 
-        multi_pointer at(const std::size_t stab_idx, const std::size_t idx) const
+        multi_pointer<const T ...> at(const std::size_t stab_idx, const std::size_t idx = 0) const
         {
             return multi_pointer<const T ...>(*this, stab_idx, idx);
         }
@@ -284,7 +294,6 @@ namespace XXX_NAMESPACE
             }
         };
 #endif
-
 
         // number of data members
         static constexpr std::size_t N = sizeof ... (T);
@@ -391,12 +400,12 @@ namespace XXX_NAMESPACE
             ptr(mp.ptr) {}
 
         // get a new multi_pointer shifted by stab_idx and idx
-        multi_pointer_inhomogeneous at(const std::size_t stab_idx, const std::size_t idx)
+        multi_pointer_inhomogeneous at(const std::size_t stab_idx, const std::size_t idx = 0)
         {
             return multi_pointer_inhomogeneous(*this, stab_idx, idx);
         }
 
-        multi_pointer_inhomogeneous at(const std::size_t stab_idx, const std::size_t idx) const
+        multi_pointer_inhomogeneous<const T ...> at(const std::size_t stab_idx, const std::size_t idx = 0) const
         {
             return multi_pointer_inhomogeneous<const T ...>(*this, stab_idx, idx);
         }

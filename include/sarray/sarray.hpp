@@ -80,6 +80,22 @@ namespace XXX_NAMESPACE
             }
         }
 
+        //! \brief Swap content
+        //!
+        //! \param x an std::array object
+        //! \return a reference to this object with the new content
+        constexpr sarray& swap(sarray& x)
+        {
+            for (std::size_t i = 0; i < D; ++i)
+            {
+                const T tmp = data[i];
+                data[i] = x.data[i];
+                x.data[i] = tmp;
+            }
+
+            return *this;
+        }
+
         //! \brief Array subscript operator
         //!
         //! \param idx element index
@@ -117,7 +133,7 @@ namespace XXX_NAMESPACE
 
         //! \brief Insert element at position 'idx'
         //!
-        //! Note: the last element of the array will be removed!
+        //! Note: the last element of the array will be removed (chopped)!
         //!
         //! \param x element to be inserted
         //! \param idx element index
@@ -168,11 +184,11 @@ namespace XXX_NAMESPACE
         //! \param r_0 start value for the reduction
         //! \return reduction
         template <typename F>
-        constexpr inline T reduce(F func, const T r_0) const
+        constexpr inline T reduce(F func, const T r_0, const std::size_t offset = 0) const
         {
             T r = r_0;
 
-            for (std::size_t i = 0; i < D; ++i)
+            for (std::size_t i = offset; i < D; ++i)
             {
                 r = func(r, data[i]);
             }
@@ -180,9 +196,9 @@ namespace XXX_NAMESPACE
             return r;
         }
 
-        constexpr inline T reduce_mul() const
+        constexpr inline T reduce_mul(const std::size_t offset = 0) const
         {
-            return reduce([&](const std::size_t product, const std::size_t element) { return (product * element); }, 1);
+            return reduce([&](const std::size_t product, const std::size_t element) { return (product * element); }, 1, offset);
         }
     };
 
