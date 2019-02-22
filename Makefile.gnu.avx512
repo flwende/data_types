@@ -17,27 +17,18 @@ CXXFLAGS += -DSOA_LAYOUT
 CXXFLAGS += -DINPLACE
 CXXFLAGS += -DVECTOR_PRODUCT
 
-target: bin/test_buffer.x
+target: bin/benchmark_buffer.x
 
-bin/test_buffer.x: obj/test_buffer.o obj/kernel.o
+bin/benchmark_buffer.x: obj/benchmark_buffer.o obj/kernel.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
-obj/test_buffer.o: src/test_buffer.cpp
+obj/benchmark_buffer.o: src/benchmark_buffer.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/kernel.o: src/kernel.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 	$(CXX) $(CXXFLAGS) -S $<
 
-test_include: obj/test_include.o
-
-obj/test_include.o: src/test_include.cpp
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
-
-obj/test_cross.o: src/test_cross.cpp
-	$(CXX) $(CXXFLAGS) -o $@ -c $<
-	$(CXX) $(CXXFLAGS) -S $<
-
 clean:
-	rm -f *~ obj/*.o bin/test_buffer.x
+	rm -f *~ obj/*.o bin/benchmark_buffer.x
 
