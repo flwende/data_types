@@ -220,6 +220,7 @@ namespace XXX_NAMESPACE
             
             for (std::size_t i_s = 0; i_s < n_stabs; ++i_s)
             {
+                // get base_pointer to this stab, and use a 1d-accessor to access the elements in it
                 base_pointer<element_type> data_stab = data->at(i_s);
                 internal::accessor<element_type, 1, L> stab(data_stab, n_internal);
                 
