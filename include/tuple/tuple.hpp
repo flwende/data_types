@@ -159,4 +159,5 @@ namespace XXX_NAMESPACE
         };
     }
 }
+
 #endif

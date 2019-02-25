@@ -3,16 +3,18 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(DATA_TYPES_BUFFER_HPP)
-#define DATA_TYPES_BUFFER_HPP
+#if !defined(BUFFER_BUFFER_HPP)
+#define BUFFER_BUFFER_HPP
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
 
+#include "../common/allocator.hpp"
 #include "../common/data_layout.hpp"
 #include "../common/traits.hpp"
 #include "../sarray/sarray.hpp"
@@ -194,13 +196,18 @@ namespace XXX_NAMESPACE
 
     public:
 
-        sarray<std::size_t, D> n;
-        sarray<std::size_t, D> n_internal;
+        using value_type = element_type;
+        using allocator_type = typename base_pointer<element_type>::allocator;
+        using size_type = std::size_t;
+
+        sarray<size_type, D> n;
+        sarray<size_type, D> n_internal;
 
     private:
 
         std::unique_ptr<base_pointer<element_type>> data;
         std::unique_ptr<base_pointer<const_element_type>> const_data;
+        const allocator_type myAllocator;
         
         inline internal::accessor<element_type, D, L> read_write()
         {
@@ -216,15 +223,15 @@ namespace XXX_NAMESPACE
         {
             if (!data.get()) return;
 
-            const std::size_t n_stabs = n_internal.reduce_mul(1);
+            const size_type n_stabs = n_internal.reduce_mul(1);
             
-            for (std::size_t i_s = 0; i_s < n_stabs; ++i_s)
+            for (size_type i_s = 0; i_s < n_stabs; ++i_s)
             {
                 // get base_pointer to this stab, and use a 1d-accessor to access the elements in it
                 base_pointer<element_type> data_stab = data->at(i_s);
                 internal::accessor<element_type, 1, L> stab(data_stab, n_internal);
                 
-                for (std::size_t i = 0; i < n_internal[0]; ++i)
+                for (size_type i = 0; i < n_internal[0]; ++i)
                 {
                     stab[i] = value;
                 }
@@ -238,7 +245,7 @@ namespace XXX_NAMESPACE
             n(),
             n_internal() {}
             
-        buffer(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
+        buffer(const sarray<size_type, D>& n, const bool initialize_to_zero = false)
             :
             n(n),
             n_internal(n.replace(base_pointer<element_type>::padding(n[0], alignment), 0)),
@@ -262,7 +269,7 @@ namespace XXX_NAMESPACE
             delete const_data.release();
         }
 
-        void resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
+        void resize(const sarray<size_type, D>& n, const bool initialize_to_zero = false)
         {
             this->n = n;
             this->n_internal = n.replace(base_pointer<element_type>::padding(n[0], alignment), 0);
@@ -312,15 +319,16 @@ namespace XXX_NAMESPACE
             typename std::conditional<return_type_is_proxy, const_proxy_type, const_element_type&>::type, 
             const_dm1_accessor_type>::type;
         
-        inline return_type operator[] (const std::size_t idx)
+        inline return_type operator[] (const size_type idx)
         {
             return read_write()[idx];
         }
 
-        inline const_return_type operator[] (const std::size_t idx) const
+        inline const_return_type operator[] (const size_type idx) const
         {
             return read()[idx];
         }
     };
 }
+
 #endif
