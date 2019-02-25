@@ -14,7 +14,6 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include "../common/allocator.hpp"
 #include "../common/data_layout.hpp"
 #include "../common/traits.hpp"
 #include "../sarray/sarray.hpp"
