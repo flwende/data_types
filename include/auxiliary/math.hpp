@@ -18,6 +18,7 @@
 #define AUXILIARY_NAMESPACE XXX_NAMESPACE
 #endif
 
+#include "../common/traits.hpp"
 #include "../sarray/sarray.hpp"
 
 namespace AUXILIARY_NAMESPACE
@@ -115,7 +116,7 @@ namespace AUXILIARY_NAMESPACE
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     //! \brief Definition of some math functions and constants for different FP types
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T>
+    template <typename T, typename Enabled = void>
     struct math
     {
         static constexpr T one = static_cast<T>(1.0);
@@ -138,8 +139,8 @@ namespace AUXILIARY_NAMESPACE
     };
 
     //! \brief Specialization with T = float
-    template <>
-    struct math<float>
+    template <typename Enabled>
+    struct math<float, Enabled>
     {
         static constexpr float one = 1.0F;
         static constexpr float minus_one = -1.0F;
@@ -159,6 +160,31 @@ namespace AUXILIARY_NAMESPACE
             return expf(x);
         }
     };
+/*
+    template <typename T>
+    struct math<T, typename std::enable_if<XXX_NAMESPACE::internal::provides_proxy_type<T>::value>::type>
+    {
+        using T_unqualified = typename std::remove_cv<T>::type;
+
+        static constexpr T_unqualified one = 1.0F;
+        static constexpr T_unqualified minus_one = -1.0F;
+
+        static T_unqualified sqrt(T_unqualified& x)
+        {
+            return MATH::sqrt(x);
+        }
+
+        static T_unqualified log(T_unqualified& x)
+        {
+            return logf(x);
+        }
+
+        static T_unqualified exp(T_unqualified& x)
+        {
+            return expf(x);
+        }
+    };
+    */
 }
 
 #endif

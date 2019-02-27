@@ -53,6 +53,9 @@ namespace VEC_NAMESPACE
             //! Remember the template parameter D (=1)
             static constexpr std::size_t d = 1;
             using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 1>;
+            using original_type = typename std::conditional<std::is_const<T>::value, 
+                const vec<typename std::remove_cv<T>::type, 1>,
+                vec<typename std::remove_cv<T>::type, 1>>::type;
 
             T& x;
 
@@ -162,6 +165,9 @@ namespace VEC_NAMESPACE
             //! Remember the template parameter D (=2)
             static constexpr std::size_t d = 2;
             using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 2>;
+            using original_type = typename std::conditional<std::is_const<T>::value, 
+                const vec<typename std::remove_cv<T>::type, 2>,
+                vec<typename std::remove_cv<T>::type, 2>>::type;
 
             T& x;
             T& y;
@@ -278,6 +284,9 @@ namespace VEC_NAMESPACE
             //! Remember the template parameter D (=3)
             static constexpr std::size_t d = 3;
             using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 3>;
+            using original_type = typename std::conditional<std::is_const<T>::value, 
+                const vec<typename std::remove_cv<T>::type, 3>,
+                vec<typename std::remove_cv<T>::type, 3>>::type;
 
             T& x;
             T& y;
@@ -398,6 +407,24 @@ namespace VEC_NAMESPACE
             os << "(" << vp.x << "," << vp.y << "," << vp.z << ")";
             return os;
         }
+    }
+}
+
+namespace XXX_NAMESPACE
+{
+    namespace internal
+    {
+        template <typename T, std::size_t D>
+        struct is_proxy_type<VEC_NAMESPACE::internal::vec_proxy<T, D>>
+        {
+            static constexpr bool value = true;
+        };
+
+        template <typename T, std::size_t D>
+        struct is_proxy_type<const VEC_NAMESPACE::internal::vec_proxy<T, D>>
+        {
+            static constexpr bool value = true;
+        };
     }
 }
 

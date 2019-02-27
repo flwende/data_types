@@ -32,6 +32,12 @@ namespace XXX_NAMESPACE
             static constexpr bool value = false;
         };
 
+        template <typename T>
+        struct is_proxy_type
+        {
+            static constexpr bool value = false;
+        };
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //! \brief Query information for data type T (particularly relevant for data layout stuff)
         //!
