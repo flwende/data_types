@@ -49,7 +49,7 @@ namespace VEC_NAMESPACE
             using const_type = vec_proxy<const T, 1>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
-            using element_type = T;
+            using value_type = T;
             //! Remember the template parameter D (=1)
             static constexpr std::size_t d = 1;
             using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 1>;
@@ -161,7 +161,7 @@ namespace VEC_NAMESPACE
             using const_type = vec_proxy<const T, 2>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
-            using element_type = T;
+            using value_type = T;
             //! Remember the template parameter D (=2)
             static constexpr std::size_t d = 2;
             using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 2>;
@@ -280,7 +280,7 @@ namespace VEC_NAMESPACE
             using const_type = vec_proxy<const T, 3>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
-            using element_type = T;
+            using value_type = T;
             //! Remember the template parameter D (=3)
             static constexpr std::size_t d = 3;
             using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 3>;

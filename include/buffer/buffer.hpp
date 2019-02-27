@@ -16,14 +16,12 @@
 #endif
 
 #include "../common/data_layout.hpp"
+#include "../common/memory.hpp"
 #include "../common/traits.hpp"
 #include "../sarray/sarray.hpp"
-#include "../simd/simd.hpp"
 
 namespace XXX_NAMESPACE
 {
-    constexpr std::size_t alignment = SIMD_NAMESPACE::simd::alignment;
-
     namespace internal
     {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -320,8 +318,8 @@ namespace XXX_NAMESPACE
         buffer(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             :
             n(n),
-            n_internal(n.replace(allocator_type::padding(n[0], alignment), 0)),
-            data(std::make_unique<base_pointer<element_type>>(allocator_type::allocate(n_internal, alignment), n_internal[0])),
+            n_internal(n.replace(allocator_type::padding(n[0]), 0)),
+            data(std::make_unique<base_pointer<element_type>>(allocator_type::allocate(n_internal), n_internal[0])),
             const_data(std::make_unique<base_pointer<const_element_type>>(*data))
         {
             if (initialize_to_zero)
@@ -344,7 +342,7 @@ namespace XXX_NAMESPACE
         void resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
         {
             this->n = n;
-            this->n_internal = n.replace(allocator_type::padding(n[0], alignment), 0);
+            this->n_internal = n.replace(allocator_type::padding(n[0]), 0);
     
             if (data.get())
             {
@@ -354,7 +352,7 @@ namespace XXX_NAMESPACE
 
             delete const_data.release();
 
-            data = std::make_unique<base_pointer<element_type>>(allocator_type::allocate(n_internal, alignment), n_internal[0]);
+            data = std::make_unique<base_pointer<element_type>>(allocator_type::allocate(n_internal), n_internal[0]);
             const_data = std::make_unique<base_pointer<const_element_type>>(*data);
 
             if (initialize_to_zero)

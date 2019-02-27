@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(COMMON_pointer_HPP)
-#define COMMON_pointer_HPP
+#if !defined(COMMON_MEMORY_HPP)
+#define COMMON_MEMORY_HPP
 
 #include <cstdint>
 #include <memory>

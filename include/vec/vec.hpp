@@ -17,9 +17,6 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../auxiliary/math.hpp"
-#include "../common/traits.hpp"
-
 namespace VEC_NAMESPACE
 {
     // some forward declarations
@@ -54,7 +51,7 @@ namespace VEC_NAMESPACE
         using type = vec<T, 1>;
         using proxy_type = typename internal::vec_proxy<T, 1>;
         //! Remember the template type parameter T
-        using element_type = T;
+        using value_type = T;
         //! Remember the template parameter D (=1)
         static constexpr std::size_t d = 1;
 
@@ -144,7 +141,7 @@ namespace VEC_NAMESPACE
         using type = vec<T, 2>;
         using proxy_type = typename internal::vec_proxy<T, 2>;
         //! Remember the template type parameter T
-        using element_type = T;
+        using value_type = T;
         //! Remember the template parameter D (=2)
         static constexpr std::size_t d = 2;
 
@@ -245,7 +242,7 @@ namespace VEC_NAMESPACE
         using type = vec<T, 3>;
         using proxy_type = typename internal::vec_proxy<T, 3>;
         //! Remember the template type parameter T
-        using element_type = T;
+        using value_type = T;
         //! Remember the template parameter D (=3)
         static constexpr std::size_t d = 3;
 
@@ -362,6 +359,8 @@ namespace VEC_NAMESPACE
 #include "vec_proxy.hpp"
 #include "vec_math.hpp"
 
+#include "../common/traits.hpp"
+
 namespace XXX_NAMESPACE
 {
     namespace internal
@@ -378,6 +377,66 @@ namespace XXX_NAMESPACE
             static constexpr bool value = true;
         };
     }
+}
+
+namespace MATH_NAMESPACE
+{
+    template <typename T, std::size_t D>
+    struct math<VEC_NAMESPACE::vec<T, D>>
+    {
+        using type = VEC_NAMESPACE::vec<T, D>;
+        using value_type = typename std::remove_cv<typename type::value_type>::type;
+
+        static constexpr value_type one = math<value_type>::one;
+        static constexpr value_type minus_one = math<value_type>::minus_one;
+
+        template <typename X>
+        static type sqrt(X x)
+        {
+            return MATH_NAMESPACE::sqrt(x);
+        }
+
+        template <typename X>
+        static type log(X x)
+        {
+            return MATH_NAMESPACE::log(x);
+        }
+
+        template <typename X>
+        static type exp(X x)
+        {
+            return MATH_NAMESPACE::exp(x);
+        }
+    };
+
+    template <typename T, std::size_t D>
+    struct math<VEC_NAMESPACE::internal::vec_proxy<T, D>>
+    {
+        using type = VEC_NAMESPACE::internal::vec_proxy<T, D>;
+        using original_type = typename type::original_type;
+        using value_type = typename std::remove_cv<typename original_type::value_type>::type;
+
+        static constexpr value_type one = math<value_type>::one;
+        static constexpr value_type minus_one = math<value_type>::minus_one;
+
+        template <typename X>
+        static original_type sqrt(X x)
+        {
+            return MATH_NAMESPACE::sqrt(x);
+        }
+
+        template <typename X>
+        static original_type log(X x)
+        {
+            return MATH_NAMESPACE::log(x);
+        }
+
+        template <typename X>
+        static original_type exp(X x)
+        {
+            return MATH_NAMESPACE::exp(x);
+        }
+    };
 }
 
 #endif

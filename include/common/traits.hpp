@@ -13,10 +13,13 @@
 #endif
 
 #include "data_layout.hpp"
-#include "memory.hpp"
 
 namespace XXX_NAMESPACE
 {
+    // forward declaration: definition in common/memory.hpp
+    template <typename T>
+    class pointer;
+
     namespace internal
     {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -18,12 +18,6 @@
 #define TUPLE_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../auxiliary/math.hpp"
-#include "../auxiliary/variadic.hpp"
-#include "../common/traits.hpp"
-#include "../sarray/sarray.hpp"
-#include "../simd/simd.hpp"
-
 namespace TUPLE_NAMESPACE
 {
     // some forward declarations
@@ -40,9 +34,6 @@ namespace TUPLE_NAMESPACE
     //! \tparam T_2 data type
     //! \tparam T_3 data type
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T_1, typename T_2, typename T_3>
-    class tuple;
-
     template <typename T_1, typename T_2, typename T_3>
     class tuple
     {
@@ -65,6 +56,7 @@ namespace TUPLE_NAMESPACE
 
         using type = tuple<T_1, T_2, T_3>;
         using proxy_type = typename internal::tuple_proxy<T_1, T_2, T_3>;
+        using value_type = typename XXX_NAMESPACE::internal::compare<T_1, typename XXX_NAMESPACE::internal::compare<T_2, T_3>::stronger_type>::stronger_type;
 
         T_1 x;
         T_2 y;
@@ -142,6 +134,8 @@ namespace TUPLE_NAMESPACE
 #include "tuple_proxy.hpp"
 #include "tuple_math.hpp"
 
+#include "../common/traits.hpp"
+
 namespace XXX_NAMESPACE
 {
     namespace internal
@@ -158,6 +152,66 @@ namespace XXX_NAMESPACE
             static constexpr bool value = true;
         };
     }
+}
+
+namespace MATH_NAMESPACE
+{
+    template <typename T_1, typename T_2, typename T_3>
+    struct math<TUPLE_NAMESPACE::tuple<T_1, T_2, T_3>>
+    {
+        using type = TUPLE_NAMESPACE::tuple<T_1, T_2, T_3>;
+        using value_type = typename std::remove_cv<typename type::value_type>::type;
+
+        static constexpr value_type one = math<value_type>::one;
+        static constexpr value_type minus_one = math<value_type>::minus_one;
+
+        template <typename X>
+        static type sqrt(X x)
+        {
+            return MATH_NAMESPACE::sqrt(x);
+        }
+
+        template <typename X>
+        static type log(X x)
+        {
+            return MATH_NAMESPACE::log(x);
+        }
+
+        template <typename X>
+        static type exp(X x)
+        {
+            return MATH_NAMESPACE::exp(x);
+        }
+    };
+
+    template <typename T_1, typename T_2, typename T_3>
+    struct math<TUPLE_NAMESPACE::internal::tuple_proxy<T_1, T_2, T_3>>
+    {
+        using type = TUPLE_NAMESPACE::internal::tuple_proxy<T_1, T_2, T_3>;
+        using original_type = typename type::original_type;
+        using value_type = typename std::remove_cv<typename original_type::value_type>::type;
+
+        static constexpr value_type one = math<value_type>::one;
+        static constexpr value_type minus_one = math<value_type>::minus_one;
+
+        template <typename X>
+        static original_type sqrt(X x)
+        {
+            return MATH_NAMESPACE::sqrt(x);
+        }
+
+        template <typename X>
+        static original_type log(X x)
+        {
+            return MATH_NAMESPACE::log(x);
+        }
+
+        template <typename X>
+        static original_type exp(X x)
+        {
+            return MATH_NAMESPACE::exp(x);
+        }
+    };
 }
 
 #endif
