@@ -51,13 +51,13 @@ namespace XXX_NAMESPACE
 
             static std::size_t padding(const std::size_t n, const std::size_t alignment = default_alignment)
             {
-                if (!AUXILIARY_NAMESPACE::is_power_of<2>(alignment))
+                if (!MATH_NAMESPACE::is_power_of<2>(alignment))
                 {
                     std::cerr << "warning: alignment is not a power of 2" << std::endl;
                     return n;
                 }
 
-                const std::size_t ratio = AUXILIARY_NAMESPACE::least_common_multiple(alignment, sizeof(value_type)) / sizeof(value_type);
+                const std::size_t ratio = MATH_NAMESPACE::least_common_multiple(alignment, sizeof(value_type)) / sizeof(value_type);
 
                 return ((n + ratio - 1) / ratio) * ratio;
             }
@@ -304,13 +304,13 @@ namespace XXX_NAMESPACE
 
         // determine the number of elements of the structured type that is needed so that their overall size
         // is an integral multiple of each data member type
-        static constexpr std::size_t record_padding_factor = AUXILIARY_NAMESPACE::least_common_multiple(size_largest_type, size_rest) / std::max(1UL, size_rest);
+        static constexpr std::size_t record_padding_factor = MATH_NAMESPACE::least_common_multiple(size_largest_type, size_rest) / std::max(1UL, size_rest);
 
         // determine the scaling factor of each member-type-size w.r.t. to the largest type
         static constexpr size_array size_scaling_factor{size_largest_type / sizeof(T) ...};
 
         // (exclusive) prefix sum over the byte-sizes of the template arguments
-        static constexpr size_array offset = AUXILIARY_NAMESPACE::prefix_sum(size_array{sizeof(T) ...});
+        static constexpr size_array offset = MATH_NAMESPACE::prefix_sum(size_array{sizeof(T) ...});
     
         // create a pointer tuple from a base pointer and the 'offset's for a field with extent of the innermost dimension 'n_0'
         template <std::size_t ... I>
@@ -343,14 +343,14 @@ namespace XXX_NAMESPACE
 
             static std::size_t padding(const std::size_t n, const std::size_t alignment = base::default_alignment)
             {
-                if (!AUXILIARY_NAMESPACE::is_power_of<2>(alignment))
+                if (!MATH_NAMESPACE::is_power_of<2>(alignment))
                 {
                     std::cerr << "warning: alignment is not a power of 2" << std::endl;
                     return n;
                 }
 
-                const std::size_t byte_padding_factor = AUXILIARY_NAMESPACE::least_common_multiple(alignment, size_largest_type) / size_largest_type;
-                const std::size_t ratio = AUXILIARY_NAMESPACE::least_common_multiple(record_padding_factor, byte_padding_factor);
+                const std::size_t byte_padding_factor = MATH_NAMESPACE::least_common_multiple(alignment, size_largest_type) / size_largest_type;
+                const std::size_t ratio = MATH_NAMESPACE::least_common_multiple(record_padding_factor, byte_padding_factor);
 
                 return ((n + ratio - 1) / ratio) * ratio;
             }

@@ -14,14 +14,14 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#if !defined(AUXILIARY_NAMESPACE)
-#define AUXILIARY_NAMESPACE XXX_NAMESPACE
+#if !defined(MATH_NAMESPACE)
+#define MATH_NAMESPACE XXX_NAMESPACE
 #endif
 
 #include "../common/traits.hpp"
 #include "../sarray/sarray.hpp"
 
-namespace AUXILIARY_NAMESPACE
+namespace MATH_NAMESPACE
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     //! \brief Greatest common divisor (gcd)
@@ -101,9 +101,9 @@ namespace AUXILIARY_NAMESPACE
     //! \return prefix sum
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     template <typename T, std::size_t N>
-    constexpr AUXILIARY_NAMESPACE::sarray<T, N> prefix_sum(const AUXILIARY_NAMESPACE::sarray<T, N>& x)
+    constexpr MATH_NAMESPACE::sarray<T, N> prefix_sum(const MATH_NAMESPACE::sarray<T, N>& x)
     {
-        AUXILIARY_NAMESPACE::sarray<T, N> y{0};
+        MATH_NAMESPACE::sarray<T, N> y{0};
 
         for (std::size_t i = 1; i < N; ++i)
         {

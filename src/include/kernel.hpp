@@ -6,6 +6,7 @@
 #if !defined(KERNEL_HPP)
 #define KERNEL_HPP
 
+#include <cstdint>
 #include <buffer/buffer.hpp>
 #include <vec/vec.hpp>
 #include <tuple/tuple.hpp>
