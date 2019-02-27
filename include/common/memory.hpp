@@ -39,7 +39,7 @@ namespace XXX_NAMESPACE
         using value_type = T;
 
         // allocator class
-        class allocator : public std::allocator<T>
+        class allocator : public std::allocator<value_type>
         {           
         protected:
 
@@ -47,7 +47,7 @@ namespace XXX_NAMESPACE
 
         public:
 
-            using pointer = typename std::allocator<T>::pointer;
+            using pointer = typename std::allocator<value_type>::pointer;
 
             static std::size_t padding(const std::size_t n, const std::size_t alignment = default_alignment)
             {
@@ -57,14 +57,14 @@ namespace XXX_NAMESPACE
                     return n;
                 }
 
-                const std::size_t ratio = AUXILIARY_NAMESPACE::least_common_multiple(alignment, sizeof(T)) / sizeof(T);
+                const std::size_t ratio = AUXILIARY_NAMESPACE::least_common_multiple(alignment, sizeof(value_type)) / sizeof(value_type);
 
                 return ((n + ratio - 1) / ratio) * ratio;
             }
 
             static pointer allocate(std::size_t n, const std::size_t alignment = default_alignment)
             {
-                return reinterpret_cast<pointer>(_mm_malloc(n * sizeof(T), alignment));
+                return reinterpret_cast<pointer>(_mm_malloc(n * sizeof(value_type), alignment));
             }
 
             template <std::size_t D>
@@ -85,9 +85,9 @@ namespace XXX_NAMESPACE
         };
 
         const std::size_t n_0;
-        T* __restrict__ ptr;
+        value_type* __restrict__ ptr;
 
-        pointer(T* __restrict__ ptr, const std::size_t n_0)
+        pointer(value_type* __restrict__ ptr, const std::size_t n_0)
             :
             n_0(n_0),
             ptr(ptr) {}
@@ -96,42 +96,37 @@ namespace XXX_NAMESPACE
         pointer(const pointer<TT>& p)
             :
             n_0(p.n_0),
-            ptr(reinterpret_cast<T*>(p.ptr)) {}
+            ptr(reinterpret_cast<value_type*>(p.ptr)) {}
 
         pointer at(const std::size_t stab_idx)
         {
             return pointer(&ptr[n_0 * stab_idx], n_0);
         }
 
-        pointer<const T> at(const std::size_t stab_idx) const
+        pointer<const value_type> at(const std::size_t stab_idx) const
         {
-            return pointer<const T>(&ptr[n_0 * stab_idx], n_0);
+            return pointer<const value_type>(&ptr[n_0 * stab_idx], n_0);
         }
 
-        T& at(const std::size_t stab_idx, const std::size_t idx)
+        value_type& at(const std::size_t stab_idx, const std::size_t idx)
         {
             return ptr[n_0 * stab_idx + idx];
         }
 
-        const T& at(const std::size_t stab_idx, const std::size_t idx) const
+        const value_type& at(const std::size_t stab_idx, const std::size_t idx) const
         {
             return ptr[n_0 * stab_idx + idx];
         }
 
-        static std::size_t padding(const std::size_t n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
+        // get base pointer
+        value_type* get_base_pointer()
         {
-            return allocator::padding(n, alignment);
+            return ptr;
         }
 
-        template <std::size_t D>
-        static T* allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
+        const value_type* get_base_pointer() const
         {
-            return allocator::allocate(n, alignment);
-        }
-
-        static void deallocate(pointer& p)
-        {
-            allocator::deallocate(p.ptr);
+            return ptr;
         }
     };
 
@@ -232,23 +227,15 @@ namespace XXX_NAMESPACE
             return multi_pointer<const T ...>(*this, stab_idx, idx);
         }
 
-        // this function provides the padded value for a given 'n' taking into account the desired alignment
-        static std::size_t padding(const std::size_t n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
+        // get base pointer
+        value_type* get_base_pointer()
         {
-            return allocator::padding(n, alignment);
+            return ptr;
         }
 
-        // allocate a contigous chunk of memory for a field of size 'n' (d-dimensional)
-        template <std::size_t D>
-        static value_type* allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
+        const value_type* get_base_pointer() const
         {
-            return allocator::allocate(n, alignment);
-        }
-
-        // deallocate memory
-        static void deallocate(multi_pointer& mp)
-        {
-            allocator::deallocate(mp.ptr);
+            return ptr;
         }
     };
 
@@ -414,27 +401,15 @@ namespace XXX_NAMESPACE
             return multi_pointer_inhomogeneous<const T ...>(*this, stab_idx, idx);
         }
         
-        // this function provides the padded value for a given 'n' taking into account the desired alignment
-        // and the internal record padding
-        static std::size_t padding(const std::size_t n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
+        // get base pointer
+        value_type* get_base_pointer()
         {
-            return allocator::padding(n, alignment);
+            return reinterpret_cast<value_type*>(std::get<0>(ptr));
         }
 
-        // allocate a contigous chunk of memory for a field of size 'n' (d-dimensional)
-        template <std::size_t D>
-        static std::uint8_t* allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = SIMD_NAMESPACE::simd::alignment)
+        const value_type* get_base_pointer() const
         {
-            return allocator::allocate(n, alignment);
-        }
-
-        // deallocate memory
-        static void deallocate(multi_pointer_inhomogeneous& mp)
-        {
-            if (std::get<0>(mp.ptr))
-            {
-                allocator::deallocate(reinterpret_cast<std::uint8_t*>(std::get<0>(mp.ptr)));
-            }
+            return reinterpret_cast<const value_type*>(std::get<0>(ptr));
         }
     };
 }

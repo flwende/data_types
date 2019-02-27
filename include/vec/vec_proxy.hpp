@@ -40,7 +40,7 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename X, std::size_t D, data_layout L, typename Enabled>
+            template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
             friend class accessor;
 
         public:
@@ -149,7 +149,7 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename X, std::size_t D, data_layout L, typename Enabled>
+            template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
             friend class accessor;
 
         public:
@@ -265,7 +265,7 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename X, std::size_t D, data_layout L, typename Enabled>
+            template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
             friend class accessor;
 
         public:
