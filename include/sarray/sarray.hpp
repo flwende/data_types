@@ -162,6 +162,30 @@ namespace XXX_NAMESPACE
             return result;
         }
 
+        //! \brief Insert element at position 'idx'
+        //!
+        //! \param x element to be inserted
+        //! \param idx element index
+        //! \return an sarray object
+        constexpr sarray<T, D + 1> insert(const T x, const std::size_t idx = 0) const
+        {
+            sarray<T, D + 1> result(*this);
+
+            if (idx < (D + 1))
+            {
+                // insert element at position 'idx'
+                result.data[idx] = x;
+
+                // take everything behind position 'idx' 
+                for (std::size_t i = idx; i < D; ++i)
+                {
+                    result.data[i + 1] = data[i];
+                }
+            }
+
+            return result;
+        }
+
         //! \brief Test whether two sarrays are the same
         //!
         //! \param rhs
