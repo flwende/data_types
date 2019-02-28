@@ -410,22 +410,4 @@ namespace VEC_NAMESPACE
     }
 }
 
-namespace XXX_NAMESPACE
-{
-    namespace internal
-    {
-        template <typename T, std::size_t D>
-        struct is_proxy_type<VEC_NAMESPACE::internal::vec_proxy<T, D>>
-        {
-            static constexpr bool value = true;
-        };
-
-        template <typename T, std::size_t D>
-        struct is_proxy_type<const VEC_NAMESPACE::internal::vec_proxy<T, D>>
-        {
-            static constexpr bool value = true;
-        };
-    }
-}
-
 #endif

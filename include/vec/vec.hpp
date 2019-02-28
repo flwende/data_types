@@ -408,35 +408,6 @@ namespace MATH_NAMESPACE
             return MATH_NAMESPACE::exp(x);
         }
     };
-
-    template <typename T, std::size_t D>
-    struct math<VEC_NAMESPACE::internal::vec_proxy<T, D>>
-    {
-        using type = VEC_NAMESPACE::internal::vec_proxy<T, D>;
-        using original_type = typename type::original_type;
-        using value_type = typename std::remove_cv<typename original_type::value_type>::type;
-
-        static constexpr value_type one = math<value_type>::one;
-        static constexpr value_type minus_one = math<value_type>::minus_one;
-
-        template <typename X>
-        static original_type sqrt(X x)
-        {
-            return MATH_NAMESPACE::sqrt(x);
-        }
-
-        template <typename X>
-        static original_type log(X x)
-        {
-            return MATH_NAMESPACE::log(x);
-        }
-
-        template <typename X>
-        static original_type exp(X x)
-        {
-            return MATH_NAMESPACE::exp(x);
-        }
-    };
 }
 
 #endif
