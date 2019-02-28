@@ -7,6 +7,7 @@
 #define BUFFER_BUFFER_HPP
 
 #include <cstdint>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -115,10 +116,65 @@ namespace XXX_NAMESPACE
         {
             using base_pointer = typename internal::traits<T, L>::base_pointer;
             base_pointer& data;
+            using base_pointer_type_internal = typename base_pointer::value_type;
             const sarray<std::size_t, D>& n;
             const std::size_t stab_idx;
 
         public:
+
+            class iterator : public std::iterator<std::forward_iterator_tag, base_pointer_type_internal, std::size_t, base_pointer_type_internal*, base_pointer_type_internal>
+            {
+                base_pointer_type_internal* __restrict__ ptr;
+
+            public:
+
+                iterator(base_pointer_type_internal* __restrict__ ptr)
+                    :
+                    ptr(ptr) {}
+
+                iterator& operator++()
+                {
+                    ++ptr;
+                    return *this;
+                }
+
+                iterator operator++(int)
+                {
+                    iterator it(ptr);
+                    ++ptr;
+                    return it;
+                }
+
+                bool operator==(iterator it) const
+                {
+                    return (ptr == it.ptr);
+                }
+
+                bool operator!=(iterator it) const
+                {
+                    return (ptr != it.ptr);
+                }
+
+                base_pointer_type_internal& operator*()
+                {
+                    return *ptr;
+                }
+
+                const base_pointer_type_internal& operator*() const
+                {
+                    return *ptr;
+                }
+            };
+
+            iterator begin()
+            {
+                return iterator(data.at(stab_idx).get_base_pointer());
+            }
+
+            iterator end()
+            {
+                return iterator(data.at(stab_idx).get_base_pointer() + n[0]);
+            }
 
             //! \brief Standard constructor
             //!
@@ -281,27 +337,27 @@ namespace XXX_NAMESPACE
         
         inline internal::accessor<element_type, D, D, L> read_write()
         {
-            return internal::accessor<element_type, D, D, L>(*data, n_internal);
+            return internal::accessor<element_type, D, D, L>(*data, n);
         }
 
         inline internal::accessor<const_element_type, D, D, L> read() const 
         {
-            return internal::accessor<const_element_type, D, D, L>(*const_data, n_internal);
+            return internal::accessor<const_element_type, D, D, L>(*const_data, n);
         }
 
         void set_data(const element_type& value)
         {
             if (!data.get()) return;
 
-            const std::size_t n_stabs = n_internal.reduce_mul(1);
+            const std::size_t n_stabs = n.reduce_mul(1);
             
             for (std::size_t i_s = 0; i_s < n_stabs; ++i_s)
             {
                 // get base_pointer to this stab, and use a 1d-accessor to access the elements in it
                 base_pointer<element_type> data_stab = data->at(i_s);
-                internal::accessor<element_type, 1, D, L> stab(data_stab, n_internal);
+                internal::accessor<element_type, 1, D, L> stab(data_stab, n);
                 
-                for (std::size_t i = 0; i < n_internal[0]; ++i)
+                for (std::size_t i = 0; i < n[0]; ++i)
                 {
                     stab[i] = value;
                 }
