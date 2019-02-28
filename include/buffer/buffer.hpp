@@ -7,7 +7,6 @@
 #define BUFFER_BUFFER_HPP
 
 #include <cstdint>
-#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -116,65 +115,10 @@ namespace XXX_NAMESPACE
         {
             using base_pointer = typename internal::traits<T, L>::base_pointer;
             base_pointer& data;
-            using base_pointer_type_internal = typename base_pointer::value_type;
             const sarray<std::size_t, D>& n;
             const std::size_t stab_idx;
 
         public:
-
-            class iterator : public std::iterator<std::forward_iterator_tag, base_pointer_type_internal, std::size_t, base_pointer_type_internal*, base_pointer_type_internal>
-            {
-                base_pointer_type_internal* __restrict__ ptr;
-
-            public:
-
-                iterator(base_pointer_type_internal* __restrict__ ptr)
-                    :
-                    ptr(ptr) {}
-
-                iterator& operator++()
-                {
-                    ++ptr;
-                    return *this;
-                }
-
-                iterator operator++(int)
-                {
-                    iterator it(ptr);
-                    ++ptr;
-                    return it;
-                }
-
-                bool operator==(iterator it) const
-                {
-                    return (ptr == it.ptr);
-                }
-
-                bool operator!=(iterator it) const
-                {
-                    return (ptr != it.ptr);
-                }
-
-                base_pointer_type_internal& operator*()
-                {
-                    return *ptr;
-                }
-
-                const base_pointer_type_internal& operator*() const
-                {
-                    return *ptr;
-                }
-            };
-
-            iterator begin()
-            {
-                return iterator(data.at(stab_idx).get_base_pointer());
-            }
-
-            iterator end()
-            {
-                return iterator(data.at(stab_idx).get_base_pointer() + n[0]);
-            }
 
             //! \brief Standard constructor
             //!
@@ -214,6 +158,73 @@ namespace XXX_NAMESPACE
                 }
 
                 return data.at(stab_idx, idx);
+            }
+
+            // a simple iterator class
+            class iterator
+            {
+                using value_type = typename base_pointer::value_type;
+
+                base_pointer base;
+
+            public:
+
+                iterator(base_pointer base)
+                    :
+                    base(base) {}
+
+                iterator& operator++()
+                {
+                    ++base;
+                    return *this;
+                }
+
+                iterator operator++(int)
+                {
+                    iterator it(base);
+                    ++base;
+                    return it;
+                }
+
+                bool operator==(iterator it) const
+                {
+                    return (base.ptr == it.base.ptr);
+                }
+
+                bool operator!=(iterator it) const
+                {
+                    return (base.ptr != it.base.ptr);
+                }
+
+                value_type& operator*()
+                {
+                    return *(base.get_base_pointer());
+                }
+
+                const value_type& operator*() const
+                {
+                    return *(base.get_base_pointer());
+                }
+
+                value_type& operator[](const std::size_t idx)
+                {
+                    return base.at(0, idx);
+                }
+
+                const value_type& operator[](const std::size_t idx) const
+                {
+                    return base.at(0, idx);
+                }
+            };
+
+            iterator begin()
+            {
+                return iterator({&(data.at(stab_idx, 0)), data.n_0});
+            }
+
+            iterator end()
+            {
+                return iterator({&(data.at(stab_idx, n[0])), data.n_0});
             }
         };
 
@@ -266,6 +277,73 @@ namespace XXX_NAMESPACE
                 }
 
                 return operator[](idx);
+            }
+            
+            // a simple iterator class
+            class iterator
+            {
+                using value_type = typename base_pointer::value_type;
+
+                base_pointer base;
+
+            public:
+
+                iterator(base_pointer base)
+                    :
+                    base(base) {}
+
+                iterator& operator++()
+                {
+                    ++base;
+                    return *this;
+                }
+
+                iterator operator++(int)
+                {
+                    iterator it(base);
+                    ++base;
+                    return it;
+                }
+
+                bool operator==(iterator it) const
+                {
+                    return (base.ptr == it.base.ptr);
+                }
+
+                bool operator!=(iterator it) const
+                {
+                    return (base.ptr != it.base.ptr);
+                }
+
+                proxy_type operator*()
+                {
+                    return proxy_type(base);
+                }
+
+                proxy_type operator*() const
+                {
+                    return proxy_type(base);
+                }
+
+                proxy_type operator[](const std::size_t idx)
+                {
+                    return proxy_type(base.at(0, idx));
+                }
+
+                const proxy_type operator[](const std::size_t idx) const
+                {
+                    return proxy_type(base.at(0, idx));
+                }
+            };
+
+            iterator begin()
+            {
+                return iterator(data.at(stab_idx, 0));
+            }
+
+            iterator end()
+            {
+                return iterator(data.at(stab_idx, n[0]));
             }
         };
     }

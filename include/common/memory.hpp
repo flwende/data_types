@@ -128,6 +128,20 @@ namespace XXX_NAMESPACE
         {
             return ptr;
         }
+
+        // pointer increment
+        pointer& operator++()
+        {
+            ++ptr;
+            return *this;
+        }
+
+        pointer operator++(int)
+        {
+            pointer p(ptr, n_0);
+            ++ptr;
+            return p;
+        }
     };
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,6 +251,20 @@ namespace XXX_NAMESPACE
         {
             return ptr;
         }
+
+        // pointer increment
+        multi_pointer& operator++()
+        {
+            ++ptr;
+            return *this;
+        }
+
+        multi_pointer operator++(int)
+        {
+            multi_pointer mp(ptr, n_0);
+            ++ptr;
+            return mp;
+        }
     };
 
     // define N-dimensional homogeneous structured type
@@ -323,7 +351,7 @@ namespace XXX_NAMESPACE
         template <std::size_t ...I>
         inline pointer_tuple make_pointer_tuple(const pointer_tuple& ptr, const std::size_t stab_idx, const std::size_t idx, std::index_sequence<I ...>)
         {
-            return {reinterpret_cast<T* __restrict__>(std::get<I>(ptr)) + stab_idx * num_units * size_scaling_factor[I] + idx ...};
+            return {std::get<I>(ptr) + stab_idx * num_units * size_scaling_factor[I] + idx ...};
         }
 
         // extent of the innermost dimension of the filed in units of largest type
@@ -410,6 +438,20 @@ namespace XXX_NAMESPACE
         const value_type* get_base_pointer() const
         {
             return reinterpret_cast<const value_type*>(std::get<0>(ptr));
+        }
+
+        // pointer increment
+        multi_pointer_inhomogeneous& operator++()
+        {
+            ptr = make_pointer_tuple(ptr, 0, 1);
+            return *this;
+        }
+
+        multi_pointer_inhomogeneous operator++(int)
+        {
+            multi_pointer_inhomogeneous mp(mp, 0, 1);
+            ptr = make_pointer_tuple(ptr, 0, 1);
+            return mp;
         }
     };
 }

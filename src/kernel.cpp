@@ -378,8 +378,6 @@ using namespace fw;
         }
     #endif
 #else
-    using proxy_type = typename fw::internal::traits<element_type, fw::data_layout::SoA>::proxy_type;
-
     #if defined(VECTOR_PRODUCT)
         template <>
         template <>
@@ -393,7 +391,7 @@ using namespace fw;
             #pragma omp simd        
             for (std::size_t i = 0; i < x_1.n[0]; ++i)
             {
-                y[i] = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(x_1[i], fw::math<proxy_type>::exp(x_2[i])) * fw::cross(x_1[i], fw::math<proxy_type>::exp(x_2[i])));
+                y[i] = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(x_1[i], fw::math<element_type>::exp(x_2[i])) * fw::cross(x_1[i], fw::math<element_type>::exp(x_2[i])));
             }
 
             return (omp_get_wtime() - time);
@@ -413,7 +411,7 @@ using namespace fw;
                 #pragma omp simd
                 for (std::size_t i = 0; i < x_1.n[0]; ++i)
                 {
-                    y[j][i] = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(x_1[j][i], fw::math<proxy_type>::exp(x_2[j][i])) * fw::cross(x_1[j][i], fw::math<proxy_type>::exp(x_2[j][i])));
+                    y[j][i] = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(x_1[j][i], fw::math<element_type>::exp(x_2[j][i])) * fw::cross(x_1[j][i], fw::math<element_type>::exp(x_2[j][i])));
                 }
             }
 
@@ -436,7 +434,7 @@ using namespace fw;
                     #pragma omp simd
                     for (std::size_t i = 0; i < x_1.n[0]; ++i)
                     {
-                        y[k][j][i] = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(x_1[k][j][i], fw::math<proxy_type>::exp(x_2[k][j][i])) * fw::cross(x_1[k][j][i], fw::math<proxy_type>::exp(x_2[k][j][i])));
+                        y[k][j][i] = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(x_1[k][j][i], fw::math<element_type>::exp(x_2[k][j][i])) * fw::cross(x_1[k][j][i], fw::math<element_type>::exp(x_2[k][j][i])));
                     }
                 }
             }
@@ -459,7 +457,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::exp(x[i].y);
                 #else
-                x[i] = fw::math<proxy_type>::exp(x[i]);
+                x[i] = fw::math<element_type>::exp(x[i]);
                 #endif
             }
 
@@ -483,7 +481,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::exp(x[j][i].y);
                     #else
-                    x[j][i] = fw::math<proxy_type>::exp(x[j][i]);
+                    x[j][i] = fw::math<element_type>::exp(x[j][i]);
                     #endif
                 }
             }
@@ -510,7 +508,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::exp(x[k][j][i].y);
                         #else
-                        x[k][j][i] = fw::math<proxy_type>::exp(x[k][j][i]);
+                        x[k][j][i] = fw::math<element_type>::exp(x[k][j][i]);
                         #endif
                     }
                 }
@@ -534,7 +532,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::log(x[i].y);
                 #else
-                x[i] = fw::math<proxy_type>::log(x[i]);
+                x[i] = fw::math<element_type>::log(x[i]);
                 #endif
             }
 
@@ -558,7 +556,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::log(x[j][i].y);
                     #else
-                    x[j][i] = fw::math<proxy_type>::log(x[j][i]);
+                    x[j][i] = fw::math<element_type>::log(x[j][i]);
                     #endif
                 }
             }
@@ -585,7 +583,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::log(x[k][j][i].y);
                         #else
-                        x[k][j][i] = fw::math<proxy_type>::log(x[k][j][i]);
+                        x[k][j][i] = fw::math<element_type>::log(x[k][j][i]);
                         #endif
                     }
                 }
@@ -609,7 +607,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::exp(x[i].y);
                 #else
-                y[i] = fw::math<proxy_type>::exp(x[i]);
+                y[i] = fw::math<element_type>::exp(x[i]);
                 #endif
             }
 
@@ -633,7 +631,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::exp(x[j][i].y);
                     #else
-                    y[j][i] = fw::math<proxy_type>::exp(x[j][i]);
+                    y[j][i] = fw::math<element_type>::exp(x[j][i]);
                     #endif
                 }
             }
@@ -660,7 +658,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::exp(x[k][j][i].y);
                         #else
-                        y[k][j][i] = fw::math<proxy_type>::exp(x[k][j][i]);
+                        y[k][j][i] = fw::math<element_type>::exp(x[k][j][i]);
                         #endif
                     }
                 }
@@ -684,7 +682,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::log(x[i].y);
                 #else
-                y[i] = fw::math<proxy_type>::log(x[i]);
+                y[i] = fw::math<element_type>::log(x[i]);
                 #endif
             }
 
@@ -708,7 +706,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::log(x[j][i].y);
                     #else
-                    y[j][i] = fw::math<proxy_type>::log(x[j][i]);
+                    y[j][i] = fw::math<element_type>::log(x[j][i]);
                     #endif
                 }
             }
@@ -735,7 +733,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::log(x[k][j][i].y);
                         #else
-                        y[k][j][i] = fw::math<proxy_type>::log(x[k][j][i]);
+                        y[k][j][i] = fw::math<element_type>::log(x[k][j][i]);
                         #endif
                     }
                 }
