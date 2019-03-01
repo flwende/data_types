@@ -132,12 +132,12 @@ namespace XXX_NAMESPACE
 
             inline T& operator[] (const std::size_t idx)
             {
-                return data.at(stab_idx, idx);
+                return *(data.at(stab_idx, idx));
             }
 
             inline const T& operator[] (const std::size_t idx) const
             {
-                return data.at(stab_idx, idx);
+                return *(data.at(stab_idx, idx));
             }
 
             inline T& at(std::size_t idx)
@@ -147,7 +147,7 @@ namespace XXX_NAMESPACE
                     throw std::out_of_range("accessor<T, 1>::at() : index out of bounds");
                 }
 
-                return data.at(stab_idx, idx);
+                return *(data.at(stab_idx, idx));
             }
 
             inline const T& at(std::size_t idx) const
@@ -157,7 +157,7 @@ namespace XXX_NAMESPACE
                     throw std::out_of_range("accessor<T, 1>::at() : index out of bounds");
                 }
 
-                return data.at(stab_idx, idx);
+                return *(data.at(stab_idx, idx));
             }
 
             // a simple iterator class
@@ -188,22 +188,22 @@ namespace XXX_NAMESPACE
 
                 bool operator==(iterator it) const
                 {
-                    return (base.ptr == it.base.ptr);
+                    return (base == it.base);
                 }
 
                 bool operator!=(iterator it) const
                 {
-                    return (base.ptr != it.base.ptr);
+                    return (base != it.base);
                 }
 
                 value_type& operator*()
                 {
-                    return *(base.get_base_pointer());
+                    return *(base.get_pointer());
                 }
 
                 const value_type& operator*() const
                 {
-                    return *(base.get_base_pointer());
+                    return *(base.get_pointer());
                 }
 
                 value_type& operator[](const std::size_t idx)
@@ -307,12 +307,12 @@ namespace XXX_NAMESPACE
 
                 bool operator==(iterator it) const
                 {
-                    return (base.ptr == it.base.ptr);
+                    return (base == it.base);
                 }
 
                 bool operator!=(iterator it) const
                 {
-                    return (base.ptr != it.base.ptr);
+                    return (base != it.base);
                 }
 
                 proxy_type operator*()
@@ -425,6 +425,7 @@ namespace XXX_NAMESPACE
 
         void set_data(const element_type& value)
         {
+            /*
             if (!data.get()) return;
 
             const std::size_t n_stabs = n.reduce_mul(1);
@@ -440,6 +441,7 @@ namespace XXX_NAMESPACE
                     stab[i] = value;
                 }
             }
+            */
         }
 
     public:
@@ -466,7 +468,7 @@ namespace XXX_NAMESPACE
         {
             if (data.get())
             {
-                allocator_type::deallocate(data->get_base_pointer());
+                allocator_type::deallocate(data->get_pointer());
                 delete data.release();
             }
 
@@ -480,7 +482,7 @@ namespace XXX_NAMESPACE
     
             if (data.get())
             {
-                allocator_type::deallocate(data->get_base_pointer());
+                allocator_type::deallocate(data->get_pointer());
                 delete data.release();
             }
 
