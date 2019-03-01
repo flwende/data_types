@@ -438,10 +438,7 @@ namespace XXX_NAMESPACE
         // increment the pointer tuple
         inline constexpr void increment_pointer_tuple(const std::size_t inc = 1)
         {
-            for (std::size_t I = 0; I < N; ++I)
-            {
-                std::get<I>(ptr) += inc;
-            }
+            AUXILIARY_NAMESPACE::variadic::loop<N>::execute([inc, this] (auto& I) { std::get<I.value>(ptr) += inc; });
         }
 
         // create tuple from the base pointer

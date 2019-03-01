@@ -173,58 +173,64 @@ namespace XXX_NAMESPACE
                     :
                     base(base) {}
 
-                iterator& operator++()
+                inline iterator& operator++()
                 {
                     ++base;
                     return *this;
                 }
 
-                iterator operator++(int)
+                inline iterator operator++(int)
                 {
                     iterator it(base);
                     ++base;
                     return it;
                 }
 
-                bool operator==(iterator it) const
+                inline iterator& operator+=(int inc)
+                {
+                    base += inc;
+                    return *this;
+                }
+
+                inline bool operator==(iterator it) const
                 {
                     return (base == it.base);
                 }
 
-                bool operator!=(iterator it) const
+                inline bool operator!=(iterator it) const
                 {
                     return (base != it.base);
                 }
 
-                value_type& operator*()
+                inline value_type& operator*()
                 {
-                    return *(base.get_pointer());
+                    return *base;
                 }
 
-                const value_type& operator*() const
+                inline const value_type& operator*() const
                 {
-                    return *(base.get_pointer());
+                    return *base;
                 }
 
-                value_type& operator[](const std::size_t idx)
+                inline value_type& operator[](const std::size_t idx)
                 {
-                    return base.at(0, idx);
+                    return *(base.at(idx));
                 }
 
-                const value_type& operator[](const std::size_t idx) const
+                inline const value_type& operator[](const std::size_t idx) const
                 {
-                    return base.at(0, idx);
+                    return *(base.at(idx));
                 }
             };
 
-            iterator begin()
+            iterator begin() const
             {
-                return iterator({&(data.at(stab_idx, 0)), data.n_0});
+                return iterator(data.at(stab_idx, 0));
             }
 
-            iterator end()
+            iterator end() const
             {
-                return iterator({&(data.at(stab_idx, n[0])), data.n_0});
+                return iterator(data.at(stab_idx, 0));
             }
         };
 
@@ -292,56 +298,62 @@ namespace XXX_NAMESPACE
                     :
                     base(base) {}
 
-                iterator& operator++()
+                inline iterator& operator++()
                 {
                     ++base;
                     return *this;
                 }
 
-                iterator operator++(int)
+                inline iterator operator++(int)
                 {
                     iterator it(base);
                     ++base;
                     return it;
                 }
 
-                bool operator==(iterator it) const
+                inline iterator& operator+=(int inc)
+                {
+                    base += inc;
+                    return *this;
+                }
+
+                inline bool operator==(iterator it) const
                 {
                     return (base == it.base);
                 }
 
-                bool operator!=(iterator it) const
+                inline bool operator!=(iterator it) const
                 {
                     return (base != it.base);
                 }
 
-                proxy_type operator*()
+                inline proxy_type operator*()
                 {
                     return proxy_type(base);
                 }
 
-                proxy_type operator*() const
+                inline proxy_type operator*() const
                 {
                     return proxy_type(base);
                 }
 
-                proxy_type operator[](const std::size_t idx)
+                inline proxy_type operator[](const std::size_t idx)
                 {
                     return proxy_type(base.at(0, idx));
                 }
 
-                const proxy_type operator[](const std::size_t idx) const
+                inline const proxy_type operator[](const std::size_t idx) const
                 {
                     return proxy_type(base.at(0, idx));
                 }
             };
 
-            iterator begin()
+            iterator begin() const
             {
                 return iterator(data.at(stab_idx, 0));
             }
 
-            iterator end()
+            iterator end() const
             {
                 return iterator(data.at(stab_idx, n[0]));
             }
@@ -425,7 +437,6 @@ namespace XXX_NAMESPACE
 
         void set_data(const element_type& value)
         {
-            /*
             if (!data.get()) return;
 
             const std::size_t n_stabs = n.reduce_mul(1);
@@ -433,15 +444,15 @@ namespace XXX_NAMESPACE
             for (std::size_t i_s = 0; i_s < n_stabs; ++i_s)
             {
                 // get base_pointer to this stab, and use a 1d-accessor to access the elements in it
-                base_pointer<element_type> data_stab = data->at(i_s);
+                base_pointer<element_type> data_stab = data->at(i_s, 0);
                 internal::accessor<element_type, 1, D, L> stab(data_stab, n);
                 
+                #pragma omp simd
                 for (std::size_t i = 0; i < n[0]; ++i)
                 {
                     stab[i] = value;
                 }
             }
-            */
         }
 
     public:
