@@ -222,7 +222,7 @@ namespace XXX_NAMESPACE
 
         constexpr inline T reduce_mul(const std::size_t offset = 0) const
         {
-            return reduce([&](const std::size_t product, const std::size_t element) { return (product * element); }, 1, offset);
+            return reduce([&](const T product, const T element) { return (product * element); }, 1, offset);
         }
     };
 
