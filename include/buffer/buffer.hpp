@@ -189,8 +189,11 @@ namespace XXX_NAMESPACE
         class accessor<T, 1, D, L>
         {
             using base_pointer = typename internal::traits<T, L>::base_pointer;
-            using value_type = typename std::conditional<L == data_layout::SoA, typename internal::traits<T, data_layout::SoA>::proxy_type, typename base_pointer::value_type&>::type;
+            using const_base_pointer = typename internal::traits<const T, L>::base_pointer;
+            using value_type = typename std::conditional<L == data_layout::SoA, typename internal::traits<T, data_layout::SoA>::proxy_type, T&>::type;
+            using const_value_type = typename std::conditional<L == data_layout::SoA, const typename internal::traits<const T, data_layout::SoA>::proxy_type, const T&>::type;
             using iterator = typename XXX_NAMESPACE::internal::iterator<base_pointer, value_type>;
+            using const_iterator = typename XXX_NAMESPACE::internal::iterator<const_base_pointer, const_value_type>;
 
             template <typename P, typename R>
             friend class XXX_NAMESPACE::internal::iterator;
@@ -250,6 +253,16 @@ namespace XXX_NAMESPACE
             iterator end() const
             {
                 return iterator(data.at(stab_idx, 0), n[0]);
+            }
+
+            const_iterator cbegin() const
+            {
+                return const_iterator(data.at(stab_idx, 0), 0);
+            }
+
+            const_iterator cend() const
+            {
+                return const_iterator(data.at(stab_idx, 0), n[0]);
             }
         };
     }
