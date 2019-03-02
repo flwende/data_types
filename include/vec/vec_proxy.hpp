@@ -43,6 +43,9 @@ namespace VEC_NAMESPACE
             template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
             friend class accessor;
 
+            template <typename P, typename R>
+            friend class XXX_NAMESPACE::internal::iterator;
+
         public:
 
             using type = vec_proxy<T, 1>;
@@ -64,6 +67,10 @@ namespace VEC_NAMESPACE
             vec_proxy(base_pointer base)
                 :
                 x(base.ptr) {}
+
+            vec_proxy(std::tuple<T&> v)
+                :
+                x(std::get<0>(v)) {}    
 
         public:
 
@@ -151,6 +158,9 @@ namespace VEC_NAMESPACE
             template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
             friend class accessor;
 
+            template <typename P, typename R>
+            friend class XXX_NAMESPACE::internal::iterator;
+
         public:
 
             using type = vec_proxy<T, 2>;
@@ -174,6 +184,11 @@ namespace VEC_NAMESPACE
                 :
                 x(base.ptr[0 * base.n_0]),
                 y(base.ptr[1 * base.n_0]) {}
+            
+            vec_proxy(std::tuple<T&, T&> v)
+                :
+                x(std::get<0>(v)),
+                y(std::get<1>(v)) {}
 
         public:
 
@@ -266,6 +281,9 @@ namespace VEC_NAMESPACE
             template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
             friend class accessor;
 
+            template <typename P, typename R>
+            friend class XXX_NAMESPACE::internal::iterator;
+
         public:
 
             using type = vec_proxy<T, 3>;
@@ -291,6 +309,12 @@ namespace VEC_NAMESPACE
                 x(base.ptr[0 * base.n_0]),
                 y(base.ptr[1 * base.n_0]),
                 z(base.ptr[2 * base.n_0]) {}
+
+            vec_proxy(std::tuple<T&, T&, T&> v)
+                :
+                x(std::get<0>(v)),
+                y(std::get<1>(v)),
+                z(std::get<2>(v)) {}
 
         public:
 

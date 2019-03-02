@@ -25,6 +25,75 @@ namespace XXX_NAMESPACE
     namespace internal
     {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //! \brief A simple random access iterator
+        //!
+        //! \tparam P pointer type
+        //! \tparam R return type for data access
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <typename P, typename R>
+        class iterator
+        {
+            P ptr;
+            std::size_t pos;
+
+        public:
+
+            iterator(P ptr, const std::size_t pos)
+                :
+                ptr(ptr),
+                pos(pos) {}
+
+            inline iterator& operator++()
+            {
+                ++pos;
+                return *this;
+            }
+
+            inline iterator operator++(int)
+            {
+                iterator it(ptr, pos);
+                ++pos;
+                return it;
+            }
+
+            inline iterator& operator+=(int inc)
+            {
+                pos += inc;
+                return *this;
+            }
+
+            inline bool operator==(const iterator& it) const
+            {
+                return (pos == it.pos);
+            }
+
+            inline bool operator!=(const iterator& it) const
+            {
+                return (pos != it.pos);
+            }
+
+            inline R operator*()
+            {
+                return *(ptr.at(pos));
+            }
+
+            inline const R operator*() const
+            {
+                return *(ptr.at(pos));
+            }
+
+            inline R operator[](const std::size_t idx)
+            {
+                return *(ptr.at(pos + idx));
+            }
+
+            inline const R operator[](const std::size_t idx) const
+            {
+                return *(ptr.at(pos + idx));
+            }
+        };
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //! \brief Accessor type implementing array subscript operator chaining [][]..[]
         //!
         //! This data type basically collects all array indices and determines the final memory reference recursively.
@@ -114,6 +183,9 @@ namespace XXX_NAMESPACE
         class accessor<T, 1, D, L, Enabled>
         {
             using base_pointer = typename internal::traits<T, L>::base_pointer;
+            using value_type = typename base_pointer::value_type;
+            using iterator = typename XXX_NAMESPACE::internal::iterator<base_pointer, value_type&>;
+
             base_pointer& data;
             const sarray<std::size_t, D>& n;
             const std::size_t stab_idx;
@@ -159,78 +231,16 @@ namespace XXX_NAMESPACE
 
                 return *(data.at(stab_idx, idx));
             }
-
-            // a simple iterator class
-            class iterator
-            {
-                using value_type = typename base_pointer::value_type;
-
-                base_pointer base;
-
-            public:
-
-                iterator(base_pointer base)
-                    :
-                    base(base) {}
-
-                inline iterator& operator++()
-                {
-                    ++base;
-                    return *this;
-                }
-
-                inline iterator operator++(int)
-                {
-                    iterator it(base);
-                    ++base;
-                    return it;
-                }
-
-                inline iterator& operator+=(int inc)
-                {
-                    base += inc;
-                    return *this;
-                }
-
-                inline bool operator==(iterator it) const
-                {
-                    return (base == it.base);
-                }
-
-                inline bool operator!=(iterator it) const
-                {
-                    return (base != it.base);
-                }
-
-                inline value_type& operator*()
-                {
-                    return *base;
-                }
-
-                inline const value_type& operator*() const
-                {
-                    return *base;
-                }
-
-                inline value_type& operator[](const std::size_t idx)
-                {
-                    return *(base.at(idx));
-                }
-
-                inline const value_type& operator[](const std::size_t idx) const
-                {
-                    return *(base.at(idx));
-                }
-            };
-
+            
+            // iterator            
             iterator begin() const
             {
-                return iterator(data.at(stab_idx, 0));
+                return iterator(data.at(stab_idx, 0), 0);
             }
 
             iterator end() const
             {
-                return iterator(data.at(stab_idx, 0));
+                return iterator(data.at(stab_idx, 0), n[0]);
             }
         };
 
@@ -239,6 +249,8 @@ namespace XXX_NAMESPACE
         {
             using base_pointer = typename internal::traits<T, data_layout::SoA>::base_pointer;
             using proxy_type = typename internal::traits<T, data_layout::SoA>::proxy_type;
+            using iterator = typename XXX_NAMESPACE::internal::iterator<base_pointer, proxy_type>;
+
             base_pointer& data;
             const sarray<std::size_t, D>& n;
             const std::size_t stab_idx;
@@ -284,78 +296,15 @@ namespace XXX_NAMESPACE
 
                 return operator[](idx);
             }
-            
-            // a simple iterator class
-            class iterator
-            {
-                using value_type = typename base_pointer::value_type;
-
-                base_pointer base;
-
-            public:
-
-                iterator(base_pointer base)
-                    :
-                    base(base) {}
-
-                inline iterator& operator++()
-                {
-                    ++base;
-                    return *this;
-                }
-
-                inline iterator operator++(int)
-                {
-                    iterator it(base);
-                    ++base;
-                    return it;
-                }
-
-                inline iterator& operator+=(int inc)
-                {
-                    base += inc;
-                    return *this;
-                }
-
-                inline bool operator==(iterator it) const
-                {
-                    return (base == it.base);
-                }
-
-                inline bool operator!=(iterator it) const
-                {
-                    return (base != it.base);
-                }
-
-                inline proxy_type operator*()
-                {
-                    return proxy_type(base);
-                }
-
-                inline proxy_type operator*() const
-                {
-                    return proxy_type(base);
-                }
-
-                inline proxy_type operator[](const std::size_t idx)
-                {
-                    return proxy_type(base.at(0, idx));
-                }
-
-                inline const proxy_type operator[](const std::size_t idx) const
-                {
-                    return proxy_type(base.at(0, idx));
-                }
-            };
-
+            // iterator
             iterator begin() const
             {
-                return iterator(data.at(stab_idx, 0));
+                return iterator(data.at(stab_idx, 0), 0);
             }
 
             iterator end() const
             {
-                return iterator(data.at(stab_idx, n[0]));
+                return iterator(data.at(stab_idx, 0), n[0]);
             }
         };
     }

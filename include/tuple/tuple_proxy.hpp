@@ -36,7 +36,10 @@ namespace TUPLE_NAMESPACE
             static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
 
             template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
-            friend class accessor;
+            friend class XXX_NAMESPACE::internal::accessor;
+
+            template <typename P, typename R>
+            friend class XXX_NAMESPACE::internal::iterator;
 
             using T_1_unqualified = typename std::remove_cv<T_1>::type;
             using T_2_unqualified = typename std::remove_cv<T_2>::type;
@@ -65,6 +68,12 @@ namespace TUPLE_NAMESPACE
                 x(*(std::get<0>(base.ptr))),
                 y(*(std::get<1>(base.ptr))),
                 z(*(std::get<2>(base.ptr))) {}
+
+            tuple_proxy(std::tuple<T_1&, T_2&, T_3&> t)
+                :
+                x(std::get<0>(t)),
+                y(std::get<1>(t)),
+                z(std::get<2>(t)) {}
 
         public:
             
