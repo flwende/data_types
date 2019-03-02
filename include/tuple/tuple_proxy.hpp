@@ -35,7 +35,7 @@ namespace TUPLE_NAMESPACE
             static_assert(!std::is_void<T_3>::value, "error: T_3 is void -> not allowed");
             static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
 
-            template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
+            template <typename X, std::size_t N, std::size_t D, data_layout L>
             friend class XXX_NAMESPACE::internal::accessor;
 
             template <typename P, typename R>
