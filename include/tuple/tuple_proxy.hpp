@@ -35,8 +35,17 @@ namespace TUPLE_NAMESPACE
             static_assert(!std::is_void<T_3>::value, "error: T_3 is void -> not allowed");
             static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
 
-            template <typename X, std::size_t D, data_layout L, typename Enabled>
-            friend class accessor;
+            template <typename X, std::size_t N, std::size_t D, data_layout L>
+            friend class XXX_NAMESPACE::internal::accessor;
+
+            template <typename P, typename R>
+            friend class XXX_NAMESPACE::internal::iterator;
+
+            using T_1_unqualified = typename std::remove_cv<T_1>::type;
+            using T_2_unqualified = typename std::remove_cv<T_2>::type;
+            using T_3_unqualified = typename std::remove_cv<T_3>::type;
+
+            static constexpr bool is_const_type = (std::is_const<T_1>::value || std::is_const<T_2>::value || std::is_const<T_3>::value);
 
         public:
 
@@ -44,6 +53,9 @@ namespace TUPLE_NAMESPACE
             using type = tuple_proxy<T_1, T_2, T_3>;
             using const_type = tuple_proxy<const T_1, const T_2, const T_3>;
             using base_pointer = XXX_NAMESPACE::multi_pointer_inhomogeneous<T_1, T_2, T_3>;
+            using original_type = typename std::conditional<is_const_type, 
+                const tuple<T_1_unqualified, T_2_unqualified, T_3_unqualified>,
+                tuple<T_1_unqualified, T_2_unqualified, T_3_unqualified>>::type;
 
             T_1& x;
             T_2& y;
@@ -57,11 +69,13 @@ namespace TUPLE_NAMESPACE
                 y(*(std::get<1>(base.ptr))),
                 z(*(std::get<2>(base.ptr))) {}
 
-        public:
+            tuple_proxy(std::tuple<T_1&, T_2&, T_3&> t)
+                :
+                x(std::get<0>(t)),
+                y(std::get<1>(t)),
+                z(std::get<2>(t)) {}
 
-            tuple_proxy(tuple_proxy& v) = delete;
-            tuple_proxy(const tuple_proxy& v) = delete;
-            tuple_proxy(tuple_proxy&& v) = delete;
+        public:
             
         #define MACRO(OP, IN_T)                                                                 \
             inline tuple_proxy& operator OP (TUPLE_NAMESPACE::IN_T<T_1, T_2, T_3>& t)           \

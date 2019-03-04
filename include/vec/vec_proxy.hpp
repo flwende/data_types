@@ -40,8 +40,11 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename X, std::size_t D, data_layout L, typename Enabled>
+            template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
             friend class accessor;
+
+            template <typename P, typename R>
+            friend class XXX_NAMESPACE::internal::iterator;
 
         public:
 
@@ -49,10 +52,13 @@ namespace VEC_NAMESPACE
             using const_type = vec_proxy<const T, 1>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
-            using element_type = T;
+            using value_type = T;
             //! Remember the template parameter D (=1)
             static constexpr std::size_t d = 1;
             using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 1>;
+            using original_type = typename std::conditional<std::is_const<T>::value, 
+                const vec<typename std::remove_cv<T>::type, 1>,
+                vec<typename std::remove_cv<T>::type, 1>>::type;
 
             T& x;
 
@@ -62,11 +68,11 @@ namespace VEC_NAMESPACE
                 :
                 x(base.ptr) {}
 
-        public:
+            vec_proxy(std::tuple<T&> v)
+                :
+                x(std::get<0>(v)) {}    
 
-            vec_proxy(vec_proxy& v) = delete;
-            vec_proxy(const vec_proxy& v) = delete;
-            vec_proxy(vec_proxy&& v) = delete;
+        public:
 
             inline VEC_NAMESPACE::vec<T_unqualified, 1>  operator-() const
             {
@@ -149,8 +155,11 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename X, std::size_t D, data_layout L, typename Enabled>
+            template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
             friend class accessor;
+
+            template <typename P, typename R>
+            friend class XXX_NAMESPACE::internal::iterator;
 
         public:
 
@@ -158,10 +167,13 @@ namespace VEC_NAMESPACE
             using const_type = vec_proxy<const T, 2>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
-            using element_type = T;
+            using value_type = T;
             //! Remember the template parameter D (=2)
             static constexpr std::size_t d = 2;
             using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 2>;
+            using original_type = typename std::conditional<std::is_const<T>::value, 
+                const vec<typename std::remove_cv<T>::type, 2>,
+                vec<typename std::remove_cv<T>::type, 2>>::type;
 
             T& x;
             T& y;
@@ -172,12 +184,13 @@ namespace VEC_NAMESPACE
                 :
                 x(base.ptr[0 * base.n_0]),
                 y(base.ptr[1 * base.n_0]) {}
+            
+            vec_proxy(std::tuple<T&, T&> v)
+                :
+                x(std::get<0>(v)),
+                y(std::get<1>(v)) {}
 
         public:
-
-            vec_proxy(vec_proxy& v) = delete;
-            vec_proxy(const vec_proxy& v) = delete;
-            vec_proxy(vec_proxy&& v) = delete;
 
             inline VEC_NAMESPACE::vec<T_unqualified, 2>  operator-() const
             {
@@ -251,7 +264,7 @@ namespace VEC_NAMESPACE
             //! \return Euclidean norm
             inline T length() const
             {
-                return AUXILIARY_NAMESPACE::math<T>::sqrt(x * x + y * y);
+                return MATH_NAMESPACE::math<T>::sqrt(x * x + y * y);
             }
         };
 
@@ -265,8 +278,11 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename X, std::size_t D, data_layout L, typename Enabled>
+            template <typename X, std::size_t N, std::size_t D, data_layout L>
             friend class accessor;
+
+            template <typename P, typename R>
+            friend class XXX_NAMESPACE::internal::iterator;
 
         public:
 
@@ -274,10 +290,13 @@ namespace VEC_NAMESPACE
             using const_type = vec_proxy<const T, 3>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
-            using element_type = T;
+            using value_type = T;
             //! Remember the template parameter D (=3)
             static constexpr std::size_t d = 3;
             using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 3>;
+            using original_type = typename std::conditional<std::is_const<T>::value, 
+                const vec<typename std::remove_cv<T>::type, 3>,
+                vec<typename std::remove_cv<T>::type, 3>>::type;
 
             T& x;
             T& y;
@@ -291,11 +310,13 @@ namespace VEC_NAMESPACE
                 y(base.ptr[1 * base.n_0]),
                 z(base.ptr[2 * base.n_0]) {}
 
-        public:
+            vec_proxy(std::tuple<T&, T&, T&> v)
+                :
+                x(std::get<0>(v)),
+                y(std::get<1>(v)),
+                z(std::get<2>(v)) {}
 
-            vec_proxy(vec_proxy& v) = delete;
-            vec_proxy(const vec_proxy& v) = delete;
-            vec_proxy(vec_proxy&& v) = delete;
+        public:
 
             inline VEC_NAMESPACE::vec<T_unqualified, 3>  operator-() const
             {
@@ -374,7 +395,7 @@ namespace VEC_NAMESPACE
             //! \return Euclidean norm
             inline T length() const
             {
-                return AUXILIARY_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
+                return MATH_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
             }
         };
 

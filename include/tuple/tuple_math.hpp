@@ -14,9 +14,13 @@
 #define TUPLE_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "tuple.hpp"
+#if !defined(MATH_NAMESPACE)
+#define MATH_NAMESPACE XXX_NAMESPACE
+#endif
 
-namespace TUPLE_NAMESPACE
+#include "../auxiliary/math.hpp"
+
+namespace MATH_NAMESPACE
 {
 #define MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                               \
     template <typename T_1, typename T_2, typename T_3, typename T_4, typename T_5, typename T_6,                                           \
@@ -42,10 +46,10 @@ namespace TUPLE_NAMESPACE
     MACRO_QUALIFIED(OP, IN_T_1, IN_T_2)                                                                                                     \
     MACRO_QUALIFIED(OP, IN_T_2, IN_T_1)                                                                                                     \
 
-    MACRO(+, tuple, internal::tuple_proxy)
-    MACRO(-, tuple, internal::tuple_proxy)
-    MACRO(*, tuple, internal::tuple_proxy)
-    MACRO(/, tuple, internal::tuple_proxy)
+    MACRO(+, TUPLE_NAMESPACE::tuple, TUPLE_NAMESPACE::internal::tuple_proxy)
+    MACRO(-, TUPLE_NAMESPACE::tuple, TUPLE_NAMESPACE::internal::tuple_proxy)
+    MACRO(*, TUPLE_NAMESPACE::tuple, TUPLE_NAMESPACE::internal::tuple_proxy)
+    MACRO(/, TUPLE_NAMESPACE::tuple, TUPLE_NAMESPACE::internal::tuple_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED
@@ -64,9 +68,9 @@ namespace TUPLE_NAMESPACE
     }                                                                                                                                       \
                                                                                                                                             \
     template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-              typename X_1 = typename XXX_NAMESPACE::internal::compare<T_1, T_4>::stronger_type_unqualified,                                \
-              typename X_2 = typename XXX_NAMESPACE::internal::compare<T_2, T_4>::stronger_type_unqualified,                                \
-              typename X_3 = typename XXX_NAMESPACE::internal::compare<T_3, T_4>::stronger_type_unqualified>                                \
+              typename X_1 = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified,                                \
+              typename X_2 = typename XXX_NAMESPACE::internal::compare<T_1, T_3>::stronger_type_unqualified,                                \
+              typename X_3 = typename XXX_NAMESPACE::internal::compare<T_1, T_4>::stronger_type_unqualified>                                \
     inline tuple<X_1, X_2, X_3> operator OP (const T_1 x_1, IN_T<T_2, T_3, T_4>& x_2)                                                       \
     {                                                                                                                                       \
         tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \
@@ -81,15 +85,15 @@ namespace TUPLE_NAMESPACE
 #define MACRO(OP, IN_T)                                                                                                                     \
     MACRO_QUALIFIED(OP, IN_T)                                                                                                               \
 
-    MACRO(+, tuple)
-    MACRO(-, tuple)
-    MACRO(*, tuple)
-    MACRO(/, tuple)
+    MACRO(+, TUPLE_NAMESPACE::tuple)
+    MACRO(-, TUPLE_NAMESPACE::tuple)
+    MACRO(*, TUPLE_NAMESPACE::tuple)
+    MACRO(/, TUPLE_NAMESPACE::tuple)
 
-    MACRO(+, internal::tuple_proxy)
-    MACRO(-, internal::tuple_proxy)
-    MACRO(*, internal::tuple_proxy)
-    MACRO(/, internal::tuple_proxy)
+    MACRO(+, TUPLE_NAMESPACE::internal::tuple_proxy)
+    MACRO(-, TUPLE_NAMESPACE::internal::tuple_proxy)
+    MACRO(*, TUPLE_NAMESPACE::internal::tuple_proxy)
+    MACRO(/, TUPLE_NAMESPACE::internal::tuple_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED
@@ -102,9 +106,9 @@ namespace TUPLE_NAMESPACE
               typename X_3 = typename std::remove_cv<T_3>::type>                                                                            \
     inline tuple<X_1, X_2, X_3> OP (IN_T<T_1, T_2, T_3>& t)                                                                                 \
     {                                                                                                                                       \
-        return tuple<X_1, X_2, X_3>(AUXILIARY_NAMESPACE::math<T_1>:: OP (t.x),                                                              \
-                                    AUXILIARY_NAMESPACE::math<T_2>:: OP (t.y),                                                              \
-                                    AUXILIARY_NAMESPACE::math<T_3>:: OP (t.z));                                                             \
+        return tuple<X_1, X_2, X_3>(MATH_NAMESPACE::math<T_1>:: OP (t.x),                                                                   \
+                                    MATH_NAMESPACE::math<T_2>:: OP (t.y),                                                                   \
+                                    MATH_NAMESPACE::math<T_3>:: OP (t.z));                                                                  \
     }                                                                                                                                       \
 
 #define MACRO_QUALIFIED(OP, IN_T)                                                                                                           \
@@ -114,13 +118,13 @@ namespace TUPLE_NAMESPACE
 #define MACRO(OP, IN_T)                                                                                                                     \
     MACRO_QUALIFIED(OP, IN_T)                                                                                                               \
 
-    MACRO(sqrt, tuple)
-    MACRO(log, tuple)
-    MACRO(exp, tuple)
+    MACRO(sqrt, TUPLE_NAMESPACE::tuple)
+    MACRO(log, TUPLE_NAMESPACE::tuple)
+    MACRO(exp, TUPLE_NAMESPACE::tuple)
 
-    MACRO(sqrt, internal::tuple_proxy)
-    MACRO(log, internal::tuple_proxy)
-    MACRO(exp, internal::tuple_proxy)
+    MACRO(sqrt, TUPLE_NAMESPACE::internal::tuple_proxy)
+    MACRO(log, TUPLE_NAMESPACE::internal::tuple_proxy)
+    MACRO(exp, TUPLE_NAMESPACE::internal::tuple_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED
@@ -157,7 +161,7 @@ namespace TUPLE_NAMESPACE
     MACRO_QUALIFIED(IN_T_1, IN_T_2)                                                                                                         \
     MACRO_QUALIFIED(IN_T_2, IN_T_1)                                                                                                         \
 
-    MACRO(tuple, internal::tuple_proxy)
+    MACRO(TUPLE_NAMESPACE::tuple, TUPLE_NAMESPACE::internal::tuple_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED
@@ -207,8 +211,8 @@ namespace TUPLE_NAMESPACE
 #define MACRO(IN_T)                                                                                                                         \
     MACRO_QUALIFIED(IN_T)                                                                                                                   \
     
-    MACRO(tuple)
-    MACRO(internal::tuple_proxy)
+    MACRO(TUPLE_NAMESPACE::tuple)
+    MACRO(TUPLE_NAMESPACE::internal::tuple_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED

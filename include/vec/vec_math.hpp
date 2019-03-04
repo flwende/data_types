@@ -14,9 +14,13 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "vec.hpp"
+#if !defined(MATH_NAMESPACE)
+#define MATH_NAMESPACE XXX_NAMESPACE
+#endif
 
-namespace VEC_NAMESPACE
+#include "../auxiliary/math.hpp"
+
+namespace MATH_NAMESPACE
 {
 #define MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                               \
     template <typename T_1, typename T_2, std::size_t D,                                                                                    \
@@ -40,10 +44,10 @@ namespace VEC_NAMESPACE
     MACRO_QUALIFIED(OP, IN_T_1, IN_T_2)                                                                                                     \
     MACRO_QUALIFIED(OP, IN_T_2, IN_T_1)                                                                                                     \
 
-    MACRO(+, vec, internal::vec_proxy)
-    MACRO(-, vec, internal::vec_proxy)
-    MACRO(*, vec, internal::vec_proxy)
-    MACRO(/, vec, internal::vec_proxy)
+    MACRO(+, VEC_NAMESPACE::vec, VEC_NAMESPACE::internal::vec_proxy)
+    MACRO(-, VEC_NAMESPACE::vec, VEC_NAMESPACE::internal::vec_proxy)
+    MACRO(*, VEC_NAMESPACE::vec, VEC_NAMESPACE::internal::vec_proxy)
+    MACRO(/, VEC_NAMESPACE::vec, VEC_NAMESPACE::internal::vec_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED
@@ -75,15 +79,15 @@ namespace VEC_NAMESPACE
 #define MACRO(OP, IN_T)                                                                                                                     \
     MACRO_QUALIFIED(OP, IN_T)                                                                                                               \
 
-    MACRO(+, vec)
-    MACRO(-, vec)
-    MACRO(*, vec)
-    MACRO(/, vec)
+    MACRO(+, VEC_NAMESPACE::vec)
+    MACRO(-, VEC_NAMESPACE::vec)
+    MACRO(*, VEC_NAMESPACE::vec)
+    MACRO(/, VEC_NAMESPACE::vec)
 
-    MACRO(+, internal::vec_proxy)
-    MACRO(-, internal::vec_proxy)
-    MACRO(*, internal::vec_proxy)
-    MACRO(/, internal::vec_proxy)
+    MACRO(+, VEC_NAMESPACE::internal::vec_proxy)
+    MACRO(-, VEC_NAMESPACE::internal::vec_proxy)
+    MACRO(*, VEC_NAMESPACE::internal::vec_proxy)
+    MACRO(/, VEC_NAMESPACE::internal::vec_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED
@@ -93,21 +97,21 @@ namespace VEC_NAMESPACE
     template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
     inline vec<T, 1> OP (IN_T<T, 1>& v)                                                                                                     \
     {                                                                                                                                       \
-        return vec<T, 1>(AUXILIARY_NAMESPACE::math<T>:: OP (v.x));                                                                          \
+        return vec<T, 1>(MATH_NAMESPACE::math<T>:: OP (v.x));                                                                               \
     }                                                                                                                                       \
                                                                                                                                             \
     template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
     inline vec<T, 2> OP (IN_T<T, 2>& v)                                                                                                     \
     {                                                                                                                                       \
-        return vec<T, 2>(AUXILIARY_NAMESPACE::math<T>:: OP (v.x), AUXILIARY_NAMESPACE::math<T>:: OP (v.y));                                 \
+        return vec<T, 2>(MATH_NAMESPACE::math<T>:: OP (v.x), MATH_NAMESPACE::math<T>:: OP (v.y));                                           \
     }                                                                                                                                       \
                                                                                                                                             \
     template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
     inline vec<X, 3> OP (IN_T<T, 3>& v)                                                                                                     \
     {                                                                                                                                       \
-        return vec<X, 3>(AUXILIARY_NAMESPACE::math<X>:: OP (v.x),                                                                           \
-                         AUXILIARY_NAMESPACE::math<X>:: OP (v.y),                                                                           \
-                         AUXILIARY_NAMESPACE::math<X>:: OP (v.z));                                                                          \
+        return vec<X, 3>(MATH_NAMESPACE::math<X>:: OP (v.x),                                                                                \
+                         MATH_NAMESPACE::math<X>:: OP (v.y),                                                                                \
+                         MATH_NAMESPACE::math<X>:: OP (v.z));                                                                               \
     }                                                                                                                                       \
 
 #define MACRO_QUALIFIED(OP, IN_T)                                                                                                           \
@@ -117,13 +121,13 @@ namespace VEC_NAMESPACE
 #define MACRO(OP, IN_T)                                                                                                                     \
     MACRO_QUALIFIED(OP, IN_T)                                                                                                               \
 
-    MACRO(sqrt, vec)
-    MACRO(log, vec)
-    MACRO(exp, vec)
+    MACRO(sqrt, VEC_NAMESPACE::vec)
+    MACRO(log, VEC_NAMESPACE::vec)
+    MACRO(exp, VEC_NAMESPACE::vec)
 
-    MACRO(sqrt, internal::vec_proxy)
-    MACRO(log, internal::vec_proxy)
-    MACRO(exp, internal::vec_proxy)
+    MACRO(sqrt, VEC_NAMESPACE::internal::vec_proxy)
+    MACRO(log, VEC_NAMESPACE::internal::vec_proxy)
+    MACRO(exp, VEC_NAMESPACE::internal::vec_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED
@@ -170,7 +174,7 @@ namespace VEC_NAMESPACE
     MACRO_QUALIFIED(IN_T_1, IN_T_2)                                                                                                         \
     MACRO_QUALIFIED(IN_T_2, IN_T_1)                                                                                                         \
 
-    MACRO(vec, internal::vec_proxy)
+    MACRO(VEC_NAMESPACE::vec, VEC_NAMESPACE::internal::vec_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED
@@ -240,8 +244,8 @@ namespace VEC_NAMESPACE
 #define MACRO(IN_T)                                                                                                                         \
     MACRO_QUALIFIED(IN_T)                                                                                                                   \
     
-    MACRO(vec)
-    MACRO(internal::vec_proxy)
+    MACRO(VEC_NAMESPACE::vec)
+    MACRO(VEC_NAMESPACE::internal::vec_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED
@@ -274,7 +278,7 @@ namespace VEC_NAMESPACE
     MACRO_QUALIFIED(IN_T_1, IN_T_2)                                                                                                         \
     MACRO_QUALIFIED(IN_T_2, IN_T_1)                                                                                                         \
 
-    MACRO(vec, internal::vec_proxy)
+    MACRO(VEC_NAMESPACE::vec, VEC_NAMESPACE::internal::vec_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED
@@ -316,8 +320,8 @@ namespace VEC_NAMESPACE
 #define MACRO(IN_T)                                                                                                                         \
     MACRO_QUALIFIED(IN_T)                                                                                                                   \
     
-    MACRO(vec)
-    MACRO(internal::vec_proxy)
+    MACRO(VEC_NAMESPACE::vec)
+    MACRO(VEC_NAMESPACE::internal::vec_proxy)
 
 #undef MACRO
 #undef MACRO_QUALIFIED

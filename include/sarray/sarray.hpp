@@ -84,7 +84,7 @@ namespace XXX_NAMESPACE
         //!
         //! \param x an std::array object
         //! \return a reference to this object with the new content
-        constexpr sarray& swap(sarray& x)
+        inline constexpr sarray& swap(sarray& x)
         {
             for (std::size_t i = 0; i < D; ++i)
             {
@@ -100,7 +100,7 @@ namespace XXX_NAMESPACE
         //!
         //! \param idx element index
         //! \return reference to the element
-        constexpr inline T& operator[](const std::size_t idx)
+        inline constexpr T& operator[](const std::size_t idx)
         {
             return data[idx];
         }
@@ -109,7 +109,7 @@ namespace XXX_NAMESPACE
         //!
         //! \param idx element index
         //! \return const reference to the element
-        constexpr inline const T& operator[](const std::size_t idx) const
+        inline constexpr const T& operator[](const std::size_t idx) const
         {
             return data[idx];
         }
@@ -119,7 +119,7 @@ namespace XXX_NAMESPACE
         //! \param x replacement
         //! \param idx element index
         //! \return an sarray object
-        constexpr sarray<T, D> replace(const T x, const std::size_t idx) const 
+        inline constexpr sarray<T, D> replace(const T x, const std::size_t idx) const 
         {
             sarray<T, D> result = *this;
 
@@ -138,7 +138,7 @@ namespace XXX_NAMESPACE
         //! \param x element to be inserted
         //! \param idx element index
         //! \return an sarray object
-        constexpr sarray<T, D> insert_and_chop(const T x, const std::size_t idx = 0) const
+        inline constexpr sarray<T, D> insert_and_chop(const T x, const std::size_t idx = 0) const
         {
             if (idx >= D) return *this;
 
@@ -162,11 +162,35 @@ namespace XXX_NAMESPACE
             return result;
         }
 
+        //! \brief Insert element at position 'idx'
+        //!
+        //! \param x element to be inserted
+        //! \param idx element index
+        //! \return an sarray object
+        inline constexpr sarray<T, D + 1> insert(const T x, const std::size_t idx = 0) const
+        {
+            sarray<T, D + 1> result(*this);
+
+            if (idx < (D + 1))
+            {
+                // insert element at position 'idx'
+                result.data[idx] = x;
+
+                // take everything behind position 'idx' 
+                for (std::size_t i = idx; i < D; ++i)
+                {
+                    result.data[i + 1] = data[i];
+                }
+            }
+
+            return result;
+        }
+
         //! \brief Test whether two sarrays are the same
         //!
         //! \param rhs
         //! \return result of the element-wise comparison of the sarray contents
-        constexpr inline bool operator==(const sarray& rhs) const
+        inline constexpr bool operator==(const sarray& rhs) const
         {
             bool is_same = true;
 
@@ -184,7 +208,7 @@ namespace XXX_NAMESPACE
         //! \param r_0 start value for the reduction
         //! \return reduction
         template <typename F>
-        constexpr inline T reduce(F func, const T r_0, const std::size_t offset = 0) const
+        inline constexpr T reduce(F func, const T r_0, const std::size_t offset = 0) const
         {
             T r = r_0;
 
@@ -196,14 +220,14 @@ namespace XXX_NAMESPACE
             return r;
         }
 
-        constexpr inline T reduce_mul(const std::size_t offset = 0) const
+        inline constexpr T reduce_mul(const std::size_t offset = 0) const
         {
-            return reduce([&](const std::size_t product, const std::size_t element) { return (product * element); }, 1, offset);
+            return reduce([&](const T product, const T element) { return (product * element); }, 1, offset);
         }
     };
 
     template <typename T, std::size_t D>
-    std::ostream& operator<<(std::ostream& os, sarray<T, D>& x)
+    std::ostream& operator<<(std::ostream& os, const sarray<T, D>& x)
     {
         for (std::size_t i = 0; i < D; ++i)
         {

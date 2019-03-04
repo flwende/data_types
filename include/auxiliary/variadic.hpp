@@ -81,6 +81,63 @@ namespace AUXILIARY_NAMESPACE
             }
         };
 
+        /////////////////////////////////////////////////////////////////
+        // compile time loop
+        //
+        // NOTE: loop<begin, end>::execute([..](auto& I) { constexpr std::size_t i = I.value; body(i[,..]); }) 
+        //       corresponds to
+        //       
+        //       for (std::size_t i = begin; i <= end; ++i)
+        //         body(i[,..]);
+        /////////////////////////////////////////////////////////////////
+        namespace
+        {
+            template <typename T, T X>
+            struct template_parameter_t
+            {
+                static constexpr T value = X;
+            };
+
+            template <std::size_t I, std::size_t Shift>
+            struct loop_implementation
+            {
+                template <typename F>
+                static void execute(F body)
+                {
+                    loop_implementation<I - 1, Shift>::execute(body);
+
+                    template_parameter_t<std::size_t, Shift + I> i; 
+                    body(i);
+                }
+            };
+
+            template <std::size_t Shift>
+            struct loop_implementation<0, Shift>
+            {
+                template <typename F>
+                static void execute(F body)
+                {
+                    template_parameter_t<std::size_t, Shift> i; 
+                    body(i);
+                }
+            };
+        }
+
+        template <std::size_t A, std::size_t B = 0>
+        struct loop
+        {
+            static constexpr std::size_t begin = (B == 0 ? 0 : A);
+            static constexpr std::size_t end = (B == 0 ? A : B);
+
+            static_assert(end > begin, "error: end <= begin");
+
+            template <typename F>
+            static void execute(F body)
+            {
+                loop_implementation<(end - begin - 1), begin>::execute(body);
+            }
+        };
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //! \brief Fold function
         //!

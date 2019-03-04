@@ -3,27 +3,102 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(DATA_TYPES_BUFFER_HPP)
-#define DATA_TYPES_BUFFER_HPP
+#if !defined(BUFFER_BUFFER_HPP)
+#define BUFFER_BUFFER_HPP
 
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
+#include <vector>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
 
 #include "../common/data_layout.hpp"
+#include "../common/memory.hpp"
 #include "../common/traits.hpp"
 #include "../sarray/sarray.hpp"
-#include "../simd/simd.hpp"
 
 namespace XXX_NAMESPACE
 {
-    constexpr std::size_t alignment = SIMD_NAMESPACE::simd::alignment;
-
     namespace internal
     {
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //! \brief A simple random access iterator
+        //!
+        //! \tparam P pointer type
+        //! \tparam R return type for data access
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <typename P, typename R>
+        class iterator
+        {
+            template <typename T, std::size_t N, std::size_t D, data_layout L>
+            friend class accessor;
+
+            template <typename T, std::size_t D, data_layout L>
+            friend class buffer;
+
+            P ptr;
+            std::size_t pos;
+
+            iterator(P ptr, const std::size_t pos)
+                :
+                ptr(ptr),
+                pos(pos) {}
+
+        public:
+
+            inline iterator& operator++()
+            {
+                ++pos;
+                return *this;
+            }
+
+            inline iterator operator++(int)
+            {
+                iterator it(ptr, pos);
+                ++pos;
+                return it;
+            }
+
+            inline iterator& operator+=(int inc)
+            {
+                pos += inc;
+                return *this;
+            }
+
+            inline bool operator==(const iterator& it) const
+            {
+                return (pos == it.pos);
+            }
+
+            inline bool operator!=(const iterator& it) const
+            {
+                return (pos != it.pos);
+            }
+
+            inline R operator*()
+            {
+                return *(ptr.at(pos));
+            }
+
+            inline const R operator*() const
+            {
+                return *(ptr.at(pos));
+            }
+
+            inline R operator[](const std::size_t idx)
+            {
+                return *(ptr.at(pos + idx));
+            }
+
+            inline const R operator[](const std::size_t idx) const
+            {
+                return *(ptr.at(pos + idx));
+            }
+        };
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //! \brief Accessor type implementing array subscript operator chaining [][]..[]
         //!
@@ -39,11 +114,12 @@ namespace XXX_NAMESPACE
         //! a proxy type that is initialized through the final memory reference type in case of SoA.
         //!
         //! \tparam T data type
+        //! \tparam N recursion level
         //! \tparam D dimension
         //! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
         //! \tparam Enabled needed for partial specialization for data types providing a proxy type
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, std::size_t D, data_layout L, typename Enabled = void>
+        template <typename T, std::size_t N, std::size_t D, data_layout L>
         class accessor
         {
             using base_pointer = typename internal::traits<T, L>::base_pointer;
@@ -64,25 +140,139 @@ namespace XXX_NAMESPACE
                 n(n), 
                 stab_idx(stab_idx) {}
 
-            inline accessor<T, D - 1, L> operator[] (const std::size_t idx) const
+            inline accessor<T, N - 1, D, L> operator[] (const std::size_t idx)
             {
                 std::size_t delta = idx;
 
-                for (std::size_t i = 1; i < (D - 1); ++i)
+                for (std::size_t i = 1; i < (N - 1); ++i)
                 {
                     delta *= n[i];
                 }               
 
-                return accessor<T, D - 1, L>(data, n, stab_idx + delta);
+                return accessor<T, N - 1, D, L>(data, n, stab_idx + delta);
+            }
+
+            inline accessor<T, N - 1, D, L> operator[] (const std::size_t idx) const
+            {
+                std::size_t delta = idx;
+
+                for (std::size_t i = 1; i < (N - 1); ++i)
+                {
+                    delta *= n[i];
+                }               
+
+                return accessor<T, N - 1, D, L>(data, n, stab_idx + delta);
+            }
+
+            inline accessor<T, N - 1, D, L> at(std::size_t idx)
+            {
+                if (idx >= n[N - 1])
+                {
+                    throw std::out_of_range("accessor<T, D>::at() : index out of bounds");
+                }
+
+                return operator[](idx);
+            }
+
+            inline accessor<T, N - 1, D, L> at(std::size_t idx) const
+            {
+                if (idx >= n[N - 1])
+                {
+                    throw std::out_of_range("accessor<T, D>::at() : index out of bounds");
+                }
+
+                return operator[](idx);
+            }
+
+            // iterator
+            template <typename R>
+            class stab_iterator
+            {
+                base_pointer& ptr;
+                const sarray<std::size_t, D>& n;
+                std::size_t pos;
+
+            public:
+
+                stab_iterator(base_pointer& ptr, const sarray<std::size_t, D>& n, const std::size_t pos = 0)
+                    :
+                    ptr(ptr),
+                    n(n),
+                    pos(pos) {}
+
+                inline stab_iterator& operator++()
+                {
+                    ++pos;
+                    return *this;
+                }
+
+                inline stab_iterator operator++(int)
+                {
+                    stab_iterator it(ptr, n, pos);
+                    ++pos;
+                    return it;
+                }
+
+                inline bool operator==(const stab_iterator& it) const
+                {
+                    return (pos == it.pos);
+                }
+
+                inline bool operator!=(const stab_iterator& it) const
+                {
+                    return (pos != it.pos);
+                }
+
+                inline R operator*()
+                {
+                    return R(ptr, n, pos);
+                }
+
+                inline const R operator*() const
+                {
+                    return R(ptr.at(pos, 0), n);
+                }
+            };
+
+            using iterator = stab_iterator<accessor<T, 1, D, L>>;
+            using const_iterator = stab_iterator<accessor<const T, 1, D, L>>;
+
+            iterator begin() const
+            {
+                return iterator(data, n, stab_idx);
+            }
+
+            iterator end() const
+            {
+                return iterator(data, n, stab_idx + sarray<std::size_t, N>(n).reduce_mul(1));
+            }
+
+            const_iterator cbegin() const
+            {
+                return const_iterator(data, n, stab_idx);
+            }
+
+            const_iterator cend() const
+            {
+                return const_iterator(data, n, stab_idx + sarray<std::size_t, N>(n).reduce_mul(1));
             }
         };
-
-        template <typename T, data_layout L, typename Enabled>
-        class accessor<T, 1, L, Enabled>
+        
+        template <typename T, std::size_t D, data_layout L>
+        class accessor<T, 1, D, L>
         {
             using base_pointer = typename internal::traits<T, L>::base_pointer;
+            using const_base_pointer = typename internal::traits<const T, L>::base_pointer;
+            using value_type = typename std::conditional<L == data_layout::SoA, typename internal::traits<T, data_layout::SoA>::proxy_type, T&>::type;
+            using const_value_type = typename std::conditional<L == data_layout::SoA, const typename internal::traits<const T, data_layout::SoA>::proxy_type, const T&>::type;
+            using iterator = typename internal::iterator<base_pointer, value_type>;
+            using const_iterator = typename internal::iterator<const_base_pointer, const_value_type>;
+
+            template <typename P, typename R>
+            friend class internal::iterator;
+
             base_pointer& data;
-            const sarray<std::size_t, 1>& n;
+            const sarray<std::size_t, D>& n;
             const std::size_t stab_idx;
 
         public:
@@ -91,52 +281,61 @@ namespace XXX_NAMESPACE
             //!
             //! \param ptr base pointer
             //! \param n extent of the D-dimensional array
-            accessor(base_pointer& data, const sarray<std::size_t, 1>& n, const std::size_t stab_idx = 0) 
+            accessor(base_pointer& data, const sarray<std::size_t, D>& n, const std::size_t stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
                 stab_idx(stab_idx) {}
 
-            inline T& operator[] (const std::size_t idx)
+            inline value_type operator[] (const std::size_t idx)
             {
-                return data.at(stab_idx, idx);
+                return *(data.at(stab_idx, idx));
             }
 
-            inline const T& operator[] (const std::size_t idx) const
+            inline const value_type operator[] (const std::size_t idx) const
             {
-                return data.at(stab_idx, idx);
-            }
-        };
-
-        template <typename T>
-        class accessor<T, 1, data_layout::SoA, typename std::enable_if<internal::provides_proxy_type<T>::value>::type>
-        {
-            using base_pointer = typename internal::traits<T, data_layout::SoA>::base_pointer;
-            using proxy_type = typename internal::traits<T, data_layout::SoA>::proxy_type;
-            base_pointer& data;
-            const sarray<std::size_t, 1>& n;
-            const std::size_t stab_idx;
-
-        public:
-
-            //! \brief Standard constructor
-            //!
-            //! \param ptr base pointer
-            //! \param n extent of the D-dimensional array
-            accessor(base_pointer& data, const sarray<std::size_t, 1>& n, const std::size_t stab_idx = 0) 
-                : 
-                data(data), 
-                n(n), 
-                stab_idx(stab_idx) {}
-
-            inline proxy_type operator[] (const std::size_t idx)
-            {
-                return proxy_type(data.at(stab_idx, idx));
+                return *(data.at(stab_idx, idx));
             }
 
-            inline proxy_type operator[] (const std::size_t idx) const
+            inline value_type at(std::size_t idx)
             {
-                return proxy_type(data.at(stab_idx, idx));
+                if (idx >= n[0])
+                {
+                    throw std::out_of_range("accessor<T, 1>::at() : index out of bounds");
+                }
+
+                return *(data.at(stab_idx, idx));
+            }
+
+            inline const value_type at(std::size_t idx) const
+            {
+                if (idx >= n[0])
+                {
+                    throw std::out_of_range("accessor<T, 1>::at() : index out of bounds");
+                }
+
+                return *(data.at(stab_idx, idx));
+            }
+            
+            // iterator            
+            iterator begin() const
+            {
+                return iterator(data.at(stab_idx, 0), 0);
+            }
+
+            iterator end() const
+            {
+                return iterator(data.at(stab_idx, 0), n[0]);
+            }
+
+            const_iterator cbegin() const
+            {
+                return const_iterator(data.at(stab_idx, 0), 0);
+            }
+
+            const_iterator cend() const
+            {
+                return const_iterator(data.at(stab_idx, 0), n[0]);
             }
         };
     }
@@ -191,40 +390,31 @@ namespace XXX_NAMESPACE
 
         template <typename X>
         using base_pointer = typename internal::traits<X, L>::base_pointer;
-
-    public:
-
-        sarray<std::size_t, D> n;
-        sarray<std::size_t, D> n_internal;
-
-    private:
-
-        std::unique_ptr<base_pointer<element_type>> data;
-        std::unique_ptr<base_pointer<const_element_type>> const_data;
         
-        inline internal::accessor<element_type, D, L> read_write()
+        inline internal::accessor<element_type, D, D, L> read_write()
         {
-            return internal::accessor<element_type, D, L>(*data, n_internal);
+            return internal::accessor<element_type, D, D, L>(*data, n);
         }
 
-        inline internal::accessor<const_element_type, D, L> read() const 
+        inline internal::accessor<const_element_type, D, D, L> read() const 
         {
-            return internal::accessor<const_element_type, D, L>(*const_data, n_internal);
+            return internal::accessor<const_element_type, D, D, L>(*const_data, n);
         }
 
         void set_data(const element_type& value)
         {
             if (!data.get()) return;
 
-            const std::size_t n_stabs = n_internal.reduce_mul(1);
+            const std::size_t n_stabs = n.reduce_mul(1);
             
             for (std::size_t i_s = 0; i_s < n_stabs; ++i_s)
             {
                 // get base_pointer to this stab, and use a 1d-accessor to access the elements in it
-                base_pointer<element_type> data_stab = data->at(i_s);
-                internal::accessor<element_type, 1, L> stab(data_stab, n_internal);
+                base_pointer<element_type> data_stab = data->at(i_s, 0);
+                internal::accessor<element_type, 1, D, L> stab(data_stab, n);
                 
-                for (std::size_t i = 0; i < n_internal[0]; ++i)
+                #pragma omp simd
+                for (std::size_t i = 0; i < n[0]; ++i)
                 {
                     stab[i] = value;
                 }
@@ -233,16 +423,30 @@ namespace XXX_NAMESPACE
 
     public:
 
+        using value_type = element_type;
+        using allocator_type = typename base_pointer<element_type>::allocator;
+        using size_type = std::size_t;
+
+        sarray<std::size_t, D> n;
+
+    private:
+
+        sarray<std::size_t, D> n_internal;
+        std::unique_ptr<base_pointer<element_type>> data;
+        std::unique_ptr<base_pointer<const_element_type>> const_data;
+
+    public:
+
         buffer()
             :
-            n(),
-            n_internal() {}
+            n_internal(),
+            n() {}
             
         buffer(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             :
             n(n),
-            n_internal(n.replace(base_pointer<element_type>::padding(n[0], alignment), 0)),
-            data(std::make_unique<base_pointer<element_type>>(base_pointer<element_type>::allocate(n_internal, alignment), n_internal[0])),
+            n_internal(n.replace(allocator_type::padding(n[0]), 0)),
+            data(std::make_unique<base_pointer<element_type>>(allocator_type::allocate(n_internal), n_internal[0])),
             const_data(std::make_unique<base_pointer<const_element_type>>(*data))
         {
             if (initialize_to_zero)
@@ -255,7 +459,7 @@ namespace XXX_NAMESPACE
         {
             if (data.get())
             {
-                base_pointer<element_type>::deallocate(*data);
+                allocator_type::deallocate(data->get_pointer());
                 delete data.release();
             }
 
@@ -265,17 +469,17 @@ namespace XXX_NAMESPACE
         void resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
         {
             this->n = n;
-            this->n_internal = n.replace(base_pointer<element_type>::padding(n[0], alignment), 0);
+            this->n_internal = n.replace(allocator_type::padding(n[0]), 0);
     
             if (data.get())
             {
-                base_pointer<element_type>::deallocate(*data);
+                allocator_type::deallocate(data->get_pointer());
                 delete data.release();
             }
 
             delete const_data.release();
 
-            data = std::make_unique<base_pointer<element_type>>(base_pointer<element_type>::allocate(n_internal, alignment), n_internal[0]);
+            data = std::make_unique<base_pointer<element_type>>(allocator_type::allocate(n_internal), n_internal[0]);
             const_data = std::make_unique<base_pointer<const_element_type>>(*data);
 
             if (initialize_to_zero)
@@ -298,8 +502,8 @@ namespace XXX_NAMESPACE
             const_data.swap(b.const_data);
         }
 
-        using dm1_accessor_type = internal::accessor<element_type, D - 1, L>;
-        using const_dm1_accessor_type = internal::accessor<const_element_type, D - 1, L>;
+        using dm1_accessor_type = internal::accessor<element_type, D - 1, D, L>;
+        using const_dm1_accessor_type = internal::accessor<const_element_type, D - 1, D, L>;
         using proxy_type = typename internal::traits<element_type, L>::proxy_type;
         using const_proxy_type = typename internal::traits<const_element_type, L>::proxy_type;
         static constexpr bool return_type_is_proxy = (L == data_layout::SoA && internal::provides_proxy_type<element_type>::value);
@@ -321,6 +525,22 @@ namespace XXX_NAMESPACE
         {
             return read()[idx];
         }
+
+        inline return_type at(std::size_t idx)
+        {
+            return read_write().at(idx);
+        }
+
+        inline const_return_type at(std::size_t idx) const
+        {
+            return read().at(idx);
+        }
+
+        allocator_type get_allocator() const
+        {
+            return allocator_type();
+        }
     };
 }
+
 #endif

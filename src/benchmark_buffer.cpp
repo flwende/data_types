@@ -115,17 +115,18 @@ int main(int argc, char** argv)
             const double tmp_1[3] = {static_cast<double>(out_2[i].x), static_cast<double>(out_2[i].y), static_cast<double>(out_2[i].z)};
             const element_type tmp_x = in_orig_1[i];
             #if defined(VECTOR_PRODUCT)
-                const element_type tmp_y = fw::exp(in_orig_2[i]);
+                const element_type tmp_y = in_orig_2[i];
+                const element_type tmp_y_1 = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(tmp_x, fw::math<element_type>::exp(tmp_y)));
                 const double tmp_2[3] = {
-                    static_cast<double>(0.5 + std::log(1.0 + (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y) * (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y))),
-                    static_cast<double>(0.5 + std::log(1.0 + (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z) * (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z))),
-                    static_cast<double>(0.5 + std::log(1.0 + (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x) * (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x)))};
+                    static_cast<double>(tmp_y_1.x),
+                    static_cast<double>(tmp_y_1.y),
+                    static_cast<double>(tmp_y_1.z)};
             #else
                 #if defined(ELEMENT_ACCESS)
                 const double tmp_2[3] = {
-                    static_cast<double>(tmp_x.x), 
+                    static_cast<double>(tmp_1[0]), 
                     static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(tmp_x.y))))),
-                    static_cast<double>(tmp_x.z)};
+                    static_cast<double>(tmp_1[2])};
                 #else
                 const double tmp_2[3] = {
                     static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(tmp_x.x))))), 
@@ -238,17 +239,18 @@ int main(int argc, char** argv)
                 const double tmp_1[3] = {static_cast<double>(out_2[j][i].x), static_cast<double>(out_2[j][i].y), static_cast<double>(out_2[j][i].z)};
                 const element_type tmp_x = in_orig_1[j * nx + i];
                 #if defined(VECTOR_PRODUCT)
-                    const element_type tmp_y = fw::exp(in_orig_2[j * nx + i]);
+                    const element_type tmp_y = in_orig_2[j * nx + i];
+                    const element_type tmp_y_1 = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(tmp_x, fw::math<element_type>::exp(tmp_y)));
                     const double tmp_2[3] = {
-                        static_cast<double>(0.5 + std::log(1.0 + (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y) * (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y))),
-                        static_cast<double>(0.5 + std::log(1.0 + (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z) * (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z))),
-                        static_cast<double>(0.5 + std::log(1.0 + (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x) * (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x)))};
+                        static_cast<double>(tmp_y_1.x),
+                        static_cast<double>(tmp_y_1.y),
+                        static_cast<double>(tmp_y_1.z)};
                 #else
                     #if defined(ELEMENT_ACCESS)
                     const double tmp_2[3] = {
-                        static_cast<double>(tmp_x.x), 
+                        static_cast<double>(tmp_1[0]), 
                         static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(tmp_x.y))))),
-                        static_cast<double>(tmp_x.z)};
+                        static_cast<double>(tmp_1[2])};
                     #else
                     const double tmp_2[3] = {
                         static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(tmp_x.x))))), 
@@ -368,17 +370,18 @@ int main(int argc, char** argv)
                     const double tmp_1[3] = {static_cast<double>(out_2[k][j][i].x), static_cast<double>(out_2[k][j][i].y), static_cast<double>(out_2[k][j][i].z)};
                     const element_type tmp_x = in_orig_1[k * nx * ny + j * nx + i];
                     #if defined(VECTOR_PRODUCT)
-                        const element_type tmp_y = fw::exp(in_orig_2[k * nx * ny + j * nx + i]);
+                        const element_type tmp_y = in_orig_2[k * nx * ny + j * nx + i];
+                        const element_type tmp_y_1 = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(tmp_x, fw::math<element_type>::exp(tmp_y)));
                         const double tmp_2[3] = {
-                            static_cast<double>(0.5 + std::log(1.0 + (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y) * (tmp_x.y * tmp_y.z - tmp_x.z * tmp_y.y))),
-                            static_cast<double>(0.5 + std::log(1.0 + (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z) * (tmp_x.z * tmp_y.x - tmp_x.x * tmp_y.z))),
-                            static_cast<double>(0.5 + std::log(1.0 + (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x) * (tmp_x.x * tmp_y.y - tmp_x.y * tmp_y.x)))};
+                            static_cast<double>(tmp_y_1.x),
+                            static_cast<double>(tmp_y_1.y),
+                            static_cast<double>(tmp_y_1.z)};
                     #else
                         #if defined(ELEMENT_ACCESS)
                         const double tmp_2[3] = {
-                            static_cast<double>(tmp_x.x), 
+                            static_cast<double>(tmp_1[0]), 
                             static_cast<double>(static_cast<type_y>(std::log(static_cast<type_y>(std::exp(tmp_x.y))))),
-                            static_cast<double>(tmp_x.z)};
+                            static_cast<double>(tmp_1[2])};
                         #else
                         const double tmp_2[3] = {
                             static_cast<double>(static_cast<type_x>(std::log(static_cast<type_x>(std::exp(tmp_x.x))))), 
