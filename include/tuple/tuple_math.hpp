@@ -68,9 +68,9 @@ namespace MATH_NAMESPACE
     }                                                                                                                                       \
                                                                                                                                             \
     template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-              typename X_1 = typename XXX_NAMESPACE::internal::compare<T_1, T_4>::stronger_type_unqualified,                                \
-              typename X_2 = typename XXX_NAMESPACE::internal::compare<T_2, T_4>::stronger_type_unqualified,                                \
-              typename X_3 = typename XXX_NAMESPACE::internal::compare<T_3, T_4>::stronger_type_unqualified>                                \
+              typename X_1 = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified,                                \
+              typename X_2 = typename XXX_NAMESPACE::internal::compare<T_1, T_3>::stronger_type_unqualified,                                \
+              typename X_3 = typename XXX_NAMESPACE::internal::compare<T_1, T_4>::stronger_type_unqualified>                                \
     inline tuple<X_1, X_2, X_3> operator OP (const T_1 x_1, IN_T<T_2, T_3, T_4>& x_2)                                                       \
     {                                                                                                                                       \
         tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \

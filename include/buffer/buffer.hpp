@@ -183,6 +183,78 @@ namespace XXX_NAMESPACE
 
                 return operator[](idx);
             }
+
+            template <typename R>
+            class stab_iterator
+            {
+                base_pointer& ptr;
+                const sarray<std::size_t, D>& n;
+                std::size_t pos;
+
+            public:
+
+                stab_iterator(base_pointer& ptr, const sarray<std::size_t, D>& n, const std::size_t pos = 0)
+                    :
+                    ptr(ptr),
+                    n(n),
+                    pos(pos) {}
+
+                inline stab_iterator& operator++()
+                {
+                    ++pos;
+                    return *this;
+                }
+
+                inline stab_iterator operator++(int)
+                {
+                    stab_iterator it(ptr, n, pos);
+                    ++pos;
+                    return it;
+                }
+
+                inline bool operator==(const stab_iterator& it) const
+                {
+                    return (pos == it.pos);
+                }
+
+                inline bool operator!=(const stab_iterator& it) const
+                {
+                    return (pos != it.pos);
+                }
+
+                inline R operator*()
+                {
+                    return R(ptr, n, pos);
+                }
+
+                inline const R operator*() const
+                {
+                    return R(ptr.at(pos, 0), n);
+                }
+            };
+
+            using iterator = stab_iterator<accessor<T, 1, D, L>>;
+            using const_iterator = stab_iterator<accessor<const T, 1, D, L>>;
+
+            iterator begin() const
+            {
+                return iterator(data, n, stab_idx);
+            }
+
+            iterator end() const
+            {
+                return iterator(data, n, stab_idx + sarray<std::size_t, N>(n).reduce_mul(1));
+            }
+
+            const_iterator cbegin() const
+            {
+                return const_iterator(data, n, stab_idx);
+            }
+
+            const_iterator cend() const
+            {
+                return const_iterator(data, n, stab_idx + sarray<std::size_t, N>(n).reduce_mul(1));
+            }
         };
         
         template <typename T, std::size_t D, data_layout L>
@@ -317,10 +389,6 @@ namespace XXX_NAMESPACE
 
         template <typename X>
         using base_pointer = typename internal::traits<X, L>::base_pointer;
-
-        std::unique_ptr<base_pointer<element_type>> data;
-        std::unique_ptr<base_pointer<const_element_type>> const_data;
-        sarray<std::size_t, D> n_internal;
         
         inline internal::accessor<element_type, D, D, L> read_write()
         {
@@ -360,6 +428,14 @@ namespace XXX_NAMESPACE
 
         sarray<std::size_t, D> n;
 
+    private:
+
+        sarray<std::size_t, D> n_internal;
+        std::unique_ptr<base_pointer<element_type>> data;
+        std::unique_ptr<base_pointer<const_element_type>> const_data;
+
+    public:
+
         buffer()
             :
             n_internal(),
@@ -367,8 +443,8 @@ namespace XXX_NAMESPACE
             
         buffer(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             :
-            n_internal(n.replace(allocator_type::padding(n[0]), 0)),
             n(n),
+            n_internal(n.replace(allocator_type::padding(n[0]), 0)),
             data(std::make_unique<base_pointer<element_type>>(allocator_type::allocate(n_internal), n_internal[0])),
             const_data(std::make_unique<base_pointer<const_element_type>>(*data))
         {
@@ -391,8 +467,8 @@ namespace XXX_NAMESPACE
 
         void resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
         {
-            this->n_internal = n.replace(allocator_type::padding(n[0]), 0);
             this->n = n;
+            this->n_internal = n.replace(allocator_type::padding(n[0]), 0);
     
             if (data.get())
             {
