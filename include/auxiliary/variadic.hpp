@@ -59,7 +59,7 @@ namespace AUXILIARY_NAMESPACE
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //! \brief N = 0 Specialization (recursion ancher definition)
+        //! \brief N = 0 Specialization (recursion anchor definition)
         //!
         //! \tparam T_head data type of the N-th element
         //! \tparam T_tail variadic argument list (tail)
@@ -87,7 +87,7 @@ namespace AUXILIARY_NAMESPACE
         // NOTE: loop<begin, end>::execute([..](auto& I) { constexpr std::size_t i = I.value; body(i[,..]); }) 
         //       corresponds to
         //       
-        //       for (std::size_t i = begin; i <= end; ++i)
+        //       for (std::size_t i = begin; i < end; ++i)
         //         body(i[,..]);
         /////////////////////////////////////////////////////////////////
         namespace
