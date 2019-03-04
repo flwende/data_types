@@ -184,6 +184,7 @@ namespace XXX_NAMESPACE
                 return operator[](idx);
             }
 
+            // iterator
             template <typename R>
             class stab_iterator
             {
