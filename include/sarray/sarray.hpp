@@ -40,6 +40,12 @@ namespace XXX_NAMESPACE
             : 
             data{} {}
 
+        constexpr sarray(const T& x) 
+        {
+            for (std::size_t i = 0; i < D; ++i)
+                data[i] = x;
+        }
+
         //! \brief Constructor taking D (or less) arguments to initialize the array
         //!
         //! \tparam Args variadic template type parameter list
