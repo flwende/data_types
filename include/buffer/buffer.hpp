@@ -289,12 +289,20 @@ namespace XXX_NAMESPACE
 
             inline value_type operator[] (const std::size_t idx)
             {
+                #if defined(SOA_INNERMOST)
                 return *(data.at(stab_idx, idx));
+                #else
+                return *(data.at(0, stab_idx * n[0] + idx));
+                #endif
             }
 
             inline const value_type operator[] (const std::size_t idx) const
             {
+                #if defined(SOA_INNERMOST)
                 return *(data.at(stab_idx, idx));
+                #else
+                return *(data.at(0, stab_idx * n[0] + idx));
+                #endif
             }
 
             inline value_type at(std::size_t idx)
@@ -304,7 +312,11 @@ namespace XXX_NAMESPACE
                     throw std::out_of_range("accessor<T, 1>::at() : index out of bounds");
                 }
 
+                #if defined(SOA_INNERMOST)
                 return *(data.at(stab_idx, idx));
+                #else
+                return *(data.at(0, stab_idx * n[0] + idx));
+                #endif
             }
 
             inline const value_type at(std::size_t idx) const
@@ -314,28 +326,48 @@ namespace XXX_NAMESPACE
                     throw std::out_of_range("accessor<T, 1>::at() : index out of bounds");
                 }
 
+                #if defined(SOA_INNERMOST)
                 return *(data.at(stab_idx, idx));
+                #else
+                return *(data.at(0, stab_idx * n[0] + idx));
+                #endif
             }
             
             // iterator            
             iterator begin() const
             {
+                #if defined(SOA_INNERMOST)
                 return iterator(data.at(stab_idx, 0), 0);
+                #else
+                return iterator(data.at(0, stab_idx * n[0]), 0);
+                #endif
             }
 
             iterator end() const
             {
+                #if defined(SOA_INNERMOST)
                 return iterator(data.at(stab_idx, 0), n[0]);
+                #else
+                return iterator(data.at(0, stab_idx * n[0]), n[0]);
+                #endif
             }
 
             const_iterator cbegin() const
             {
+                #if defined(SOA_INNERMOST)
                 return const_iterator(data.at(stab_idx, 0), 0);
+                #else
+                return const_iterator(data.at(0, stab_idx * n[0]), 0);
+                #endif
             }
 
             const_iterator cend() const
             {
+                #if defined(SOA_INNERMOST)
                 return const_iterator(data.at(stab_idx, 0), n[0]);
+                #else
+                return const_iterator(data.at(0, stab_idx * n[0]), n[0]);
+                #endif
             }
         };
     }
@@ -445,7 +477,11 @@ namespace XXX_NAMESPACE
         buffer(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             :
             n(n),
+            #if defined(SOA_INNERMOST)
             n_internal(n.replace(allocator_type::padding(n[0]), 0)),
+            #else
+            n_internal(sarray<std::size_t, D>{{1}}.replace(n.reduce_mul(), 0)), // {n_0 * .. * n_{D-1}, 1,.., 1}
+            #endif
             data(std::make_unique<base_pointer<element_type>>(allocator_type::allocate(n_internal), n_internal[0])),
             const_data(std::make_unique<base_pointer<const_element_type>>(*data))
         {
@@ -469,7 +505,11 @@ namespace XXX_NAMESPACE
         void resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
         {
             this->n = n;
+            #if defined(SOA_INNERMOST)
             this->n_internal = n.replace(allocator_type::padding(n[0]), 0);
+            #else
+            this->n_internal = sarray<std::size_t, D>{{1}}.replace(n.reduce_mul(), 0);
+            #endif
     
             if (data.get())
             {
