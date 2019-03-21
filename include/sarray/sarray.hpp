@@ -202,6 +202,15 @@ namespace XXX_NAMESPACE
             return is_same;
         }
 
+        //! \brief Test whether two sarrays are the same
+        //!
+        //! \param rhs
+        //! \return result of the element-wise comparison of the sarray contents
+        inline constexpr bool operator!=(const sarray& rhs) const
+        {
+            return !(*this == rhs);
+        }
+
         //! \brief Reduce across all entries
         //!
         //! \param func a lambda implementing the reduction
