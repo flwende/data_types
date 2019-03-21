@@ -91,7 +91,7 @@ using namespace fw;
                     #pragma omp simd
                     for (std::size_t i = 0; i < n[0]; ++i)
                     {
-                        const std::size_t index = (k * n[1] + j) * n[0]) + i;
+                        const std::size_t index = (k * n[1] + j) * n[0] + i;
                         y[index] = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(x_1[index], fw::math<element_type>::exp(x_2[index])));
                     }
                 }
@@ -597,7 +597,7 @@ using namespace fw;
                     #pragma omp simd
                     for (std::size_t i = 0; i < n[0]; ++i)
                     {
-                        const std::size_t index = (k * n[1] + j) * n[0]) + i;
+                        const std::size_t index = (k * n[1] + j) * n[0] + i;
                         y[index] = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(x_1[index], fw::math<element_type>::exp(x_2[index])));
                     }
                 }
