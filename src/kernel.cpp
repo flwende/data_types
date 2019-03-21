@@ -893,8 +893,6 @@ using namespace fw;
         template <>
         double kernel<element_type>::exp<3, 1>(const fw::buffer<element_type, 1, fw::data_layout::SoA>& x, fw::buffer<element_type, 1, fw::data_layout::SoA>& y, const array_type<3>& n)
         {
-            return 0.0;
-
             double time = omp_get_wtime();
             
             for (std::size_t k = 0; k < n[2]; ++k)
@@ -999,8 +997,6 @@ using namespace fw;
         template <>
         double kernel<element_type>::log<3, 1>(const fw::buffer<element_type, 1, fw::data_layout::SoA>& x, fw::buffer<element_type, 1, fw::data_layout::SoA>& y, const array_type<3>& n)
         {
-            return 0.0;
-
             double time = omp_get_wtime();
 
             for (std::size_t k = 0; k < n[2]; ++k)
