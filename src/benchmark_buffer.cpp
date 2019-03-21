@@ -78,14 +78,14 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < WARMUP; ++n)
         {
             #if defined(VECTOR_PRODUCT)
-                kernel<element_type>::cross<1>(in_1, in_2, out_2);
+                kernel<element_type>::cross<1>(in_1, in_2, out_2, {nx});
             #else
                 #if defined(INPLACE)
-                kernel<element_type>::exp<1>(out_2);
-                kernel<element_type>::log<1>(out_2);
+                kernel<element_type>::exp<1>(out_2, {nx});
+                kernel<element_type>::log<1>(out_2, {nx});
                 #else
-                kernel<element_type>::exp<1>(in_1, out_1);
-                kernel<element_type>::log<1>(out_1, out_2);
+                kernel<element_type>::exp<1>(in_1, out_1, {nx});
+                kernel<element_type>::log<1>(out_1, out_2, {nx});
                 #endif
             #endif
         }
@@ -93,14 +93,14 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < MEASUREMENT; ++n)
         {
             #if defined(VECTOR_PRODUCT)
-                time += kernel<element_type>::cross<1>(in_1, in_2, out_2);
+                time += kernel<element_type>::cross<1>(in_1, in_2, out_2, {nx});
             #else
                 #if defined(INPLACE)
-                time += kernel<element_type>::exp<1>(out_2);
-                time += kernel<element_type>::log<1>(out_2);
+                time += kernel<element_type>::exp<1>(out_2, {nx});
+                time += kernel<element_type>::log<1>(out_2, {nx});
                 #else
-                time += kernel<element_type>::exp<1>(in_1, out_1);
-                time += kernel<element_type>::log<1>(out_1, out_2);
+                time += kernel<element_type>::exp<1>(in_1, out_1, {nx});
+                time += kernel<element_type>::log<1>(out_1, out_2, {nx});
                 #endif
             #endif
         }
@@ -200,14 +200,14 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < WARMUP; ++n)
         {
             #if defined(VECTOR_PRODUCT)
-                kernel<element_type>::cross<2>(in_1, in_2, out_2);
+                kernel<element_type>::cross<2>(in_1, in_2, out_2, {nx, ny});
             #else
                 #if defined(INPLACE)
-                kernel<element_type>::exp<2>(out_2);
-                kernel<element_type>::log<2>(out_2);
+                kernel<element_type>::exp<2>(out_2, {nx, ny});
+                kernel<element_type>::log<2>(out_2, {nx, ny});
                 #else
-                kernel<element_type>::exp<2>(in_1, out_1);
-                kernel<element_type>::log<2>(out_1, out_2);
+                kernel<element_type>::exp<2>(in_1, out_1, {nx, ny});
+                kernel<element_type>::log<2>(out_1, out_2, {nx, ny});
                 #endif
             #endif
         }
@@ -215,14 +215,14 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < MEASUREMENT; ++n)
         {
             #if defined(VECTOR_PRODUCT)
-                time += kernel<element_type>::cross<2>(in_1, in_2, out_2);
+                time += kernel<element_type>::cross<2>(in_1, in_2, out_2, {nx, ny});
             #else
                 #if defined(INPLACE)
-                time += kernel<element_type>::exp<2>(out_2);
-                time += kernel<element_type>::log<2>(out_2);
+                time += kernel<element_type>::exp<2>(out_2, {nx, ny});
+                time += kernel<element_type>::log<2>(out_2, {nx, ny});
                 #else
-                time += kernel<element_type>::exp<2>(in_1, out_1);
-                time += kernel<element_type>::log<2>(out_1, out_2);
+                time += kernel<element_type>::exp<2>(in_1, out_1, {nx, ny});
+                time += kernel<element_type>::log<2>(out_1, out_2, {nx, ny});
                 #endif
             #endif
         }
@@ -289,14 +289,23 @@ int main(int argc, char** argv)
     {
         std::vector<element_type> in_orig_1(nx * ny * nz);
         std::vector<element_type> in_orig_2(nx * ny * nz);
-        buffer_type<element_type, 3> in_1, out_1, out_2;
-        #if defined(VECTOR_PRODUCT)
-        buffer_type<element_type, 3> in_2{{nx, ny, nz}};
+        #if defined(USE_1D_BUFFER)
+            buffer_type<element_type, 1> in_1, out_1, out_2;
+            #if defined(VECTOR_PRODUCT)
+            buffer_type<element_type, 1> in_2{{nx * ny * nz}};
+            #endif            
+            in_1.resize({nx * ny * nz});
+            out_1.resize({nx * ny * nz});
+            out_2.resize({nx * ny * nz}); 
+        #else
+            buffer_type<element_type, 3> in_1, out_1, out_2;
+            #if defined(VECTOR_PRODUCT)
+            buffer_type<element_type, 3> in_2{{nx, ny, nz}};
+            #endif
+            in_1.resize({nx, ny, nz});
+            out_1.resize({nx, ny, nz});
+            out_2.resize({nx, ny, nz});
         #endif
-    
-        in_1.resize({nx, ny, nz});
-        out_1.resize({nx, ny, nz});
-        out_2.resize({nx, ny, nz});
         
         for (std::size_t k = 0; k < nz; ++k)
         {
@@ -304,13 +313,21 @@ int main(int argc, char** argv)
             {
                 for (std::size_t i = 0; i < nx; ++i)
                 {
+                    const std::size_t index = k * nx * ny + j * nx + i;
                     const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                     const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                     const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
-                    in_orig_1[k * nx * ny + j * nx + i] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
-                    in_1[k][j][i] = in_orig_1[k * nx * ny + j * nx + i];
-                    #if defined(INPLACE)
-                    out_2[k][j][i] = in_1[k][j][i];
+                    in_orig_1[index] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                    #if defined(USE_1D_BUFFER)
+                        in_1[index] = in_orig_1[index];
+                        #if defined(INPLACE)
+                        out_2[index] = in_1[index];
+                        #endif
+                    #else
+                        in_1[k][j][i] = in_orig_1[index];
+                        #if defined(INPLACE)
+                        out_2[k][j][i] = in_1[k][j][i];
+                        #endif
                     #endif
 
                     #if defined(VECTOR_PRODUCT)
@@ -318,25 +335,35 @@ int main(int argc, char** argv)
                         const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                         const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                         const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
-                        in_orig_2[k * nx * ny + j * nx + i] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
-                        in_2[k][j][i] = in_orig_2[k * nx * ny + j * nx + i];
+                        in_orig_2[index] = {static_cast<type_x>(s_1 * value), static_cast<type_y>(s_2 * value), static_cast<type_z>(s_3 * value)};
+                        #if defined(USE_1D_BUFFER)
+                            in_2[index] = in_orig_2[index];
+                        #else
+                            in_2[k][j][i] = in_orig_2[index];
+                        #endif
                     }
                     #endif
                 }
             }
         }
+       
+        #if defined(USE_1D_BUFFER)
+        constexpr std::size_t DD = 1;
+        #else
+        constexpr std::size_t DD = 3;
+        #endif
 
         for (std::size_t n = 0; n < WARMUP; ++n)
         {
             #if defined(VECTOR_PRODUCT)
-                kernel<element_type>::cross<3>(in_1, in_2, out_2);
+                kernel<element_type>::cross<3, DD>(in_1, in_2, out_2, {nx, ny, nz});
             #else
                 #if defined(INPLACE)
-                kernel<element_type>::exp<3>(out_2);
-                kernel<element_type>::log<3>(out_2);
+                kernel<element_type>::exp<3, DD>(out_2, {nx, ny, nz});
+                kernel<element_type>::log<3, DD>(out_2, {nx, ny, nz});
                 #else
-                kernel<element_type>::exp<3>(in_1, out_1);
-                kernel<element_type>::log<3>(out_1, out_2);
+                kernel<element_type>::exp<3, DD>(in_1, out_1, {nx, ny, nz});
+                kernel<element_type>::log<3, DD>(out_1, out_2, {nx, ny, nz});
                 #endif
             #endif
         }
@@ -344,18 +371,18 @@ int main(int argc, char** argv)
         for (std::size_t n = 0; n < MEASUREMENT; ++n)
         {
             #if defined(VECTOR_PRODUCT)
-                time += kernel<element_type>::cross<3>(in_1, in_2, out_2);
+                time += kernel<element_type>::cross<3, DD>(in_1, in_2, out_2, {nx, ny, nz});
             #else
                 #if defined(INPLACE)
-                time += kernel<element_type>::exp<3>(out_2);
-                time += kernel<element_type>::log<3>(out_2);
+                time += kernel<element_type>::exp<3, DD>(out_2, {nx, ny, nz});
+                time += kernel<element_type>::log<3, DD>(out_2, {nx, ny, nz});
                 #else
-                time += kernel<element_type>::exp<3>(in_1, out_1);
-                time += kernel<element_type>::log<3>(out_1, out_2);
+                time += kernel<element_type>::exp<3, DD>(in_1, out_1, {nx, ny, nz});
+                time += kernel<element_type>::log<3, DD>(out_1, out_2, {nx, ny, nz});
                 #endif
             #endif
         }
-
+        
         #if defined(CHECK_RESULTS)
         const double max_abs_error = static_cast<type>(1.0E-6);
         const std::size_t print_num_elements = 128;
@@ -367,10 +394,15 @@ int main(int argc, char** argv)
             {
                 for (std::size_t i = 0; i < nx; ++i, ++e)
                 {
-                    const double tmp_1[3] = {static_cast<double>(out_2[k][j][i].x), static_cast<double>(out_2[k][j][i].y), static_cast<double>(out_2[k][j][i].z)};
-                    const element_type tmp_x = in_orig_1[k * nx * ny + j * nx + i];
+                    const std::size_t index = k * nx * ny + j * nx + i;
+                    #if defined(USE_1D_BUFFER)
+                        const double tmp_1[3] = {static_cast<double>(out_2[index].x), static_cast<double>(out_2[index].y), static_cast<double>(out_2[index].z)};
+                    #else
+                        const double tmp_1[3] = {static_cast<double>(out_2[k][j][i].x), static_cast<double>(out_2[k][j][i].y), static_cast<double>(out_2[k][j][i].z)};
+                    #endif
+                    const element_type tmp_x = in_orig_1[index];
                     #if defined(VECTOR_PRODUCT)
-                        const element_type tmp_y = in_orig_2[k * nx * ny + j * nx + i];
+                        const element_type tmp_y = in_orig_2[index];
                         const element_type tmp_y_1 = 0.5 + fw::math<element_type>::log(1.0 + fw::cross(tmp_x, fw::math<element_type>::exp(tmp_y)));
                         const double tmp_2[3] = {
                             static_cast<double>(tmp_y_1.x),
@@ -404,7 +436,11 @@ int main(int argc, char** argv)
 
                     if (e < print_num_elements)
                     {
+                    #if defined(USE_1D_BUFFER)
+                        std::cout << out_2[index] << std::endl;
+                    #else
                         std::cout << out_2[k][j][i] << std::endl;
+                    #endif
                     }
                 }
                 if (not_passed) break;
