@@ -7,7 +7,6 @@
 #define TUPLE_TUPLE_HPP
 
 #include <auxiliary/math.hpp>
-#include <common/memory.hpp>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -133,7 +132,7 @@ namespace TUPLE_NAMESPACE
 #include "tuple_proxy.hpp"
 #include "tuple_math.hpp"
 
-#include "../common/traits.hpp"
+#include <common/traits.hpp>
 
 namespace XXX_NAMESPACE
 {

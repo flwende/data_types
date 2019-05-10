@@ -6,11 +6,7 @@
 #if !defined(VEC_VEC_HPP)
 #define VEC_VEC_HPP
 
-#include <cstdint>
-#include <iostream>
-
 #include <auxiliary/math.hpp>
-#include <common/memory.hpp>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -362,7 +358,7 @@ namespace VEC_NAMESPACE
 #include "vec_proxy.hpp"
 #include "vec_math.hpp"
 
-#include "../common/traits.hpp"
+#include <common/traits.hpp>
 
 namespace XXX_NAMESPACE
 {
