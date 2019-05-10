@@ -17,16 +17,6 @@
 #define TUPLE_NAMESPACE XXX_NAMESPACE
 #endif
 
-// some forward declarations
-namespace XXX_NAMESPACE
-{
-    namespace internal
-    {
-        template <typename P, typename R>
-        class iterator;
-    }
-}
-
 namespace TUPLE_NAMESPACE
 {
     // some forward declarations

@@ -20,16 +20,6 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-// some forward declarations
-namespace XXX_NAMESPACE
-{
-    namespace internal
-    {
-        template <typename P, typename R>
-        class iterator;
-    }
-}
-
 namespace VEC_NAMESPACE
 {
     // some forward declarations

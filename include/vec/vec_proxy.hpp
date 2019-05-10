@@ -14,7 +14,15 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../common/data_layout.hpp"
+// some forward declarations
+namespace XXX_NAMESPACE
+{
+    namespace internal
+    {
+        template <typename P, typename R>
+        class iterator;
+    }
+}
 
 namespace VEC_NAMESPACE
 {
