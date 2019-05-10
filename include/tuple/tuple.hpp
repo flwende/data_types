@@ -6,9 +6,8 @@
 #if !defined(TUPLE_TUPLE_HPP)
 #define TUPLE_TUPLE_HPP
 
-#include <cstdint>
-#include <iostream>
-#include <type_traits>
+#include <auxiliary/math.hpp>
+#include <common/memory.hpp>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -17,6 +16,16 @@
 #if !defined(TUPLE_NAMESPACE)
 #define TUPLE_NAMESPACE XXX_NAMESPACE
 #endif
+
+// some forward declarations
+namespace XXX_NAMESPACE
+{
+    namespace internal
+    {
+        template <typename P, typename R>
+        class iterator;
+    }
+}
 
 namespace TUPLE_NAMESPACE
 {
