@@ -14,7 +14,27 @@
 #define TUPLE_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../common/data_layout.hpp"
+#include <common/memory.hpp>
+#include <common/data_layout.hpp>
+
+// some forward declarations
+namespace XXX_NAMESPACE
+{
+    namespace internal 
+    {
+        template <typename P, typename R>
+        class iterator;
+    }
+}
+
+namespace XXX_NAMESPACE
+{
+    namespace internal 
+    {
+        template <typename X, std::size_t N, std::size_t D, XXX_NAMESPACE::data_layout L>
+        class accessor;
+    }
+}
 
 namespace TUPLE_NAMESPACE
 {
@@ -35,7 +55,7 @@ namespace TUPLE_NAMESPACE
             static_assert(!std::is_void<T_3>::value, "error: T_3 is void -> not allowed");
             static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
 
-            template <typename X, std::size_t N, std::size_t D, data_layout L>
+            template <typename X, std::size_t N, std::size_t D, XXX_NAMESPACE::data_layout L>
             friend class XXX_NAMESPACE::internal::accessor;
 
             template <typename P, typename R>

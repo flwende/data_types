@@ -14,7 +14,28 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../common/data_layout.hpp"
+#include <common/memory.hpp>
+#include <common/data_layout.hpp>
+
+// some forward declarations
+namespace XXX_NAMESPACE
+{
+    namespace internal 
+    {
+        template <typename P, typename R>
+        class iterator;
+    }
+}
+
+namespace XXX_NAMESPACE
+{
+    namespace internal 
+    {
+        template <typename X, std::size_t N, std::size_t D, XXX_NAMESPACE::data_layout L>
+        class accessor;
+    }
+}
+
 
 namespace VEC_NAMESPACE
 {
@@ -40,8 +61,8 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
-            friend class accessor;
+            template <typename X, std::size_t N, std::size_t D, XXX_NAMESPACE::data_layout L>
+            friend class XXX_NAMESPACE::internal::accessor;
 
             template <typename P, typename R>
             friend class XXX_NAMESPACE::internal::iterator;
@@ -155,8 +176,8 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename X, std::size_t N, std::size_t D, data_layout L, typename Enabled>
-            friend class accessor;
+            template <typename X, std::size_t N, std::size_t D, XXX_NAMESPACE::data_layout L>
+            friend class XXX_NAMESPACE::internal::accessor;
 
             template <typename P, typename R>
             friend class XXX_NAMESPACE::internal::iterator;
@@ -278,8 +299,8 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename X, std::size_t N, std::size_t D, data_layout L>
-            friend class accessor;
+            template <typename X, std::size_t N, std::size_t D, XXX_NAMESPACE::data_layout L>
+            friend class XXX_NAMESPACE::internal::accessor;
 
             template <typename P, typename R>
             friend class XXX_NAMESPACE::internal::iterator;

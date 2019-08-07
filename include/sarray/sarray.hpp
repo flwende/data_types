@@ -40,6 +40,12 @@ namespace XXX_NAMESPACE
             : 
             data{} {}
 
+        constexpr sarray(const T& x) 
+        {
+            for (std::size_t i = 0; i < D; ++i)
+                data[i] = x;
+        }
+
         //! \brief Constructor taking D (or less) arguments to initialize the array
         //!
         //! \tparam Args variadic template type parameter list
@@ -200,6 +206,15 @@ namespace XXX_NAMESPACE
             }
 
             return is_same;
+        }
+
+        //! \brief Test whether two sarrays are the same
+        //!
+        //! \param rhs
+        //! \return result of the element-wise comparison of the sarray contents
+        inline constexpr bool operator!=(const sarray& rhs) const
+        {
+            return !(*this == rhs);
         }
 
         //! \brief Reduce across all entries

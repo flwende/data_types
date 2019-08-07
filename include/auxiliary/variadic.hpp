@@ -224,7 +224,7 @@ namespace AUXILIARY_NAMESPACE
         // NOTE: loop<begin, end>::execute([..](auto& I) { constexpr std::size_t i = I.value; body(i[,..]); }) 
         //       corresponds to
         //       
-        //       for (std::size_t i = begin; i <= end; ++i)
+        //       for (std::size_t i = begin; i < end; ++i)
         //         body(i[,..]);
         /////////////////////////////////////////////////////////////////
         namespace
