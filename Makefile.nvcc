@@ -24,7 +24,7 @@ target: bin/benchmark_buffer.x
 bin/benchmark_buffer.x: obj/benchmark_buffer.o obj/kernel.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
-obj/benchmark_buffer.o: src/benchmark_buffer.cpp
+obj/benchmark_buffer.o: src/benchmark_buffer_gpu.cu
 	$(CXX) $(NVCCFLAGS) -o $@ -c $<
 
 obj/kernel.o: src/kernel.cpp
