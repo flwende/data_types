@@ -1,0 +1,36 @@
+CXX = nvcc
+LD = nvcc
+
+INC = -I./include -I./src/include
+CXXFLAGS = -O3 -std=c++14 -march=native -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC)
+
+OPTIONS += -DCHECK_RESULTS
+#OPTIONS += -DAOS_LAYOUT
+OPTIONS += -DSOA_LAYOUT
+#OPTIONS += -DELEMENT_ACCESS
+#OPTIONS += -DINPLACE
+#OPTIONS += -DVECTOR_PRODUCT
+
+NVCCFLAGS = -O3 -arch=sm_61
+NVCCFLAGS += --resource-usage
+#NVCCFLAGS += --maxrregcount=16
+NVCCFLAGS += --expt-relaxed-constexpr
+NVCCFLAGS += -Xcompiler="$(CXXFLAGS)" $(OPTIONS)
+
+LDFLAGS = -O3 -lgomp
+
+target: bin/benchmark_buffer.x
+
+bin/benchmark_buffer.x: obj/benchmark_buffer.o obj/kernel.o
+	$(LD) $(LDFLAGS) -o $@ $^
+
+obj/benchmark_buffer.o: src/benchmark_buffer.cpp
+	$(CXX) $(NVCCFLAGS) -o $@ -c $<
+
+obj/kernel.o: src/kernel.cpp
+	$(CXX) $(NVCCFLAGS) -o $@ -c $<
+	g++ $(CXXFLAGS) $(OPTIONS) -S $<		
+
+clean:
+	rm -f *~ obj/*.o bin/benchmark_buffer.x
+

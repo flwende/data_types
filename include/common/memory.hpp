@@ -199,31 +199,32 @@ namespace XXX_NAMESPACE
     //! 
     //! \tparam T... types (one for each data member; all the same)
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename ... T>
+    template <typename ...T>
     class multi_pointer
     {
-        template <typename ... X>
+        template <typename ...X>
         friend class multi_pointer;
 
         // number of data members
-        static constexpr std::size_t N = sizeof ... (T);
+        static constexpr std::size_t N = sizeof...(T);
         static_assert(N > 0, "error: no template arguments specified");
 
         // all members have the same type: get this type
-        using head_type = typename AUXILIARY_NAMESPACE::variadic::argument<0, T ...>::type;
+        using head_type = typename AUXILIARY_NAMESPACE::variadic::pack<T...>::template type<0>;
 
         // check if all types are the same
-        static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::fold([](const bool result, const bool is_same) constexpr { return result && is_same; }, true, std::is_same<head_type, T>::value ...);
+        //static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::fold([](const bool result, const bool is_same) constexpr { return result && is_same; }, true, std::is_same<head_type, T>::value...);
+        static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::pack<T...>::is_same();
         static_assert(is_homogeneous, "error: use the inhomogeneous multi pointer instead");
 
         // size of the homogeneous structured type
         static constexpr std::size_t record_size = N * sizeof(head_type);
 
         // create tuple from the base pointer
-        template <std::size_t ... I>
-        inline std::tuple<T& ...> get_values(std::index_sequence<I ...>)
+        template <std::size_t ...I>
+        inline std::tuple<T&...> get_values(std::index_sequence<I...>)
         {
-            return {ptr[I * n_0] ...};
+            return {ptr[I * n_0]...};
         }
 
     public:
@@ -247,12 +248,12 @@ namespace XXX_NAMESPACE
             ptr(&mp.ptr[stab_idx * N * n_0 + idx]) {}
 
         // copy /conversion constructors
-        multi_pointer(const multi_pointer<typename std::remove_cv<T>::type ...>& mp)
+        multi_pointer(const multi_pointer<typename std::remove_cv<T>::type...>& mp)
             :
             n_0(mp.n_0),
             ptr(reinterpret_cast<value_type*>(mp.ptr)) {}
 
-        multi_pointer(const multi_pointer<const typename std::remove_cv<T>::type ...>& mp)
+        multi_pointer(const multi_pointer<const typename std::remove_cv<T>::type...>& mp)
             :
             n_0(mp.n_0),
             ptr(reinterpret_cast<value_type*>(mp.ptr)) {}
@@ -263,9 +264,9 @@ namespace XXX_NAMESPACE
             return multi_pointer(*this, 0, idx);
         }
 
-        inline multi_pointer<const T ...> at(const std::size_t idx) const
+        inline multi_pointer<const T...> at(const std::size_t idx) const
         {
-            return multi_pointer<const T ...>(*this, 0, idx);
+            return multi_pointer<const T...>(*this, 0, idx);
         }
 
         inline multi_pointer at(const std::size_t stab_idx, const std::size_t idx)
@@ -273,18 +274,18 @@ namespace XXX_NAMESPACE
             return multi_pointer(*this, stab_idx, idx);
         }
 
-        inline multi_pointer<const T ...> at(const std::size_t stab_idx, const std::size_t idx) const
+        inline multi_pointer<const T...> at(const std::size_t stab_idx, const std::size_t idx) const
         {
-            return multi_pointer<const T ...>(*this, stab_idx, idx);
+            return multi_pointer<const T...>(*this, stab_idx, idx);
         }
 
         // dereference
-        inline std::tuple<T& ...> operator*()
+        inline std::tuple<T&...> operator*()
         {
             return get_values(std::make_index_sequence<N>{});
         }
 
-        inline std::tuple<const T& ...> operator*() const
+        inline std::tuple<const T&...> operator*() const
         {
             return get_values(std::make_index_sequence<N>{});
         }
@@ -372,21 +373,22 @@ namespace XXX_NAMESPACE
     //! 
     //! \tparam T... types (one for each data member; can be all different)
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename ... T>
+    template <typename ...T>
     class multi_pointer_inhomogeneous
     {
-        template <typename ... X>
+        template <typename ...X>
         friend class multi_pointer_inhomogeneous;
 
         // number of data members
-        static constexpr std::size_t N = sizeof ... (T);
+        static constexpr std::size_t N = sizeof...(T);
         static_assert(N > 0, "error: no template arguments specified");
         
         // get the type of the first template argument
-        using head_type = typename AUXILIARY_NAMESPACE::variadic::argument<0, T ...>::type;
+        using head_type = typename AUXILIARY_NAMESPACE::variadic::pack<T...>::template type<0>;
 
         // check if all types are the same: we don't want that here
-        static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::fold([](const bool result, const bool is_same) constexpr { return result && is_same; }, true, std::is_same<head_type, T>::value ...);
+        //static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::fold([](const bool result, const bool is_same) constexpr { return result && is_same; }, true, std::is_same<head_type, T>::value...);
+        static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::pack<T...>::is_same();
         static_assert(!is_homogeneous, "error: use the homogeneous multi pointer instead");
 
         using size_array = XXX_NAMESPACE::sarray<std::size_t, N>;
@@ -394,58 +396,67 @@ namespace XXX_NAMESPACE
         using pointer_tuple = std::tuple<T* __restrict__ ...>;
         
         // find out the byte-size of the largest type
+        /*
         static constexpr std::size_t size_largest_type = AUXILIARY_NAMESPACE::variadic::fold(
             [](const std::size_t max_size, const std::size_t argument_size) constexpr { return std::max(max_size, argument_size); }, 
             0, 
-            sizeof(T) ...);
+            sizeof(T)...);
+        */
+        static constexpr std::size_t size_largest_type = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_largest_type();
 
         // determine the total byte-size of all data members that have a size different (smaller) than the largest type
+        /*
         static constexpr std::size_t size_rest = AUXILIARY_NAMESPACE::variadic::fold(
             [](const std::size_t size, const std::size_t argument_size) constexpr { return size + argument_size; }, 
             0, 
-            (size_largest_type == sizeof(T) ? 0 : sizeof(T)) ...);
+            (size_largest_type == sizeof(T) ? 0 : sizeof(T))...);
+        */
+        static constexpr std::size_t size_rest = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_pack_excluding_largest_type();
 
         // size of the inhomogeneous structured type
+        /*
         static constexpr std::size_t record_size = AUXILIARY_NAMESPACE::variadic::fold(
             [](const std::size_t size, const std::size_t argument_size) constexpr { return size + argument_size; }, 
             0, 
-            sizeof(T) ...);
+            sizeof(T)...);
+        */
+        static constexpr std::size_t record_size = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_pack();
 
         // determine the number of elements of the structured type that is needed so that their overall size
         // is an integral multiple of each data member type
         static constexpr std::size_t record_padding_factor = MATH_NAMESPACE::least_common_multiple(size_largest_type, size_rest) / std::max(1UL, size_rest);
 
         // determine the scaling factor of each member-type-size w.r.t. to the largest type
-        static constexpr size_array size_scaling_factor{size_largest_type / sizeof(T) ...};
+        static constexpr size_array size_scaling_factor{size_largest_type / sizeof(T)...};
 
         // (exclusive) prefix sum over the byte-sizes of the template arguments
-        static constexpr size_array offset = MATH_NAMESPACE::prefix_sum(size_array{sizeof(T) ...});
+        static constexpr size_array offset = MATH_NAMESPACE::prefix_sum(size_array{sizeof(T)...});
     
         // create a pointer tuple from a base pointer and the 'offset's for a field with extent of the innermost dimension 'n_0'
-        template <std::size_t ... I>
-        inline constexpr pointer_tuple make_pointer_tuple(std::uint8_t* __restrict__ ptr, const std::size_t n_0, std::index_sequence<I ...>)
+        template <std::size_t ...I>
+        inline constexpr pointer_tuple make_pointer_tuple(std::uint8_t* __restrict__ ptr, const std::size_t n_0, std::index_sequence<I...>)
         {
-            return {reinterpret_cast<T* __restrict__>(&ptr[offset[I] * n_0]) ...};
+            return {reinterpret_cast<T* __restrict__>(&ptr[offset[I] * n_0])...};
         }
 
         // create a pointer tuple from an existing pointer tuple, a stab index (stab_idx) and an intra-stab index (idx)
         template <std::size_t ...I>
-        inline constexpr pointer_tuple make_pointer_tuple(const pointer_tuple& ptr, const std::size_t stab_idx, const std::size_t idx, std::index_sequence<I ...>)
+        inline constexpr pointer_tuple make_pointer_tuple(const pointer_tuple& ptr, const std::size_t stab_idx, const std::size_t idx, std::index_sequence<I...>)
         {
-            return {std::get<I>(ptr) + stab_idx * num_units * size_scaling_factor[I] + idx ...};
+            return {std::get<I>(ptr) + stab_idx * num_units * size_scaling_factor[I] + idx...};
         }
 
         // increment the pointer tuple
         inline constexpr void increment_pointer_tuple(const std::size_t inc = 1)
         {
-            AUXILIARY_NAMESPACE::variadic::loop<N>::execute([inc, this] (auto& I) { std::get<I.value>(ptr) += inc; });
+            AUXILIARY_NAMESPACE::variadic::loop<N>::execute([inc, this] (auto& I) {std::get<I.value>(ptr) += inc;});
         }
 
         // create tuple from the base pointer
-        template <std::size_t ... I>
-        inline std::tuple<T& ...> get_values(std::index_sequence<I ...>)
+        template <std::size_t ...I>
+        inline std::tuple<T&...> get_values(std::index_sequence<I...>)
         {
-            return {*(std::get<I>(ptr)) ...};
+            return {*(std::get<I>(ptr))...};
         }
 
         // extent of the innermost dimension of the filed in units of largest type
@@ -472,12 +483,12 @@ namespace XXX_NAMESPACE
             ptr(make_pointer_tuple(mp.ptr, stab_idx, idx, std::make_index_sequence<N>{})) {}
 
         // copy / conversion constructors
-        multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous<typename std::remove_cv<T>::type ...>& mp)
+        multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous<typename std::remove_cv<T>::type...>& mp)
             :
             num_units(mp.num_units),
             ptr(mp.ptr) {}
 
-        multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous<const typename std::remove_cv<T>::type ...>& mp)
+        multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous<const typename std::remove_cv<T>::type...>& mp)
             :
             num_units(mp.num_units),
             ptr(mp.ptr) {}
@@ -488,9 +499,9 @@ namespace XXX_NAMESPACE
             return multi_pointer_inhomogeneous(*this, 0, idx);
         }
 
-        inline multi_pointer_inhomogeneous<const T ...> at(const std::size_t idx) const
+        inline multi_pointer_inhomogeneous<const T...> at(const std::size_t idx) const
         {
-            return multi_pointer_inhomogeneous<const T ...>(*this, 0, idx);
+            return multi_pointer_inhomogeneous<const T...>(*this, 0, idx);
         }
 
         inline multi_pointer_inhomogeneous at(const std::size_t stab_idx, const std::size_t idx)
@@ -498,18 +509,18 @@ namespace XXX_NAMESPACE
             return multi_pointer_inhomogeneous(*this, stab_idx, idx);
         }
 
-        inline multi_pointer_inhomogeneous<const T ...> at(const std::size_t stab_idx, const std::size_t idx) const
+        inline multi_pointer_inhomogeneous<const T...> at(const std::size_t stab_idx, const std::size_t idx) const
         {
-            return multi_pointer_inhomogeneous<const T ...>(*this, stab_idx, idx);
+            return multi_pointer_inhomogeneous<const T...>(*this, stab_idx, idx);
         }
 
         // dereference
-        inline std::tuple<T& ...> operator*()
+        inline std::tuple<T&...> operator*()
         {
             return get_values(std::make_index_sequence<N>{});
         }
 
-        inline std::tuple<const T& ...> operator*() const
+        inline std::tuple<const T&...> operator*() const
         {
             return get_values(std::make_index_sequence<N>{});
         }
