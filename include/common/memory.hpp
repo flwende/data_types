@@ -213,7 +213,6 @@ namespace XXX_NAMESPACE
         using head_type = typename AUXILIARY_NAMESPACE::variadic::pack<T...>::template type<0>;
 
         // check if all types are the same
-        //static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::fold([](const bool result, const bool is_same) constexpr { return result && is_same; }, true, std::is_same<head_type, T>::value...);
         static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::pack<T...>::is_same();
         static_assert(is_homogeneous, "error: use the inhomogeneous multi pointer instead");
 
@@ -387,39 +386,20 @@ namespace XXX_NAMESPACE
         using head_type = typename AUXILIARY_NAMESPACE::variadic::pack<T...>::template type<0>;
 
         // check if all types are the same: we don't want that here
-        //static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::fold([](const bool result, const bool is_same) constexpr { return result && is_same; }, true, std::is_same<head_type, T>::value...);
         static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::pack<T...>::is_same();
         static_assert(!is_homogeneous, "error: use the homogeneous multi pointer instead");
 
         using size_array = XXX_NAMESPACE::sarray<std::size_t, N>;
         // base pointers (of different type) are managed internally by using a tuple
-        using pointer_tuple = std::tuple<T* __restrict__ ...>;
+        using pointer_tuple = std::tuple<T* __restrict__...>;
         
         // find out the byte-size of the largest type
-        /*
-        static constexpr std::size_t size_largest_type = AUXILIARY_NAMESPACE::variadic::fold(
-            [](const std::size_t max_size, const std::size_t argument_size) constexpr { return std::max(max_size, argument_size); }, 
-            0, 
-            sizeof(T)...);
-        */
         static constexpr std::size_t size_largest_type = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_largest_type();
 
         // determine the total byte-size of all data members that have a size different (smaller) than the largest type
-        /*
-        static constexpr std::size_t size_rest = AUXILIARY_NAMESPACE::variadic::fold(
-            [](const std::size_t size, const std::size_t argument_size) constexpr { return size + argument_size; }, 
-            0, 
-            (size_largest_type == sizeof(T) ? 0 : sizeof(T))...);
-        */
         static constexpr std::size_t size_rest = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_pack_excluding_largest_type();
 
         // size of the inhomogeneous structured type
-        /*
-        static constexpr std::size_t record_size = AUXILIARY_NAMESPACE::variadic::fold(
-            [](const std::size_t size, const std::size_t argument_size) constexpr { return size + argument_size; }, 
-            0, 
-            sizeof(T)...);
-        */
         static constexpr std::size_t record_size = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_pack();
 
         // determine the number of elements of the structured type that is needed so that their overall size
@@ -436,7 +416,7 @@ namespace XXX_NAMESPACE
         template <std::size_t ...I>
         inline constexpr pointer_tuple make_pointer_tuple(std::uint8_t* __restrict__ ptr, const std::size_t n_0, std::index_sequence<I...>)
         {
-            return {reinterpret_cast<T* __restrict__>(&ptr[offset[I] * n_0])...};
+            return {reinterpret_cast<T*>(&ptr[offset[I] * n_0])...};
         }
 
         // create a pointer tuple from an existing pointer tuple, a stab index (stab_idx) and an intra-stab index (idx)
