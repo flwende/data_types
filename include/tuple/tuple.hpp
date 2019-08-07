@@ -8,6 +8,18 @@
 
 #include <auxiliary/math.hpp>
 
+#if defined(__CUDACC__)
+#include <cuda_runtime.h>
+
+#define HOST_VERSION __host__
+#define CUDA_DEVICE_VERSION __device__
+#define CUDA_KERNEL __global__
+#else
+#define HOST_VERSION 
+#define CUDA_DEVICE_VERSION 
+#define CUDA_KERNEL 
+#endif
+
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
@@ -60,16 +72,24 @@ namespace TUPLE_NAMESPACE
         T_2 y;
         T_3 z;
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         tuple() : x(0), y(0), z(0) {}
 
         template <typename X>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         tuple(const X xyz) : x(xyz), y(xyz), z(xyz) {}
         tuple(const T_1 x, const T_2 y, const T_3 z) : x(x), y(y), z(z) {}
 
         template <typename X_1, typename X_2, typename X_3>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         tuple(const tuple<X_1, X_2, X_3>& t) : x(t.x), y(t.y), z(t.z) {}
         
         template <typename X_1, typename X_2, typename X_3>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         tuple(const internal::tuple_proxy<X_1, X_2, X_3>& tp) : x(tp.x), y(tp.y), z(tp.z) {}
 
         //! Some operators

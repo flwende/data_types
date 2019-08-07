@@ -134,12 +134,16 @@ namespace XXX_NAMESPACE
             //! \param data pointer-like memory reference
             //! \param n extent of the D-dimensional array
             //! \param stab_idx the offset in units of 'innermost dimension n[0]'
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             accessor(base_pointer& data, const sarray<std::size_t, D>& n, const std::size_t stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
                 stab_idx(stab_idx) {}
 
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline accessor<T, N - 1, D, L> operator[] (const std::size_t idx)
             {
                 std::size_t delta = idx;
@@ -152,6 +156,8 @@ namespace XXX_NAMESPACE
                 return accessor<T, N - 1, D, L>(data, n, stab_idx + delta);
             }
 
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline accessor<T, N - 1, D, L> operator[] (const std::size_t idx) const
             {
                 std::size_t delta = idx;
@@ -280,12 +286,16 @@ namespace XXX_NAMESPACE
             //!
             //! \param ptr base pointer
             //! \param n extent of the D-dimensional array
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             accessor(base_pointer& data, const sarray<std::size_t, D>& n, const std::size_t stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
                 stab_idx(stab_idx) {}
 
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline value_type operator[] (const std::size_t idx)
             {
                 #if defined(SOA_INNERMOST)
@@ -295,6 +305,8 @@ namespace XXX_NAMESPACE
                 #endif
             }
 
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline const value_type operator[] (const std::size_t idx) const
             {
                 #if defined(SOA_INNERMOST)
@@ -422,16 +434,6 @@ namespace XXX_NAMESPACE
         template <typename X>
         using base_pointer = typename internal::traits<X, L>::base_pointer;
         
-        inline internal::accessor<element_type, D, D, L> read_write()
-        {
-            return internal::accessor<element_type, D, D, L>(*data, n);
-        }
-
-        inline internal::accessor<const_element_type, D, D, L> read() const 
-        {
-            return internal::accessor<const_element_type, D, D, L>(*const_data, n);
-        }
-
         void set_data(const element_type& value)
         {
             if (!data.get()) return;
@@ -541,38 +543,28 @@ namespace XXX_NAMESPACE
             const_data.swap(b.const_data);
         }
 
-        using dm1_accessor_type = internal::accessor<element_type, D - 1, D, L>;
-        using const_dm1_accessor_type = internal::accessor<const_element_type, D - 1, D, L>;
-        using proxy_type = typename internal::traits<element_type, L>::proxy_type;
-        using const_proxy_type = typename internal::traits<const_element_type, L>::proxy_type;
-        static constexpr bool return_type_is_proxy = (L == data_layout::SoA && internal::provides_proxy_type<element_type>::value);
-
-        using return_type = typename std::conditional<D == 1,
-            typename std::conditional<return_type_is_proxy, proxy_type, element_type&>::type, 
-            dm1_accessor_type>::type;
-
-        using const_return_type = typename std::conditional<D == 1, 
-            typename std::conditional<return_type_is_proxy, const_proxy_type, const_element_type&>::type, 
-            const_dm1_accessor_type>::type;
-        
-        inline return_type operator[] (const std::size_t idx)
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        inline auto operator[](const std::size_t idx)
         {
-            return read_write()[idx];
+            return internal::accessor<element_type, D, D, L>(*data, n)[idx];
         }
 
-        inline const_return_type operator[] (const std::size_t idx) const
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        inline auto operator[](const std::size_t idx) const
         {
-            return read()[idx];
+            return internal::accessor<const_element_type, D, D, L>(*const_data, n)[idx];
         }
 
-        inline return_type at(std::size_t idx)
+        inline auto at(std::size_t idx)
         {
-            return read_write().at(idx);
+            return internal::accessor<element_type, D, D, L>(*data, n)[idx];
         }
 
-        inline const_return_type at(std::size_t idx) const
+        inline auto at(std::size_t idx) const
         {
-            return read().at(idx);
+            return internal::accessor<const_element_type, D, D, L>(*const_data, n)[idx];
         }
 
         allocator_type get_allocator() const

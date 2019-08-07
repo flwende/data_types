@@ -83,12 +83,8 @@ namespace TUPLE_NAMESPACE
             
         private:
 
-            tuple_proxy(base_pointer base)
-                :
-                x(*(std::get<0>(base.ptr))),
-                y(*(std::get<1>(base.ptr))),
-                z(*(std::get<2>(base.ptr))) {}
-
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             tuple_proxy(std::tuple<T_1&, T_2&, T_3&> t)
                 :
                 x(std::get<0>(t)),

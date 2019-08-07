@@ -8,6 +8,18 @@
 
 #include <auxiliary/math.hpp>
 
+#if defined(__CUDACC__)
+#include <cuda_runtime.h>
+
+#define HOST_VERSION __host__
+#define CUDA_DEVICE_VERSION __device__
+#define CUDA_KERNEL __global__
+#else
+#define HOST_VERSION 
+#define CUDA_DEVICE_VERSION 
+#define CUDA_KERNEL 
+#endif
+
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
@@ -57,16 +69,22 @@ namespace VEC_NAMESPACE
         T x;
 
         //! Constructors
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const T x = 0)
             :
             x(x) {}
 
         template <typename X>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const vec<X, 1>& v)
             :
             x(v.x) {}
 
         template <typename X>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const internal::vec_proxy<X, 1>& vp)
             :
             x(vp.x) {}
@@ -148,23 +166,31 @@ namespace VEC_NAMESPACE
         T y;
 
         //! Constructors
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const T xy = 0) 
             :
             x(xy),
             y(xy) {}
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const T x, const T y)
             :
             x(x),
             y(y) {}
 
         template <typename X>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const vec<X, 2>& v)
             :
             x(v.x),
             y(v.y) {}
 
         template <typename X>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const internal::vec_proxy<X, 2>& vp)
             :
             x(vp.x),
@@ -250,12 +276,16 @@ namespace VEC_NAMESPACE
         T z;
 
         //! Constructors
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const T xyz = 0)
             :
             x(xyz),
             y(xyz),
             z(xyz) {}
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const T x, const T y, const T z)
             :
             x(x),
@@ -263,6 +293,8 @@ namespace VEC_NAMESPACE
             z(z) {}
 
         template <typename X>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const vec<X, 3>& v)
             :
             x(v.x),
@@ -270,6 +302,8 @@ namespace VEC_NAMESPACE
             z(v.z) {}
 
         template <typename X>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         vec(const internal::vec_proxy<X, 3>& vp)
             :
             x(vp.x),

@@ -10,6 +10,18 @@
 #include <memory>
 #include <tuple>
 
+#if defined(__CUDACC__)
+#include <cuda_runtime.h>
+
+#define HOST_VERSION __host__
+#define CUDA_DEVICE_VERSION __device__
+#define CUDA_KERNEL __global__
+#else
+#define HOST_VERSION 
+#define CUDA_DEVICE_VERSION 
+#define CUDA_KERNEL 
+#endif
+
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
@@ -49,6 +61,8 @@ namespace XXX_NAMESPACE
             ptr(ptr) {}
 
         // constructor: from an existing pointer and a stab index (stab_idx) and an intra-stab index (idx)
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         pointer(const pointer& p, const std::size_t stab_idx, const std::size_t idx)
             :
             n_0(p.n_0),
@@ -62,32 +76,44 @@ namespace XXX_NAMESPACE
             ptr(reinterpret_cast<T*>(p.ptr)) {}
 
         // get a new pointer shifted by [stab_idx and] idx
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline pointer at(const std::size_t idx)
         {
             return pointer(*this, 0, idx);
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline const pointer at(const std::size_t idx) const
         {
             return pointer(*this, 0, idx);
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline pointer at(const std::size_t stab_idx, const std::size_t idx)
         {
             return pointer(*this, stab_idx, idx);
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline const pointer at(const std::size_t stab_idx, const std::size_t idx) const
         {
             return pointer(*this, stab_idx, idx);
         }
 
         // dereference
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline T& operator*()
         {
             return *ptr;
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline const T& operator*() const
         {
             return *ptr;
@@ -221,6 +247,8 @@ namespace XXX_NAMESPACE
 
         // create tuple from the base pointer
         template <std::size_t ...I>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline std::tuple<T&...> get_values(std::index_sequence<I...>)
         {
             return {ptr[I * n_0]...};
@@ -241,6 +269,8 @@ namespace XXX_NAMESPACE
             ptr(ptr) {}
 
         // constructor: from an existing multi_pointer and a stab index (stab_idx) and an intra-stab index (idx)
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         multi_pointer(const multi_pointer& mp, const std::size_t stab_idx, const std::size_t idx)
             :
             n_0(mp.n_0),
@@ -258,32 +288,44 @@ namespace XXX_NAMESPACE
             ptr(reinterpret_cast<value_type*>(mp.ptr)) {}
 
         // get a new multi_pointer shifted by stab_idx and idx
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline multi_pointer at(const std::size_t idx)
         {
             return multi_pointer(*this, 0, idx);
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline multi_pointer<const T...> at(const std::size_t idx) const
         {
             return multi_pointer<const T...>(*this, 0, idx);
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline multi_pointer at(const std::size_t stab_idx, const std::size_t idx)
         {
             return multi_pointer(*this, stab_idx, idx);
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline multi_pointer<const T...> at(const std::size_t stab_idx, const std::size_t idx) const
         {
             return multi_pointer<const T...>(*this, stab_idx, idx);
         }
 
         // dereference
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline std::tuple<T&...> operator*()
         {
             return get_values(std::make_index_sequence<N>{});
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline std::tuple<const T&...> operator*() const
         {
             return get_values(std::make_index_sequence<N>{});
@@ -421,6 +463,8 @@ namespace XXX_NAMESPACE
 
         // create a pointer tuple from an existing pointer tuple, a stab index (stab_idx) and an intra-stab index (idx)
         template <std::size_t ...I>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline constexpr pointer_tuple make_pointer_tuple(const pointer_tuple& ptr, const std::size_t stab_idx, const std::size_t idx, std::index_sequence<I...>)
         {
             return {std::get<I>(ptr) + stab_idx * num_units * size_scaling_factor[I] + idx...};
@@ -434,6 +478,8 @@ namespace XXX_NAMESPACE
 
         // create tuple from the base pointer
         template <std::size_t ...I>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline std::tuple<T&...> get_values(std::index_sequence<I...>)
         {
             return {*(std::get<I>(ptr))...};
@@ -457,6 +503,8 @@ namespace XXX_NAMESPACE
             ptr(make_pointer_tuple(ptr, n_0, std::make_index_sequence<N>{})) {}
 
         // constructor: from an existing multi_pointer and a stab index (stab_idx) and an intra-stab index (idx)
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         multi_pointer_inhomogeneous(const multi_pointer_inhomogeneous& mp, const std::size_t stab_idx, const std::size_t idx)
             :
             num_units(mp.num_units),
@@ -474,32 +522,44 @@ namespace XXX_NAMESPACE
             ptr(mp.ptr) {}
 
         // get a new multi_pointer shifted by [stab_idx and] 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline multi_pointer_inhomogeneous at(const std::size_t idx)
         {
             return multi_pointer_inhomogeneous(*this, 0, idx);
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline multi_pointer_inhomogeneous<const T...> at(const std::size_t idx) const
         {
             return multi_pointer_inhomogeneous<const T...>(*this, 0, idx);
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline multi_pointer_inhomogeneous at(const std::size_t stab_idx, const std::size_t idx)
         {
             return multi_pointer_inhomogeneous(*this, stab_idx, idx);
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline multi_pointer_inhomogeneous<const T...> at(const std::size_t stab_idx, const std::size_t idx) const
         {
             return multi_pointer_inhomogeneous<const T...>(*this, stab_idx, idx);
         }
 
         // dereference
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline std::tuple<T&...> operator*()
         {
             return get_values(std::make_index_sequence<N>{});
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline std::tuple<const T&...> operator*() const
         {
             return get_values(std::make_index_sequence<N>{});
