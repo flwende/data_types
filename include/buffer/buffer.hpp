@@ -268,8 +268,7 @@ namespace XXX_NAMESPACE
             using iterator = typename internal::iterator<base_pointer, value_type>;
             using const_iterator = typename internal::iterator<const_base_pointer, const_value_type>;
 
-            template <typename P, typename R>
-            friend class internal::iterator;
+            friend iterator;
 
             base_pointer& data;
             const sarray<std::size_t, D>& n;
