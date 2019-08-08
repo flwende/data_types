@@ -17,7 +17,7 @@
 namespace XXX_NAMESPACE
 {
     // forward declaration: definition in common/memory.hpp
-    template <typename T>
+    template <typename ...T>
     class pointer;
 
     namespace internal

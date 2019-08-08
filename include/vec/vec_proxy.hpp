@@ -76,7 +76,7 @@ namespace VEC_NAMESPACE
             using value_type = T;
             //! Remember the template parameter D (=1)
             static constexpr std::size_t d = 1;
-            using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 1>;
+            using base_pointer = XXX_NAMESPACE::pointer_n<T, 1>;
             using original_type = typename std::conditional<std::is_const<T>::value, 
                 const vec<typename std::remove_cv<T>::type, 1>,
                 vec<typename std::remove_cv<T>::type, 1>>::type;
@@ -189,7 +189,7 @@ namespace VEC_NAMESPACE
             using value_type = T;
             //! Remember the template parameter D (=2)
             static constexpr std::size_t d = 2;
-            using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 2>;
+            using base_pointer = XXX_NAMESPACE::pointer_n<T, 2>;
             using original_type = typename std::conditional<std::is_const<T>::value, 
                 const vec<typename std::remove_cv<T>::type, 2>,
                 vec<typename std::remove_cv<T>::type, 2>>::type;
@@ -309,7 +309,7 @@ namespace VEC_NAMESPACE
             using value_type = T;
             //! Remember the template parameter D (=3)
             static constexpr std::size_t d = 3;
-            using base_pointer = XXX_NAMESPACE::multi_pointer_n<T, 3>;
+            using base_pointer = XXX_NAMESPACE::pointer_n<T, 3>;
             using original_type = typename std::conditional<std::is_const<T>::value, 
                 const vec<typename std::remove_cv<T>::type, 3>,
                 vec<typename std::remove_cv<T>::type, 3>>::type;

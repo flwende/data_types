@@ -169,99 +169,6 @@ namespace XXX_NAMESPACE
 
                 return accessor<T, N - 1, D, L>(data, n, stab_idx + delta);
             }
-
-            inline accessor<T, N - 1, D, L> at(std::size_t idx)
-            {
-                if (idx >= n[N - 1])
-                {
-                    throw std::out_of_range("accessor<T, D>::at() : index out of bounds");
-                }
-
-                return operator[](idx);
-            }
-
-            inline accessor<T, N - 1, D, L> at(std::size_t idx) const
-            {
-                if (idx >= n[N - 1])
-                {
-                    throw std::out_of_range("accessor<T, D>::at() : index out of bounds");
-                }
-
-                return operator[](idx);
-            }
-
-            // iterator
-            template <typename R>
-            class stab_iterator
-            {
-                base_pointer& ptr;
-                const sarray<std::size_t, D>& n;
-                std::size_t pos;
-
-            public:
-
-                stab_iterator(base_pointer& ptr, const sarray<std::size_t, D>& n, const std::size_t pos = 0)
-                    :
-                    ptr(ptr),
-                    n(n),
-                    pos(pos) {}
-
-                inline stab_iterator& operator++()
-                {
-                    ++pos;
-                    return *this;
-                }
-
-                inline stab_iterator operator++(int)
-                {
-                    stab_iterator it(ptr, n, pos);
-                    ++pos;
-                    return it;
-                }
-
-                inline bool operator==(const stab_iterator& it) const
-                {
-                    return (pos == it.pos);
-                }
-
-                inline bool operator!=(const stab_iterator& it) const
-                {
-                    return (pos != it.pos);
-                }
-
-                inline R operator*()
-                {
-                    return R(ptr, n, pos);
-                }
-
-                inline const R operator*() const
-                {
-                    return R(ptr.at(pos, 0), n);
-                }
-            };
-
-            using iterator = stab_iterator<accessor<T, 1, D, L>>;
-            using const_iterator = stab_iterator<accessor<const T, 1, D, L>>;
-
-            iterator begin() const
-            {
-                return iterator(data, n, stab_idx);
-            }
-
-            iterator end() const
-            {
-                return iterator(data, n, stab_idx + sarray<std::size_t, N>(n).reduce_mul(1));
-            }
-
-            const_iterator cbegin() const
-            {
-                return const_iterator(data, n, stab_idx);
-            }
-
-            const_iterator cend() const
-            {
-                return const_iterator(data, n, stab_idx + sarray<std::size_t, N>(n).reduce_mul(1));
-            }
         };
         
         template <typename T, std::size_t D, data_layout L>
@@ -269,13 +176,10 @@ namespace XXX_NAMESPACE
         {
             using base_pointer = typename internal::traits<T, L>::base_pointer;
             using const_base_pointer = typename internal::traits<const T, L>::base_pointer;
-            using value_type = typename std::conditional<L == data_layout::SoA, typename internal::traits<T, data_layout::SoA>::proxy_type, T&>::type;
-            using const_value_type = typename std::conditional<L == data_layout::SoA, const typename internal::traits<const T, data_layout::SoA>::proxy_type, const T&>::type;
-            using iterator = typename internal::iterator<base_pointer, value_type>;
-            using const_iterator = typename internal::iterator<const_base_pointer, const_value_type>;
-
-            friend iterator;
-
+            static constexpr bool UseProxyType = (L != data_layout::AoS && internal::provides_proxy_type<T>::value);
+            using value_type = typename std::conditional<UseProxyType, typename internal::traits<T, L>::proxy_type, T&>::type;
+            using const_value_type = typename std::conditional<UseProxyType, const typename internal::traits<const T, L>::proxy_type, const T&>::type;
+            
             base_pointer& data;
             const sarray<std::size_t, D>& n;
             const std::size_t stab_idx;
@@ -293,91 +197,56 @@ namespace XXX_NAMESPACE
                 data(data), 
                 n(n), 
                 stab_idx(stab_idx) {}
-
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline value_type operator[] (const std::size_t idx)
-            {
-                #if defined(SOA_INNERMOST)
-                return *(data.at(stab_idx, idx));
-                #else
-                return *(data.at(0, stab_idx * n[0] + idx));
-                #endif
-            }
-
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline const value_type operator[] (const std::size_t idx) const
-            {
-                #if defined(SOA_INNERMOST)
-                return *(data.at(stab_idx, idx));
-                #else
-                return *(data.at(0, stab_idx * n[0] + idx));
-                #endif
-            }
-
-            inline value_type at(std::size_t idx)
-            {
-                if (idx >= n[0])
-                {
-                    throw std::out_of_range("accessor<T, 1>::at() : index out of bounds");
-                }
-
-                #if defined(SOA_INNERMOST)
-                return *(data.at(stab_idx, idx));
-                #else
-                return *(data.at(0, stab_idx * n[0] + idx));
-                #endif
-            }
-
-            inline const value_type at(std::size_t idx) const
-            {
-                if (idx >= n[0])
-                {
-                    throw std::out_of_range("accessor<T, 1>::at() : index out of bounds");
-                }
-
-                #if defined(SOA_INNERMOST)
-                return *(data.at(stab_idx, idx));
-                #else
-                return *(data.at(0, stab_idx * n[0] + idx));
-                #endif
-            }
             
-            // iterator            
-            iterator begin() const
+            template <bool Enable = true>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator[] (const std::size_t idx)
+                -> typename std::enable_if<(UseProxyType && Enable), value_type>::type
             {
                 #if defined(SOA_INNERMOST)
-                return iterator(data.at(stab_idx, 0), 0);
+                return data.access(stab_idx, idx);
                 #else
-                return iterator(data.at(0, stab_idx * n[0]), 0);
+                return data.access(0, stab_idx * n[0] + idx);
                 #endif
             }
 
-            iterator end() const
+            template <bool Enable = true>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator[] (const std::size_t idx) const
+                -> typename std::enable_if<(UseProxyType && Enable), const_value_type>::type
             {
                 #if defined(SOA_INNERMOST)
-                return iterator(data.at(stab_idx, 0), n[0]);
+                return data.access(stab_idx, idx);
                 #else
-                return iterator(data.at(0, stab_idx * n[0]), n[0]);
+                return data.access(0, stab_idx * n[0] + idx);
                 #endif
             }
 
-            const_iterator cbegin() const
+            template <bool Enable = true>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator[] (const std::size_t idx)
+                -> typename std::enable_if<(!UseProxyType && Enable), value_type>::type
             {
                 #if defined(SOA_INNERMOST)
-                return const_iterator(data.at(stab_idx, 0), 0);
+                return std::get<0>(data.access(stab_idx, idx));
                 #else
-                return const_iterator(data.at(0, stab_idx * n[0]), 0);
+                return std::get<0>(data.access(0, stab_idx * n[0] + idx));
                 #endif
             }
 
-            const_iterator cend() const
+            template <bool Enable = true>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator[] (const std::size_t idx) const
+                -> typename std::enable_if<(!UseProxyType && Enable), const_value_type>::type
             {
                 #if defined(SOA_INNERMOST)
-                return const_iterator(data.at(stab_idx, 0), n[0]);
+                return std::get<0>(data.access(stab_idx, idx));
                 #else
-                return const_iterator(data.at(0, stab_idx * n[0]), n[0]);
+                return std::get<0>(data.access(0, stab_idx * n[0] + idx));
                 #endif
             }
         };
@@ -446,14 +315,13 @@ namespace XXX_NAMESPACE
                 base_pointer<element_type> data_stab = data->at(i_s, 0);
                 internal::accessor<element_type, 1, D, L> stab(data_stab, n);
                 
-                #pragma omp simd
                 for (std::size_t i = 0; i < n[0]; ++i)
                 {
                     stab[i] = value;
                 }
             }
         }
-
+        
     public:
 
         using value_type = element_type;

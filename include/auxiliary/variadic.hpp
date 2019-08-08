@@ -22,20 +22,20 @@ namespace AUXILIARY_NAMESPACE
 {
     namespace variadic
     {
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //! \brief Get the number of arguments in the variadic list
-        //!
-        //! \tparam T variadic argument list
-        //! \return number of arguments
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename ...T>
-        constexpr std::size_t get_num_arguments()
-        {
-            return sizeof ...(T);
-        }
-
         namespace
         {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //! \brief Get the number of arguments in the variadic list
+            //!
+            //! \tparam T variadic argument list
+            //! \return number of arguments
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            template <typename ...T>
+            constexpr std::size_t get_num_arguments()
+            {
+                return sizeof ...(T);
+            }
+
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //! \brief Get the value of the N-th argument and its type in the variadic list
             //!
@@ -126,6 +126,8 @@ namespace AUXILIARY_NAMESPACE
         {
             template <std::size_t N>
             using type = typename argument<N, T...>::type;
+
+            static constexpr std::size_t length = get_num_arguments<T...>();
 
             template <std::size_t N>
             static constexpr auto value(T... values)
