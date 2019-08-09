@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(BUFFER_BUFFER_HPP)
-#define BUFFER_BUFFER_HPP
+#if !defined(FIELD_FIELD_HPP)
+#define FIELD_FIELD_HPP
 
 #include <cstdint>
 #include <memory>
@@ -25,81 +25,6 @@ namespace XXX_NAMESPACE
 {
     namespace internal
     {
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //! \brief A simple random access iterator
-        //!
-        //! \tparam P pointer type
-        //! \tparam R return type for data access
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename P, typename R>
-        class iterator
-        {
-            template <typename T, std::size_t N, std::size_t D, data_layout L>
-            friend class accessor;
-
-            template <typename T, std::size_t D, data_layout L>
-            friend class buffer;
-
-            P ptr;
-            std::size_t pos;
-
-            iterator(P ptr, const std::size_t pos)
-                :
-                ptr(ptr),
-                pos(pos) {}
-
-        public:
-
-            inline iterator& operator++()
-            {
-                ++pos;
-                return *this;
-            }
-
-            inline iterator operator++(int)
-            {
-                iterator it(ptr, pos);
-                ++pos;
-                return it;
-            }
-
-            inline iterator& operator+=(int inc)
-            {
-                pos += inc;
-                return *this;
-            }
-
-            inline bool operator==(const iterator& it) const
-            {
-                return (pos == it.pos);
-            }
-
-            inline bool operator!=(const iterator& it) const
-            {
-                return (pos != it.pos);
-            }
-
-            inline R operator*()
-            {
-                return *(ptr.at(pos));
-            }
-
-            inline const R operator*() const
-            {
-                return *(ptr.at(pos));
-            }
-
-            inline R operator[](const std::size_t idx)
-            {
-                return *(ptr.at(pos + idx));
-            }
-
-            inline const R operator[](const std::size_t idx) const
-            {
-                return *(ptr.at(pos + idx));
-            }
-        };
-
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //! \brief Accessor type implementing array subscript operator chaining [][]..[]
         //!
@@ -145,7 +70,8 @@ namespace XXX_NAMESPACE
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline accessor<T, N - 1, D, L> operator[] (const std::size_t idx)
+            inline auto operator[] (const std::size_t idx)
+                -> accessor<T, N - 1, D, L>
             {
                 std::size_t delta = idx;
 
@@ -154,12 +80,13 @@ namespace XXX_NAMESPACE
                     delta *= n[i];
                 }               
 
-                return accessor<T, N - 1, D, L>(data, n, stab_idx + delta);
+                return {data, n, stab_idx + delta};
             }
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline accessor<T, N - 1, D, L> operator[] (const std::size_t idx) const
+            inline auto operator[] (const std::size_t idx) const
+                -> accessor<T, N - 1, D, L>
             {
                 std::size_t delta = idx;
 
@@ -168,7 +95,7 @@ namespace XXX_NAMESPACE
                     delta *= n[i];
                 }               
 
-                return accessor<T, N - 1, D, L>(data, n, stab_idx + delta);
+                return {data, n, stab_idx + delta};
             }
         };
         
@@ -256,19 +183,19 @@ namespace XXX_NAMESPACE
     }
     
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //! \brief Multi-dimensional buffer data type
+    //! \brief Multi-dimensional field data type
     //!
-    //! This buffer data type uses a plain C-pointer to dynamically adapt to the needed memory requirement.
+    //! This field data type uses a plain C-pointer to dynamically adapt to the needed memory requirement.
     //! In case of D > 1, its is determined as the product of all dimensions with the
     //! innermost dimension padded according to T, the data layout and the (default) data alignment.
     //! All memory is contiguous and can be moved as a whole (important e.g. for data transfers).
-    //! The buffer, however, allows access to the data using array subscript operator chaining together with proxy objects.
+    //! The field, however, allows access to the data using array subscript operator chaining together with proxy objects.
     //! \n\n
     //! In case of Data_layout = AoS, data is stored with all elements placed in main memory one after the other.
     //! \n
     //! In case of Data_layout = SoA (applied only if T is a record type) the individual members
     //! are placed one after the other along the innermost dimension, e.g. for
-    //! buffer<vec<double, 3>, 2, SoA>({3, 2}) the memory layout would be the following one:
+    //! field<vec<double, 3>, 2, SoA>({3, 2}) the memory layout would be the following one:
     //! <pre>
     //!     [0][0].x
     //!     [0][1].x
@@ -286,7 +213,7 @@ namespace XXX_NAMESPACE
     //!     [1][1].y
     //!     [1][2].y
     //! </pre>
-    //! You can access the individual components of buffer<vec<double, 3>, 2, SoA> b({3,2})
+    //! You can access the individual components of field<vec<double, 3>, 2, SoA> b({3,2})
     //! as usual, e.g., b[1][0].x = ...
     //! \n
     //! GNU and Clang/LLVM seem to optimize the proxies away.
@@ -296,17 +223,33 @@ namespace XXX_NAMESPACE
     //! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     template <typename T, std::size_t D, data_layout L = data_layout::AoS>
-    class buffer
+    class field
     {
-        static_assert(!std::is_const<T>::value, "error: buffer with const elements is not allowed");
+        static_assert(!std::is_const<T>::value, "error: field with const elements is not allowed");
+
+    public:
 
         using element_type = T;
-        using const_element_type = typename internal::traits<element_type, L>::const_type;
+        static constexpr std::size_t dimension = D;
+        static constexpr data_layout layout = L;
 
+    private:
+
+        using const_element_type = typename internal::traits<element_type, L>::const_type;
         template <typename X>
         using base_pointer = typename internal::traits<X, L>::base_pointer;
+        using allocator_type = typename base_pointer<element_type>::allocator;
         
-        void set_data(const element_type& value)
+        sarray<std::size_t, D> n;
+        std::pair<std::size_t, std::size_t> allocation_shape;
+        std::unique_ptr<base_pointer<element_type>> data;
+        std::unique_ptr<base_pointer<const_element_type>> const_data;
+        #if defined(__CUDACC__)
+        std::unique_ptr<field> d_this; 
+        #endif
+
+        auto set_data(const element_type& value)
+            -> void
         {
             if (!data.get()) return;
 
@@ -324,29 +267,15 @@ namespace XXX_NAMESPACE
                 }
             }
         }
-        
-    public:
-
-        using value_type = element_type;
-        using allocator_type = typename base_pointer<element_type>::allocator;
-        using size_type = std::size_t;
-
-        sarray<std::size_t, D> n;
-
-    private:
-
-        std::pair<std::size_t, std::size_t> allocation_shape;
-        std::unique_ptr<base_pointer<element_type>> data;
-        std::unique_ptr<base_pointer<const_element_type>> const_data;
 
     public:
 
-        buffer()
+        field()
             :
             n() 
         {}
             
-        buffer(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
+        field(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             :
             n(n),
             allocation_shape(allocator_type::template get_allocation_shape<L>(n)),
@@ -359,7 +288,7 @@ namespace XXX_NAMESPACE
             }
         }
         
-        ~buffer()
+        ~field()
         {
             if (data.get())
             {
@@ -371,7 +300,8 @@ namespace XXX_NAMESPACE
             delete const_data.release();
         }
 
-        void resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
+        auto resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
+            -> void
         {
             this->n = n;
             allocation_shape = allocator_type::template get_allocation_shape<L>(n);
@@ -393,11 +323,12 @@ namespace XXX_NAMESPACE
             }
         }
 
-        void swap(buffer& b)
+        auto swap(field& b)
+            -> void
         {
             if (n != b.n)
             {
-                std::cerr << "error: buffer swapping not possible because of different extents" << std::endl;
+                std::cerr << "error: field swapping not possible because of different extents" << std::endl;
                 return;
             }
 
@@ -410,6 +341,8 @@ namespace XXX_NAMESPACE
             data.swap(b.data);
             const_data.swap(b.const_data);
         }
+
+
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
@@ -433,11 +366,6 @@ namespace XXX_NAMESPACE
         inline auto at(std::size_t idx) const
         {
             return internal::accessor<const_element_type, D, D, L>(*const_data, n)[idx];
-        }
-
-        allocator_type get_allocator() const
-        {
-            return allocator_type();
         }
     };
 }
