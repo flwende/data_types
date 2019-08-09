@@ -49,8 +49,8 @@ namespace XXX_NAMESPACE
             using base_pointer = typename std::conditional<std::is_const<T>::value, const typename XXX_NAMESPACE::pointer<T>, typename XXX_NAMESPACE::pointer<T>>::type;
         };
 
-        template <typename T>
-        struct traits<T, data_layout::SoA, typename std::enable_if<provides_proxy_type<T>::value>::type>
+        template <typename T, data_layout L>
+        struct traits<T, L, typename std::enable_if<(L != data_layout::AoS && provides_proxy_type<T>::value)>::type>
         {
             using type = T;
             using const_type = const T;

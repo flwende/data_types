@@ -202,39 +202,9 @@ namespace XXX_NAMESPACE
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto operator[] (const std::size_t idx)
-                -> typename std::enable_if<(UseProxyType && Enable), value_type>::type
-            {
-                #if defined(SOA_INNERMOST)
-                return data.access(stab_idx, idx);
-                #else
-                return data.access(0, stab_idx * n[0] + idx);
-                #endif
-            }
-
-            template <bool Enable = true>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline auto operator[] (const std::size_t idx) const
-                -> typename std::enable_if<(UseProxyType && Enable), const_value_type>::type
-            {
-                #if defined(SOA_INNERMOST)
-                return data.access(stab_idx, idx);
-                #else
-                return data.access(0, stab_idx * n[0] + idx);
-                #endif
-            }
-
-            template <bool Enable = true>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline auto operator[] (const std::size_t idx)
                 -> typename std::enable_if<(!UseProxyType && Enable), value_type>::type
             {
-                #if defined(SOA_INNERMOST)
-                return std::get<0>(data.access(stab_idx, idx));
-                #else
                 return std::get<0>(data.access(0, stab_idx * n[0] + idx));
-                #endif
             }
 
             template <bool Enable = true>
@@ -243,12 +213,44 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const std::size_t idx) const
                 -> typename std::enable_if<(!UseProxyType && Enable), const_value_type>::type
             {
-                #if defined(SOA_INNERMOST)
-                return std::get<0>(data.access(stab_idx, idx));
-                #else
                 return std::get<0>(data.access(0, stab_idx * n[0] + idx));
-                #endif
             }
+
+            template <bool Enable = true, data_layout Layout = L>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator[] (const std::size_t idx)
+                -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoAi && Enable), value_type>::type
+            {
+                return data.access(stab_idx, idx);
+            }
+
+            template <bool Enable = true, data_layout Layout = L>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator[] (const std::size_t idx) const
+                -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoAi && Enable), value_type>::type
+            {
+                return data.access(stab_idx, idx);
+            }
+
+            template <bool Enable = true, data_layout Layout = L>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator[] (const std::size_t idx)
+                -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoA && Enable), value_type>::type
+            {
+                return data.access(0, stab_idx * n[0] + idx);
+            }
+
+            template <bool Enable = true, data_layout Layout = L>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator[] (const std::size_t idx) const
+                -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoA && Enable), value_type>::type
+            {
+                return data.access(0, stab_idx * n[0] + idx);
+            }            
         };
     }
     
@@ -346,7 +348,7 @@ namespace XXX_NAMESPACE
         buffer(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             :
             n(n),
-            #if defined(SOA_INNERMOST)
+            #if defined(SOAI_LAYOUT)
             n_internal(n.replace(allocator_type::padding(n[0]), 0)),
             #else
             n_internal(sarray<std::size_t, D>{{1}}.replace(n.reduce_mul(), 0)), // {n_0 * .. * n_{D-1}, 1,.., 1}
@@ -374,7 +376,7 @@ namespace XXX_NAMESPACE
         void resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
         {
             this->n = n;
-            #if defined(SOA_INNERMOST)
+            #if defined(SOAI_LAYOUT)
             this->n_internal = n.replace(allocator_type::padding(n[0]), 0);
             #else
             this->n_internal = sarray<std::size_t, D>{{1}}.replace(n.reduce_mul(), 0);

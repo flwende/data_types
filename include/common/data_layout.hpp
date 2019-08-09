@@ -12,7 +12,7 @@
 
 namespace XXX_NAMESPACE
 {
-    enum class data_layout { AoS = 1, SoA = 2 };
+    enum class data_layout {AoS, SoA, SoAi};
 }
 
 #endif
