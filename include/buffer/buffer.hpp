@@ -15,10 +15,11 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include "../common/data_layout.hpp"
-#include "../common/memory.hpp"
-#include "../common/traits.hpp"
-#include "../sarray/sarray.hpp"
+#include <common/data_layout.hpp>
+#include <common/memory.hpp>
+#include <common/traits.hpp>
+#include <platform/target.hpp>
+#include <sarray/sarray.hpp>
 
 namespace XXX_NAMESPACE
 {
@@ -334,7 +335,7 @@ namespace XXX_NAMESPACE
 
     private:
 
-        sarray<std::size_t, D> n_internal;
+        std::pair<std::size_t, std::size_t> allocation_shape;
         std::unique_ptr<base_pointer<element_type>> data;
         std::unique_ptr<base_pointer<const_element_type>> const_data;
 
@@ -342,18 +343,14 @@ namespace XXX_NAMESPACE
 
         buffer()
             :
-            n_internal(),
-            n() {}
+            n() 
+        {}
             
         buffer(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             :
             n(n),
-            #if defined(SOAI_LAYOUT)
-            n_internal(n.replace(allocator_type::padding(n[0]), 0)),
-            #else
-            n_internal(sarray<std::size_t, D>{{1}}.replace(n.reduce_mul(), 0)), // {n_0 * .. * n_{D-1}, 1,.., 1}
-            #endif
-            data(std::make_unique<base_pointer<element_type>>(allocator_type::allocate(n_internal), n_internal[0])),
+            allocation_shape(allocator_type::template get_allocation_shape<L>(n)),
+            data(std::make_unique<base_pointer<element_type>>(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first)),
             const_data(std::make_unique<base_pointer<const_element_type>>(*data))
         {
             if (initialize_to_zero)
@@ -366,33 +363,30 @@ namespace XXX_NAMESPACE
         {
             if (data.get())
             {
-                allocator_type::deallocate(data->get_pointer());
-                delete data.release();
+                //allocator_type::deallocate(data->get_pointer());
+                allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(data->get_pointer());
             }
 
+            delete data.release();
             delete const_data.release();
         }
 
         void resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
         {
             this->n = n;
-            #if defined(SOAI_LAYOUT)
-            this->n_internal = n.replace(allocator_type::padding(n[0]), 0);
-            #else
-            this->n_internal = sarray<std::size_t, D>{{1}}.replace(n.reduce_mul(), 0);
-            #endif
-    
+            allocation_shape = allocator_type::template get_allocation_shape<L>(n);
+
             if (data.get())
             {
-                allocator_type::deallocate(data->get_pointer());
-                delete data.release();
+                allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(data->get_pointer());
             }
 
+            delete data.release();
             delete const_data.release();
-
-            data = std::make_unique<base_pointer<element_type>>(allocator_type::allocate(n_internal), n_internal[0]);
+            
+            data = std::make_unique<base_pointer<element_type>>(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first);
             const_data = std::make_unique<base_pointer<const_element_type>>(*data);
-
+            
             if (initialize_to_zero)
             {
                 set_data({});
@@ -408,7 +402,11 @@ namespace XXX_NAMESPACE
             }
 
             n.swap(b.n);
-            n_internal.swap(b.n_internal);
+
+            std::pair<std::size_t, std::size_t> this_allocation_shape = allocation_shape;
+            allocation_shape = b.allocation_shape;
+            b.allocation_shape = this_allocation_shape;
+
             data.swap(b.data);
             const_data.swap(b.const_data);
         }

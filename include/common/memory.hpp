@@ -26,10 +26,12 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include "../auxiliary/math.hpp"
-#include "../auxiliary/variadic.hpp"
-#include "../sarray/sarray.hpp"
-#include "../simd/simd.hpp"
+#include <auxiliary/math.hpp>
+#include <auxiliary/variadic.hpp>
+#include <common/data_layout.hpp>
+#include <platform/target.hpp>
+#include <sarray/sarray.hpp>
+#include <simd/simd.hpp>
 
 namespace XXX_NAMESPACE
 {
@@ -121,24 +123,39 @@ namespace XXX_NAMESPACE
         // constructor: from an existing pointer and a stab index (stab_idx) and an intra-stab index (idx)
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        pointer(const pointer& mp, const std::size_t stab_idx, const std::size_t idx)
+        pointer(const pointer& p, const std::size_t stab_idx, const std::size_t idx)
             :
-            n_0(mp.n_0),
-            ptr(&mp.ptr[stab_idx * N * n_0 + idx]) 
+            n_0(p.n_0),
+            ptr(&p.ptr[stab_idx * N * n_0 + idx]) 
         {}
 
         // copy /conversion constructors
-        pointer(const pointer<typename std::remove_cv<T>::type...>& mp)
+        pointer(const pointer<typename std::remove_cv<T>::type...>& p)
             :
-            n_0(mp.n_0),
-            ptr(reinterpret_cast<value_type*>(mp.ptr)) 
+            n_0(p.n_0),
+            ptr(reinterpret_cast<value_type*>(p.ptr)) 
         {}
 
-        pointer(const pointer<const typename std::remove_cv<T>::type...>& mp)
+        pointer(const pointer<const typename std::remove_cv<T>::type...>& p)
             :
-            n_0(mp.n_0),
-            ptr(reinterpret_cast<value_type*>(mp.ptr)) 
+            n_0(p.n_0),
+            ptr(reinterpret_cast<value_type*>(p.ptr)) 
         {}
+
+        // swap
+        inline auto swap(pointer& p)
+            -> pointer&
+        {
+            std::size_t this_n_0 = n_0;
+            n_0 = p.n_0;
+            p.n_0 = this_n_0;
+
+            value_type* this_ptr = ptr;
+            ptr = p.ptr;
+            p.ptr = this_ptr;
+
+            return *this;
+        }
 
         // get a new pointer shifted by stab_idx and idx
         HOST_VERSION
@@ -243,9 +260,9 @@ namespace XXX_NAMESPACE
         inline auto operator++(int)
             -> pointer
         {
-            pointer mp(*this);
+            pointer p(*this);
             ++ptr;
-            return mp;
+            return p;
         }
 
         inline auto operator+=(const std::size_t n)
@@ -291,23 +308,33 @@ namespace XXX_NAMESPACE
                 return ((n + ratio - 1) / ratio) * ratio;
             }
 
-            static auto allocate(std::size_t n, const std::size_t alignment = default_alignment)
-                -> value_type*
+            template <data_layout L, std::size_t D, bool Enable = true>
+            static auto get_allocation_shape(const sarray<std::size_t, D>& n, const std::size_t alignment = default_alignment)
+                -> typename std::enable_if<(L != data_layout::SoA && Enable), std::pair<std::size_t, std::size_t>>::type
             {
-                return reinterpret_cast<value_type*>(_mm_malloc(n * sizeof(value_type), alignment));
+                return {padding(n[0], alignment), N * n.reduce_mul(1)};
             }
 
-            template <std::size_t D>
-            static auto allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = default_alignment)
-                -> value_type*
+            template <data_layout L, std::size_t D, bool Enable = true>
+            static auto get_allocation_shape(const sarray<std::size_t, D>& n, const std::size_t alignment = default_alignment)
+                -> typename std::enable_if<(L == data_layout::SoA && Enable), std::pair<std::size_t, std::size_t>>::type
             {
-                const std::size_t num_elements = padding(n[0], alignment) * N * n.reduce_mul(1);
-
-                return allocate(num_elements, alignment);
+                return {padding(n.reduce_mul(), alignment), N};
             }
 
-            static auto deallocate(value_type* ptr, std::size_t n = 0)
-                -> void
+            template <XXX_NAMESPACE::target Target, bool Enable = true>
+            static auto allocate(const std::pair<std::size_t, std::size_t>& allocation_shape, const std::size_t alignment = default_alignment)
+                -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), value_type*>::type
+            {
+                const std::size_t num_elements = allocation_shape.first * allocation_shape.second;
+
+                // NOTE: aligned_alloc results in a segfault here -> use _mm_malloc
+                return reinterpret_cast<value_type*>(_mm_malloc(num_elements * sizeof(value_type), alignment));
+            }
+
+            template <XXX_NAMESPACE::target Target, bool Enable = true>
+            static auto deallocate(value_type* ptr)
+                -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), void>::type
             {
                 if (ptr)
                 {
@@ -475,6 +502,21 @@ namespace XXX_NAMESPACE
             ptr(mp.ptr) 
         {}
 
+        // swap
+        inline auto swap(multi_pointer& mp)
+            -> multi_pointer&
+        {
+            std::size_t this_num_units = num_units;
+            num_units = mp.num_units;
+            mp.num_units = this_num_units;
+
+            std::tuple<T*...> this_ptr = ptr;
+            ptr = mp.ptr;
+            mp.ptr = this_ptr;
+
+            return *this;
+        }
+
         // get a new multi_pointer shifted by [stab_idx and] 
         HOST_VERSION
         CUDA_DEVICE_VERSION
@@ -625,6 +667,40 @@ namespace XXX_NAMESPACE
                 return ((n + ratio - 1) / ratio) * ratio;
             }
 
+            template <data_layout L, std::size_t D, bool Enable = true>
+            static auto get_allocation_shape(const sarray<std::size_t, D>& n, const std::size_t alignment = default_alignment)
+                -> typename std::enable_if<(L != data_layout::SoA && Enable), std::pair<std::size_t, std::size_t>>::type
+            {
+                return {padding(n[0], alignment), n.reduce_mul(1)};
+            }
+
+            template <data_layout L, std::size_t D, bool Enable = true>
+            static auto get_allocation_shape(const sarray<std::size_t, D>& n, const std::size_t alignment = default_alignment)
+                -> typename std::enable_if<(L == data_layout::SoA && Enable), std::pair<std::size_t, std::size_t>>::type
+            {
+                return {padding(n.reduce_mul(), alignment), 1};
+            }
+
+            template <XXX_NAMESPACE::target Target, bool Enable = true>
+            static auto allocate(const std::pair<std::size_t, std::size_t>& allocation_shape, const std::size_t alignment = default_alignment)
+                -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), value_type*>::type
+            {
+                const std::size_t num_elements = allocation_shape.first * allocation_shape.second;
+
+                // NOTE: aligned_alloc results in a segfault here -> use _mm_malloc
+                return reinterpret_cast<value_type*>(_mm_malloc(num_elements * record_size, alignment));
+            }
+
+            template <XXX_NAMESPACE::target Target, bool Enable = true>
+            static auto deallocate(value_type* ptr)
+                -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), void>::type
+            {
+                if (ptr)
+                {
+                    _mm_free(ptr);
+                }
+            }
+            /*
             static auto allocate(std::size_t n, const std::size_t alignment = default_alignment)
                 -> value_type*
             {
@@ -648,6 +724,7 @@ namespace XXX_NAMESPACE
                     _mm_free(ptr);
                 }
             }
+            */
         };
     };
 }
