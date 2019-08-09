@@ -95,11 +95,17 @@ namespace XXX_NAMESPACE
         }
 
         // extent of the innermost dimension (w.r.t. a multidimensional field declaration)
-        const std::size_t n_0;
+        std::size_t n_0;
         // base pointer
         value_type* ptr;
 
     public:
+
+        pointer()
+            :
+            n_0(0),
+            ptr(nullptr)
+        {}
 
         // constructor: from external base pointer and innermist dimension
         pointer(value_type* ptr, const std::size_t n_0)
@@ -118,17 +124,23 @@ namespace XXX_NAMESPACE
         {}
 
         // copy /conversion constructors
-        pointer(const pointer<typename std::remove_cv<T>::type...>& p)
+        template <typename ...OtherT>
+        pointer(const pointer<OtherT...>& p)
             :
             n_0(p.n_0),
             ptr(reinterpret_cast<value_type*>(p.ptr)) 
-        {}
+        {
+            static_assert(AUXILIARY_NAMESPACE::variadic::pack<value_type, OtherT...>::is_convertible(), "error: types are not convertible");
+        }
 
-        pointer(const pointer<const typename std::remove_cv<T>::type...>& p)
-            :
-            n_0(p.n_0),
-            ptr(reinterpret_cast<value_type*>(p.ptr)) 
-        {}
+        auto operator=(const pointer& p)
+            -> pointer&
+        {
+            n_0 = p.n_0;
+            ptr = reinterpret_cast<value_type*>(p.ptr);
+
+            return *this;
+        }
 
         // swap
         inline auto swap(pointer& p)
@@ -321,12 +333,12 @@ namespace XXX_NAMESPACE
             }
 
             template <XXX_NAMESPACE::target Target, bool Enable = true>
-            static auto deallocate(value_type* ptr)
+            static auto deallocate(pointer& p)
                 -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), void>::type
             {
-                if (ptr)
+                if (p.get_pointer())
                 {
-                    _mm_free(ptr);
+                    _mm_free(p.get_pointer());
                 }
             }
         };
@@ -455,11 +467,17 @@ namespace XXX_NAMESPACE
         using value_type = std::uint8_t;
 
         // extent of the innermost dimension of the filed in units of largest type
-        const std::size_t num_units;
+        std::size_t num_units;
         // base pointers (of different type) are managed internally by using a tuple
         std::tuple<T*...> ptr;
 
     public:
+
+        multi_pointer()
+            :
+            num_units(0),
+            ptr{}
+        {}
 
         // constructor: from external base pointer and innermist dimension
         multi_pointer(std::uint8_t* __restrict__ ptr, const std::size_t n_0)
@@ -478,17 +496,23 @@ namespace XXX_NAMESPACE
         {}
 
         // copy / conversion constructors
-        multi_pointer(const multi_pointer<typename std::remove_cv<T>::type...>& mp)
+        template <typename ...OtherT>
+        multi_pointer(const multi_pointer<OtherT...>& mp)
             :
             num_units(mp.num_units),
             ptr(mp.ptr) 
-        {}
+        {
+            static_assert(AUXILIARY_NAMESPACE::variadic::pack<value_type, OtherT...>::is_convertible(), "error: types are not convertible");
+        }
 
-        multi_pointer(const multi_pointer<const typename std::remove_cv<T>::type...>& mp)
-            :
-            num_units(mp.num_units),
-            ptr(mp.ptr) 
-        {}
+        auto operator=(const multi_pointer& mp)
+            -> multi_pointer&
+        {
+            num_units = mp.num_units;
+            ptr = mp.ptr;
+
+            return *this;
+        }
 
         // swap
         inline auto swap(multi_pointer& mp)
@@ -680,39 +704,14 @@ namespace XXX_NAMESPACE
             }
 
             template <XXX_NAMESPACE::target Target, bool Enable = true>
-            static auto deallocate(value_type* ptr)
+            static auto deallocate(multi_pointer& mp)
                 -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), void>::type
             {
-                if (ptr)
+                if (mp.get_pointer())
                 {
-                    _mm_free(ptr);
+                    _mm_free(mp.get_pointer());
                 }
             }
-            /*
-            static auto allocate(std::size_t n, const std::size_t alignment = default_alignment)
-                -> value_type*
-            {
-                return reinterpret_cast<value_type*>(_mm_malloc(n * sizeof(value_type), alignment));
-            }
-
-            template <std::size_t D>
-            static auto allocate(const sarray<std::size_t, D>& n, const std::size_t alignment = default_alignment)
-                -> value_type*
-            {
-                const std::size_t num_elements = padding(n[0], alignment) * n.reduce_mul(1) * record_size;
-
-                return allocate(num_elements, alignment);
-            }
-
-            static auto deallocate(value_type* ptr, std::size_t n = 0)
-                -> void
-            {
-                if (ptr)
-                {
-                    _mm_free(ptr);
-                }
-            }
-            */
         };
     };
 }

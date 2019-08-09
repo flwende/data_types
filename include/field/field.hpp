@@ -242,12 +242,13 @@ namespace XXX_NAMESPACE
         
         sarray<std::size_t, D> n;
         std::pair<std::size_t, std::size_t> allocation_shape;
-        std::unique_ptr<base_pointer<element_type>> data;
-        std::unique_ptr<base_pointer<const_element_type>> const_data;
+        base_pointer<element_type>* data;
+        base_pointer<const_element_type>* const_data;
+        bool release_memory;
         #if defined(__CUDACC__)
-        std::unique_ptr<field> d_this; 
+        field* d_this; 
         #endif
-
+/*
         auto set_data(const element_type& value)
             -> void
         {
@@ -267,37 +268,48 @@ namespace XXX_NAMESPACE
                 }
             }
         }
+        */
 
     public:
 
         field()
             :
-            n() 
+            n{},
+            allocation_shape{0, 0},
+            data(nullptr),
+            const_data(nullptr),
+            release_memory(false)
         {}
             
         field(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             :
             n(n),
             allocation_shape(allocator_type::template get_allocation_shape<L>(n)),
-            data(std::make_unique<base_pointer<element_type>>(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first)),
-            const_data(std::make_unique<base_pointer<const_element_type>>(*data))
+            data(new base_pointer<element_type>(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first)),
+            const_data(new base_pointer<const element_type>(*data)),
+            release_memory(true)
         {
             if (initialize_to_zero)
             {
-                set_data({});
+                //set_data({});
             }
         }
         
         ~field()
         {
-            if (data.get())
+            if (release_memory)
             {
-                //allocator_type::deallocate(data->get_pointer());
-                allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(data->get_pointer());
+                if (data)
+                {
+                    allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(*data);
+                }
             }
+        }
 
-            delete data.release();
-            delete const_data.release();
+        auto size() const
+            -> const sarray<std::size_t, D>&
+        {
+            return n;   
         }
 
         auto resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
@@ -306,26 +318,24 @@ namespace XXX_NAMESPACE
             this->n = n;
             allocation_shape = allocator_type::template get_allocation_shape<L>(n);
 
-            if (data.get())
+            if (data)
             {
-                allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(data->get_pointer());
+                allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(*data);
             }
-
-            delete data.release();
-            delete const_data.release();
             
-            data = std::make_unique<base_pointer<element_type>>(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first);
-            const_data = std::make_unique<base_pointer<const_element_type>>(*data);
+            data = new base_pointer<element_type>(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first);
+            const_data = new base_pointer<const_element_type>(*data);
             
             if (initialize_to_zero)
             {
-                set_data({});
+               // set_data({});
             }
         }
 
         auto swap(field& b)
             -> void
         {
+            /*
             if (n != b.n)
             {
                 std::cerr << "error: field swapping not possible because of different extents" << std::endl;
@@ -340,6 +350,7 @@ namespace XXX_NAMESPACE
 
             data.swap(b.data);
             const_data.swap(b.const_data);
+            */
         }
 
 
