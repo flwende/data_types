@@ -6,13 +6,29 @@
 #if !defined(PLATFORM_TARGET_HPP)
 #define PLATFORM_TARGET_HPP
 
+#if defined(__CUDACC__)
+#include <cuda_runtime.h>
+
+#define HOST_VERSION __host__
+#define CUDA_DEVICE_VERSION __device__
+#define CUDA_KERNEL __global__
+#else
+#define HOST_VERSION 
+#define CUDA_DEVICE_VERSION 
+#define CUDA_KERNEL 
+#endif
+
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
 
 namespace XXX_NAMESPACE
 {
-    enum class target {Host = 1, GPU_CUDA = 2};
+    #if defined(__CUDACC__)
+    enum class target {Host, GPU_CUDA};
+    #else
+    enum class target {Host};
+    #endif
 }
 
 #endif
