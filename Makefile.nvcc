@@ -6,7 +6,8 @@ CXXFLAGS = -O3 -std=c++14 -march=native -fopenmp -fopenmp-simd -ftree-vectorize 
 
 OPTIONS += -DCHECK_RESULTS
 #OPTIONS += -DAOS_LAYOUT
-OPTIONS += -DSOA_LAYOUT
+#OPTIONS += -DSOA_LAYOUT
+OPTIONS += -DSOAI_LAYOUT
 #OPTIONS += -DELEMENT_ACCESS
 #OPTIONS += -DINPLACE
 #OPTIONS += -DVECTOR_PRODUCT
@@ -19,12 +20,12 @@ NVCCFLAGS += -Xcompiler="$(CXXFLAGS)" $(OPTIONS)
 
 LDFLAGS = -O3 -lgomp
 
-target: bin/benchmark_buffer.x
+target: bin/benchmark_buffer_gpu.x
 
-bin/benchmark_buffer.x: obj/benchmark_buffer.o obj/kernel.o
+bin/benchmark_buffer_gpu.x: obj/benchmark_buffer_gpu.o obj/kernel.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
-obj/benchmark_buffer.o: src/benchmark_buffer_gpu.cu
+obj/benchmark_buffer_gpu.o: src/benchmark_buffer_gpu.cu
 	$(CXX) $(NVCCFLAGS) -o $@ -c $<
 
 obj/kernel.o: src/kernel.cpp
@@ -32,5 +33,5 @@ obj/kernel.o: src/kernel.cpp
 	g++ $(CXXFLAGS) $(OPTIONS) -S $<		
 
 clean:
-	rm -f *~ obj/*.o bin/benchmark_buffer.x
+	rm -f *~ obj/*.o bin/benchmark_buffer_gpu.x
 
