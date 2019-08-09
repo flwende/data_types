@@ -48,7 +48,8 @@ namespace XXX_NAMESPACE
         template <typename T, std::size_t N, std::size_t D, data_layout L>
         class accessor
         {
-            using base_pointer = typename internal::traits<T, L>::base_pointer;
+            //using base_pointer = typename internal::traits<T, L>::base_pointer;
+            using base_pointer = typename std::conditional<std::is_const<T>::value, const typename internal::traits<T, L>::base_pointer, typename internal::traits<T, L>::base_pointer>::type;
             base_pointer& data;
             const sarray<std::size_t, D>& n;
             const std::size_t stab_idx;
@@ -102,8 +103,9 @@ namespace XXX_NAMESPACE
         template <typename T, std::size_t D, data_layout L>
         class accessor<T, 1, D, L>
         {
-            using base_pointer = typename internal::traits<T, L>::base_pointer;
-            using const_base_pointer = typename internal::traits<const T, L>::base_pointer;
+            //using base_pointer = typename internal::traits<T, L>::base_pointer;
+            //using const_base_pointer = typename internal::traits<const T, L>::base_pointer;
+            using base_pointer = typename std::conditional<std::is_const<T>::value, const typename internal::traits<T, L>::base_pointer, typename internal::traits<T, L>::base_pointer>::type;
             static constexpr bool UseProxyType = (L != data_layout::AoS && internal::provides_proxy_type<T>::value);
             using value_type = typename std::conditional<UseProxyType, typename internal::traits<T, L>::proxy_type, T&>::type;
             using const_value_type = typename std::conditional<UseProxyType, const typename internal::traits<const T, L>::proxy_type, const T&>::type;
@@ -242,8 +244,8 @@ namespace XXX_NAMESPACE
         
         sarray<std::size_t, D> n;
         std::pair<std::size_t, std::size_t> allocation_shape;
-        base_pointer<element_type>* data;
-        base_pointer<const_element_type>* const_data;
+        base_pointer<element_type> data;
+        base_pointer<const_element_type> const_data;
         bool release_memory;
         #if defined(__CUDACC__)
         field* d_this; 
@@ -276,8 +278,8 @@ namespace XXX_NAMESPACE
             :
             n{},
             allocation_shape{0, 0},
-            data(nullptr),
-            const_data(nullptr),
+            data{},
+            const_data{},
             release_memory(false)
         {}
             
@@ -285,8 +287,8 @@ namespace XXX_NAMESPACE
             :
             n(n),
             allocation_shape(allocator_type::template get_allocation_shape<L>(n)),
-            data(new base_pointer<element_type>(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first)),
-            const_data(new base_pointer<const element_type>(*data)),
+            data(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first),
+            const_data(*data),
             release_memory(true)
         {
             if (initialize_to_zero)
@@ -299,10 +301,7 @@ namespace XXX_NAMESPACE
         {
             if (release_memory)
             {
-                if (data)
-                {
-                    allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(*data);
-                }
+                allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(data);
             }
         }
 
@@ -315,16 +314,12 @@ namespace XXX_NAMESPACE
         auto resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             -> void
         {
+            allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(data);
+
             this->n = n;
             allocation_shape = allocator_type::template get_allocation_shape<L>(n);
-
-            if (data)
-            {
-                allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(*data);
-            }
-            
-            data = new base_pointer<element_type>(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first);
-            const_data = new base_pointer<const_element_type>(*data);
+            data = base_pointer<element_type>(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first);
+            const_data = base_pointer<const_element_type>(data);
             
             if (initialize_to_zero)
             {
@@ -353,30 +348,28 @@ namespace XXX_NAMESPACE
             */
         }
 
-
-
         HOST_VERSION
         CUDA_DEVICE_VERSION
         inline auto operator[](const std::size_t idx)
         {
-            return internal::accessor<element_type, D, D, L>(*data, n)[idx];
+            return internal::accessor<element_type, D, D, L>(data, n)[idx];
         }
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
         inline auto operator[](const std::size_t idx) const
         {
-            return internal::accessor<const_element_type, D, D, L>(*const_data, n)[idx];
+            return internal::accessor<const_element_type, D, D, L>(const_data, n)[idx];
         }
 
         inline auto at(std::size_t idx)
         {
-            return internal::accessor<element_type, D, D, L>(*data, n)[idx];
+            return internal::accessor<element_type, D, D, L>(data, n)[idx];
         }
 
         inline auto at(std::size_t idx) const
         {
-            return internal::accessor<const_element_type, D, D, L>(*const_data, n)[idx];
+            return internal::accessor<const_element_type, D, D, L>(const_data, n)[idx];
         }
     };
 }
