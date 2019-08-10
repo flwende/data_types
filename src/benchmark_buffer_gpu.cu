@@ -23,6 +23,36 @@ constexpr std::size_t MEASUREMENT = 20;
 constexpr double SPREAD = 1.0;
 constexpr double OFFSET = 3.0;
 
+
+#if defined(__CUDACC__)
+__global__ void foo(XXX_NAMESPACE::device_field<element_type, 3, layout> a)
+{
+    const std::size_t x = blockIdx.x * blockDim.x + threadIdx.x;
+    const std::size_t y = blockIdx.y * blockDim.y + threadIdx.y;
+    const std::size_t z = blockIdx.z * blockDim.z + threadIdx.z;
+
+    const std::size_t nx = a.size()[0];
+    const std::size_t ny = a.size()[1];
+    const std::size_t nz = a.size()[2];
+    
+    if (x < nx && y < ny && z < nz)
+    {
+
+        const std::size_t index = (z * ny + y) * nx + x;
+
+#if defined(ELEMENT_ACCESS)
+        a[z][y][x].x = 2.0 * index;
+#else
+
+        a[z][y][x].x = 1.0 * index;
+        a[z][y][x].y = 2.0 * index;
+        a[z][y][x].z = 3.0 * index;
+#endif
+    }
+}
+#endif
+
+
 int main(int argc, char** argv)
 {
     // command line arguments
@@ -307,6 +337,7 @@ int main(int argc, char** argv)
             out_2.resize({nx, ny, nz});
         #endif
         
+        /*
         for (std::size_t k = 0; k < nz; ++k)
         {
             for (std::size_t j = 0; j < ny; ++j)
@@ -382,7 +413,35 @@ int main(int argc, char** argv)
                 #endif
             #endif
         }
+        */
+        const dim3 block_size(128, 1, 1);
+        const dim3 grid_size((nx + block_size.x - 1) / block_size.x, (ny + block_size.y - 1) / block_size.y, (nz + block_size.z - 1) / block_size.z);
         
+        for (std::size_t i = 0; i < 10; ++i)
+        {
+            foo<<<grid_size, block_size>>>(in_1.device());
+        }
+
+        cudaEvent_t start, stop;
+        cudaEventCreate(&start);
+        cudaEventCreate(&stop);
+
+        cudaEventRecord(start, 0);
+        for (std::size_t i = 0; i < 10; ++i)
+        {
+            foo<<<grid_size, block_size>>>(in_1.device());
+        }
+        cudaDeviceSynchronize();
+        cudaEventRecord(stop, 0);
+        cudaEventSynchronize(stop);
+
+        float elapsed_time;
+        cudaEventElapsedTime(&elapsed_time, start, stop);
+        std::cout << "elapsed time: " << elapsed_time << "ms" << std::endl;
+
+        cudaError_t error = cudaGetLastError();
+        std::cout << cudaGetErrorString(error) << std::endl;
+
         #if defined(CHECK_RESULTS)
         const double max_abs_error = static_cast<type>(1.0E-6);
         const std::size_t print_num_elements = 128;

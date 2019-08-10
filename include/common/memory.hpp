@@ -292,8 +292,6 @@ namespace XXX_NAMESPACE
 
             static constexpr std::size_t default_alignment = SIMD_NAMESPACE::simd::alignment;
 
-        public:
-
             static auto padding(const std::size_t n, const std::size_t alignment = default_alignment)
                 -> std::size_t
             {
@@ -307,6 +305,8 @@ namespace XXX_NAMESPACE
 
                 return ((n + ratio - 1) / ratio) * ratio;
             }
+
+        public:
 
             template <data_layout L, std::size_t D, bool Enable = true>
             static auto get_allocation_shape(const sarray<std::size_t, D>& n, const std::size_t alignment = default_alignment)
@@ -322,14 +322,17 @@ namespace XXX_NAMESPACE
                 return {padding(n.reduce_mul(), alignment), N};
             }
 
+            static auto get_byte_size(const std::pair<std::size_t, std::size_t>& allocation_shape)
+            {
+                return allocation_shape.first * allocation_shape.second * sizeof(value_type);
+            }
+
             template <XXX_NAMESPACE::target Target, bool Enable = true>
             static auto allocate(const std::pair<std::size_t, std::size_t>& allocation_shape, const std::size_t alignment = default_alignment)
                 -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), value_type*>::type
             {
-                const std::size_t num_elements = allocation_shape.first * allocation_shape.second;
-
                 // NOTE: aligned_alloc results in a segfault here -> use _mm_malloc
-                return reinterpret_cast<value_type*>(_mm_malloc(num_elements * sizeof(value_type), alignment));
+                return reinterpret_cast<value_type*>(_mm_malloc(get_byte_size(allocation_shape), alignment));
             }
 
             template <XXX_NAMESPACE::target Target, bool Enable = true>
@@ -686,8 +689,6 @@ namespace XXX_NAMESPACE
 
             static constexpr std::size_t default_alignment = SIMD_NAMESPACE::simd::alignment;
 
-        public:
-
             static auto padding(const std::size_t n, const std::size_t alignment = default_alignment)
                 -> std::size_t
             {
@@ -703,6 +704,8 @@ namespace XXX_NAMESPACE
                 return ((n + ratio - 1) / ratio) * ratio;
             }
 
+        public:
+
             template <data_layout L, std::size_t D, bool Enable = true>
             static auto get_allocation_shape(const sarray<std::size_t, D>& n, const std::size_t alignment = default_alignment)
                 -> typename std::enable_if<(L != data_layout::SoA && Enable), std::pair<std::size_t, std::size_t>>::type
@@ -717,14 +720,17 @@ namespace XXX_NAMESPACE
                 return {padding(n.reduce_mul(), alignment), 1};
             }
 
+            static auto get_byte_size(const std::pair<std::size_t, std::size_t>& allocation_shape)
+            {
+                return allocation_shape.first * allocation_shape.second * record_size;
+            }
+
             template <XXX_NAMESPACE::target Target, bool Enable = true>
             static auto allocate(const std::pair<std::size_t, std::size_t>& allocation_shape, const std::size_t alignment = default_alignment)
                 -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), value_type*>::type
             {
-                const std::size_t num_elements = allocation_shape.first * allocation_shape.second;
-
                 // NOTE: aligned_alloc results in a segfault here -> use _mm_malloc
-                return reinterpret_cast<value_type*>(_mm_malloc(num_elements * record_size, alignment));
+                return reinterpret_cast<value_type*>(_mm_malloc(get_byte_size(allocation_shape), alignment));
             }
 
             template <XXX_NAMESPACE::target Target, bool Enable = true>

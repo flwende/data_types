@@ -12,7 +12,8 @@
 #include <tuple/tuple.hpp>
 
 // data types and layout
-using type = double;
+//using type = double;
+using type = float;
 
 using type_x = type;
 using type_y = type;
