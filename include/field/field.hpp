@@ -241,36 +241,6 @@ namespace XXX_NAMESPACE
         template <typename X>
         using base_pointer = typename internal::traits<X, L>::base_pointer;
         using allocator_type = typename base_pointer<element_type>::allocator;
-        
-        sarray<std::size_t, D> n;
-        std::pair<std::size_t, std::size_t> allocation_shape;
-        base_pointer<element_type> data;
-        base_pointer<const_element_type> const_data;
-        bool release_memory;
-        #if defined(__CUDACC__)
-        field* d_this; 
-        #endif
-/*
-        auto set_data(const element_type& value)
-            -> void
-        {
-            if (!data.get()) return;
-
-            const std::size_t n_stabs = n.reduce_mul(1);
-            
-            for (std::size_t i_s = 0; i_s < n_stabs; ++i_s)
-            {
-                // get base_pointer to this stab, and use a 1d-accessor to access the elements in it
-                base_pointer<element_type> data_stab = data->at(i_s, 0);
-                internal::accessor<element_type, 1, D, L> stab(data_stab, n);
-                
-                for (std::size_t i = 0; i < n[0]; ++i)
-                {
-                    stab[i] = value;
-                }
-            }
-        }
-        */
 
     public:
 
@@ -280,8 +250,13 @@ namespace XXX_NAMESPACE
             allocation_shape{0, 0},
             data{},
             const_data{},
-            release_memory(false)
-        {}
+            d_this{},
+            owns_data(false)
+        {
+            #if defined(__CUDACC__)
+            d_this = nullptr;
+            #endif
+        }
             
         field(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             :
@@ -289,32 +264,30 @@ namespace XXX_NAMESPACE
             allocation_shape(allocator_type::template get_allocation_shape<L>(n)),
             data(allocator_type::template allocate<XXX_NAMESPACE::target::Host>(allocation_shape), allocation_shape.first),
             const_data(*data),
-            release_memory(true)
+            d_this{},
+            owns_data(true)
         {
             if (initialize_to_zero)
             {
-                //set_data({});
+                set_data({});
             }
+
+            #if defined(__CUDACC__)
+            d_this = nullptr;
+            #endif
         }
         
         ~field()
         {
-            if (release_memory)
-            {
-                allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(data);
-            }
-        }
+            release_data();
 
-        auto size() const
-            -> const sarray<std::size_t, D>&
-        {
-            return n;   
+            release_device_data();
         }
 
         auto resize(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
             -> void
         {
-            allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(data);
+            release_data();
 
             this->n = n;
             allocation_shape = allocator_type::template get_allocation_shape<L>(n);
@@ -323,29 +296,25 @@ namespace XXX_NAMESPACE
             
             if (initialize_to_zero)
             {
-               // set_data({});
+                set_data({});
             }
+
+            // now this instance owns the data
+            owns_data = true; 
         }
 
         auto swap(field& b)
             -> void
         {
-            /*
-            if (n != b.n)
-            {
-                std::cerr << "error: field swapping not possible because of different extents" << std::endl;
-                return;
-            }
+            // TODO: implementation; if (owns_data) {..}
+        }
 
-            n.swap(b.n);
+        auto device(const bool sync_with_host = false)
+            -> field&
+        {
+            resize_device_data(sync_with_host);
 
-            std::pair<std::size_t, std::size_t> this_allocation_shape = allocation_shape;
-            allocation_shape = b.allocation_shape;
-            b.allocation_shape = this_allocation_shape;
-
-            data.swap(b.data);
-            const_data.swap(b.const_data);
-            */
+            return *d_this;
         }
 
         HOST_VERSION
@@ -362,15 +331,79 @@ namespace XXX_NAMESPACE
             return internal::accessor<const_element_type, D, D, L>(const_data, n)[idx];
         }
 
-        inline auto at(std::size_t idx)
+        HOST_VERSION
+        CUDA_DEVICE_VERSION    
+        auto size() const
+            -> const sarray<std::size_t, D>&
         {
-            return internal::accessor<element_type, D, D, L>(data, n)[idx];
+            return n;   
         }
 
-        inline auto at(std::size_t idx) const
+    private:
+
+        auto release_data()
+            -> void
         {
-            return internal::accessor<const_element_type, D, D, L>(const_data, n)[idx];
+            if (owns_data)
+            {
+                allocator_type::template deallocate<XXX_NAMESPACE::target::Host>(data);
+            }
         }
+
+        auto release_device_data()
+            -> void
+        {
+            #if defined(__CUDACC__)
+            if (owns_data && d_this)
+            {
+                allocator_type::template deallocate<XXX_NAMESPACE::target::GPU_CUDA>(d_this->data);
+                delete d_this;
+            }
+            #endif
+
+            d_this = nullptr;
+        }
+
+        auto resize_device_data(const bool sync_with_host = false)
+            -> void
+        {
+            release_device_data();
+         
+            #if defined(__CUDACC__)
+            if (owns_data && !d_this)
+            {
+                d_this = new field(n, allocation_shape, allocator_type::template allocate<XXX_NAMESPACE::target::GPU_CUDA>(allocation_shape));
+            }
+
+            if (sync_with_host)
+            {
+
+            }
+            #endif
+        }
+
+        auto set_data(const element_type& value)
+            -> void
+        {
+            for (std::size_t stab_idx = 0; stab_idx < n.reduce_mul(1); ++stab_idx)
+            {
+                // get base_pointer to this stab, and use a 1d-accessor to access the elements in it
+                base_pointer<element_type> stab_pointer(data, stab_idx, 0);
+                internal::accessor<element_type, 1, D, L> stab(stab_pointer, n);
+
+                for (std::size_t i = 0; i < n[0]; ++i)
+                {
+                    stab[i] = value;
+                }
+            }
+        }
+
+        sarray<std::size_t, D> n;
+        std::pair<std::size_t, std::size_t> allocation_shape;
+        base_pointer<element_type> data;
+        base_pointer<const_element_type> const_data;
+        field* d_this;
+        bool owns_data;
     };
 }
 

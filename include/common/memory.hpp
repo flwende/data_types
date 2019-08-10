@@ -341,6 +341,30 @@ namespace XXX_NAMESPACE
                     _mm_free(p.get_pointer());
                 }
             }
+
+            #if defined(__CUDACC__)
+            template <XXX_NAMESPACE::target Target, bool Enable = true>
+            static auto allocate(const std::pair<std::size_t, std::size_t>& allocation_shape, const std::size_t alignment = default_alignment)
+                -> typename std::enable_if<(Target == XXX_NAMESPACE::target::GPU_CUDA && Enable), value_type*>::type
+            {
+                const std::size_t num_elements = allocation_shape.first * allocation_shape.second;
+                value_type* d_ptr;
+
+                cudaMalloc((void**)&d_ptr, num_elements * sizeof(value_type));
+
+                return d_ptr;
+            }
+
+            template <XXX_NAMESPACE::target Target, bool Enable = true>
+            static auto deallocate(pointer& p)
+                -> typename std::enable_if<(Target == XXX_NAMESPACE::target::GPU_CUDA && Enable), void>::type
+            {
+                if (p.get_pointer())
+                {
+                    cudaFree(p.get_pointer());
+                }
+            }
+            #endif
         };
     };
 
@@ -712,6 +736,30 @@ namespace XXX_NAMESPACE
                     _mm_free(mp.get_pointer());
                 }
             }
+
+            #if defined(__CUDACC__)
+            template <XXX_NAMESPACE::target Target, bool Enable = true>
+            static auto allocate(const std::pair<std::size_t, std::size_t>& allocation_shape, const std::size_t alignment = default_alignment)
+                -> typename std::enable_if<(Target == XXX_NAMESPACE::target::GPU_CUDA && Enable), value_type*>::type
+            {
+                const std::size_t num_elements = allocation_shape.first * allocation_shape.second;
+                value_type* d_ptr;
+
+                cudaMalloc((void**)&d_ptr, num_elements * record_size);
+
+                return d_ptr;
+            }
+
+            template <XXX_NAMESPACE::target Target, bool Enable = true>
+            static auto deallocate(multi_pointer& mp)
+                -> typename std::enable_if<(Target == XXX_NAMESPACE::target::GPU_CUDA && Enable), void>::type
+            {
+                if (mp.get_pointer())
+                {
+                    cudaFree(mp.get_pointer());
+                }
+            }
+            #endif
         };
     };
 }
