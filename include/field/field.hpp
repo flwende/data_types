@@ -339,7 +339,6 @@ namespace XXX_NAMESPACE
         }
 
     #if defined(__CUDACC__)
-        
         auto device(const bool sync_with_host = false)
             -> device_field<T, D, L>&
         {

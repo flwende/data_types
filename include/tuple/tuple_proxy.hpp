@@ -56,11 +56,8 @@ namespace TUPLE_NAMESPACE
             static_assert(!std::is_void<T_3>::value, "error: T_3 is void -> not allowed");
             static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
 
-            template <typename X, std::size_t N, std::size_t D, XXX_NAMESPACE::data_layout L>
+            template <typename, std::size_t, std::size_t, XXX_NAMESPACE::data_layout>
             friend class XXX_NAMESPACE::internal::accessor;
-
-            template <typename P, typename R>
-            friend class XXX_NAMESPACE::internal::iterator;
 
             using T_1_unqualified = typename std::remove_cv<T_1>::type;
             using T_2_unqualified = typename std::remove_cv<T_2>::type;

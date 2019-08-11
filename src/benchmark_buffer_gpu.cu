@@ -45,7 +45,7 @@ __global__ void foo(XXX_NAMESPACE::device_field<element_type, 3, layout> a)
 #else
 
         a[z][y][x].x = 1.0 * index;
-        a[z][y][x].y = 2.0 * index;
+        a[z][y][x].y = -2.0 * index;
         a[z][y][x].z = 3.0 * index;
 #endif
     }
@@ -438,6 +438,27 @@ int main(int argc, char** argv)
         float elapsed_time;
         cudaEventElapsedTime(&elapsed_time, start, stop);
         std::cout << "elapsed time: " << elapsed_time << "ms" << std::endl;
+
+        if (argc > 4)
+        {
+            in_1.copy_device_to_host();
+
+            //const float* ptr = reinterpret_cast<const float*>(&in_1[0][0][0].x);
+            const std::int8_t* ptr = reinterpret_cast<const std::int8_t*>(&in_1[0][0][0].x);
+
+            for (std::size_t z = 0; z < nz; ++z)
+            {
+                for (std::size_t y = 0; y < ny; ++y)
+                {
+                    for (std::size_t x = 0; x < nx; ++x)
+                    {
+                        //std::cout << ptr[(z * ny + y) * nx + x] << " ";
+                        std::cout << static_cast<std::int32_t>(ptr[(z * ny + y) * nx + x]) << " ";
+                    }
+                    std::cout << std::endl;
+                }
+            }
+        }
 
         cudaError_t error = cudaGetLastError();
         std::cout << cudaGetErrorString(error) << std::endl;
