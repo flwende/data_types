@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <iostream>
 
+#include <platform/target.hpp>
+
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
@@ -106,6 +108,8 @@ namespace XXX_NAMESPACE
         //!
         //! \param idx element index
         //! \return reference to the element
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline constexpr T& operator[](const std::size_t idx)
         {
             return data[idx];
@@ -115,6 +119,8 @@ namespace XXX_NAMESPACE
         //!
         //! \param idx element index
         //! \return const reference to the element
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline constexpr const T& operator[](const std::size_t idx) const
         {
             return data[idx];
@@ -223,6 +229,8 @@ namespace XXX_NAMESPACE
         //! \param r_0 start value for the reduction
         //! \return reduction
         template <typename F>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline constexpr T reduce(F func, const T r_0, const std::size_t begin = 0, const std::size_t end = D) const
         {
             T r = r_0;
@@ -235,6 +243,8 @@ namespace XXX_NAMESPACE
             return r;
         }
 
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         inline constexpr T reduce_mul(const std::size_t begin = 0, const std::size_t end = D) const
         {
             return reduce([&](const T product, const T element) { return (product * element); }, 1, begin, end);
