@@ -223,11 +223,11 @@ namespace XXX_NAMESPACE
         //! \param r_0 start value for the reduction
         //! \return reduction
         template <typename F>
-        inline constexpr T reduce(F func, const T r_0, const std::size_t offset = 0) const
+        inline constexpr T reduce(F func, const T r_0, const std::size_t begin = 0, const std::size_t end = D) const
         {
             T r = r_0;
 
-            for (std::size_t i = offset; i < D; ++i)
+            for (std::size_t i = begin; i < end; ++i)
             {
                 r = func(r, data[i]);
             }
@@ -235,9 +235,9 @@ namespace XXX_NAMESPACE
             return r;
         }
 
-        inline constexpr T reduce_mul(const std::size_t offset = 0) const
+        inline constexpr T reduce_mul(const std::size_t begin = 0, const std::size_t end = D) const
         {
-            return reduce([&](const T product, const T element) { return (product * element); }, 1, offset);
+            return reduce([&](const T product, const T element) { return (product * element); }, 1, begin, end);
         }
     };
 
