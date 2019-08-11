@@ -74,14 +74,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const std::size_t idx)
                 -> accessor<T, N - 1, D, L>
             {
-                std::size_t delta = idx;
-
-                for (std::size_t i = 1; i < (N - 1); ++i)
-                {
-                    delta *= n[i];
-                }               
-
-                return {data, n, stab_idx + delta};
+                return {data, n, stab_idx + idx * n.reduce_mul(1, N - 1)};
             }
 
             HOST_VERSION
@@ -89,14 +82,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const std::size_t idx) const
                 -> accessor<T, N - 1, D, L>
             {
-                std::size_t delta = idx;
-
-                for (std::size_t i = 1; i < (N - 1); ++i)
-                {
-                    delta *= n[i];
-                }               
-
-                return {data, n, stab_idx + delta};
+                return {data, n, stab_idx + idx * n.reduce_mul(1, N - 1)};
             }
         };
         
