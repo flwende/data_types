@@ -16,6 +16,7 @@
 #endif
 
 #include <common/data_layout.hpp>
+#include <common/data_types.hpp>
 #include <common/memory.hpp>
 #include <common/traits.hpp>
 #include <platform/target.hpp>
@@ -45,14 +46,14 @@ namespace XXX_NAMESPACE
         //! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
         //! \tparam Enabled needed for partial specialization for data types providing a proxy type
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, std::size_t N, std::size_t D, data_layout L>
+        template <typename T, size_type N, size_type D, data_layout L>
         class accessor
         {
             //using base_pointer = typename internal::traits<T, L>::base_pointer;
             using base_pointer = typename std::conditional<std::is_const<T>::value, const typename internal::traits<T, L>::base_pointer, typename internal::traits<T, L>::base_pointer>::type;
             base_pointer& data;
-            const sarray<std::size_t, D>& n;
-            const std::size_t stab_idx;
+            const sarray<size_type, D>& n;
+            const size_type stab_idx;
 
         public:
 
@@ -63,7 +64,7 @@ namespace XXX_NAMESPACE
             //! \param stab_idx the offset in units of 'innermost dimension n[0]'
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            accessor(base_pointer& data, const sarray<std::size_t, D>& n, const std::size_t stab_idx = 0) 
+            accessor(base_pointer& data, const sarray<size_type, D>& n, const size_type stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
@@ -71,7 +72,7 @@ namespace XXX_NAMESPACE
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const std::size_t idx)
+            inline auto operator[] (const size_type idx)
                 -> accessor<T, N - 1, D, L>
             {
                 return {data, n, stab_idx + idx * n.reduce_mul(1, N - 1)};
@@ -79,14 +80,14 @@ namespace XXX_NAMESPACE
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const std::size_t idx) const
+            inline auto operator[] (const size_type idx) const
                 -> accessor<T, N - 1, D, L>
             {
                 return {data, n, stab_idx + idx * n.reduce_mul(1, N - 1)};
             }
         };
         
-        template <typename T, std::size_t D, data_layout L>
+        template <typename T, size_type D, data_layout L>
         class accessor<T, 1, D, L>
         {
             //using base_pointer = typename internal::traits<T, L>::base_pointer;
@@ -97,8 +98,8 @@ namespace XXX_NAMESPACE
             using const_value_type = typename std::conditional<UseProxyType, const typename internal::traits<const T, L>::proxy_type, const T&>::type;
             
             base_pointer& data;
-            const sarray<std::size_t, D>& n;
-            const std::size_t stab_idx;
+            const sarray<size_type, D>& n;
+            const size_type stab_idx;
 
         public:
 
@@ -108,7 +109,7 @@ namespace XXX_NAMESPACE
             //! \param n extent of the D-dimensional array
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            accessor(base_pointer& data, const sarray<std::size_t, D>& n, const std::size_t stab_idx = 0) 
+            accessor(base_pointer& data, const sarray<size_type, D>& n, const size_type stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
@@ -117,7 +118,7 @@ namespace XXX_NAMESPACE
             template <bool Enable = true>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const std::size_t idx)
+            inline auto operator[] (const size_type idx)
                 -> typename std::enable_if<(!UseProxyType && Enable), value_type>::type
             {
                 return std::get<0>(data.access(0, stab_idx * n[0] + idx));
@@ -126,7 +127,7 @@ namespace XXX_NAMESPACE
             template <bool Enable = true>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const std::size_t idx) const
+            inline auto operator[] (const size_type idx) const
                 -> typename std::enable_if<(!UseProxyType && Enable), const_value_type>::type
             {
                 return std::get<0>(data.access(0, stab_idx * n[0] + idx));
@@ -135,7 +136,7 @@ namespace XXX_NAMESPACE
             template <bool Enable = true, data_layout Layout = L>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const std::size_t idx)
+            inline auto operator[] (const size_type idx)
                 -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoAi && Enable), value_type>::type
             {
                 return data.access(stab_idx, idx);
@@ -144,7 +145,7 @@ namespace XXX_NAMESPACE
             template <bool Enable = true, data_layout Layout = L>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const std::size_t idx) const
+            inline auto operator[] (const size_type idx) const
                 -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoAi && Enable), value_type>::type
             {
                 return data.access(stab_idx, idx);
@@ -153,7 +154,7 @@ namespace XXX_NAMESPACE
             template <bool Enable = true, data_layout Layout = L>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const std::size_t idx)
+            inline auto operator[] (const size_type idx)
                 -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoA && Enable), value_type>::type
             {
                 return data.access(0, stab_idx * n[0] + idx);
@@ -162,7 +163,7 @@ namespace XXX_NAMESPACE
             template <bool Enable = true, data_layout Layout = L>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const std::size_t idx) const
+            inline auto operator[] (const size_type idx) const
                 -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoA && Enable), value_type>::type
             {
                 return data.access(0, stab_idx * n[0] + idx);
@@ -210,10 +211,10 @@ namespace XXX_NAMESPACE
     //! \tparam D dimension
     //! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T, std::size_t D, data_layout L>
+    template <typename T, size_type D, data_layout L>
     class device_field;
 
-    template <typename T, std::size_t D, data_layout L = data_layout::AoS>
+    template <typename T, size_type D, data_layout L = data_layout::AoS>
     class field
     {
         static_assert(!std::is_const<T>::value, "error: field with const elements is not allowed");
@@ -221,7 +222,7 @@ namespace XXX_NAMESPACE
     public:
 
         using element_type = T;
-        static constexpr std::size_t dimension = D;
+        static constexpr size_type dimension = D;
         static constexpr data_layout layout = L;
 
     private:
@@ -258,7 +259,7 @@ namespace XXX_NAMESPACE
 
         field() = default;
             
-        field(const sarray<std::size_t, D>& n, const bool initialize_to_zero = false)
+        field(const sarray<size_type, D>& n, const bool initialize_to_zero = false)
             :
             n(n),
             allocation_shape(allocator::template get_allocation_shape<L>(n)),
@@ -272,7 +273,7 @@ namespace XXX_NAMESPACE
             }
         }
         
-        auto resize(const sarray<std::size_t, D>& new_n, const bool initialize_to_zero = false)
+        auto resize(const sarray<size_type, D>& new_n, const bool initialize_to_zero = false)
             -> void
         {
             if (n != new_n)
@@ -304,14 +305,14 @@ namespace XXX_NAMESPACE
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto operator[](const std::size_t idx)
+        inline auto operator[](const size_type idx)
         {
             return internal::accessor<element_type, D, D, L>(*data, n)[idx];
         }
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto operator[](const std::size_t idx) const
+        inline auto operator[](const size_type idx) const
         {
             return internal::accessor<const_element_type, D, D, L>(*const_data, n)[idx];
         }
@@ -319,7 +320,7 @@ namespace XXX_NAMESPACE
         HOST_VERSION
         CUDA_DEVICE_VERSION    
         auto size() const
-            -> const sarray<std::size_t, D>&
+            -> const sarray<size_type, D>&
         {
             return n;   
         }
@@ -358,7 +359,7 @@ namespace XXX_NAMESPACE
 
     private:
 
-        field(const sarray<std::size_t, D>& n, const std::pair<std::size_t, std::size_t>& allocation_shape, const shared_base_pointer<element_type>& data)
+        field(const sarray<size_type, D>& n, const std::pair<size_type, size_type>& allocation_shape, const shared_base_pointer<element_type>& data)
             :
             n(n),
             allocation_shape(allocation_shape),
@@ -368,14 +369,14 @@ namespace XXX_NAMESPACE
         {}
 
         template <typename X, XXX_NAMESPACE::target Target>
-        auto make_base_pointer(const std::pair<std::size_t, std::size_t>& allocation_shape)
+        auto make_base_pointer(const std::pair<size_type, size_type>& allocation_shape)
             -> base_pointer<X>
         {
             return {allocator::template allocate<Target>(allocation_shape), allocation_shape.first};
         }
 
         template <typename X, XXX_NAMESPACE::target Target>
-        auto make_shared_base_pointer(const std::pair<std::size_t, std::size_t>& allocation_shape)
+        auto make_shared_base_pointer(const std::pair<size_type, size_type>& allocation_shape)
             -> shared_base_pointer<X>
         {
             return {new base_pointer<X>(allocator::template allocate<Target>(allocation_shape), allocation_shape.first), deleter<Target>()};
@@ -384,13 +385,13 @@ namespace XXX_NAMESPACE
         auto set_data(const element_type& value)
             -> void
         {   
-            for (std::size_t stab_idx = 0; stab_idx < n.reduce_mul(1); ++stab_idx)
+            for (size_type stab_idx = 0; stab_idx < n.reduce_mul(1); ++stab_idx)
             {
                 // get base_pointer to this stab, and use a 1d-accessor to access the elements in it
                 base_pointer<element_type> stab_pointer(*data, stab_idx, 0);
                 internal::accessor<element_type, 1, D, L> stab(stab_pointer, n);
 
-                for (std::size_t i = 0; i < n[0]; ++i)
+                for (size_type i = 0; i < n[0]; ++i)
                 {
                     stab[i] = value;
                 }
@@ -410,26 +411,26 @@ namespace XXX_NAMESPACE
         }
     #endif
 
-        sarray<std::size_t, D> n;
-        std::pair<std::size_t, std::size_t> allocation_shape;
+        sarray<size_type, D> n;
+        std::pair<size_type, size_type> allocation_shape;
         shared_base_pointer<element_type> data;
         shared_base_pointer<const_element_type> const_data;
         std::shared_ptr<device_field<T, D, L>> d_this;
     };
 
 #if defined(__CUDACC__)
-    template <typename T, std::size_t D, data_layout L>
+    template <typename T, size_type D, data_layout L>
     class device_field
     {
         static_assert(!std::is_const<T>::value, "error: field with const elements is not allowed");
 
-        template <typename, std::size_t, data_layout>
+        template <typename, size_type, data_layout>
         friend class field;
 
     public:
 
         using element_type = T;
-        static constexpr std::size_t dimension = D;
+        static constexpr size_type dimension = D;
         static constexpr data_layout layout = L;
 
     //private:
@@ -438,7 +439,7 @@ namespace XXX_NAMESPACE
         template <typename X>
         using base_pointer = typename internal::traits<X, L>::base_pointer;
 
-        device_field(const sarray<std::size_t, D>& n, const std::pair<std::size_t, std::size_t>& allocation_shape, const base_pointer<element_type>& data)
+        device_field(const sarray<size_type, D>& n, const std::pair<size_type, size_type>& allocation_shape, const base_pointer<element_type>& data)
             :
             n(n),
             allocation_shape(allocation_shape),
@@ -449,28 +450,28 @@ namespace XXX_NAMESPACE
     public:
 
         CUDA_DEVICE_VERSION
-        inline auto operator[](const std::size_t idx)
+        inline auto operator[](const size_type idx)
         {
             return internal::accessor<element_type, D, D, L>(data, n)[idx];
         }
 
         CUDA_DEVICE_VERSION
-        inline auto operator[](const std::size_t idx) const
+        inline auto operator[](const size_type idx) const
         {
             return internal::accessor<const_element_type, D, D, L>(const_data, n)[idx];
         }
 
         CUDA_DEVICE_VERSION    
         auto size() const
-            -> const sarray<std::size_t, D>&
+            -> const sarray<size_type, D>&
         {
             return n;   
         }
 
     private:
 
-        sarray<std::size_t, D> n;
-        std::pair<std::size_t, std::size_t> allocation_shape;
+        sarray<size_type, D> n;
+        std::pair<size_type, size_type> allocation_shape;
         base_pointer<element_type> data;
         base_pointer<const_element_type> const_data;
     };

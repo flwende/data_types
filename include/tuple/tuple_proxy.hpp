@@ -14,8 +14,9 @@
 #define TUPLE_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include <common/memory.hpp>
 #include <common/data_layout.hpp>
+#include <common/data_types.hpp>
+#include <common/memory.hpp>
 #include <auxiliary/variadic.hpp>
 
 // some forward declarations
@@ -32,7 +33,7 @@ namespace XXX_NAMESPACE
 {
     namespace internal 
     {
-        template <typename X, std::size_t N, std::size_t D, XXX_NAMESPACE::data_layout L>
+        template <typename X, size_type N, size_type D, XXX_NAMESPACE::data_layout L>
         class accessor;
     }
 }
@@ -56,7 +57,7 @@ namespace TUPLE_NAMESPACE
             static_assert(!std::is_void<T_3>::value, "error: T_3 is void -> not allowed");
             static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
 
-            template <typename, std::size_t, std::size_t, XXX_NAMESPACE::data_layout>
+            template <typename, size_type, size_type, XXX_NAMESPACE::data_layout>
             friend class XXX_NAMESPACE::internal::accessor;
 
             using T_1_unqualified = typename std::remove_cv<T_1>::type;

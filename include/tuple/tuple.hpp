@@ -6,9 +6,6 @@
 #if !defined(TUPLE_TUPLE_HPP)
 #define TUPLE_TUPLE_HPP
 
-#include <auxiliary/math.hpp>
-#include <platform/target.hpp>
-
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
@@ -16,6 +13,9 @@
 #if !defined(TUPLE_NAMESPACE)
 #define TUPLE_NAMESPACE XXX_NAMESPACE
 #endif
+
+#include <auxiliary/math.hpp>
+#include <platform/target.hpp>
 
 namespace TUPLE_NAMESPACE
 {

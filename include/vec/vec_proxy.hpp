@@ -16,6 +16,7 @@
 
 #include <common/memory.hpp>
 #include <common/data_layout.hpp>
+#include <common/data_types.hpp>
 
 // some forward declarations
 namespace XXX_NAMESPACE
@@ -31,7 +32,7 @@ namespace XXX_NAMESPACE
 {
     namespace internal 
     {
-        template <typename X, std::size_t N, std::size_t D, XXX_NAMESPACE::data_layout L>
+        template <typename X, size_type N, size_type D, XXX_NAMESPACE::data_layout L>
         class accessor;
     }
 }
@@ -61,7 +62,7 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename, std::size_t, std::size_t, XXX_NAMESPACE::data_layout>
+            template <typename, size_type, size_type, XXX_NAMESPACE::data_layout>
             friend class XXX_NAMESPACE::internal::accessor;
 
         public:
@@ -72,7 +73,7 @@ namespace VEC_NAMESPACE
             //! Remember the template type parameter T
             using value_type = T;
             //! Remember the template parameter D (=1)
-            static constexpr std::size_t d = 1;
+            static constexpr size_type d = 1;
             using base_pointer = XXX_NAMESPACE::pointer_n<T, 1>;
             using original_type = typename std::conditional<std::is_const<T>::value, 
                 const vec<typename std::remove_cv<T>::type, 1>,
@@ -171,7 +172,7 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename, std::size_t, std::size_t, XXX_NAMESPACE::data_layout>
+            template <typename, size_type, size_type, XXX_NAMESPACE::data_layout>
             friend class XXX_NAMESPACE::internal::accessor;
 
         public:
@@ -182,7 +183,7 @@ namespace VEC_NAMESPACE
             //! Remember the template type parameter T
             using value_type = T;
             //! Remember the template parameter D (=2)
-            static constexpr std::size_t d = 2;
+            static constexpr size_type d = 2;
             using base_pointer = XXX_NAMESPACE::pointer_n<T, 2>;
             using original_type = typename std::conditional<std::is_const<T>::value, 
                 const vec<typename std::remove_cv<T>::type, 2>,
@@ -288,7 +289,7 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename, std::size_t, std::size_t, XXX_NAMESPACE::data_layout>
+            template <typename, size_type, size_type, XXX_NAMESPACE::data_layout>
             friend class XXX_NAMESPACE::internal::accessor;
 
         public:
@@ -299,7 +300,7 @@ namespace VEC_NAMESPACE
             //! Remember the template type parameter T
             using value_type = T;
             //! Remember the template parameter D (=3)
-            static constexpr std::size_t d = 3;
+            static constexpr size_type d = 3;
             using base_pointer = XXX_NAMESPACE::pointer_n<T, 3>;
             using original_type = typename std::conditional<std::is_const<T>::value, 
                 const vec<typename std::remove_cv<T>::type, 3>,

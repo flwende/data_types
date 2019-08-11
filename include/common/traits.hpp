@@ -12,7 +12,7 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include "data_layout.hpp"
+#include <common/data_layout.hpp>
 
 namespace XXX_NAMESPACE
 {

@@ -10,11 +10,12 @@
 #include <cstdint>
 #include <iostream>
 
-#include <platform/target.hpp>
-
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
+
+#include <common/data_types.hpp>
+#include <platform/target.hpp>
 
 namespace XXX_NAMESPACE
 {
@@ -24,10 +25,10 @@ namespace XXX_NAMESPACE
     //! \tparam T data type
     //! \tparam D array size
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T, std::size_t D>
+    template <typename T, size_type D>
     class sarray
     {
-        template <typename TT, std::size_t DD>
+        template <typename, size_type>
         friend class sarray;
      
         T data[D];
@@ -35,7 +36,7 @@ namespace XXX_NAMESPACE
     public:
 
         using element_type = T;
-        static constexpr std::size_t size = D;
+        static constexpr size_type size = D;
 
         //! \brief Standard constructor
         constexpr sarray() 
@@ -44,7 +45,7 @@ namespace XXX_NAMESPACE
 
         constexpr sarray(const T& x) 
         {
-            for (std::size_t i = 0; i < D; ++i)
+            for (size_type i = 0; i < D; ++i)
                 data[i] = x;
         }
 
@@ -61,17 +62,17 @@ namespace XXX_NAMESPACE
         //!
         //! \tparam X array size
         //! \param x an sarray object of type T with size X
-        template <std::size_t X>
+        template <size_type X>
         constexpr sarray(const sarray<T, X>& x)
         {
-            constexpr std::size_t i_max = (X < D ? X : D);
+            constexpr size_type i_max = (X < D ? X : D);
 
-            for (std::size_t i = 0; i < i_max; ++i)
+            for (size_type i = 0; i < i_max; ++i)
             {
                 data[i] = x.data[i];
             }
 
-            for (std::size_t i = i_max; i < D; ++i)
+            for (size_type i = i_max; i < D; ++i)
             {
                 data[i] = static_cast<T>(0);
             }
@@ -82,7 +83,7 @@ namespace XXX_NAMESPACE
         //! \param x an std::array object
         constexpr sarray(const std::array<T, D>& x) 
         {
-            for (std::size_t i = 0; i < D; ++i)
+            for (size_type i = 0; i < D; ++i)
             {
                 data[i] = x[i];
             }
@@ -94,7 +95,7 @@ namespace XXX_NAMESPACE
         //! \return a reference to this object with the new content
         inline constexpr sarray& swap(sarray& x)
         {
-            for (std::size_t i = 0; i < D; ++i)
+            for (size_type i = 0; i < D; ++i)
             {
                 const T tmp = data[i];
                 data[i] = x.data[i];
@@ -110,7 +111,7 @@ namespace XXX_NAMESPACE
         //! \return reference to the element
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline constexpr T& operator[](const std::size_t idx)
+        inline constexpr T& operator[](const size_type idx)
         {
             return data[idx];
         }
@@ -121,7 +122,7 @@ namespace XXX_NAMESPACE
         //! \return const reference to the element
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline constexpr const T& operator[](const std::size_t idx) const
+        inline constexpr const T& operator[](const size_type idx) const
         {
             return data[idx];
         }
@@ -131,7 +132,7 @@ namespace XXX_NAMESPACE
         //! \param x replacement
         //! \param idx element index
         //! \return an sarray object
-        inline constexpr sarray<T, D> replace(const T x, const std::size_t idx) const 
+        inline constexpr sarray<T, D> replace(const T x, const size_type idx) const 
         {
             sarray<T, D> result = *this;
 
@@ -150,14 +151,14 @@ namespace XXX_NAMESPACE
         //! \param x element to be inserted
         //! \param idx element index
         //! \return an sarray object
-        inline constexpr sarray<T, D> insert_and_chop(const T x, const std::size_t idx = 0) const
+        inline constexpr sarray<T, D> insert_and_chop(const T x, const size_type idx = 0) const
         {
             if (idx >= D) return *this;
 
             sarray<T, D> result;
 
             // take everything before position 'idx'
-            for (std::size_t i = 0; i < idx; ++i)
+            for (size_type i = 0; i < idx; ++i)
             {
                 result.data[i] = data[i];
             }
@@ -166,7 +167,7 @@ namespace XXX_NAMESPACE
             result.data[idx] = x;
 
             // take everything behind position 'idx' 
-            for (std::size_t i = idx; i < (D - 1); ++i)
+            for (size_type i = idx; i < (D - 1); ++i)
             {
                 result.data[i + 1] = data[i];
             }
@@ -179,7 +180,7 @@ namespace XXX_NAMESPACE
         //! \param x element to be inserted
         //! \param idx element index
         //! \return an sarray object
-        inline constexpr sarray<T, D + 1> insert(const T x, const std::size_t idx = 0) const
+        inline constexpr sarray<T, D + 1> insert(const T x, const size_type idx = 0) const
         {
             sarray<T, D + 1> result(*this);
 
@@ -189,7 +190,7 @@ namespace XXX_NAMESPACE
                 result.data[idx] = x;
 
                 // take everything behind position 'idx' 
-                for (std::size_t i = idx; i < D; ++i)
+                for (size_type i = idx; i < D; ++i)
                 {
                     result.data[i + 1] = data[i];
                 }
@@ -206,7 +207,7 @@ namespace XXX_NAMESPACE
         {
             bool is_same = true;
 
-            for (std::size_t i = 0; i < D; ++i)
+            for (size_type i = 0; i < D; ++i)
             {
                 is_same &= (data[i] == rhs.data[i]);
             }
@@ -231,11 +232,11 @@ namespace XXX_NAMESPACE
         template <typename F>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline constexpr T reduce(F func, const T r_0, const std::size_t begin = 0, const std::size_t end = D) const
+        inline constexpr T reduce(F func, const T r_0, const size_type begin = 0, const size_type end = D) const
         {
             T r = r_0;
 
-            for (std::size_t i = begin; i < end; ++i)
+            for (size_type i = begin; i < end; ++i)
             {
                 r = func(r, data[i]);
             }
@@ -245,16 +246,16 @@ namespace XXX_NAMESPACE
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline constexpr T reduce_mul(const std::size_t begin = 0, const std::size_t end = D) const
+        inline constexpr T reduce_mul(const size_type begin = 0, const size_type end = D) const
         {
             return reduce([&](const T product, const T element) { return (product * element); }, 1, begin, end);
         }
     };
 
-    template <typename T, std::size_t D>
+    template <typename T, typename size_type, size_type D>
     std::ostream& operator<<(std::ostream& os, const sarray<T, D>& x)
     {
-        for (std::size_t i = 0; i < D; ++i)
+        for (size_type i = 0; i < D; ++i)
         {
             os << x[i] << ((i + 1) < D ? " " : "");
         }

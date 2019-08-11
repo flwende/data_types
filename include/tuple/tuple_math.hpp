@@ -18,7 +18,7 @@
 #define MATH_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../auxiliary/math.hpp"
+#include <auxiliary/math.hpp>
 
 namespace MATH_NAMESPACE
 {

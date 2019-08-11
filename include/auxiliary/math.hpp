@@ -18,8 +18,9 @@
 #define MATH_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include "../common/traits.hpp"
-#include "../sarray/sarray.hpp"
+#include <common/data_types.hpp>
+#include <common/traits.hpp>
+#include <sarray/sarray.hpp>
 
 namespace MATH_NAMESPACE
 {
@@ -71,7 +72,7 @@ namespace MATH_NAMESPACE
     //! \param x argument
     //! \return x is power of N or not
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <std::size_t N, typename T>
+    template <size_type N, typename T>
     constexpr bool is_power_of(T x)
     {
         static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
@@ -96,12 +97,12 @@ namespace MATH_NAMESPACE
     //! \param x argument
     //! \return prefix sum
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T, std::size_t N>
+    template <typename T, size_type N>
     constexpr MATH_NAMESPACE::sarray<T, N> prefix_sum(const MATH_NAMESPACE::sarray<T, N>& x)
     {
         MATH_NAMESPACE::sarray<T, N> y{0};
 
-        for (std::size_t i = 1; i < N; ++i)
+        for (size_type i = 1; i < N; ++i)
         {
             y[i] = y[i - 1] + x[i - 1];
         }

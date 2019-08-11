@@ -43,12 +43,14 @@
 #define SIMD_NAMESPACE XXX_NAMESPACE
 #endif
 
+#include <common/data_types.hpp>
+
 namespace SIMD_NAMESPACE
 {
     namespace simd
     {
         //! Memory alignment
-        static constexpr std::size_t alignment = SIMD_ALIGNMENT;
+        static constexpr size_type alignment = SIMD_ALIGNMENT;
 
         //! \brief Test for which fundamental data types there is SIMD equivalents
         //!
@@ -97,7 +99,7 @@ namespace SIMD_NAMESPACE
         template <>                                     \
         struct type<TYPE>                               \
         {                                               \
-            static constexpr std::size_t width = SW;    \
+            static constexpr size_type width = SW;    \
         };                                              \
 
     #define MACRO_C(TYPE, SW)                           \

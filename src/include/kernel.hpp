@@ -10,8 +10,10 @@
 #include <field/field.hpp>
 #include <vec/vec.hpp>
 #include <tuple/tuple.hpp>
+#include <common/data_types.hpp>
 
 // data types and layout
+using size_type = fw::size_type;
 //using type = double;
 using type = float;
 /*
@@ -53,11 +55,11 @@ constexpr fw::data_layout layout = fw::data_layout::SoA;
 constexpr fw::data_layout layout = fw::data_layout::SoAi;
 #endif
 
-template <typename T, std::size_t D>
+template <typename T, size_type D>
 using buffer_type = fw::field<T, D, layout>;
 
-template <std::size_t D>
-using array_type = fw::sarray<std::size_t, D>;
+template <size_type D>
+using array_type = fw::sarray<size_type, D>;
 
 // prototypes
 template <typename T>
@@ -65,53 +67,53 @@ struct kernel
 {
 #if defined(AOS_LAYOUT)
     #if defined(VECTOR_PRODUCT)
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double cross(const fw::field<T, DD, fw::data_layout::AoS>& x_1, const fw::field<T, DD, fw::data_layout::AoS>& x_2, fw::field<T, DD, fw::data_layout::AoS>& y, const array_type<D>& n);
     #else
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double exp(fw::field<T, DD, fw::data_layout::AoS>& x, const array_type<D>& n);
 
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double log(fw::field<T, DD, fw::data_layout::AoS>& x, const array_type<D>& n);
 
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double exp(const fw::field<T, DD, fw::data_layout::AoS>& x, fw::field<T, DD, fw::data_layout::AoS>& y, const array_type<D>& n);
 
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double log(const fw::field<T, DD, fw::data_layout::AoS>& x, fw::field<T, DD, fw::data_layout::AoS>& y, const array_type<D>& n);
     #endif
 #elif defined(SOA_LAYOUT)
     #if defined(VECTOR_PRODUCT)
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double cross(const fw::field<T, DD, fw::data_layout::SoA>& x_1, const fw::field<T, DD, fw::data_layout::SoA>& x_2, fw::field<T, DD, fw::data_layout::SoA>& y, const array_type<D>& n);
     #else
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double exp(fw::field<T, DD, fw::data_layout::SoA>& x, const array_type<D>& n);
 
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double log(fw::field<T, DD, fw::data_layout::SoA>& x, const array_type<D>& n);
 
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double exp(const fw::field<T, DD, fw::data_layout::SoA>& x, fw::field<T, DD, fw::data_layout::SoA>& y, const array_type<D>& n);
 
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double log(const fw::field<T, DD, fw::data_layout::SoA>& x, fw::field<T, DD, fw::data_layout::SoA>& y, const array_type<D>& n);
     #endif
 #elif defined(SOAI_LAYOUT)
     #if defined(VECTOR_PRODUCT)
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double cross(const fw::field<T, DD, fw::data_layout::SoAi>& x_1, const fw::field<T, DD, fw::data_layout::SoAi>& x_2, fw::field<T, DD, fw::data_layout::SoAi>& y, const array_type<D>& n);
     #else
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double exp(fw::field<T, DD, fw::data_layout::SoAi>& x, const array_type<D>& n);
 
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double log(fw::field<T, DD, fw::data_layout::SoAi>& x, const array_type<D>& n);
 
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double exp(const fw::field<T, DD, fw::data_layout::SoAi>& x, fw::field<T, DD, fw::data_layout::SoAi>& y, const array_type<D>& n);
 
-        template <std::size_t D, std::size_t DD = D>
+        template <size_type D, size_type DD = D>
         static double log(const fw::field<T, DD, fw::data_layout::SoAi>& x, fw::field<T, DD, fw::data_layout::SoAi>& y, const array_type<D>& n);
     #endif    
 #endif
