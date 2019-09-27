@@ -12,15 +12,14 @@
 #include <tuple/tuple.hpp>
 #include <common/data_types.hpp>
 
-// data types and layout
+// Data types and layouts.
 using size_type = fw::size_type;
-//using type = double;
-using type = float;
+using real_type = fw::real_type;
 
-using type_x = type;
-using type_y = type;
-using type_z = type;
-using element_type = fw::vec<type, 3>;
+using type_x = real_type;
+using type_y = real_type;
+using type_z = real_type;
+using element_type = fw::vec<real_type, 3>;
 
 /*
 using type_x = std::uint32_t;
@@ -50,19 +49,19 @@ using element_type = fw::tuple<type_x, type_y, type_z>;
 using const_element_type = const element_type;
 
 #if defined(AOS_LAYOUT)
-constexpr fw::data_layout layout = fw::data_layout::AoS;
+constexpr fw::data_layout DataLayout = fw::data_layout::AoS;
 #elif defined(SOA_LAYOUT)
-constexpr fw::data_layout layout = fw::data_layout::SoA;
+constexpr fw::data_layout DataLayout = fw::data_layout::SoA;
 #elif defined(SOAI_LAYOUT)
-constexpr fw::data_layout layout = fw::data_layout::SoAi;
+constexpr fw::data_layout DataLayout = fw::data_layout::SoAi;
 #endif
 
-template <typename T, size_type D>
-using buffer_type = fw::field<T, D, layout>;
+template <typename T, size_type C_Dimension>
+using field_type = fw::field<T, C_Dimension, DataLayout>;
 
-template <size_type D>
-using array_type = fw::sarray<size_type, D>;
-
+template <size_type C_Dimension>
+using array_type = fw::sarray<size_type, C_Dimension>;
+/*
 // prototypes
 template <typename T>
 struct kernel
@@ -120,5 +119,6 @@ struct kernel
     #endif    
 #endif
 };
+*/
 
 #endif

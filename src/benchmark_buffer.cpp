@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     const size_type nx = (argc > 1 ? atoi(argv[++dim]) : NX_DEFAULT);
     const size_type ny = (argc > 2 ? atoi(argv[++dim]) : NY_DEFAULT);
     const size_type nz = (argc > 3 ? atoi(argv[++dim]) : NZ_DEFAULT);
-    const size_type print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, 12UL));
+    const size_type print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, static_cast<size_type>(12)));
 
     // initialization
     srand48(nx);

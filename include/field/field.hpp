@@ -121,7 +121,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const size_type idx)
                 -> typename std::enable_if<(!UseProxyType && Enable), value_type>::type
             {
-                return std::get<0>(data.access(0, stab_idx * n[0] + idx));
+                return std::get<0>(data.access(stab_idx, idx));
             }
 
             template <bool Enable = true>
@@ -130,7 +130,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const size_type idx) const
                 -> typename std::enable_if<(!UseProxyType && Enable), const_value_type>::type
             {
-                return std::get<0>(data.access(0, stab_idx * n[0] + idx));
+                return std::get<0>(data.access(stab_idx, idx));
             }
 
             template <bool Enable = true, data_layout Layout = L>
@@ -249,7 +249,6 @@ namespace XXX_NAMESPACE
             auto operator()(device_field<T, D, L>* ptr) const
                 -> typename std::enable_if<(Target == XXX_NAMESPACE::target::GPU_CUDA && Enable), void>::type
             {
-                std::cout << "dev" << std::endl;
                 allocator::template deallocate<XXX_NAMESPACE::target::GPU_CUDA>(ptr->data);
             }
         #endif    
@@ -272,7 +271,7 @@ namespace XXX_NAMESPACE
                 set_data({});
             }
         }
-        
+
         auto resize(const sarray<size_type, D>& new_n, const bool initialize_to_zero = false)
             -> void
         {
@@ -297,15 +296,41 @@ namespace XXX_NAMESPACE
             }
         }
 
+        template <typename FuncT>
+        auto set(FuncT func)
+        {
+            const size_type pitch = allocation_shape.first;
+            const size_type num_stabs = allocation_shape.second;
+
+            if (data.get())
+            {
+                //DEBUG<decltype(std::get<0>((*data).access(0,0)))> dfd;
+                
+                for (size_t stab_index = 0; stab_index < num_stabs; ++stab_index)
+                {
+                    for (size_t i = 0; i < n[0]; ++i)
+                    {
+                        std::get<0>((*data).access(stab_index, i)) = func();
+                    }
+                }
+                
+            }
+        }
+
         auto swap(field& b)
             -> void
         {
             // TODO: implementation; if (owns_data) {..}
         }
 
+        static constexpr bool UseProxyType = (L != data_layout::AoS && internal::provides_proxy_type<T>::value);
+        using value_type = std::conditional_t<(D == 1), std::conditional_t<UseProxyType, typename internal::traits<T, L>::proxy_type, T&>, internal::accessor<element_type, D - 1, D, L>>;
+        using const_value_type = std::conditional_t<(D == 1), std::conditional_t<UseProxyType, const typename internal::traits<T, L>::proxy_type, const T&>, internal::accessor<const_element_type, D - 1, D, L>>;
+        
         HOST_VERSION
         CUDA_DEVICE_VERSION
         inline auto operator[](const size_type idx)
+            -> value_type
         {
             return internal::accessor<element_type, D, D, L>(*data, n)[idx];
         }
@@ -313,49 +338,50 @@ namespace XXX_NAMESPACE
         HOST_VERSION
         CUDA_DEVICE_VERSION
         inline auto operator[](const size_type idx) const
+            -> const_value_type
         {
             return internal::accessor<const_element_type, D, D, L>(*const_data, n)[idx];
         }
 
         HOST_VERSION
         CUDA_DEVICE_VERSION    
-        auto size() const
+        inline auto size() const
             -> const sarray<size_type, D>&
         {
             return n;   
         }
 
-    #if defined(__CUDACC__)
-        auto device(const bool sync_with_host = false)
-            -> device_field<T, D, L>&
-        {
-            if (!d_this.get())
+        #if defined(__CUDACC__)
+            auto device(const bool sync_with_host = false)
+                -> device_field<T, D, L>&
             {
-                resize_device_data(sync_with_host);
+                if (!d_this.get())
+                {
+                    resize_device_data(sync_with_host);
+                }
+        
+                return *d_this;
             }
 
-            return *d_this;
-        }
-        
-        auto copy_device_to_host()
-            -> void
-        {
-            if (d_this.get())
+            auto copy_device_to_host()
+                -> void
             {
-                cudaMemcpy((void*)data->get_pointer(), (const void*)d_this->data.get_pointer(), allocator::get_byte_size(allocation_shape), cudaMemcpyDeviceToHost);
+                if (d_this.get())
+                {
+                    cudaMemcpy((void*)data->get_pointer(), (const void*)d_this->data.get_pointer(), allocator::get_byte_size(allocation_shape), cudaMemcpyDeviceToHost);
+                }
             }
-        }
 
-        auto copy_host_to_device()
-            -> void
-        {
-        
-            if (d_this.get())
+            auto copy_host_to_device()
+                -> void
             {
-                cudaMemcpy((void*)d_this->data.get_pointer(), (const void*)data->get_pointer(), allocator::get_byte_size(allocation_shape), cudaMemcpyHostToDevice);
+            
+                if (d_this.get())
+                {
+                    cudaMemcpy((void*)d_this->data.get_pointer(), (const void*)data->get_pointer(), allocator::get_byte_size(allocation_shape), cudaMemcpyHostToDevice);
+                }
             }
-        }
-    #endif
+        #endif
 
     private:
 

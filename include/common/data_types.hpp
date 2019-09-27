@@ -7,6 +7,7 @@
 #define COMMON_DATA_TYPES_HPP
 
 #include <cstdint>
+#include <cstdlib>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -14,8 +15,9 @@
 
 namespace XXX_NAMESPACE
 {
-    //using size_type = std::size_t;
-    using size_type = std::uint32_t;
+    using size_type = std::size_t;
+    //using size_type = std::uint32_t;
+    using real_type = float;
 }
 
 #endif
