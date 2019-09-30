@@ -49,9 +49,9 @@ int main(int argc, char** argv)
         buffer_type<element_type, 1> in_2{{nx}};
         #endif
         
-        in_1.resize({nx});
-        out_1.resize({nx});
-        out_2.resize({nx});
+        in_1.Resize({nx});
+        out_1.Resize({nx});
+        out_2.Resize({nx});
         
         for (size_type i = 0; i < nx; ++i)
         {
@@ -168,9 +168,9 @@ int main(int argc, char** argv)
         buffer_type<element_type, 2> in_2{{nx, ny}};
         #endif
     
-        in_1.resize({nx, ny});
-        out_1.resize({nx, ny});
-        out_2.resize({nx, ny});
+        in_1.Resize({nx, ny});
+        out_1.Resize({nx, ny});
+        out_2.Resize({nx, ny});
         
         for (size_type j = 0; j < ny; ++j)
         {
@@ -294,17 +294,17 @@ int main(int argc, char** argv)
             #if defined(VECTOR_PRODUCT)
             buffer_type<element_type, 1> in_2{{nx * ny * nz}};
             #endif            
-            in_1.resize({nx * ny * nz});
-            out_1.resize({nx * ny * nz});
-            out_2.resize({nx * ny * nz}); 
+            in_1.Resize({nx * ny * nz});
+            out_1.Resize({nx * ny * nz});
+            out_2.Resize({nx * ny * nz}); 
         #else
             buffer_type<element_type, 3> in_1, out_1, out_2;
             #if defined(VECTOR_PRODUCT)
             buffer_type<element_type, 3> in_2{{nx, ny, nz}};
             #endif
-            in_1.resize({nx, ny, nz});
-            out_1.resize({nx, ny, nz});
-            out_2.resize({nx, ny, nz});
+            in_1.Resize({nx, ny, nz});
+            out_1.Resize({nx, ny, nz});
+            out_2.Resize({nx, ny, nz});
         #endif
         
         for (size_type k = 0; k < nz; ++k)

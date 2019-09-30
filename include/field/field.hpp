@@ -10,6 +10,7 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#include <type_traits>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -49,14 +50,13 @@ namespace XXX_NAMESPACE
         template <typename T, size_type N, size_type D, data_layout L>
         class accessor
         {
-            //using base_pointer = typename internal::traits<T, L>::base_pointer;
             using base_pointer = typename std::conditional<std::is_const<T>::value, const typename internal::traits<T, L>::base_pointer, typename internal::traits<T, L>::base_pointer>::type;
             base_pointer& data;
             const sarray<size_type, D>& n;
             const size_type stab_idx;
 
         public:
-
+	    
             //! \brief Standard constructor
             //!
             //! \param data pointer-like memory reference
@@ -69,7 +69,7 @@ namespace XXX_NAMESPACE
                 data(data), 
                 n(n), 
                 stab_idx(stab_idx) {}
-
+	    
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto operator[] (const size_type idx)
@@ -77,7 +77,7 @@ namespace XXX_NAMESPACE
             {
                 return {data, n, stab_idx + idx * n.reduce_mul(1, N - 1)};
             }
-
+	    
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto operator[] (const size_type idx) const
@@ -90,8 +90,6 @@ namespace XXX_NAMESPACE
         template <typename T, size_type D, data_layout L>
         class accessor<T, 1, D, L>
         {
-            //using base_pointer = typename internal::traits<T, L>::base_pointer;
-            //using const_base_pointer = typename internal::traits<const T, L>::base_pointer;
             using base_pointer = typename std::conditional<std::is_const<T>::value, const typename internal::traits<T, L>::base_pointer, typename internal::traits<T, L>::base_pointer>::type;
             static constexpr bool UseProxyType = (L != data_layout::AoS && internal::provides_proxy_type<T>::value);
             using value_type = typename std::conditional<UseProxyType, typename internal::traits<T, L>::proxy_type, T&>::type;
@@ -211,11 +209,128 @@ namespace XXX_NAMESPACE
     //! \tparam D dimension
     //! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T, size_type D, data_layout L>
-    class device_field;
-
     template <typename T, size_type D, data_layout L = data_layout::AoS>
-    class field
+    class Field;
+
+    template <typename ElementT, size_type C_Dimension, data_layout C_Layout, target C_Target>
+    class Container
+    {
+        using Self = Container<ElementT, C_Dimension, C_Layout, C_Target>;
+
+        friend class Field<ElementT, C_Dimension, C_Layout>;
+
+    public:
+
+        using ElementType = ElementT;
+        static constexpr size_type Dimension = C_Dimension;
+        static constexpr data_layout Layout = C_Layout;
+        static constexpr target Target = C_Target;
+
+    private:
+
+        using ConstElementT = typename internal::traits<ElementT, C_Layout>::const_type;
+        template <typename T>
+        using BasePointerT = typename internal::traits<T, C_Layout>::base_pointer;
+        using AllocatorT = typename BasePointerT<ElementT>::allocator;
+
+        struct Deleter
+        {
+            auto operator()(BasePointerT<ElementT>* ptr) const
+                -> void
+            {
+                AllocatorT::template deallocate<C_Target>(*ptr);
+            }
+        };
+
+        Container()
+            :
+            n{},
+            allocation_shape{}
+        {}
+
+        Container(const sarray<size_type, C_Dimension>& n)
+            :
+            n(n),
+            allocation_shape(AllocatorT::template get_allocation_shape<C_Layout>(n)),
+            data(new BasePointerT<ElementT>(AllocatorT::template allocate<Target>(allocation_shape), allocation_shape.first), Deleter()),
+	        ptr(*data),
+            const_ptr(*data)
+        {}
+
+        static constexpr bool UseProxyType = (C_Layout != data_layout::AoS && internal::provides_proxy_type<ElementT>::value);
+        using return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, typename internal::traits<ElementT, C_Layout>::proxy_type, ElementT&>, internal::accessor<ElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
+        using const_return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, const typename internal::traits<const ElementT, C_Layout>::proxy_type, const ElementT&>, internal::accessor<ConstElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
+
+    public:
+
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        inline auto operator[](const size_type idx)
+            -> return_type
+        {
+            return internal::accessor<ElementT, C_Dimension, C_Dimension, C_Layout>(ptr, n)[idx];
+        }
+
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        inline auto operator[](const size_type idx) const
+            -> const_return_type
+        {
+            return internal::accessor<ConstElementT, C_Dimension, C_Dimension, C_Layout>(const_ptr, n)[idx];
+        }
+
+        template <typename FuncT>
+        auto Set(FuncT func)
+        {
+            const size_type pitch = allocation_shape.first;
+            const size_type num_stabs = allocation_shape.second;
+
+            if (data.get())
+            {   
+                for (size_t stab_index = 0; stab_index < num_stabs; ++stab_index)
+                {
+                    for (size_t i = 0; i < n[0]; ++i)
+                    {
+                        std::get<0>(data.get()->access(stab_index, i)) = func();
+                    }
+                }
+                
+            }
+        }
+
+        HOST_VERSION
+        CUDA_DEVICE_VERSION    
+        const auto& Size() const
+        {
+            return n;   
+        }
+
+        auto IsEmpty() const
+        {
+            return (data.get() == nullptr);
+        }
+
+    private:
+
+        auto GetByteSize() const
+        {
+            return AllocatorT::get_byte_size(allocation_shape);
+        }
+
+        auto GetBasePointer()
+        {
+            return data.get()->get_pointer();
+        }
+
+        sarray<size_type, C_Dimension> n;
+        std::pair<size_type, size_type> allocation_shape;
+	    std::shared_ptr<BasePointerT<ElementT>> data;
+	    BasePointerT<ElementT> ptr;
+        BasePointerT<ConstElementT> const_ptr;
+    };
+
+    template <typename T, size_type D, data_layout L>
+    class Field
     {
         static_assert(!std::is_const<T>::value, "error: field with const elements is not allowed");
 
@@ -228,96 +343,49 @@ namespace XXX_NAMESPACE
     private:
 
         using const_element_type = typename internal::traits<element_type, L>::const_type;
-        template <typename X>
-        using base_pointer = typename internal::traits<X, L>::base_pointer;
-        template <typename X>
-        using shared_base_pointer = std::shared_ptr<base_pointer<X>>;
-        using allocator = typename base_pointer<element_type>::allocator;
         
-        template <XXX_NAMESPACE::target Target>
-        struct deleter
-        {
-            template <bool Enable = true>
-            auto operator()(base_pointer<element_type>* ptr) const
-                -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), void>::type
-            {
-                allocator::template deallocate<Target>(*ptr);
-            }
-
-        #if defined(__CUDACC__)
-            template <bool Enable = true>
-            auto operator()(device_field<T, D, L>* ptr) const
-                -> typename std::enable_if<(Target == XXX_NAMESPACE::target::GPU_CUDA && Enable), void>::type
-            {
-                allocator::template deallocate<XXX_NAMESPACE::target::GPU_CUDA>(ptr->data);
-            }
-        #endif    
-        };
-
     public:
 
-        field() = default;
+        Field() = default;
             
-        field(const sarray<size_type, D>& n, const bool initialize_to_zero = false)
+        Field(const sarray<size_type, D>& n, const bool initialize_to_zero = false)
             :
-            n(n),
-            allocation_shape(allocator::template get_allocation_shape<L>(n)),
-            data(make_shared_base_pointer<element_type, XXX_NAMESPACE::target::Host>(allocation_shape)),
-            const_data(new base_pointer<const_element_type>(*data), [] (auto p) {}),
-            d_this{}
+            n(n)
         {
-            if (initialize_to_zero)
-            {
-                set_data({});
-            }
+            Resize(n, initialize_to_zero);
         }
 
-        auto resize(const sarray<size_type, D>& new_n, const bool initialize_to_zero = false)
+        auto Resize(const sarray<size_type, D>& new_n, const bool initialize_to_zero = false)
             -> void
         {
             if (n != new_n)
             {
                 n = new_n;
-                allocation_shape = allocator::template get_allocation_shape<L>(n);
-                data = make_shared_base_pointer<element_type, XXX_NAMESPACE::target::Host>(allocation_shape);
-                const_data = shared_base_pointer<const_element_type>(new base_pointer<const_element_type>(*data), [] (auto p) {});
+                data = Container<T, D, L, XXX_NAMESPACE::target::Host>(n);
                 
                 if (initialize_to_zero)
                 {
-                    set_data({});
+                    data.Set([] () { return 0; });
                 }
 
             #if defined(__CUDACC__)
-                if (d_this.get())
+                device_data = Container<T, D, L, target::GPU_CUDA>(n);
+
+                if (initialize_to_zero)
                 {
-                    resize_device_data(initialize_to_zero);
+                    CopyHostToDevice();
                 }
             #endif
             }
         }
-
+        
         template <typename FuncT>
-        auto set(FuncT func)
+        auto Set(FuncT func)
         {
-            const size_type pitch = allocation_shape.first;
-            const size_type num_stabs = allocation_shape.second;
-
-            if (data.get())
-            {
-                //DEBUG<decltype(std::get<0>((*data).access(0,0)))> dfd;
-                
-                for (size_t stab_index = 0; stab_index < num_stabs; ++stab_index)
-                {
-                    for (size_t i = 0; i < n[0]; ++i)
-                    {
-                        std::get<0>((*data).access(stab_index, i)) = func();
-                    }
-                }
-                
-            }
+            data.Set(func);
         }
-
-        auto swap(field& b)
+        
+        auto Swap(Field& b)
             -> void
         {
             // TODO: implementation; if (owns_data) {..}
@@ -325,22 +393,18 @@ namespace XXX_NAMESPACE
 
         static constexpr bool UseProxyType = (L != data_layout::AoS && internal::provides_proxy_type<T>::value);
         using value_type = std::conditional_t<(D == 1), std::conditional_t<UseProxyType, typename internal::traits<T, L>::proxy_type, T&>, internal::accessor<element_type, D - 1, D, L>>;
-        using const_value_type = std::conditional_t<(D == 1), std::conditional_t<UseProxyType, const typename internal::traits<T, L>::proxy_type, const T&>, internal::accessor<const_element_type, D - 1, D, L>>;
-        
-        HOST_VERSION
-        CUDA_DEVICE_VERSION
+        using const_value_type = std::conditional_t<(D == 1), std::conditional_t<UseProxyType, const typename internal::traits<const T, L>::proxy_type, const T&>, internal::accessor<const_element_type, D - 1, D, L>>;
+
         inline auto operator[](const size_type idx)
             -> value_type
         {
-            return internal::accessor<element_type, D, D, L>(*data, n)[idx];
+            return data[idx];
         }
 
-        HOST_VERSION
-        CUDA_DEVICE_VERSION
         inline auto operator[](const size_type idx) const
             -> const_value_type
         {
-            return internal::accessor<const_element_type, D, D, L>(*const_data, n)[idx];
+            return data[idx];
         }
 
         HOST_VERSION
@@ -351,157 +415,48 @@ namespace XXX_NAMESPACE
             return n;   
         }
 
-        #if defined(__CUDACC__)
-            auto device(const bool sync_with_host = false)
-                -> device_field<T, D, L>&
-            {
-                if (!d_this.get())
-                {
-                    resize_device_data(sync_with_host);
-                }
-        
-                return *d_this;
-            }
-
-            auto copy_device_to_host()
-                -> void
-            {
-                if (d_this.get())
-                {
-                    cudaMemcpy((void*)data->get_pointer(), (const void*)d_this->data.get_pointer(), allocator::get_byte_size(allocation_shape), cudaMemcpyDeviceToHost);
-                }
-            }
-
-            auto copy_host_to_device()
-                -> void
-            {
-            
-                if (d_this.get())
-                {
-                    cudaMemcpy((void*)d_this->data.get_pointer(), (const void*)data->get_pointer(), allocator::get_byte_size(allocation_shape), cudaMemcpyHostToDevice);
-                }
-            }
-        #endif
-
-    private:
-
-        field(const sarray<size_type, D>& n, const std::pair<size_type, size_type>& allocation_shape, const shared_base_pointer<element_type>& data)
-            :
-            n(n),
-            allocation_shape(allocation_shape),
-            data(data),
-            const_data(new base_pointer<const_element_type>(*data), [] (auto p) {}),
-            d_this{}
-        {}
-
-        template <typename X, XXX_NAMESPACE::target Target>
-        auto make_base_pointer(const std::pair<size_type, size_type>& allocation_shape)
-            -> base_pointer<X>
-        {
-            return {allocator::template allocate<Target>(allocation_shape), allocation_shape.first};
-        }
-
-        template <typename X, XXX_NAMESPACE::target Target>
-        auto make_shared_base_pointer(const std::pair<size_type, size_type>& allocation_shape)
-            -> shared_base_pointer<X>
-        {
-            return {new base_pointer<X>(allocator::template allocate<Target>(allocation_shape), allocation_shape.first), deleter<Target>()};
-        }
-
-        auto set_data(const element_type& value)
-            -> void
-        {   
-            for (size_type stab_idx = 0; stab_idx < n.reduce_mul(1); ++stab_idx)
-            {
-                // get base_pointer to this stab, and use a 1d-accessor to access the elements in it
-                base_pointer<element_type> stab_pointer(*data, stab_idx, 0);
-                internal::accessor<element_type, 1, D, L> stab(stab_pointer, n);
-
-                for (size_type i = 0; i < n[0]; ++i)
-                {
-                    stab[i] = value;
-                }
-            }
-        }
-
     #if defined(__CUDACC__)
-        auto resize_device_data(const bool sync_with_host = false)
-            -> void
+        auto GetDeviceAccess(const bool sync_with_host = false)
+            -> Container<T, D, L, target::GPU_CUDA>&
         {
-            d_this = std::shared_ptr<device_field<T, D, L>>(new device_field<T, D, L>(n, allocation_shape, make_base_pointer<element_type, XXX_NAMESPACE::target::GPU_CUDA>(allocation_shape)), deleter<XXX_NAMESPACE::target::GPU_CUDA>()); 
-        
+            if (device_data.IsEmpty())
+            {
+                device_data = Container<T, D, L, target::GPU_CUDA>(n);
+            }
+
             if (sync_with_host)
             {
-                cudaMemcpy((void*)d_this->data.get_pointer(), (const void*)data->get_pointer(), allocator::get_byte_size(allocation_shape), cudaMemcpyHostToDevice);
+                CopyHostToDevice();
+            }
+
+            return device_data;
+        }
+
+        auto CopyDeviceToHost()
+            -> void
+        {
+            if (!device_data.IsEmpty())
+            {
+                cudaMemcpy((void*)data.GetBasePointer(), (const void*)device_data.GetBasePointer(), data.GetByteSize(), cudaMemcpyDeviceToHost);
+            }
+        }
+
+        auto CopyHostToDevice()
+            -> void
+        {
+            if (!device_data.IsEmpty())
+            {
+                cudaMemcpy((void*)device_data.GetBasePointer(), (const void*)data.GetBasePointer(), data.GetByteSize(), cudaMemcpyHostToDevice);
             }
         }
     #endif
 
         sarray<size_type, D> n;
-        std::pair<size_type, size_type> allocation_shape;
-        shared_base_pointer<element_type> data;
-        shared_base_pointer<const_element_type> const_data;
-        std::shared_ptr<device_field<T, D, L>> d_this;
+        Container<T, D, L, target::Host> data;
+    #if defined(__CUDACC__)
+        Container<T, D, L, target::GPU_CUDA> device_data;
+    #endif
     };
-
-#if defined(__CUDACC__)
-    template <typename T, size_type D, data_layout L>
-    class device_field
-    {
-        static_assert(!std::is_const<T>::value, "error: field with const elements is not allowed");
-
-        template <typename, size_type, data_layout>
-        friend class field;
-
-    public:
-
-        using element_type = T;
-        static constexpr size_type dimension = D;
-        static constexpr data_layout layout = L;
-
-    //private:
-
-        using const_element_type = typename internal::traits<element_type, L>::const_type;
-        template <typename X>
-        using base_pointer = typename internal::traits<X, L>::base_pointer;
-
-        device_field(const sarray<size_type, D>& n, const std::pair<size_type, size_type>& allocation_shape, const base_pointer<element_type>& data)
-            :
-            n(n),
-            allocation_shape(allocation_shape),
-            data(data),
-            const_data(data)
-        {}
-
-    public:
-
-        CUDA_DEVICE_VERSION
-        inline auto operator[](const size_type idx)
-        {
-            return internal::accessor<element_type, D, D, L>(data, n)[idx];
-        }
-
-        CUDA_DEVICE_VERSION
-        inline auto operator[](const size_type idx) const
-        {
-            return internal::accessor<const_element_type, D, D, L>(const_data, n)[idx];
-        }
-
-        CUDA_DEVICE_VERSION    
-        auto size() const
-            -> const sarray<size_type, D>&
-        {
-            return n;   
-        }
-
-    private:
-
-        sarray<size_type, D> n;
-        std::pair<size_type, size_type> allocation_shape;
-        base_pointer<element_type> data;
-        base_pointer<const_element_type> const_data;
-    };
-#endif
 }
 
 #endif

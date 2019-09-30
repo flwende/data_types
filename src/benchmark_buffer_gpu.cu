@@ -23,17 +23,16 @@ constexpr std::size_t MEASUREMENT = 20;
 constexpr double SPREAD = 1.0;
 constexpr double OFFSET = 3.0;
 
-
 #if defined(__CUDACC__)
-__global__ void foo(XXX_NAMESPACE::device_field<element_type, 3, layout> a)
+__global__ void foo(XXX_NAMESPACE::Container<element_type, 3, layout, XXX_NAMESPACE::target::GPU_CUDA> a)
 {
     const std::size_t x = blockIdx.x * blockDim.x + threadIdx.x;
     const std::size_t y = blockIdx.y * blockDim.y + threadIdx.y;
     const std::size_t z = blockIdx.z * blockDim.z + threadIdx.z;
-
-    const std::size_t nx = a.size()[0];
-    const std::size_t ny = a.size()[1];
-    const std::size_t nz = a.size()[2];
+    
+    const std::size_t nx = a.Size()[0];
+    const std::size_t ny = a.Size()[1];
+    const std::size_t nz = a.Size()[2];
     
     if (x < nx && y < ny && z < nz)
     {
@@ -43,7 +42,6 @@ __global__ void foo(XXX_NAMESPACE::device_field<element_type, 3, layout> a)
 #if defined(ELEMENT_ACCESS)
         a[z][y][x].x = 2.0 * index;
 #else
-
         a[z][y][x].x = 1.0 * index;
         a[z][y][x].y = -2.0 * index;
         a[z][y][x].z = 3.0 * index;
@@ -79,9 +77,9 @@ int main(int argc, char** argv)
         buffer_type<element_type, 1> in_2{{nx}};
         #endif
         
-        in_1.resize({nx});
-        out_1.resize({nx});
-        out_2.resize({nx});
+        in_1.Resize({nx});
+        out_1.Resize({nx});
+        out_2.Resize({nx});
         
         for (std::size_t i = 0; i < nx; ++i)
         {
@@ -198,9 +196,9 @@ int main(int argc, char** argv)
         buffer_type<element_type, 2> in_2{{nx, ny}};
         #endif
     
-        in_1.resize({nx, ny});
-        out_1.resize({nx, ny});
-        out_2.resize({nx, ny});
+        in_1.Resize({nx, ny});
+        out_1.Resize({nx, ny});
+        out_2.Resize({nx, ny});
         
         for (std::size_t j = 0; j < ny; ++j)
         {
@@ -324,17 +322,17 @@ int main(int argc, char** argv)
             #if defined(VECTOR_PRODUCT)
             buffer_type<element_type, 1> in_2{{nx * ny * nz}};
             #endif            
-            in_1.resize({nx * ny * nz});
-            out_1.resize({nx * ny * nz});
-            out_2.resize({nx * ny * nz}); 
+            in_1.Resize({nx * ny * nz});
+            out_1.Resize({nx * ny * nz});
+            out_2.Resize({nx * ny * nz}); 
         #else
             buffer_type<element_type, 3> in_1, out_1, out_2;
             #if defined(VECTOR_PRODUCT)
             buffer_type<element_type, 3> in_2{{nx, ny, nz}};
             #endif
-            in_1.resize({nx, ny, nz});
-            out_1.resize({nx, ny, nz});
-            out_2.resize({nx, ny, nz});
+            in_1.Resize({nx, ny, nz});
+            out_1.Resize({nx, ny, nz});
+            out_2.Resize({nx, ny, nz});
         #endif
         
         /*
@@ -416,10 +414,12 @@ int main(int argc, char** argv)
         */
         const dim3 block_size(128, 1, 1);
         const dim3 grid_size((nx + block_size.x - 1) / block_size.x, (ny + block_size.y - 1) / block_size.y, (nz + block_size.z - 1) / block_size.z);
+	    //XXX_NAMESPACE::Container<element_type, 3, layout, XXX_NAMESPACE::target::GPU_CUDA> gpu_buffer{{nx, ny, nz}};
         
         for (std::size_t i = 0; i < 10; ++i)
         {
-            foo<<<grid_size, block_size>>>(in_1.device());
+            foo<<<grid_size, block_size>>>(in_1.GetDeviceAccess());
+	        //foo<<<grid_size, block_size>>>(gpu_buffer);
         }
 
         cudaEvent_t start, stop;
@@ -429,7 +429,8 @@ int main(int argc, char** argv)
         cudaEventRecord(start, 0);
         for (std::size_t i = 0; i < 10; ++i)
         {
-            foo<<<grid_size, block_size>>>(in_1.device());
+            foo<<<grid_size, block_size>>>(in_1.GetDeviceAccess());
+	        //foo<<<grid_size, block_size>>>(gpu_buffer);
         }
         cudaDeviceSynchronize();
         cudaEventRecord(stop, 0);
@@ -441,10 +442,10 @@ int main(int argc, char** argv)
 
         if (argc > 4)
         {
-            in_1.copy_device_to_host();
+            in_1.CopyDeviceToHost();
 
-            //const float* ptr = reinterpret_cast<const float*>(&in_1[0][0][0].x);
-            const std::int8_t* ptr = reinterpret_cast<const std::int8_t*>(&in_1[0][0][0].x);
+            const float* ptr = reinterpret_cast<const float*>(&in_1[0][0][0].x);
+            //const std::int8_t* ptr = reinterpret_cast<const std::int8_t*>(&in_1[0][0][0].x);
 
             for (std::size_t z = 0; z < nz; ++z)
             {
@@ -452,8 +453,8 @@ int main(int argc, char** argv)
                 {
                     for (std::size_t x = 0; x < nx; ++x)
                     {
-                        //std::cout << ptr[(z * ny + y) * nx + x] << " ";
-                        std::cout << static_cast<std::int32_t>(ptr[(z * ny + y) * nx + x]) << " ";
+                        std::cout << ptr[(z * ny + y) * nx + x] << " ";
+                        //std::cout << static_cast<std::int32_t>(ptr[(z * ny + y) * nx + x]) << " ";
                     }
                     std::cout << std::endl;
                 }
