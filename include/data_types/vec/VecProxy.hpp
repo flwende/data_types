@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(VEC_VEC_PROXY_HPP)
-#define VEC_VEC_PROXY_HPP
+#if !defined(DATA_TYPES_VEC_VEC_PROXY_HPP)
+#define DATA_TYPES_VEC_VEC_PROXY_HPP
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -14,9 +14,9 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include <common/memory.hpp>
-#include <common/data_layout.hpp>
-#include <common/data_types.hpp>
+#include <common/Memory.hpp>
+#include <common/DataLayout.hpp>
+#include <data_types/DataTypes.hpp>
 
 // some forward declarations
 namespace XXX_NAMESPACE

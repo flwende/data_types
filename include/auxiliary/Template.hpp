@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(AUXILIARY_VARIADIC_HPP)
-#define AUXILIARY_VARIADIC_HPP
+#if !defined(AUXILIARY_TEMPLATE_HPP)
+#define AUXILIARY_TEMPLATE_HPP
 
 #include <cstdint>
 
@@ -16,8 +16,8 @@
 #define AUXILIARY_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include <common/data_types.hpp>
-#include <auxiliary/macro.hpp>
+#include <data_types/DataTypes.hpp>
+#include <auxiliary/Macro.hpp>
 
 namespace AUXILIARY_NAMESPACE
 {

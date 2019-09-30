@@ -14,13 +14,13 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include <auxiliary/math.hpp>
-#include <auxiliary/variadic.hpp>
-#include <common/data_layout.hpp>
-#include <common/data_types.hpp>
-#include <platform/target.hpp>
-#include <sarray/sarray.hpp>
-#include <simd/simd.hpp>
+#include <common/Math.hpp>
+#include <auxiliary/Template.hpp>
+#include <common/DataLayout.hpp>
+#include <data_types/DataTypes.hpp>
+#include <platform/Target.hpp>
+#include <data_types/array/Array.hpp>
+#include <platform/simd/Simd.hpp>
 
 namespace XXX_NAMESPACE
 {

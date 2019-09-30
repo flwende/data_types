@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(VEC_VEC_HPP)
-#define VEC_VEC_HPP
+#if !defined(DATA_TYPES_VEC_VEC_HPP)
+#define DATA_TYPES_VEC_VEC_HPP
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -14,9 +14,9 @@
 #define VEC_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include <auxiliary/math.hpp>
-#include <common/data_types.hpp>
-#include <platform/target.hpp>
+#include <common/Math.hpp>
+#include <data_types/DataTypes.hpp>
+#include <platform/Target.hpp>
 
 namespace VEC_NAMESPACE
 {
@@ -379,10 +379,10 @@ namespace VEC_NAMESPACE
     }
 }
 
-#include "vec_proxy.hpp"
-#include "vec_math.hpp"
+#include <data_types/vec/VecProxy.hpp>
+#include <data_types/vec/VecMath.hpp>
 
-#include <common/traits.hpp>
+#include <common/Traits.hpp>
 
 namespace XXX_NAMESPACE
 {

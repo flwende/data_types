@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(SARRAY_SARRAY_HPP)
-#define SARRAY_SARRAY_HPP
+#if !defined(DATA_TYPES_ARRAY_ARRAY_HPP)
+#define DATA_TYPES_ARRAY_ARRAY_HPP
 
 #include <array>
 #include <cstdint>
@@ -14,8 +14,8 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include <common/data_types.hpp>
-#include <platform/target.hpp>
+#include <data_types/DataTypes.hpp>
+#include <platform/Target.hpp>
 
 namespace XXX_NAMESPACE
 {

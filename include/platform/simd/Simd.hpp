@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(SIMD_SIMD_PLATFORM_HPP)
-#define SIMD_SIMD_PLATFORM_HPP
+#if !defined(PLATFORM_SIMD_SIMD_HPP)
+#define PLATFORM_SIMD_SIMD_HPP
 
 #include <cstdint>
 #include <immintrin.h>
@@ -43,7 +43,7 @@
 #define SIMD_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include <common/data_types.hpp>
+#include <data_types/DataTypes.hpp>
 
 namespace SIMD_NAMESPACE
 {

@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(TUPLE_TUPLE_HPP)
-#define TUPLE_TUPLE_HPP
+#if !defined(DATA_TYPES_TUPLE_TUPLE_HPP)
+#define DATA_TYPES_TUPLE_TUPLE_HPP
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -14,8 +14,8 @@
 #define TUPLE_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include <auxiliary/math.hpp>
-#include <platform/target.hpp>
+#include <common/Math.hpp>
+#include <platform/Target.hpp>
 
 namespace TUPLE_NAMESPACE
 {
@@ -138,10 +138,10 @@ namespace TUPLE_NAMESPACE
     }
 }
 
-#include "tuple_proxy.hpp"
-#include "tuple_math.hpp"
+#include <data_types/tuple/TupleProxy.hpp>
+#include <data_types/tuple/TupleMath.hpp>
 
-#include <common/traits.hpp>
+#include <common/Traits.hpp>
 
 namespace XXX_NAMESPACE
 {

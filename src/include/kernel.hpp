@@ -7,10 +7,10 @@
 #define KERNEL_HPP
 
 #include <cstdint>
-#include <field/field.hpp>
-#include <vec/vec.hpp>
-#include <tuple/tuple.hpp>
-#include <common/data_types.hpp>
+#include <data_types/field/Field.hpp>
+#include <data_types/vec/Vec.hpp>
+#include <data_types/tuple/Tuple.hpp>
+#include <data_types/DataTypes.hpp>
 
 // Data types and layout
 using SizeType = fw::SizeType;

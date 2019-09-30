@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(TUPLE_TUPLE_MATH_HPP)
-#define TUPLE_TUPLE_MATH_HPP
+#if !defined(DATA_TYPES_TUPLE_TUPLE_MATH_HPP)
+#define DATA_TYPES_TUPLE_TUPLE_MATH_HPP
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -18,7 +18,7 @@
 #define MATH_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include <auxiliary/math.hpp>
+#include <common/Math.hpp>
 
 namespace MATH_NAMESPACE
 {

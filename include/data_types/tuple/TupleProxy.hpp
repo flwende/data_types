@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(TUPLE_TUPLE_PROXY_HPP)
-#define TUPLE_TUPLE_PROXY_HPP
+#if !defined(DATA_TYPES_TUPLE_TUPLE_PROXY_HPP)
+#define DATA_TYPES_TUPLE_TUPLE_PROXY_HPP
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -14,10 +14,10 @@
 #define TUPLE_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include <common/data_layout.hpp>
-#include <common/data_types.hpp>
-#include <common/memory.hpp>
-#include <auxiliary/variadic.hpp>
+#include <common/DataLayout.hpp>
+#include <data_types/DataTypes.hpp>
+#include <common/Memory.hpp>
+#include <auxiliary/Template.hpp>
 
 // some forward declarations
 namespace XXX_NAMESPACE

@@ -3,8 +3,8 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(AUXILIARY_MATH_HPP)
-#define AUXILIARY_MATH_HPP
+#if !defined(COMMON_MATH_HPP)
+#define COMMON_MATH_HPP
 
 #include <cmath>
 #include <cstdint>
@@ -18,13 +18,14 @@
 #define MATH_NAMESPACE XXX_NAMESPACE
 #endif
 
-#include <common/data_types.hpp>
-#include <common/traits.hpp>
-#include <sarray/sarray.hpp>
+#include <data_types/DataTypes.hpp>
+#include <common/Traits.hpp>
+#include <data_types/array/Array.hpp>
 
 namespace MATH_NAMESPACE
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //!
     //! \brief Greatest common divisor (gcd)
     //! 
     //! \tparam T must be an unsigned integer

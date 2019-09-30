@@ -19,7 +19,7 @@ namespace XXX_NAMESPACE
     using RealType = float;
 }
 
-#include <sarray/sarray.hpp>
+#include <data_types/array/Array.hpp>
 
 namespace XXX_NAMESPACE
 {
