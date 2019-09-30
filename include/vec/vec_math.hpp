@@ -24,7 +24,7 @@
 namespace MATH_NAMESPACE
 {
 #define MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                               \
-    template <typename T_1, typename T_2, size_type D,                                                                                    \
+    template <typename T_1, typename T_2, SizeType D,                                                                                    \
               typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
     inline vec<X, D> operator OP (IN_T_1<T_1, D>& x_1, IN_T_2<T_2, D>& x_2)                                                                 \
     {                                                                                                                                       \
@@ -55,7 +55,7 @@ namespace MATH_NAMESPACE
 #undef MACRO_UNQUALIFIED
 
 #define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
-    template <typename T_1, typename T_2, size_type D,                                                                                    \
+    template <typename T_1, typename T_2, SizeType D,                                                                                    \
               typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
     inline vec<X, D> operator OP (IN_T<T_1, D>& x_1, const T_2 x_2)                                                                         \
     {                                                                                                                                       \
@@ -64,7 +64,7 @@ namespace MATH_NAMESPACE
         return y;                                                                                                                           \
     }                                                                                                                                       \
                                                                                                                                             \
-    template <typename T_1, typename T_2, size_type D,                                                                                    \
+    template <typename T_1, typename T_2, SizeType D,                                                                                    \
               typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
     inline vec<X, D> operator OP (const T_1 x_1, IN_T<T_2, D>& x_2)                                                                         \
     {                                                                                                                                       \
@@ -156,7 +156,7 @@ namespace MATH_NAMESPACE
         return (x_1.x * x_2.x + x_1.y * x_2.y + x_1.z * x_2.z);                                                                             \
     }                                                                                                                                       \
                                                                                                                                             \
-    template <typename T_1, typename T_2, size_type D,                                                                                    \
+    template <typename T_1, typename T_2, SizeType D,                                                                                    \
               typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
     inline X dot(IN_T_1<T_1, D>& x_1, IN_T_2<T_2, D>& x_2)                                                                                  \
     {                                                                                                                                       \
@@ -224,14 +224,14 @@ namespace MATH_NAMESPACE
         return x_1 * (x_2.x + x_2.y + x_2.z);                                                                                               \
     }                                                                                                                                       \
                                                                                                                                             \
-    template <typename T_1, typename T_2, size_type D,                                                                                    \
+    template <typename T_1, typename T_2, SizeType D,                                                                                    \
               typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
     inline X dot(IN_T<T_1, D>& x_1, const T_2 x_2)                                                                                          \
     {                                                                                                                                       \
         return dot_product(x_1, x_2);                                                                                                       \
     }                                                                                                                                       \
                                                                                                                                             \
-    template <typename T_1, typename T_2, size_type D,                                                                                    \
+    template <typename T_1, typename T_2, SizeType D,                                                                                    \
               typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
     inline X dot(const T_1 x_1, IN_T<T_2, D>& x_2)                                                                                          \
     {                                                                                                                                       \

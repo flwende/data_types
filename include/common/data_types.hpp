@@ -15,9 +15,17 @@
 
 namespace XXX_NAMESPACE
 {
-    using size_type = std::size_t;
-    //using size_type = std::uint32_t;
-    using real_type = float;
+    using SizeType = std::size_t;
+    using RealType = float;
 }
+
+#include <sarray/sarray.hpp>
+
+namespace XXX_NAMESPACE
+{
+    template <SizeType C_D>
+    using SizeArray = fw::sarray<SizeType, C_D>;
+}
+
 
 #endif

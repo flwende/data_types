@@ -33,38 +33,38 @@ namespace XXX_NAMESPACE
         //! This data type basically collects all array indices and determines the final memory reference recursively.
         //! 
         //! Idea: all memory is allocated as a contiguous set of stabs (innermost dimension n[0] with padding).
-        //! For D > 1, the number of stabs is determined as the reduction over all indices, but without accounting for
+        //! For C_D > 1, the number of stabs is determined as the reduction over all indices, but without accounting for
         //! the innermost dimension: [k][j][i] -> '(k * n[1] + j) * n[0] + i' -> 'stab_idx = k * n[1] + j'
         //! The 'memory' type holds a base-pointer-like memory reference to [0][0]..[0] and can deduce the final
         //! memory reference from 'stab_idx', 'n[0]' and 'i'.
-        //! The result (recursion anchor, D=1) of the array subscript operator chaining is either a reference of type 
-        //! 'T' in case of the AoS data layout or if there is no proxy type available with the SoA data layout, or
+        //! The result (recursion anchor, C_D=1) of the array subscript operator chaining is either a reference of type 
+        //! 'ElementT' in case of the AoS data layout or if there is no proxy type available with the SoA data layout, or
         //! a proxy type that is initialized through the final memory reference type in case of SoA.
         //!
-        //! \tparam T data type
-        //! \tparam N recursion level
-        //! \tparam D dimension
+        //! \tparam ElementT data type
+        //! \tparam C_N recursion level
+        //! \tparam C_D dimension
         //! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
         //! \tparam Enabled needed for partial specialization for data types providing a proxy type
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, size_type N, size_type D, data_layout L>
-        class accessor
+        template <typename ElementT, SizeType C_N, SizeType C_D, data_layout C_Layout>
+        class Accessor
         {
-            using base_pointer = typename std::conditional<std::is_const<T>::value, const typename internal::traits<T, L>::base_pointer, typename internal::traits<T, L>::base_pointer>::type;
-            base_pointer& data;
-            const sarray<size_type, D>& n;
-            const size_type stab_idx;
+            using BasePointerType = typename std::conditional<std::is_const<ElementT>::value, const typename internal::traits<ElementT, C_Layout>::BasePointerType, typename internal::traits<ElementT, C_Layout>::BasePointerType>::type;
+            BasePointerType& data;
+            const SizeArray<C_D>& n;
+            const SizeType stab_idx;
 
         public:
 	    
             //! \brief Standard constructor
             //!
             //! \param data pointer-like memory reference
-            //! \param n extent of the D-dimensional array
+            //! \param n extent of the C_D-dimensional array
             //! \param stab_idx the offset in units of 'innermost dimension n[0]'
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            accessor(base_pointer& data, const sarray<size_type, D>& n, const size_type stab_idx = 0) 
+            Accessor(BasePointerType& data, const SizeArray<C_D>& n, const SizeType stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
@@ -72,42 +72,42 @@ namespace XXX_NAMESPACE
 	    
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const size_type idx)
-                -> accessor<T, N - 1, D, L>
+            inline auto operator[] (const SizeType idx)
+                -> Accessor<ElementT, C_N - 1, C_D, C_Layout>
             {
-                return {data, n, stab_idx + idx * n.reduce_mul(1, N - 1)};
+                return {data, n, stab_idx + idx * n.reduce_mul(1, C_N - 1)};
             }
 	    
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const size_type idx) const
-                -> accessor<T, N - 1, D, L>
+            inline auto operator[] (const SizeType idx) const
+                -> Accessor<ElementT, C_N - 1, C_D, C_Layout>
             {
-                return {data, n, stab_idx + idx * n.reduce_mul(1, N - 1)};
+                return {data, n, stab_idx + idx * n.reduce_mul(1, C_N - 1)};
             }
         };
         
-        template <typename T, size_type D, data_layout L>
-        class accessor<T, 1, D, L>
+        template <typename ElementT, SizeType C_D, data_layout C_Layout>
+        class Accessor<ElementT, 1, C_D, C_Layout>
         {
-            using base_pointer = typename std::conditional<std::is_const<T>::value, const typename internal::traits<T, L>::base_pointer, typename internal::traits<T, L>::base_pointer>::type;
-            static constexpr bool UseProxyType = (L != data_layout::AoS && internal::provides_proxy_type<T>::value);
-            using value_type = typename std::conditional<UseProxyType, typename internal::traits<T, L>::proxy_type, T&>::type;
-            using const_value_type = typename std::conditional<UseProxyType, const typename internal::traits<const T, L>::proxy_type, const T&>::type;
+            using BasePointerType = typename std::conditional<std::is_const<ElementT>::value, const typename internal::traits<ElementT, C_Layout>::BasePointerType, typename internal::traits<ElementT, C_Layout>::BasePointerType>::type;
+            static constexpr bool UseProxyType = (C_Layout != data_layout::AoS && internal::provides_proxy_type<ElementT>::value);
+            using value_type = typename std::conditional<UseProxyType, typename internal::traits<ElementT, C_Layout>::ProxyType, ElementT&>::type;
+            using const_value_type = typename std::conditional<UseProxyType, const typename internal::traits<const ElementT, C_Layout>::ProxyType, const ElementT&>::type;
             
-            base_pointer& data;
-            const sarray<size_type, D>& n;
-            const size_type stab_idx;
+            BasePointerType& data;
+            const SizeArray<C_D>& n;
+            const SizeType stab_idx;
 
         public:
 
             //! \brief Standard constructor
             //!
             //! \param ptr base pointer
-            //! \param n extent of the D-dimensional array
+            //! \param n extent of the C_D-dimensional array
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            accessor(base_pointer& data, const sarray<size_type, D>& n, const size_type stab_idx = 0) 
+            Accessor(BasePointerType& data, const SizeArray<C_D>& n, const SizeType stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
@@ -116,7 +116,7 @@ namespace XXX_NAMESPACE
             template <bool Enable = true>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const size_type idx)
+            inline auto operator[] (const SizeType idx)
                 -> typename std::enable_if<(!UseProxyType && Enable), value_type>::type
             {
                 return std::get<0>(data.access(stab_idx, idx));
@@ -125,43 +125,43 @@ namespace XXX_NAMESPACE
             template <bool Enable = true>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const size_type idx) const
+            inline auto operator[] (const SizeType idx) const
                 -> typename std::enable_if<(!UseProxyType && Enable), const_value_type>::type
             {
                 return std::get<0>(data.access(stab_idx, idx));
             }
 
-            template <bool Enable = true, data_layout Layout = L>
+            template <bool Enable = true, data_layout Layout = C_Layout>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const size_type idx)
+            inline auto operator[] (const SizeType idx)
                 -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoAi && Enable), value_type>::type
             {
                 return data.access(stab_idx, idx);
             }
 
-            template <bool Enable = true, data_layout Layout = L>
+            template <bool Enable = true, data_layout Layout = C_Layout>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const size_type idx) const
+            inline auto operator[] (const SizeType idx) const
                 -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoAi && Enable), value_type>::type
             {
                 return data.access(stab_idx, idx);
             }
 
-            template <bool Enable = true, data_layout Layout = L>
+            template <bool Enable = true, data_layout Layout = C_Layout>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const size_type idx)
+            inline auto operator[] (const SizeType idx)
                 -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoA && Enable), value_type>::type
             {
                 return data.access(0, stab_idx * n[0] + idx);
             }
 
-            template <bool Enable = true, data_layout Layout = L>
+            template <bool Enable = true, data_layout Layout = C_Layout>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[] (const size_type idx) const
+            inline auto operator[] (const SizeType idx) const
                 -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoA && Enable), value_type>::type
             {
                 return data.access(0, stab_idx * n[0] + idx);
@@ -173,14 +173,14 @@ namespace XXX_NAMESPACE
     //! \brief Multi-dimensional field data type
     //!
     //! This field data type uses a plain C-pointer to dynamically adapt to the needed memory requirement.
-    //! In case of D > 1, its is determined as the product of all dimensions with the
-    //! innermost dimension padded according to T, the data layout and the (default) data alignment.
+    //! In case of C_D > 1, its is determined as the product of all dimensions with the
+    //! innermost dimension padded according to ElementT, the data layout and the (default) data alignment.
     //! All memory is contiguous and can be moved as a whole (important e.g. for data transfers).
     //! The field, however, allows access to the data using array subscript operator chaining together with proxy objects.
     //! \n\n
     //! In case of Data_layout = AoS, data is stored with all elements placed in main memory one after the other.
     //! \n
-    //! In case of Data_layout = SoA (applied only if T is a record type) the individual members
+    //! In case of Data_layout = SoA (applied only if ElementT is a record type) the individual members
     //! are placed one after the other along the innermost dimension, e.g. for
     //! field<vec<double, 3>, 2, SoA>({3, 2}) the memory layout would be the following one:
     //! <pre>
@@ -205,14 +205,14 @@ namespace XXX_NAMESPACE
     //! \n
     //! GNU and Clang/LLVM seem to optimize the proxies away.
     //!
-    //! \tparam T data type
-    //! \tparam D dimension
-    //! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
+    //! \tparam ElementT data type
+    //! \tparam C_D dimension
+    //! \tparam C_Layout any of SoA (struct of arrays) and AoS (array of structs)
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T, size_type D, data_layout L = data_layout::AoS>
+    template <typename T, SizeType C_D, data_layout C_Layout = data_layout::AoS>
     class Field;
 
-    template <typename ElementT, size_type C_Dimension, data_layout C_Layout, target C_Target>
+    template <typename ElementT, SizeType C_Dimension, data_layout C_Layout, target C_Target>
     class Container
     {
         using Self = Container<ElementT, C_Dimension, C_Layout, C_Target>;
@@ -222,20 +222,20 @@ namespace XXX_NAMESPACE
     public:
 
         using ElementType = ElementT;
-        static constexpr size_type Dimension = C_Dimension;
+        static constexpr SizeType Dimension = C_Dimension;
         static constexpr data_layout Layout = C_Layout;
         static constexpr target Target = C_Target;
 
     private:
 
-        using ConstElementT = typename internal::traits<ElementT, C_Layout>::const_type;
+        using ConstElementT = typename internal::traits<ElementT, C_Layout>::ConstType;
         template <typename T>
-        using BasePointerT = typename internal::traits<T, C_Layout>::base_pointer;
-        using AllocatorT = typename BasePointerT<ElementT>::allocator;
+        using BasePointerType = typename internal::traits<T, C_Layout>::BasePointerType;
+        using AllocatorT = typename BasePointerType<ElementT>::allocator;
 
         struct Deleter
         {
-            auto operator()(BasePointerT<ElementT>* ptr) const
+            auto operator()(BasePointerType<ElementT>* ptr) const
                 -> void
             {
                 AllocatorT::template deallocate<C_Target>(*ptr);
@@ -248,42 +248,42 @@ namespace XXX_NAMESPACE
             allocation_shape{}
         {}
 
-        Container(const sarray<size_type, C_Dimension>& n)
+        Container(const SizeArray<C_Dimension>& n)
             :
             n(n),
             allocation_shape(AllocatorT::template get_allocation_shape<C_Layout>(n)),
-            data(new BasePointerT<ElementT>(AllocatorT::template allocate<Target>(allocation_shape), allocation_shape.first), Deleter()),
+            data(new BasePointerType<ElementT>(AllocatorT::template allocate<Target>(allocation_shape), allocation_shape.first), Deleter()),
 	        ptr(*data),
             const_ptr(*data)
         {}
 
         static constexpr bool UseProxyType = (C_Layout != data_layout::AoS && internal::provides_proxy_type<ElementT>::value);
-        using return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, typename internal::traits<ElementT, C_Layout>::proxy_type, ElementT&>, internal::accessor<ElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
-        using const_return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, const typename internal::traits<const ElementT, C_Layout>::proxy_type, const ElementT&>, internal::accessor<ConstElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
+        using return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, typename internal::traits<ElementT, C_Layout>::ProxyType, ElementT&>, internal::Accessor<ElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
+        using const_return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, const typename internal::traits<const ElementT, C_Layout>::ProxyType, const ElementT&>, internal::Accessor<ConstElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
 
     public:
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto operator[](const size_type idx)
+        inline auto operator[](const SizeType idx)
             -> return_type
         {
-            return internal::accessor<ElementT, C_Dimension, C_Dimension, C_Layout>(ptr, n)[idx];
+            return internal::Accessor<ElementT, C_Dimension, C_Dimension, C_Layout>(ptr, n)[idx];
         }
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto operator[](const size_type idx) const
+        inline auto operator[](const SizeType idx) const
             -> const_return_type
         {
-            return internal::accessor<ConstElementT, C_Dimension, C_Dimension, C_Layout>(const_ptr, n)[idx];
+            return internal::Accessor<ConstElementT, C_Dimension, C_Dimension, C_Layout>(const_ptr, n)[idx];
         }
 
         template <typename FuncT>
         auto Set(FuncT func)
         {
-            const size_type pitch = allocation_shape.first;
-            const size_type num_stabs = allocation_shape.second;
+            const SizeType pitch = allocation_shape.first;
+            const SizeType num_stabs = allocation_shape.second;
 
             if (data.get())
             {   
@@ -322,14 +322,14 @@ namespace XXX_NAMESPACE
             return data.get()->get_pointer();
         }
 
-        sarray<size_type, C_Dimension> n;
-        std::pair<size_type, size_type> allocation_shape;
-	    std::shared_ptr<BasePointerT<ElementT>> data;
-	    BasePointerT<ElementT> ptr;
-        BasePointerT<ConstElementT> const_ptr;
+        SizeArray<C_Dimension> n;
+        std::pair<SizeType, SizeType> allocation_shape;
+	    std::shared_ptr<BasePointerType<ElementT>> data;
+	    BasePointerType<ElementT> ptr;
+        BasePointerType<ConstElementT> const_ptr;
     };
 
-    template <typename T, size_type D, data_layout L>
+    template <typename T, SizeType C_D, data_layout C_Layout>
     class Field
     {
         static_assert(!std::is_const<T>::value, "error: field with const elements is not allowed");
@@ -337,31 +337,31 @@ namespace XXX_NAMESPACE
     public:
 
         using element_type = T;
-        static constexpr size_type dimension = D;
-        static constexpr data_layout layout = L;
+        static constexpr SizeType dimension = C_D;
+        static constexpr data_layout layout = C_Layout;
 
     private:
 
-        using const_element_type = typename internal::traits<element_type, L>::const_type;
+        using const_element_type = typename internal::traits<element_type, C_Layout>::ConstType;
         
     public:
 
         Field() = default;
             
-        Field(const sarray<size_type, D>& n, const bool initialize_to_zero = false)
+        Field(const SizeArray<C_D>& n, const bool initialize_to_zero = false)
             :
             n(n)
         {
             Resize(n, initialize_to_zero);
         }
 
-        auto Resize(const sarray<size_type, D>& new_n, const bool initialize_to_zero = false)
+        auto Resize(const SizeArray<C_D>& new_n, const bool initialize_to_zero = false)
             -> void
         {
             if (n != new_n)
             {
                 n = new_n;
-                data = Container<T, D, L, XXX_NAMESPACE::target::Host>(n);
+                data = Container<T, C_D, C_Layout, XXX_NAMESPACE::target::Host>(n);
                 
                 if (initialize_to_zero)
                 {
@@ -369,7 +369,7 @@ namespace XXX_NAMESPACE
                 }
 
             #if defined(__CUDACC__)
-                device_data = Container<T, D, L, target::GPU_CUDA>(n);
+                device_data = Container<T, C_D, C_Layout, target::GPU_CUDA>(n);
 
                 if (initialize_to_zero)
                 {
@@ -391,17 +391,17 @@ namespace XXX_NAMESPACE
             // TODO: implementation; if (owns_data) {..}
         }
 
-        static constexpr bool UseProxyType = (L != data_layout::AoS && internal::provides_proxy_type<T>::value);
-        using value_type = std::conditional_t<(D == 1), std::conditional_t<UseProxyType, typename internal::traits<T, L>::proxy_type, T&>, internal::accessor<element_type, D - 1, D, L>>;
-        using const_value_type = std::conditional_t<(D == 1), std::conditional_t<UseProxyType, const typename internal::traits<const T, L>::proxy_type, const T&>, internal::accessor<const_element_type, D - 1, D, L>>;
+        static constexpr bool UseProxyType = (C_Layout != data_layout::AoS && internal::provides_proxy_type<T>::value);
+        using value_type = std::conditional_t<(C_D == 1), std::conditional_t<UseProxyType, typename internal::traits<T, C_Layout>::ProxyType, T&>, internal::Accessor<element_type, C_D - 1, C_D, C_Layout>>;
+        using const_value_type = std::conditional_t<(C_D == 1), std::conditional_t<UseProxyType, const typename internal::traits<const T, C_Layout>::ProxyType, const T&>, internal::Accessor<const_element_type, C_D - 1, C_D, C_Layout>>;
 
-        inline auto operator[](const size_type idx)
+        inline auto operator[](const SizeType idx)
             -> value_type
         {
             return data[idx];
         }
 
-        inline auto operator[](const size_type idx) const
+        inline auto operator[](const SizeType idx) const
             -> const_value_type
         {
             return data[idx];
@@ -410,18 +410,18 @@ namespace XXX_NAMESPACE
         HOST_VERSION
         CUDA_DEVICE_VERSION    
         inline auto size() const
-            -> const sarray<size_type, D>&
+            -> const SizeArray<C_D>&
         {
             return n;   
         }
 
     #if defined(__CUDACC__)
         auto GetDeviceAccess(const bool sync_with_host = false)
-            -> Container<T, D, L, target::GPU_CUDA>&
+            -> Container<T, C_D, C_Layout, target::GPU_CUDA>&
         {
             if (device_data.IsEmpty())
             {
-                device_data = Container<T, D, L, target::GPU_CUDA>(n);
+                device_data = Container<T, C_D, C_Layout, target::GPU_CUDA>(n);
             }
 
             if (sync_with_host)
@@ -451,10 +451,10 @@ namespace XXX_NAMESPACE
         }
     #endif
 
-        sarray<size_type, D> n;
-        Container<T, D, L, target::Host> data;
+        SizeArray<C_D> n;
+        Container<T, C_D, C_Layout, target::Host> data;
     #if defined(__CUDACC__)
-        Container<T, D, L, target::GPU_CUDA> device_data;
+        Container<T, C_D, C_Layout, target::GPU_CUDA> device_data;
     #endif
     };
 }

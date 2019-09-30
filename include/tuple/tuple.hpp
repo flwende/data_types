@@ -54,7 +54,7 @@ namespace TUPLE_NAMESPACE
     public:
 
         using type = tuple<T_1, T_2, T_3>;
-        using proxy_type = typename internal::tuple_proxy<T_1, T_2, T_3>;
+        using ProxyType = typename internal::tuple_proxy<T_1, T_2, T_3>;
         using value_type = typename XXX_NAMESPACE::internal::compare<T_1, typename XXX_NAMESPACE::internal::compare<T_2, T_3>::stronger_type>::stronger_type;
 
         T_1 x;

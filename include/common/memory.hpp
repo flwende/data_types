@@ -48,7 +48,7 @@ namespace XXX_NAMESPACE
         friend class pointer;
 
         // number of data members
-        static constexpr size_type N = AUXILIARY_NAMESPACE::variadic::pack<T...>::length;
+        static constexpr SizeType N = AUXILIARY_NAMESPACE::variadic::pack<T...>::length;
         static_assert(N > 0, "error: empty parameter pack");
 
         // all members have the same type: get this type
@@ -59,44 +59,44 @@ namespace XXX_NAMESPACE
         static_assert(is_homogeneous, "error: use the inhomogeneous multi_pointer instead");
 
         // create tuple from the base pointer
-        template <size_type ...I>
+        template <SizeType ...I>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto get_values(std::integer_sequence<size_type, I...>)
+        inline auto get_values(std::integer_sequence<SizeType, I...>)
             -> std::tuple<T&...>
         {
             return {reinterpret_cast<T&>(ptr[I * n_0])...};
         }
 
-        template <size_type ...I>
+        template <SizeType ...I>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto get_values(std::integer_sequence<size_type, I...>) const
+        inline auto get_values(std::integer_sequence<SizeType, I...>) const
             -> std::tuple<const T&...>
         {
             return {reinterpret_cast<const T&>(ptr[I * n_0])...};
         }
 
-        template <size_type ...I>
+        template <SizeType ...I>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto get_values(const size_type stab_idx, const size_type idx, std::integer_sequence<size_type, I...>)
+        inline auto get_values(const SizeType stab_idx, const SizeType idx, std::integer_sequence<SizeType, I...>)
             -> std::tuple<T&...>
         {
             return {reinterpret_cast<T&>(ptr[(stab_idx * N + I) * n_0 + idx])...};
         }
 
-        template <size_type ...I>
+        template <SizeType ...I>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto get_values(const size_type stab_idx, const size_type idx, std::integer_sequence<size_type, I...>) const
+        inline auto get_values(const SizeType stab_idx, const SizeType idx, std::integer_sequence<SizeType, I...>) const
             -> std::tuple<const T&...>
         {
             return {reinterpret_cast<const T&>(ptr[(stab_idx * N + I) * n_0 + idx])...};
         }
 
         // extent of the innermost dimension (w.r.t. a multidimensional field declaration)
-        size_type n_0;
+        SizeType n_0;
         // base pointer
         value_type* ptr;
 
@@ -109,7 +109,7 @@ namespace XXX_NAMESPACE
         {}
 
         // constructor: from external base pointer and innermist dimension
-        pointer(value_type* ptr, const size_type n_0)
+        pointer(value_type* ptr, const SizeType n_0)
             :
             n_0(n_0),
             ptr(ptr) 
@@ -118,7 +118,7 @@ namespace XXX_NAMESPACE
         // constructor: from an existing pointer and a stab index (stab_idx) and an intra-stab index (idx)
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        pointer(const pointer& p, const size_type stab_idx, const size_type idx)
+        pointer(const pointer& p, const SizeType stab_idx, const SizeType idx)
             :
             n_0(p.n_0),
             ptr(&p.ptr[stab_idx * N * n_0 + idx]) 
@@ -147,7 +147,7 @@ namespace XXX_NAMESPACE
         inline auto swap(pointer& p)
             -> pointer&
         {
-            size_type this_n_0 = n_0;
+            SizeType this_n_0 = n_0;
             n_0 = p.n_0;
             p.n_0 = this_n_0;
 
@@ -161,7 +161,7 @@ namespace XXX_NAMESPACE
         // get a new pointer shifted by stab_idx and idx
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto at(const size_type idx)
+        inline auto at(const SizeType idx)
             -> pointer
         {
             return {*this, 0, idx};
@@ -169,7 +169,7 @@ namespace XXX_NAMESPACE
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto at(const size_type idx) const
+        inline auto at(const SizeType idx) const
             -> pointer<const T...>
         {
             return {*this, 0, idx};
@@ -177,7 +177,7 @@ namespace XXX_NAMESPACE
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto at(const size_type stab_idx, const size_type idx)
+        inline auto at(const SizeType stab_idx, const SizeType idx)
             -> pointer
         {
             return {*this, stab_idx, idx};
@@ -185,7 +185,7 @@ namespace XXX_NAMESPACE
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto at(const size_type stab_idx, const size_type idx) const
+        inline auto at(const SizeType stab_idx, const SizeType idx) const
             -> pointer<const T...>
         {
             return {*this, stab_idx, idx};
@@ -196,45 +196,45 @@ namespace XXX_NAMESPACE
         CUDA_DEVICE_VERSION
         inline auto operator*()
         {
-            return get_values(std::make_integer_sequence<size_type, N>{});
+            return get_values(std::make_integer_sequence<SizeType, N>{});
         }
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
         inline auto operator*() const
         {
-            return get_values(std::make_integer_sequence<size_type, N>{});
+            return get_values(std::make_integer_sequence<SizeType, N>{});
         }
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto access(const size_type idx)
+        inline auto access(const SizeType idx)
         {
-            return get_values(0, idx, std::make_integer_sequence<size_type, N>{});
-        }
-
-        template <bool Enable = true>
-        HOST_VERSION
-        CUDA_DEVICE_VERSION
-        inline auto access(const size_type idx) const
-        {
-            return get_values(0, idx, std::make_integer_sequence<size_type, N>{});
+            return get_values(0, idx, std::make_integer_sequence<SizeType, N>{});
         }
 
         template <bool Enable = true>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto access(const size_type stab_idx, const size_type idx)
+        inline auto access(const SizeType idx) const
         {
-            return get_values(stab_idx, idx, std::make_integer_sequence<size_type, N>{});
+            return get_values(0, idx, std::make_integer_sequence<SizeType, N>{});
         }
 
         template <bool Enable = true>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto access(const size_type stab_idx, const size_type idx) const
+        inline auto access(const SizeType stab_idx, const SizeType idx)
         {
-            return get_values(stab_idx, idx, std::make_integer_sequence<size_type, N>{});
+            return get_values(stab_idx, idx, std::make_integer_sequence<SizeType, N>{});
+        }
+
+        template <bool Enable = true>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        inline auto access(const SizeType stab_idx, const SizeType idx) const
+        {
+            return get_values(stab_idx, idx, std::make_integer_sequence<SizeType, N>{});
         }
 
         // get base pointer
@@ -266,7 +266,7 @@ namespace XXX_NAMESPACE
             return p;
         }
 
-        inline auto operator+=(const size_type n)
+        inline auto operator+=(const SizeType n)
             -> pointer&
         {
             ptr += n;
@@ -291,10 +291,10 @@ namespace XXX_NAMESPACE
         {           
         protected:
 
-            static constexpr size_type default_alignment = SIMD_NAMESPACE::simd::alignment;
+            static constexpr SizeType default_alignment = SIMD_NAMESPACE::simd::alignment;
 
-            static auto padding(const size_type n, const size_type alignment = default_alignment)
-                -> size_type
+            static auto padding(const SizeType n, const SizeType alignment = default_alignment)
+                -> SizeType
             {
                 if (!MATH_NAMESPACE::is_power_of<2>(alignment))
                 {
@@ -302,35 +302,35 @@ namespace XXX_NAMESPACE
                     return n;
                 }
 
-                const size_type ratio = MATH_NAMESPACE::least_common_multiple(alignment, static_cast<size_type>(sizeof(value_type))) / static_cast<size_type>(sizeof(value_type));
+                const SizeType ratio = MATH_NAMESPACE::least_common_multiple(alignment, static_cast<SizeType>(sizeof(value_type))) / static_cast<SizeType>(sizeof(value_type));
 
                 return ((n + ratio - 1) / ratio) * ratio;
             }
 
         public:
 
-            template <data_layout L, size_type D, bool Enable = true>
-            static auto get_allocation_shape(const sarray<size_type, D>& n, const size_type alignment = default_alignment)
-                -> typename std::enable_if<(L != data_layout::SoA && Enable), std::pair<size_type, size_type>>::type
+            template <data_layout L, SizeType D, bool Enable = true>
+            static auto get_allocation_shape(const sarray<SizeType, D>& n, const SizeType alignment = default_alignment)
+                -> typename std::enable_if<(L != data_layout::SoA && Enable), std::pair<SizeType, SizeType>>::type
             {
                 return {padding(n[0], alignment), N * n.reduce_mul(1)};
             }
 
-            template <data_layout L, size_type D, bool Enable = true>
-            static auto get_allocation_shape(const sarray<size_type, D>& n, const size_type alignment = default_alignment)
-                -> typename std::enable_if<(L == data_layout::SoA && Enable), std::pair<size_type, size_type>>::type
+            template <data_layout L, SizeType D, bool Enable = true>
+            static auto get_allocation_shape(const sarray<SizeType, D>& n, const SizeType alignment = default_alignment)
+                -> typename std::enable_if<(L == data_layout::SoA && Enable), std::pair<SizeType, SizeType>>::type
             {
                 return {padding(n.reduce_mul(), alignment), N};
             }
 
-            static auto get_byte_size(const std::pair<size_type, size_type>& allocation_shape)
-                -> size_type
+            static auto get_byte_size(const std::pair<SizeType, SizeType>& allocation_shape)
+                -> SizeType
             {
                 return allocation_shape.first * allocation_shape.second * sizeof(value_type);
             }
 
             template <XXX_NAMESPACE::target Target, bool Enable = true>
-            static auto allocate(const std::pair<size_type, size_type>& allocation_shape, const size_type alignment = default_alignment)
+            static auto allocate(const std::pair<SizeType, SizeType>& allocation_shape, const SizeType alignment = default_alignment)
                 -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), value_type*>::type
             {
                 // NOTE: aligned_alloc results in a segfault here -> use _mm_malloc
@@ -349,10 +349,10 @@ namespace XXX_NAMESPACE
 
             #if defined(__CUDACC__)
             template <XXX_NAMESPACE::target Target, bool Enable = true>
-            static auto allocate(const std::pair<size_type, size_type>& allocation_shape, const size_type alignment = default_alignment)
+            static auto allocate(const std::pair<SizeType, SizeType>& allocation_shape, const SizeType alignment = default_alignment)
                 -> typename std::enable_if<(Target == XXX_NAMESPACE::target::GPU_CUDA && Enable), value_type*>::type
             {
-                const size_type num_elements = allocation_shape.first * allocation_shape.second;
+                const SizeType num_elements = allocation_shape.first * allocation_shape.second;
                 value_type* d_ptr;
 
                 cudaMalloc((void**)&d_ptr, num_elements * sizeof(value_type));
@@ -380,7 +380,7 @@ namespace XXX_NAMESPACE
         MACRO_VARIADIC_TYPE_GEN(XXX_NAMESPACE::pointer);
     }
 
-    template <typename T, size_type N>
+    template <typename T, SizeType N>
     using pointer_n = typename type_gen<T, N>::type;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -403,10 +403,10 @@ namespace XXX_NAMESPACE
         template <typename ...X>
         friend class multi_pointer;
 
-        static constexpr size_type one = static_cast<size_type>(1);
+        static constexpr SizeType one = static_cast<SizeType>(1);
 
         // number of data members
-        static constexpr size_type N = AUXILIARY_NAMESPACE::variadic::pack<T...>::length;
+        static constexpr SizeType N = AUXILIARY_NAMESPACE::variadic::pack<T...>::length;
         static_assert(N > 0, "error: empty parameter pack");
         
         // check if all types are the same: we don't want that here
@@ -414,81 +414,81 @@ namespace XXX_NAMESPACE
         static_assert(!is_homogeneous, "error: use the homogeneous pointer instead");
 
         // find out the byte-size of the largest type
-        static constexpr size_type size_largest_type = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_largest_type();
+        static constexpr SizeType size_largest_type = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_largest_type();
 
         // determine the total byte-size of all data members that have a size different (smaller) than the largest type
-        static constexpr size_type size_rest = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_pack_excluding_largest_type();
+        static constexpr SizeType size_rest = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_pack_excluding_largest_type();
 
         // size of the inhomogeneous structured type
-        static constexpr size_type record_size = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_pack();
+        static constexpr SizeType record_size = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_pack();
 
         // determine the number of elements of the structured type that is needed so that their overall size
         // is an integral multiple of each data member type
-        static constexpr size_type record_padding_factor = std::max(one, MATH_NAMESPACE::least_common_multiple(size_largest_type, size_rest) / std::max(one, size_rest));
+        static constexpr SizeType record_padding_factor = std::max(one, MATH_NAMESPACE::least_common_multiple(size_largest_type, size_rest) / std::max(one, size_rest));
 
         // determine the scaling factor of each member-type-size w.r.t. to the largest type
-        static constexpr XXX_NAMESPACE::sarray<size_type, N> size_scaling_factor{size_largest_type / static_cast<size_type>(sizeof(T))...};
+        static constexpr XXX_NAMESPACE::sarray<SizeType, N> size_scaling_factor{size_largest_type / static_cast<SizeType>(sizeof(T))...};
 
         // (exclusive) prefix sum over the byte-sizes of the template arguments
-        static constexpr XXX_NAMESPACE::sarray<size_type, N> offset = MATH_NAMESPACE::prefix_sum(XXX_NAMESPACE::sarray<size_type, N>{sizeof(T)...});
+        static constexpr XXX_NAMESPACE::sarray<SizeType, N> offset = MATH_NAMESPACE::prefix_sum(XXX_NAMESPACE::sarray<SizeType, N>{sizeof(T)...});
     
         // create a pointer tuple from a base pointer and the 'offset's for a field with extent of the innermost dimension 'n_0'
-        template <size_type ...I>
-        inline constexpr auto make_pointer_tuple(std::uint8_t* __restrict__ ptr, const size_type n_0, std::integer_sequence<size_type, I...>)
+        template <SizeType ...I>
+        inline constexpr auto make_pointer_tuple(std::uint8_t* __restrict__ ptr, const SizeType n_0, std::integer_sequence<SizeType, I...>)
             -> std::tuple<T*...>
         {
             return {reinterpret_cast<T*>(&ptr[offset[I] * n_0])...};
         }
 
         // create a pointer tuple from an existing pointer tuple, a stab index (stab_idx) and an intra-stab index (idx)
-        template <size_type ...I>
+        template <SizeType ...I>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline constexpr auto make_pointer_tuple(const std::tuple<T*...>& ptr, const size_type stab_idx, const size_type idx, std::integer_sequence<size_type, I...>)
+        inline constexpr auto make_pointer_tuple(const std::tuple<T*...>& ptr, const SizeType stab_idx, const SizeType idx, std::integer_sequence<SizeType, I...>)
             -> std::tuple<T*...>
         {
             return {std::get<I>(ptr) + stab_idx * num_units * size_scaling_factor[I] + idx...};
         }
 
         // increment the pointer tuple
-        inline constexpr auto increment_pointer_tuple(const size_type inc = 1)
+        inline constexpr auto increment_pointer_tuple(const SizeType inc = 1)
             -> void
         {
             AUXILIARY_NAMESPACE::variadic::loop<N>::execute([inc, this] (auto& I) {std::get<I.value>(ptr) += inc;});
         }
 
         // create tuple from the base pointer
-        template <size_type ...I>
+        template <SizeType ...I>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto get_values(std::integer_sequence<size_type, I...>)
+        inline auto get_values(std::integer_sequence<SizeType, I...>)
             -> std::tuple<T&...>
         {
             return {*(std::get<I>(ptr))...};
         }
 
-        template <size_type ...I>
+        template <SizeType ...I>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto get_values(std::integer_sequence<size_type, I...>) const
+        inline auto get_values(std::integer_sequence<SizeType, I...>) const
             -> std::tuple<const T&...>
         {
             return {*(std::get<I>(ptr))...};
         }
 
-        template <size_type ...I>
+        template <SizeType ...I>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto get_values(const size_type stab_idx, const size_type idx, std::integer_sequence<size_type, I...>)
+        inline auto get_values(const SizeType stab_idx, const SizeType idx, std::integer_sequence<SizeType, I...>)
             -> std::tuple<T&...>
         {
             return {*(std::get<I>(ptr) + stab_idx * num_units * size_scaling_factor[I] + idx)...};
         }
 
-        template <size_type ...I>
+        template <SizeType ...I>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto get_values(const size_type stab_idx, const size_type idx, std::integer_sequence<size_type, I...>) const
+        inline auto get_values(const SizeType stab_idx, const SizeType idx, std::integer_sequence<SizeType, I...>) const
             -> std::tuple<const T&...>
         {
             return {*(std::get<I>(ptr) + stab_idx * num_units * size_scaling_factor[I] + idx)...};
@@ -498,7 +498,7 @@ namespace XXX_NAMESPACE
         using value_type = std::uint8_t;
 
         // extent of the innermost dimension of the filed in units of largest type
-        size_type num_units;
+        SizeType num_units;
         // base pointers (of different type) are managed internally by using a tuple
         std::tuple<T*...> ptr;
 
@@ -511,19 +511,19 @@ namespace XXX_NAMESPACE
         {}
 
         // constructor: from external base pointer and innermist dimension
-        multi_pointer(std::uint8_t* __restrict__ ptr, const size_type n_0)
+        multi_pointer(std::uint8_t* __restrict__ ptr, const SizeType n_0)
             :
             num_units((n_0 * record_size) / size_largest_type),
-            ptr(make_pointer_tuple(ptr, n_0, std::make_integer_sequence<size_type, N>{})) 
+            ptr(make_pointer_tuple(ptr, n_0, std::make_integer_sequence<SizeType, N>{})) 
         {}
 
         // constructor: from an existing multi_pointer and a stab index (stab_idx) and an intra-stab index (idx)
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        multi_pointer(const multi_pointer& mp, const size_type stab_idx, const size_type idx)
+        multi_pointer(const multi_pointer& mp, const SizeType stab_idx, const SizeType idx)
             :
             num_units(mp.num_units),
-            ptr(make_pointer_tuple(mp.ptr, stab_idx, idx, std::make_integer_sequence<size_type, N>{})) 
+            ptr(make_pointer_tuple(mp.ptr, stab_idx, idx, std::make_integer_sequence<SizeType, N>{})) 
         {}
 
         // copy / conversion constructors
@@ -549,7 +549,7 @@ namespace XXX_NAMESPACE
         inline auto swap(multi_pointer& mp)
             -> multi_pointer&
         {
-            size_type this_num_units = num_units;
+            SizeType this_num_units = num_units;
             num_units = mp.num_units;
             mp.num_units = this_num_units;
 
@@ -563,7 +563,7 @@ namespace XXX_NAMESPACE
         // get a new multi_pointer shifted by [stab_idx and] 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto at(const size_type idx)
+        inline auto at(const SizeType idx)
             -> multi_pointer
         {
             return {*this, 0, idx};
@@ -571,7 +571,7 @@ namespace XXX_NAMESPACE
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto at(const size_type idx) const
+        inline auto at(const SizeType idx) const
             -> multi_pointer<const T...>
         {
             return {*this, 0, idx};
@@ -579,7 +579,7 @@ namespace XXX_NAMESPACE
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto at(const size_type stab_idx, const size_type idx)
+        inline auto at(const SizeType stab_idx, const SizeType idx)
             -> multi_pointer
         {
             return {*this, stab_idx, idx};
@@ -587,7 +587,7 @@ namespace XXX_NAMESPACE
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto at(const size_type stab_idx, const size_type idx) const
+        inline auto at(const SizeType stab_idx, const SizeType idx) const
             -> multi_pointer<const T...>
         {
             return {*this, stab_idx, idx};
@@ -598,43 +598,43 @@ namespace XXX_NAMESPACE
         CUDA_DEVICE_VERSION
         inline auto operator*()
         {
-            return get_values(std::make_integer_sequence<size_type, N>{});
+            return get_values(std::make_integer_sequence<SizeType, N>{});
         }
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
         inline auto operator*() const
         {
-            return get_values(std::make_integer_sequence<size_type, N>{});
+            return get_values(std::make_integer_sequence<SizeType, N>{});
         }
 
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto access(const size_type idx)
+        inline auto access(const SizeType idx)
         {
-            return get_values(0, idx, std::make_integer_sequence<size_type, N>{});
+            return get_values(0, idx, std::make_integer_sequence<SizeType, N>{});
         }
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto access(const size_type idx) const
+        inline auto access(const SizeType idx) const
         {
-            return get_values(0, idx, std::make_integer_sequence<size_type, N>{});
+            return get_values(0, idx, std::make_integer_sequence<SizeType, N>{});
         }
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto access(const size_type stab_idx, const size_type idx)
+        inline auto access(const SizeType stab_idx, const SizeType idx)
         {
-            return get_values(stab_idx, idx, std::make_integer_sequence<size_type, N>{});
+            return get_values(stab_idx, idx, std::make_integer_sequence<SizeType, N>{});
         }
 
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        inline auto access(const size_type stab_idx, const size_type idx) const
+        inline auto access(const SizeType stab_idx, const SizeType idx) const
         {
-            return get_values(stab_idx, idx, std::make_integer_sequence<size_type, N>{});
+            return get_values(stab_idx, idx, std::make_integer_sequence<SizeType, N>{});
         }
         
         // get base pointer
@@ -666,7 +666,7 @@ namespace XXX_NAMESPACE
             return mp;
         }
 
-        inline auto operator+=(const size_type n)
+        inline auto operator+=(const SizeType n)
             -> multi_pointer&
         {
             increment_pointer_tuple(n);
@@ -691,10 +691,10 @@ namespace XXX_NAMESPACE
         {           
         protected:
 
-            static constexpr size_type default_alignment = SIMD_NAMESPACE::simd::alignment;
+            static constexpr SizeType default_alignment = SIMD_NAMESPACE::simd::alignment;
 
-            static auto padding(const size_type n, const size_type alignment = default_alignment)
-                -> size_type
+            static auto padding(const SizeType n, const SizeType alignment = default_alignment)
+                -> SizeType
             {
                 if (!MATH_NAMESPACE::is_power_of<2>(alignment))
                 {
@@ -702,35 +702,35 @@ namespace XXX_NAMESPACE
                     return n;
                 }
 
-                const size_type byte_padding_factor = MATH_NAMESPACE::least_common_multiple(alignment, size_largest_type) / size_largest_type;
-                const size_type ratio = MATH_NAMESPACE::least_common_multiple(record_padding_factor, byte_padding_factor);
+                const SizeType byte_padding_factor = MATH_NAMESPACE::least_common_multiple(alignment, size_largest_type) / size_largest_type;
+                const SizeType ratio = MATH_NAMESPACE::least_common_multiple(record_padding_factor, byte_padding_factor);
 
                 return ((n + ratio - 1) / ratio) * ratio;
             }
 
         public:
 
-            template <data_layout L, size_type D, bool Enable = true>
-            static auto get_allocation_shape(const sarray<size_type, D>& n, const size_type alignment = default_alignment)
-                -> typename std::enable_if<(L != data_layout::SoA && Enable), std::pair<size_type, size_type>>::type
+            template <data_layout L, SizeType D, bool Enable = true>
+            static auto get_allocation_shape(const sarray<SizeType, D>& n, const SizeType alignment = default_alignment)
+                -> typename std::enable_if<(L != data_layout::SoA && Enable), std::pair<SizeType, SizeType>>::type
             {
                 return {padding(n[0], alignment), n.reduce_mul(1)};
             }
 
-            template <data_layout L, size_type D, bool Enable = true>
-            static auto get_allocation_shape(const sarray<size_type, D>& n, const size_type alignment = default_alignment)
-                -> typename std::enable_if<(L == data_layout::SoA && Enable), std::pair<size_type, size_type>>::type
+            template <data_layout L, SizeType D, bool Enable = true>
+            static auto get_allocation_shape(const sarray<SizeType, D>& n, const SizeType alignment = default_alignment)
+                -> typename std::enable_if<(L == data_layout::SoA && Enable), std::pair<SizeType, SizeType>>::type
             {
                 return {padding(n.reduce_mul(), alignment), 1};
             }
 
-            static auto get_byte_size(const std::pair<size_type, size_type>& allocation_shape)
+            static auto get_byte_size(const std::pair<SizeType, SizeType>& allocation_shape)
             {
                 return allocation_shape.first * allocation_shape.second * record_size;
             }
 
             template <XXX_NAMESPACE::target Target, bool Enable = true>
-            static auto allocate(const std::pair<size_type, size_type>& allocation_shape, const size_type alignment = default_alignment)
+            static auto allocate(const std::pair<SizeType, SizeType>& allocation_shape, const SizeType alignment = default_alignment)
                 -> typename std::enable_if<(Target == XXX_NAMESPACE::target::Host && Enable), value_type*>::type
             {
                 // NOTE: aligned_alloc results in a segfault here -> use _mm_malloc
@@ -749,10 +749,10 @@ namespace XXX_NAMESPACE
 
             #if defined(__CUDACC__)
             template <XXX_NAMESPACE::target Target, bool Enable = true>
-            static auto allocate(const std::pair<size_type, size_type>& allocation_shape, const size_type alignment = default_alignment)
+            static auto allocate(const std::pair<SizeType, SizeType>& allocation_shape, const SizeType alignment = default_alignment)
                 -> typename std::enable_if<(Target == XXX_NAMESPACE::target::GPU_CUDA && Enable), value_type*>::type
             {
-                const size_type num_elements = allocation_shape.first * allocation_shape.second;
+                const SizeType num_elements = allocation_shape.first * allocation_shape.second;
                 value_type* d_ptr;
 
                 cudaMalloc((void**)&d_ptr, num_elements * record_size);

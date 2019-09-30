@@ -72,7 +72,7 @@ namespace MATH_NAMESPACE
     //! \param x argument
     //! \return x is power of N or not
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <size_type N, typename T>
+    template <SizeType N, typename T>
     constexpr bool is_power_of(T x)
     {
         static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
@@ -97,12 +97,12 @@ namespace MATH_NAMESPACE
     //! \param x argument
     //! \return prefix sum
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T, size_type N>
+    template <typename T, SizeType N>
     constexpr MATH_NAMESPACE::sarray<T, N> prefix_sum(const MATH_NAMESPACE::sarray<T, N>& x)
     {
         MATH_NAMESPACE::sarray<T, N> y{0};
 
-        for (size_type i = 1; i < N; ++i)
+        for (SizeType i = 1; i < N; ++i)
         {
             y[i] = y[i - 1] + x[i - 1];
         }

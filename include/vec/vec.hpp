@@ -23,7 +23,7 @@ namespace VEC_NAMESPACE
     // some forward declarations
     namespace internal
     {
-        template <typename T, size_type D>
+        template <typename T, SizeType D>
         class vec_proxy;
     }
 
@@ -33,7 +33,7 @@ namespace VEC_NAMESPACE
     //! \tparam T data type
     //! \tparam D dimension
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T, size_type D>
+    template <typename T, SizeType D>
     class vec;
 
     //! \brief D = 1 specialization with component x
@@ -50,11 +50,11 @@ namespace VEC_NAMESPACE
     public:
 
         using type = vec<T, 1>;
-        using proxy_type = typename internal::vec_proxy<T, 1>;
+        using ProxyType = typename internal::vec_proxy<T, 1>;
         //! Remember the template type parameter T
         using value_type = T;
         //! Remember the template parameter D (=1)
-        static constexpr size_type d = 1;
+        static constexpr SizeType d = 1;
 
         T x;
 
@@ -146,11 +146,11 @@ namespace VEC_NAMESPACE
     public:
 
         using type = vec<T, 2>;
-        using proxy_type = typename internal::vec_proxy<T, 2>;
+        using ProxyType = typename internal::vec_proxy<T, 2>;
         //! Remember the template type parameter T
         using value_type = T;
         //! Remember the template parameter D (=2)
-        static constexpr size_type d = 2;
+        static constexpr SizeType d = 2;
 
         T x;
         T y;
@@ -255,11 +255,11 @@ namespace VEC_NAMESPACE
     public:
 
         using type = vec<T, 3>;
-        using proxy_type = typename internal::vec_proxy<T, 3>;
+        using ProxyType = typename internal::vec_proxy<T, 3>;
         //! Remember the template type parameter T
         using value_type = T;
         //! Remember the template parameter D (=3)
-        static constexpr size_type d = 3;
+        static constexpr SizeType d = 3;
 
         T x;
         T y;
@@ -388,13 +388,13 @@ namespace XXX_NAMESPACE
 {
     namespace internal
     {
-        template <typename T, size_type D>
+        template <typename T, SizeType D>
         struct provides_proxy_type<VEC_NAMESPACE::vec<T, D>>
         {
             static constexpr bool value = true;
         };
 
-        template <typename T, size_type D>
+        template <typename T, SizeType D>
         struct provides_proxy_type<const VEC_NAMESPACE::vec<T, D>>
         {
             static constexpr bool value = true;
@@ -404,7 +404,7 @@ namespace XXX_NAMESPACE
 
 namespace MATH_NAMESPACE
 {
-    template <typename T, size_type D>
+    template <typename T, SizeType D>
     struct math<VEC_NAMESPACE::vec<T, D>>
     {
         using type = VEC_NAMESPACE::vec<T, D>;

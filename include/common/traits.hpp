@@ -43,19 +43,19 @@ namespace XXX_NAMESPACE
         template <typename T, data_layout L, typename Enabled = void>
         struct traits
         {
-            using type = T;
-            using const_type = const T;
-            using proxy_type = T;
-            using base_pointer = typename XXX_NAMESPACE::pointer<T>;
+            using Type = T;
+            using ConstType = const T;
+            using ProxyType = T;
+            using BasePointerType = typename XXX_NAMESPACE::pointer<T>;
         };
 
         template <typename T, data_layout L>
-        struct traits<T, L, typename std::enable_if<(L != data_layout::AoS && provides_proxy_type<T>::value)>::type>
+        struct traits<T, L, std::enable_if_t<(L != data_layout::AoS && provides_proxy_type<T>::value)>>
         {
-            using type = T;
-            using const_type = const T;
-            using proxy_type = typename std::conditional<std::is_const<T>::value, typename T::proxy_type::const_type, typename T::proxy_type>::type;
-            using base_pointer = typename proxy_type::base_pointer;
+            using Type = T;
+            using ConstType = const T;
+            using ProxyType = std::conditional_t<std::is_const<T>::value, typename T::ProxyType::ConstType, typename T::ProxyType>;
+            using BasePointerType = typename ProxyType::BasePointerType;
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,28 +69,28 @@ namespace XXX_NAMESPACE
         template <typename T_1, typename T_2, typename Enabled = void>
         struct compare
         {
-            using stronger_type = typename std::conditional<(sizeof(T_1) > sizeof(T_2)), T_1, T_2>::type;
-            using stronger_type_unqualified = typename std::remove_cv<stronger_type>::type;
-            using weaker_type = typename std::conditional<(sizeof(T_1) > sizeof(T_2)), T_2, T_1>::type;
-            using weaker_type_unqualified = typename std::remove_cv<weaker_type>::type;
+            using stronger_type = std::conditional_t<(sizeof(T_1) > sizeof(T_2)), T_1, T_2>;
+            using stronger_type_unqualified = std::decay_t<stronger_type>;
+            using weaker_type = std::conditional_t<(sizeof(T_1) > sizeof(T_2)), T_2, T_1>;
+            using weaker_type_unqualified = std::decay_t<weaker_type>;
         };
 
         template <typename T_1, typename T_2>
-        struct compare<T_1, T_2, typename std::enable_if<std::is_floating_point<T_1>::value && !std::is_floating_point<T_2>::value>::type>
+        struct compare<T_1, T_2, std::enable_if_t<std::is_floating_point<T_1>::value && !std::is_floating_point<T_2>::value>>
         {
             using stronger_type = T_1;
-            using stronger_type_unqualified = typename std::remove_cv<stronger_type>::type;
+            using stronger_type_unqualified = std::decay_t<stronger_type>;
             using weaker_type = T_2;
-            using weaker_type_unqualified = typename std::remove_cv<weaker_type>::type;
+            using weaker_type_unqualified = std::decay_t<weaker_type>;
         };
 
         template <typename T_1, typename T_2>
-        struct compare<T_1, T_2, typename std::enable_if<!std::is_floating_point<T_1>::value && std::is_floating_point<T_2>::value>::type>
+        struct compare<T_1, T_2, std::enable_if_t<!std::is_floating_point<T_1>::value && std::is_floating_point<T_2>::value>>
         {
             using stronger_type = T_2;
-            using stronger_type_unqualified = typename std::remove_cv<stronger_type>::type;
+            using stronger_type_unqualified = std::decay_t<stronger_type>;
             using weaker_type = T_1;
-            using weaker_type_unqualified = typename std::remove_cv<weaker_type>::type;
+            using weaker_type_unqualified = std::decay_t<weaker_type>;
         };
     }
 }

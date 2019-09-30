@@ -32,7 +32,7 @@ namespace AUXILIARY_NAMESPACE
             //! \return number of arguments
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename ...T>
-            constexpr size_type get_num_arguments()
+            constexpr SizeType get_num_arguments()
             {
                 return sizeof ...(T);
             }
@@ -44,7 +44,7 @@ namespace AUXILIARY_NAMESPACE
             //! \tparam T_head data type (head)
             //! \tparam T_tail variadic argument list (tail)
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <size_type N, typename T_head, typename ...T_tail>
+            template <SizeType N, typename T_head, typename ...T_tail>
             struct argument
             {
                 //! Data type of the N-th argument
@@ -125,12 +125,12 @@ namespace AUXILIARY_NAMESPACE
         template <typename ...T>
         struct pack
         {
-            template <size_type N>
+            template <SizeType N>
             using type = typename argument<N, T...>::type;
 
-            static constexpr size_type length = get_num_arguments<T...>();
+            static constexpr SizeType length = get_num_arguments<T...>();
 
-            template <size_type N>
+            template <SizeType N>
             static constexpr auto value(T... values)
             {
                 static_assert(sizeof...(T) > 0, "error: empty parameter pack");
@@ -144,7 +144,7 @@ namespace AUXILIARY_NAMESPACE
 
                 using T_Head = typename argument<0, T...>::type;
 
-                return accumulate<size_type, typename std::conditional<sizeof(T) == 0, T, size_type>::type...>::add(0, (std::is_same<T_Head, T>::value ? 1 : 0)...) == sizeof...(T);
+                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, (std::is_same<T_Head, T>::value ? 1 : 0)...) == sizeof...(T);
             }
 
             static constexpr bool has_same_size()
@@ -153,7 +153,7 @@ namespace AUXILIARY_NAMESPACE
 
                 using T_Head = typename argument<0, T...>::type;
 
-                return accumulate<size_type, typename std::conditional<sizeof(T) == 0, T, size_type>::type...>::add(0, (sizeof(T_Head) == sizeof(T) ? 1 : 0)...) == sizeof...(T);
+                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, (sizeof(T_Head) == sizeof(T) ? 1 : 0)...) == sizeof...(T);
             }
 
             static constexpr bool is_convertible()
@@ -162,37 +162,37 @@ namespace AUXILIARY_NAMESPACE
 
                 using T_Head = typename argument<0, T...>::type;
 
-                return accumulate<size_type, typename std::conditional<sizeof(T) == 0, T, size_type>::type...>::add(0, (std::is_convertible<T_Head, T>::value ? 1 : 0)...) == sizeof...(T);
+                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, (std::is_convertible<T_Head, T>::value ? 1 : 0)...) == sizeof...(T);
             }
 
             static constexpr bool is_const()
             {
                 static_assert(sizeof...(T) > 0, "error: empty parameter pack");
 
-                return accumulate<size_type, typename std::conditional<sizeof(T) == 0, T, size_type>::type...>::add(0, (std::is_const<T>::value ? 1 : 0)...) == sizeof...(T);
+                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, (std::is_const<T>::value ? 1 : 0)...) == sizeof...(T);
             }
 
-            static constexpr size_type size_of_largest_type()
+            static constexpr SizeType size_of_largest_type()
             {
                 static_assert(sizeof...(T) > 0, "error: empty parameter pack");
 
-                return accumulate<size_type, typename std::conditional<sizeof(T) == 0, T, size_type>::type...>::max(0, sizeof(T)...);
+                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::max(0, sizeof(T)...);
             }
 
-            static constexpr size_type size_of_pack()
+            static constexpr SizeType size_of_pack()
             {
                 static_assert(sizeof...(T) > 0, "error: empty parameter pack");
 
-                return accumulate<size_type, typename std::conditional<sizeof(T) == 0, T, size_type>::type...>::add(0, sizeof(T)...);
+                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, sizeof(T)...);
             }
 
-            static constexpr size_type size_of_pack_excluding_largest_type()
+            static constexpr SizeType size_of_pack_excluding_largest_type()
             {
                 static_assert(sizeof...(T) > 0, "error: empty parameter pack");
 
-                constexpr size_type size_largest_type = size_of_largest_type();
+                constexpr SizeType size_largest_type = size_of_largest_type();
 
-                return accumulate<size_type, typename std::conditional<sizeof(T) == 0, T, size_type>::type...>::add(0, (sizeof(T) == size_largest_type ? 0 : sizeof(T))...);
+                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, (sizeof(T) == size_largest_type ? 0 : sizeof(T))...);
             }
         };
 
@@ -224,10 +224,10 @@ namespace AUXILIARY_NAMESPACE
         /////////////////////////////////////////////////////////////////
         // compile time loop
         //
-        // NOTE: loop<begin, end>::execute([..](auto& I) { constexpr size_type i = I.value; body(i[,..]); }) 
+        // NOTE: loop<begin, end>::execute([..](auto& I) { constexpr SizeType i = I.value; body(i[,..]); }) 
         //       corresponds to
         //       
-        //       for (size_type i = begin; i < end; ++i)
+        //       for (SizeType i = begin; i < end; ++i)
         //         body(i[,..]);
         /////////////////////////////////////////////////////////////////
         namespace
@@ -238,7 +238,7 @@ namespace AUXILIARY_NAMESPACE
                 static constexpr T value = X;
             };
 
-            template <size_type I, size_type Shift>
+            template <SizeType I, SizeType Shift>
             struct loop_implementation
             {
                 template <typename F>
@@ -246,28 +246,28 @@ namespace AUXILIARY_NAMESPACE
                 {
                     loop_implementation<I - 1, Shift>::execute(body);
 
-                    template_parameter_t<size_type, Shift + I> i; 
+                    template_parameter_t<SizeType, Shift + I> i; 
                     body(i);
                 }
             };
 
-            template <size_type Shift>
+            template <SizeType Shift>
             struct loop_implementation<0, Shift>
             {
                 template <typename F>
                 static void execute(F body)
                 {
-                    template_parameter_t<size_type, Shift> i; 
+                    template_parameter_t<SizeType, Shift> i; 
                     body(i);
                 }
             };
         }
 
-        template <size_type A, size_type B = 0>
+        template <SizeType A, SizeType B = 0>
         struct loop
         {
-            static constexpr size_type begin = (B == 0 ? 0 : A);
-            static constexpr size_type end = (B == 0 ? A : B);
+            static constexpr SizeType begin = (B == 0 ? 0 : A);
+            static constexpr SizeType end = (B == 0 ? A : B);
 
             static_assert(end > begin, "error: end <= begin");
 
@@ -288,7 +288,7 @@ namespace AUXILIARY_NAMESPACE
         //! \param TYPE_NAME name of the variadic type to be generated
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
     #define MACRO_VARIADIC_TYPE_GEN(TYPE_NAME)                                          \
-        template <size_type N, typename T_head, typename ...T_tail>                   \
+        template <SizeType N, typename T_head, typename ...T_tail>                   \
         struct type_gen_impl                                                            \
         {                                                                               \
             using type = typename type_gen_impl<N - 1, T_tail...>::type;                \
@@ -300,7 +300,7 @@ namespace AUXILIARY_NAMESPACE
             using type = TYPE_NAME<T_head, T_tail...>;                                  \
         };                                                                              \
                                                                                         \
-        template <typename T, size_type N>                                            \
+        template <typename T, SizeType N>                                            \
         struct type_gen                                                                 \
         {                                                                               \
             static_assert(N > 0, "error: no template arguments specified");             \
