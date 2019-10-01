@@ -6,7 +6,6 @@
 #if !defined(AUXILIARY_TEMPLATE_HPP)
 #define AUXILIARY_TEMPLATE_HPP
 
-#include <cstdint>
 #include <type_traits>
 
 #if !defined(XXX_NAMESPACE)
@@ -290,26 +289,26 @@ namespace XXX_NAMESPACE
         //! \param TYPE_NAME name of the type to be generated
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define MACRO_TYPE_GEN(TYPE_NAME)                                                                                                                                                                                 \
-    template <SizeType C_N, typename Head, typename ...Tail>                                                                                                                                                               \
-    struct TypeGenImplementation                                                                                                                                                                                                   \
+#define MACRO_TYPE_GEN(TYPE_NAME)                                                                                                                                                                                          \
+    template <SizeType C_N, typename Head, typename... Tail>                                                                                                                                                               \
+    struct TypeGenImplementation                                                                                                                                                                                           \
     {                                                                                                                                                                                                                      \
-        using Type = typename TypeGenImplementation<C_N - 1, Tail...>::Type;                                                                                                                                                       \
+        using Type = typename TypeGenImplementation<C_N - 1, Tail...>::Type;                                                                                                                                               \
     };                                                                                                                                                                                                                     \
                                                                                                                                                                                                                            \
-    template <typename Head, typename ...Tail>                                                                                                                                                                             \
-    struct TypeGenImplementation<0, Head, Tail...>                                                                                                                                                                                 \
+    template <typename Head, typename... Tail>                                                                                                                                                                             \
+    struct TypeGenImplementation<0, Head, Tail...>                                                                                                                                                                         \
     {                                                                                                                                                                                                                      \
         using Type = TYPE_NAME<Head, Tail...>;                                                                                                                                                                             \
     };                                                                                                                                                                                                                     \
                                                                                                                                                                                                                            \
     template <typename T, SizeType C_N>                                                                                                                                                                                    \
-    struct TypeGen                                                                                                                                                                                                        \
+    struct TypeGen                                                                                                                                                                                                         \
     {                                                                                                                                                                                                                      \
-        static_assert(C_N > 0, "error: no template parameters specified");                                                                                                                                                  \
+        static_assert(C_N > 0, "error: no template parameters specified");                                                                                                                                                 \
         static_assert(C_N <= FW_SEQ_MAX_N, "error: not implemented");                                                                                                                                                      \
                                                                                                                                                                                                                            \
-        using Type = typename TypeGenImplementation<FW_SEQ_MAX_N - C_N, FW_SEQ_N(T)>::Type;                                                                                                                                        \
+        using Type = typename TypeGenImplementation<FW_SEQ_MAX_N - C_N, FW_SEQ_N(T)>::Type;                                                                                                                                \
     };
     } // namespace variadic
 
@@ -373,7 +372,6 @@ namespace XXX_NAMESPACE
                 }
             };
         } // namespace
-
 
         /////////////////////////////////////////////////////////////////
         //!
