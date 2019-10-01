@@ -296,13 +296,13 @@ namespace XXX_NAMESPACE
             static auto padding(const SizeType n, const SizeType alignment = default_alignment)
                 -> SizeType
             {
-                if (!MATH_NAMESPACE::is_power_of<2>(alignment))
+                if (!::XXX_NAMESPACE::math::IsPowerOf<2>(alignment))
                 {
                     std::cerr << "warning: alignment is not a power of 2" << std::endl;
                     return n;
                 }
 
-                const SizeType ratio = MATH_NAMESPACE::least_common_multiple(alignment, static_cast<SizeType>(sizeof(value_type))) / static_cast<SizeType>(sizeof(value_type));
+                const SizeType ratio = ::XXX_NAMESPACE::math::LeastCommonMultiple(alignment, static_cast<SizeType>(sizeof(value_type))) / static_cast<SizeType>(sizeof(value_type));
 
                 return ((n + ratio - 1) / ratio) * ratio;
             }
@@ -424,13 +424,13 @@ namespace XXX_NAMESPACE
 
         // determine the number of elements of the structured type that is needed so that their overall size
         // is an integral multiple of each data member type
-        static constexpr SizeType record_padding_factor = std::max(one, MATH_NAMESPACE::least_common_multiple(size_largest_type, size_rest) / std::max(one, size_rest));
+        static constexpr SizeType record_padding_factor = std::max(one, ::XXX_NAMESPACE::math::LeastCommonMultiple(size_largest_type, size_rest) / std::max(one, size_rest));
 
         // determine the scaling factor of each member-type-size w.r.t. to the largest type
         static constexpr XXX_NAMESPACE::sarray<SizeType, N> size_scaling_factor{size_largest_type / static_cast<SizeType>(sizeof(T))...};
 
         // (exclusive) prefix sum over the byte-sizes of the template arguments
-        static constexpr XXX_NAMESPACE::sarray<SizeType, N> offset = MATH_NAMESPACE::prefix_sum(XXX_NAMESPACE::sarray<SizeType, N>{sizeof(T)...});
+        static constexpr XXX_NAMESPACE::sarray<SizeType, N> offset = ::XXX_NAMESPACE::math::PrefixSum(XXX_NAMESPACE::sarray<SizeType, N>{sizeof(T)...});
     
         // create a pointer tuple from a base pointer and the 'offset's for a field with extent of the innermost dimension 'n_0'
         template <SizeType ...I>
@@ -696,14 +696,14 @@ namespace XXX_NAMESPACE
             static auto padding(const SizeType n, const SizeType alignment = default_alignment)
                 -> SizeType
             {
-                if (!MATH_NAMESPACE::is_power_of<2>(alignment))
+                if (!::XXX_NAMESPACE::math::IsPowerOf<2>(alignment))
                 {
                     std::cerr << "warning: alignment is not a power of 2" << std::endl;
                     return n;
                 }
 
-                const SizeType byte_padding_factor = MATH_NAMESPACE::least_common_multiple(alignment, size_largest_type) / size_largest_type;
-                const SizeType ratio = MATH_NAMESPACE::least_common_multiple(record_padding_factor, byte_padding_factor);
+                const SizeType byte_padding_factor = ::XXX_NAMESPACE::math::LeastCommonMultiple(alignment, size_largest_type) / size_largest_type;
+                const SizeType ratio = ::XXX_NAMESPACE::math::LeastCommonMultiple(record_padding_factor, byte_padding_factor);
 
                 return ((n + ratio - 1) / ratio) * ratio;
             }

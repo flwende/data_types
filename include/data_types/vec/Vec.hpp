@@ -237,7 +237,7 @@ namespace VEC_NAMESPACE
         //! \return Euclidean norm
         inline T length() const
         {
-            return MATH_NAMESPACE::math<T>::sqrt(x * x + y * y);
+            return ::XXX_NAMESPACE::math::Func<T>::sqrt(x * x + y * y);
         }
     };
     
@@ -353,7 +353,7 @@ namespace VEC_NAMESPACE
         //! \return Euclidean norm
         inline T length() const
         {
-            return MATH_NAMESPACE::math<T>::sqrt(x * x + y * y + z * z);
+            return ::XXX_NAMESPACE::math::Func<T>::sqrt(x * x + y * y + z * z);
         }
     };
 
@@ -400,37 +400,37 @@ namespace XXX_NAMESPACE
             static constexpr bool value = true;
         };
     }
-}
-
-namespace MATH_NAMESPACE
-{
-    template <typename T, SizeType D>
-    struct math<VEC_NAMESPACE::vec<T, D>>
+    
+    namespace math
     {
-        using type = VEC_NAMESPACE::vec<T, D>;
-        using value_type = typename std::remove_cv<typename type::value_type>::type;
-
-        static constexpr value_type one = math<value_type>::one;
-        static constexpr value_type minus_one = math<value_type>::minus_one;
-
-        template <typename X>
-        static type sqrt(X x)
+        template <typename T, SizeType D>
+        struct Func<VEC_NAMESPACE::vec<T, D>>
         {
-            return MATH_NAMESPACE::sqrt(x);
-        }
+            using type = VEC_NAMESPACE::vec<T, D>;
+            using value_type = typename std::remove_cv<typename type::value_type>::type;
 
-        template <typename X>
-        static type log(X x)
-        {
-            return MATH_NAMESPACE::log(x);
-        }
+            static constexpr value_type One = Func<value_type>::One;
+            static constexpr value_type MinusOne = Func<value_type>::MinusOne;
 
-        template <typename X>
-        static type exp(X x)
-        {
-            return MATH_NAMESPACE::exp(x);
-        }
-    };
+            template <typename X>
+            static type sqrt(X x)
+            {
+                return ::XXX_NAMESPACE::math::sqrt(x);
+            }
+
+            template <typename X>
+            static type log(X x)
+            {
+                return ::XXX_NAMESPACE::math::log(x);
+            }
+
+            template <typename X>
+            static type exp(X x)
+            {
+                return ::XXX_NAMESPACE::math::exp(x);
+            }
+        };
+    }
 }
 
 #endif

@@ -7,157 +7,179 @@
 #define COMMON_MATH_HPP
 
 #include <cmath>
-#include <cstdint>
 #include <type_traits>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
 
-#if !defined(MATH_NAMESPACE)
-#define MATH_NAMESPACE XXX_NAMESPACE
-#endif
-
 #include <data_types/DataTypes.hpp>
-#include <common/Traits.hpp>
-#include <data_types/array/Array.hpp>
 
-namespace MATH_NAMESPACE
+namespace XXX_NAMESPACE
 {
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //!
-    //! \brief Greatest common divisor (gcd)
-    //! 
-    //! \tparam T must be an unsigned integer
-    //! \param x_1 input
-    //! \param x_2 input
-    //! \return gcd(x_1, x_2)
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T>
-    constexpr T greatest_common_divisor(T x_1, T x_2)
+    namespace math
     {
-        static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
-
-        while (true)
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief Greatest common divisor (gcd).
+        //!
+        //! \tparam T the argument type (must be an unsigned integer)
+        //! \param x_1 argument
+        //! \param x_2 argument
+        //! \return gcd(x_1, x_2)
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <typename T>
+        constexpr auto GreatestCommonDivisor(T x_1, T x_2)
         {
-            if (x_1 == 0) return x_2;
-            x_2 %= x_1;
-            if (x_2 == 0) return x_1;
-            x_1 %= x_2;
-        }
-    }
+            static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //! \brief Least common multiple (lcm)
-    //! 
-    //! Note: it holds 'gcd(x_1, x_2) * lcm(x_1, x_2) = |x_1 * x_2|'
-    //!
-    //! \tparam T must be an unsigned integer
-    //! \param x_1 input
-    //! \param x_2 input
-    //! \return lcm(x_1, x_2)
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T>
-    constexpr T least_common_multiple(T x_1, T x_2)
-    {
-        static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
+            while (true)
+            {
+                if (x_1 == 0)
+                    return x_2;
 
-        return (x_1 * x_2) / greatest_common_divisor(x_1, x_2);
-    }
+                x_2 %= x_1;
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //! \brief Power of N test
-    //!
-    //! \tparam N base
-    //! \tparam T must be an unsigned integer
-    //! \param x argument
-    //! \return x is power of N or not
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <SizeType N, typename T>
-    constexpr bool is_power_of(T x)
-    {
-        static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
-        static_assert(N > 0, "error: N must be at least 1");
+                if (x_2 == 0)
+                    return x_1;
 
-        if (x == 1 || x == N) return true;
-        if (x <= 0 || x < N || N == 1) return false;
-
-        while (true)
-        {
-            if (x == 0 || x % N) return false;
-            x /= N;
-            if (x == 1) return true;
-        }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //! \brief Prefix sum calculation
-    //!
-    //! \tparam T data type
-    //! \tparam N array extent
-    //! \param x argument
-    //! \return prefix sum
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T, SizeType N>
-    constexpr MATH_NAMESPACE::sarray<T, N> prefix_sum(const MATH_NAMESPACE::sarray<T, N>& x)
-    {
-        MATH_NAMESPACE::sarray<T, N> y{0};
-
-        for (SizeType i = 1; i < N; ++i)
-        {
-            y[i] = y[i - 1] + x[i - 1];
+                x_1 %= x_2;
+            }
         }
 
-        return y;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //! \brief Definition of some math functions and constants for different FP types
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T>
-    struct math
-    {
-        static constexpr T one = static_cast<T>(1.0);
-        static constexpr T minus_one = static_cast<T>(-1.0);
-
-        static T sqrt(const T x)
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief Least common multiple (lcm).
+        //!
+        //! It holds 'gcd(x_1, x_2) * lcm(x_1, x_2) = |x_1 * x_2|'
+        //!
+        //! \tparam T the argument type (must be an unsigned integer)
+        //! \param x_1 argument
+        //! \param x_2 argument
+        //! \return lcm(x_1, x_2)
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <typename T>
+        constexpr auto LeastCommonMultiple(T x_1, T x_2)
         {
-            return std::sqrt(x);
+            static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
+
+            return (x_1 * x_2) / GreatestCommonDivisor(x_1, x_2);
         }
 
-        static T log(const T x)
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief Power of C_N test.
+        //!
+        //! \tparam C_N the base
+        //! \tparam T the argument type (must be an unsigned integer)
+        //! \param x argument
+        //! \return `true` if `x` is power of `C_N`, otherwise `false`
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <SizeType C_N, typename T>
+        constexpr auto IsPowerOf(T x)
         {
-            return std::log(x);
+            static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
+            static_assert(C_N > 0, "error: C_N must be at least 1");
+
+            if (x == 1 || x == C_N)
+                return true;
+
+            if (x <= 0 || x < C_N || C_N == 1)
+                return false;
+
+            while (true)
+            {
+                if (x == 0 || x % C_N)
+                    return false;
+
+                x /= C_N;
+
+                if (x == 1)
+                    return true;
+            }
         }
 
-        static T exp(const T x)
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief Prefix sum calculation.
+        //!
+        //! \tparam C_N the array extent
+        //! \param x argument
+        //! \return an array holding the prefix sums
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <SizeType C_N>
+        constexpr auto PrefixSum(const SizeArray<C_N>& x)
         {
-            return std::exp(x);
+            SizeArray<C_N> y{0};
+
+            for (SizeType i = 1; i < C_N; ++i)
+            {
+                y[i] = y[i - 1] + x[i - 1];
+            }
+
+            return y;
         }
-    };
 
-    //! \brief Specialization with T = float
-    template <>
-    struct math<float>
-    {
-        static constexpr float one = 1.0F;
-        static constexpr float minus_one = -1.0F;
-
-        static float sqrt(const float x)
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief Definition of some math functions and constants for different FP types
+        //!
+        //! \tparam T a floating point type
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <typename T>
+        struct Func
         {
-            return sqrtf(x);
-        }
+            static_assert(std::is_floating_point<T>::value, "error: this is not a floating point type");
 
-        static float log(const float x)
-        {
-            return logf(x);
-        }
+            static constexpr T One = static_cast<T>(1.0);
+            static constexpr T MinusOne = static_cast<T>(-1.0);
 
-        static float exp(const float x)
+            //!
+            //! \brief Calculate the square root.
+            //!
+            //! \param x argument
+            //! \return the square root of `x`
+            //!
+            static auto sqrt(const T x) { return std::sqrt(x); }
+
+            //!
+            //! \brief Calculate the logarithm.
+            //!
+            //! \param x argument
+            //! \return the logarithm of `x`
+            //!
+            static auto log(const T x) { return std::log(x); }
+
+            //!
+            //! \brief Calculate the exponential.
+            //!
+            //! \param x argument
+            //! \return the exponential of `x`
+            //!
+            static auto exp(const T x) { return std::exp(x); }
+        };
+
+        //!
+        //! \brief Specialization for `T=float`.
+        //!
+        template <>
+        struct Func<float>
         {
-            return expf(x);
-        }
-    };
-}
+            static constexpr float One = 1.0F;
+            static constexpr float MinusOne = -1.0F;
+
+            static auto sqrt(const float x) { return sqrtf(x); }
+
+            static auto log(const float x) { return logf(x); }
+
+            static auto exp(const float x) { return expf(x); }
+        };
+    } // namespace math
+} // namespace XXX_NAMESPACE
 
 #endif

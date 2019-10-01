@@ -7,7 +7,7 @@
 #define DATA_TYPES_ARRAY_ARRAY_HPP
 
 #include <array>
-#include <cstdint>
+//#include <cstdint>
 #include <iostream>
 
 #if !defined(XXX_NAMESPACE)

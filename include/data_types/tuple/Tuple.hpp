@@ -159,37 +159,37 @@ namespace XXX_NAMESPACE
             static constexpr bool value = true;
         };
     }
-}
 
-namespace MATH_NAMESPACE
-{
-    template <typename T_1, typename T_2, typename T_3>
-    struct math<TUPLE_NAMESPACE::tuple<T_1, T_2, T_3>>
+    namespace math
     {
-        using type = TUPLE_NAMESPACE::tuple<T_1, T_2, T_3>;
-        using value_type = typename std::remove_cv<typename type::value_type>::type;
-
-        static constexpr value_type one = math<value_type>::one;
-        static constexpr value_type minus_one = math<value_type>::minus_one;
-
-        template <typename X>
-        static type sqrt(X x)
+        template <typename T_1, typename T_2, typename T_3>
+        struct Func<TUPLE_NAMESPACE::tuple<T_1, T_2, T_3>>
         {
-            return MATH_NAMESPACE::sqrt(x);
-        }
+            using type = TUPLE_NAMESPACE::tuple<T_1, T_2, T_3>;
+            using value_type = typename std::remove_cv<typename type::value_type>::type;
 
-        template <typename X>
-        static type log(X x)
-        {
-            return MATH_NAMESPACE::log(x);
-        }
+            static constexpr value_type One = Func<value_type>::One;
+            static constexpr value_type MinusOne = Func<value_type>::MinusOne;
 
-        template <typename X>
-        static type exp(X x)
-        {
-            return MATH_NAMESPACE::exp(x);
-        }
-    };
+            template <typename X>
+            static type sqrt(X x)
+            {
+                return ::XXX_NAMESPACE::math::sqrt(x);
+            }
+
+            template <typename X>
+            static type log(X x)
+            {
+                return ::XXX_NAMESPACE::math::log(x);
+            }
+
+            template <typename X>
+            static type exp(X x)
+            {
+                return ::XXX_NAMESPACE::math::exp(x);
+            }
+        };
+    }
 }
 
 #endif
