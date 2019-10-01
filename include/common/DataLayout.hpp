@@ -12,7 +12,15 @@
 
 namespace XXX_NAMESPACE
 {
-    enum class data_layout {AoS, SoA, SoAi};
-}
+    namespace memory
+    {
+        enum class DataLayout
+        {
+            AoS,
+            SoA,
+            SoAi
+        };
+    } // namespace memory
+} // namespace XXX_NAMESPACE
 
 #endif

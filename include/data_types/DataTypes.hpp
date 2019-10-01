@@ -7,7 +7,7 @@
 #define COMMON_DATA_TYPES_HPP
 
 #include <cstdint>
-#include <cstdlib>
+//#include <cstdlib>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw

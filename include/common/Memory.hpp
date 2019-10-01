@@ -309,16 +309,16 @@ namespace XXX_NAMESPACE
 
         public:
 
-            template <data_layout L, SizeType D, bool Enable = true>
+            template <::XXX_NAMESPACE::memory::DataLayout L, SizeType D, bool Enable = true>
             static auto get_allocation_shape(const sarray<SizeType, D>& n, const SizeType alignment = default_alignment)
-                -> typename std::enable_if<(L != data_layout::SoA && Enable), std::pair<SizeType, SizeType>>::type
+                -> typename std::enable_if<(L != ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), std::pair<SizeType, SizeType>>::type
             {
                 return {padding(n[0], alignment), N * n.reduce_mul(1)};
             }
 
-            template <data_layout L, SizeType D, bool Enable = true>
+            template <::XXX_NAMESPACE::memory::DataLayout L, SizeType D, bool Enable = true>
             static auto get_allocation_shape(const sarray<SizeType, D>& n, const SizeType alignment = default_alignment)
-                -> typename std::enable_if<(L == data_layout::SoA && Enable), std::pair<SizeType, SizeType>>::type
+                -> typename std::enable_if<(L == ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), std::pair<SizeType, SizeType>>::type
             {
                 return {padding(n.reduce_mul(), alignment), N};
             }
@@ -710,16 +710,16 @@ namespace XXX_NAMESPACE
 
         public:
 
-            template <data_layout L, SizeType D, bool Enable = true>
+            template <::XXX_NAMESPACE::memory::DataLayout L, SizeType D, bool Enable = true>
             static auto get_allocation_shape(const sarray<SizeType, D>& n, const SizeType alignment = default_alignment)
-                -> typename std::enable_if<(L != data_layout::SoA && Enable), std::pair<SizeType, SizeType>>::type
+                -> typename std::enable_if<(L != ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), std::pair<SizeType, SizeType>>::type
             {
                 return {padding(n[0], alignment), n.reduce_mul(1)};
             }
 
-            template <data_layout L, SizeType D, bool Enable = true>
+            template <::XXX_NAMESPACE::memory::DataLayout L, SizeType D, bool Enable = true>
             static auto get_allocation_shape(const sarray<SizeType, D>& n, const SizeType alignment = default_alignment)
-                -> typename std::enable_if<(L == data_layout::SoA && Enable), std::pair<SizeType, SizeType>>::type
+                -> typename std::enable_if<(L == ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), std::pair<SizeType, SizeType>>::type
             {
                 return {padding(n.reduce_mul(), alignment), 1};
             }

@@ -14,7 +14,7 @@ using namespace fw;
     #if defined(VECTOR_PRODUCT)
         template <>
         template <>
-        double kernel<element_type>::cross<1, 1>(const fw::Field<element_type, 1, fw::data_layout::AoS>& x_1, const fw::Field<element_type, 1, fw::data_layout::AoS>& x_2, fw::Field<element_type, 1, fw::data_layout::AoS>& y, const array_type<1>& n)
+        double kernel<element_type>::cross<1, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x_1, const fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x_2, fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& y, const array_type<1>& n)
         {
             double time = omp_get_wtime();
 
@@ -32,7 +32,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::cross<2, 2>(const fw::Field<element_type, 2, fw::data_layout::AoS>& x_1, const fw::Field<element_type, 2, fw::data_layout::AoS>& x_2, fw::Field<element_type, 2, fw::data_layout::AoS>& y, const array_type<2>& n)
+        double kernel<element_type>::cross<2, 2>(const fw::Field<element_type, 2, ::fw::memory::DataLayout::AoS>& x_1, const fw::Field<element_type, 2, ::fw::memory::DataLayout::AoS>& x_2, fw::Field<element_type, 2, ::fw::memory::DataLayout::AoS>& y, const array_type<2>& n)
         {
             double time = omp_get_wtime();
 
@@ -53,7 +53,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::cross<3, 3>(const fw::Field<element_type, 3, fw::data_layout::AoS>& x_1, const fw::Field<element_type, 3, fw::data_layout::AoS>& x_2, fw::Field<element_type, 3, fw::data_layout::AoS>& y, const array_type<3>& n)
+        double kernel<element_type>::cross<3, 3>(const fw::Field<element_type, 3, ::fw::memory::DataLayout::AoS>& x_1, const fw::Field<element_type, 3, ::fw::memory::DataLayout::AoS>& x_2, fw::Field<element_type, 3, ::fw::memory::DataLayout::AoS>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -77,7 +77,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::cross<3, 1>(const fw::Field<element_type, 1, fw::data_layout::AoS>& x_1, const fw::Field<element_type, 1, fw::data_layout::AoS>& x_2, fw::Field<element_type, 1, fw::data_layout::AoS>& y, const array_type<3>& n)
+        double kernel<element_type>::cross<3, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x_1, const fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x_2, fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -102,7 +102,7 @@ using namespace fw;
     #else
         template <>
         template <>
-        double kernel<element_type>::exp<1, 1>(fw::Field<element_type, 1, fw::data_layout::AoS>& x, const array_type<1>& n)
+        double kernel<element_type>::exp<1, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -124,7 +124,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<2, 2>(fw::Field<element_type, 2, fw::data_layout::AoS>& x, const array_type<2>& n)
+        double kernel<element_type>::exp<2, 2>(fw::Field<element_type, 2, ::fw::memory::DataLayout::AoS>& x, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -149,7 +149,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 3>(fw::Field<element_type, 3, fw::data_layout::AoS>& x, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 3>(fw::Field<element_type, 3, ::fw::memory::DataLayout::AoS>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -177,7 +177,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 1>(fw::Field<element_type, 1, fw::data_layout::AoS>& x, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -206,7 +206,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<1, 1>(fw::Field<element_type, 1, fw::data_layout::AoS>& x, const array_type<1>& n)
+        double kernel<element_type>::log<1, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -228,7 +228,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<2, 2>(fw::Field<element_type, 2, fw::data_layout::AoS>& x, const array_type<2>& n)
+        double kernel<element_type>::log<2, 2>(fw::Field<element_type, 2, ::fw::memory::DataLayout::AoS>& x, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -253,7 +253,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 3>(fw::Field<element_type, 3, fw::data_layout::AoS>& x, const array_type<3>& n)
+        double kernel<element_type>::log<3, 3>(fw::Field<element_type, 3, ::fw::memory::DataLayout::AoS>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -281,7 +281,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 1>(fw::Field<element_type, 1, fw::data_layout::AoS>& x, const array_type<3>& n)
+        double kernel<element_type>::log<3, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -310,7 +310,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<1, 1>(const fw::Field<element_type, 1, fw::data_layout::AoS>& x, fw::Field<element_type, 1, fw::data_layout::AoS>& y, const array_type<1>& n)
+        double kernel<element_type>::exp<1, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& y, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -332,7 +332,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<2, 2>(const fw::Field<element_type, 2, fw::data_layout::AoS>& x, fw::Field<element_type, 2, fw::data_layout::AoS>& y, const array_type<2>& n)
+        double kernel<element_type>::exp<2, 2>(const fw::Field<element_type, 2, ::fw::memory::DataLayout::AoS>& x, fw::Field<element_type, 2, ::fw::memory::DataLayout::AoS>& y, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -357,7 +357,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 3>(const fw::Field<element_type, 3, fw::data_layout::AoS>& x, fw::Field<element_type, 3, fw::data_layout::AoS>& y, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 3>(const fw::Field<element_type, 3, ::fw::memory::DataLayout::AoS>& x, fw::Field<element_type, 3, ::fw::memory::DataLayout::AoS>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -385,7 +385,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 1>(const fw::Field<element_type, 1, fw::data_layout::AoS>& x, fw::Field<element_type, 1, fw::data_layout::AoS>& y, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -414,7 +414,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<1, 1>(const fw::Field<element_type, 1, fw::data_layout::AoS>& x, fw::Field<element_type, 1, fw::data_layout::AoS>& y, const array_type<1>& n)
+        double kernel<element_type>::log<1, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& y, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -436,7 +436,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<2, 2>(const fw::Field<element_type, 2, fw::data_layout::AoS>& x, fw::Field<element_type, 2, fw::data_layout::AoS>& y, const array_type<2>& n)
+        double kernel<element_type>::log<2, 2>(const fw::Field<element_type, 2, ::fw::memory::DataLayout::AoS>& x, fw::Field<element_type, 2, ::fw::memory::DataLayout::AoS>& y, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -461,7 +461,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 3>(const fw::Field<element_type, 3, fw::data_layout::AoS>& x, fw::Field<element_type, 3, fw::data_layout::AoS>& y, const array_type<3>& n)
+        double kernel<element_type>::log<3, 3>(const fw::Field<element_type, 3, ::fw::memory::DataLayout::AoS>& x, fw::Field<element_type, 3, ::fw::memory::DataLayout::AoS>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -489,7 +489,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 1>(const fw::Field<element_type, 1, fw::data_layout::AoS>& x, fw::Field<element_type, 1, fw::data_layout::AoS>& y, const array_type<3>& n)
+        double kernel<element_type>::log<3, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::AoS>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -520,7 +520,7 @@ using namespace fw;
     #if defined(VECTOR_PRODUCT)
         template <>
         template <>
-        double kernel<element_type>::cross<1, 1>(const fw::Field<element_type, 1, fw::data_layout::SoA>& x_1, const fw::Field<element_type, 1, fw::data_layout::SoA>& x_2, fw::Field<element_type, 1, fw::data_layout::SoA>& y, const array_type<1>& n)
+        double kernel<element_type>::cross<1, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x_1, const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x_2, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& y, const array_type<1>& n)
         {
             double time = omp_get_wtime();
 
@@ -538,7 +538,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::cross<2, 2>(const fw::Field<element_type, 2, fw::data_layout::SoA>& x_1, const fw::Field<element_type, 2, fw::data_layout::SoA>& x_2, fw::Field<element_type, 2, fw::data_layout::SoA>& y, const array_type<2>& n)
+        double kernel<element_type>::cross<2, 2>(const fw::Field<element_type, 2, ::fw::memory::DataLayout::SoA>& x_1, const fw::Field<element_type, 2, ::fw::memory::DataLayout::SoA>& x_2, fw::Field<element_type, 2, ::fw::memory::DataLayout::SoA>& y, const array_type<2>& n)
         {
             double time = omp_get_wtime();
 
@@ -559,7 +559,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::cross<3, 3>(const fw::Field<element_type, 3, fw::data_layout::SoA>& x_1, const fw::Field<element_type, 3, fw::data_layout::SoA>& x_2, fw::Field<element_type, 3, fw::data_layout::SoA>& y, const array_type<3>& n)
+        double kernel<element_type>::cross<3, 3>(const fw::Field<element_type, 3, ::fw::memory::DataLayout::SoA>& x_1, const fw::Field<element_type, 3, ::fw::memory::DataLayout::SoA>& x_2, fw::Field<element_type, 3, ::fw::memory::DataLayout::SoA>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -583,7 +583,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::cross<3, 1>(const fw::Field<element_type, 1, fw::data_layout::SoA>& x_1, const fw::Field<element_type, 1, fw::data_layout::SoA>& x_2, fw::Field<element_type, 1, fw::data_layout::SoA>& y, const array_type<3>& n)
+        double kernel<element_type>::cross<3, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x_1, const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x_2, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -608,7 +608,7 @@ using namespace fw;
     #else
         template <>
         template <>
-        double kernel<element_type>::exp<1, 1>(fw::Field<element_type, 1, fw::data_layout::SoA>& x, const array_type<1>& n)
+        double kernel<element_type>::exp<1, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -630,7 +630,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<2, 2>(fw::Field<element_type, 2, fw::data_layout::SoA>& x, const array_type<2>& n)
+        double kernel<element_type>::exp<2, 2>(fw::Field<element_type, 2, ::fw::memory::DataLayout::SoA>& x, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -655,7 +655,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 3>(fw::Field<element_type, 3, fw::data_layout::SoA>& x, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 3>(fw::Field<element_type, 3, ::fw::memory::DataLayout::SoA>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -683,7 +683,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 1>(fw::Field<element_type, 1, fw::data_layout::SoA>& x, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -712,7 +712,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<1, 1>(fw::Field<element_type, 1, fw::data_layout::SoA>& x, const array_type<1>& n)
+        double kernel<element_type>::log<1, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -734,7 +734,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<2, 2>(fw::Field<element_type, 2, fw::data_layout::SoA>& x, const array_type<2>& n)
+        double kernel<element_type>::log<2, 2>(fw::Field<element_type, 2, ::fw::memory::DataLayout::SoA>& x, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -759,7 +759,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 3>(fw::Field<element_type, 3, fw::data_layout::SoA>& x, const array_type<3>& n)
+        double kernel<element_type>::log<3, 3>(fw::Field<element_type, 3, ::fw::memory::DataLayout::SoA>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -787,7 +787,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 1>(fw::Field<element_type, 1, fw::data_layout::SoA>& x, const array_type<3>& n)
+        double kernel<element_type>::log<3, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -816,7 +816,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<1, 1>(const fw::Field<element_type, 1, fw::data_layout::SoA>& x, fw::Field<element_type, 1, fw::data_layout::SoA>& y, const array_type<1>& n)
+        double kernel<element_type>::exp<1, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& y, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -838,7 +838,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<2, 2>(const fw::Field<element_type, 2, fw::data_layout::SoA>& x, fw::Field<element_type, 2, fw::data_layout::SoA>& y, const array_type<2>& n)
+        double kernel<element_type>::exp<2, 2>(const fw::Field<element_type, 2, ::fw::memory::DataLayout::SoA>& x, fw::Field<element_type, 2, ::fw::memory::DataLayout::SoA>& y, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -863,7 +863,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 3>(const fw::Field<element_type, 3, fw::data_layout::SoA>& x, fw::Field<element_type, 3, fw::data_layout::SoA>& y, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 3>(const fw::Field<element_type, 3, ::fw::memory::DataLayout::SoA>& x, fw::Field<element_type, 3, ::fw::memory::DataLayout::SoA>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -891,7 +891,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 1>(const fw::Field<element_type, 1, fw::data_layout::SoA>& x, fw::Field<element_type, 1, fw::data_layout::SoA>& y, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -920,7 +920,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<1, 1>(const fw::Field<element_type, 1, fw::data_layout::SoA>& x, fw::Field<element_type, 1, fw::data_layout::SoA>& y, const array_type<1>& n)
+        double kernel<element_type>::log<1, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& y, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -942,7 +942,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<2, 2>(const fw::Field<element_type, 2, fw::data_layout::SoA>& x, fw::Field<element_type, 2, fw::data_layout::SoA>& y, const array_type<2>& n)
+        double kernel<element_type>::log<2, 2>(const fw::Field<element_type, 2, ::fw::memory::DataLayout::SoA>& x, fw::Field<element_type, 2, ::fw::memory::DataLayout::SoA>& y, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -967,7 +967,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 3>(const fw::Field<element_type, 3, fw::data_layout::SoA>& x, fw::Field<element_type, 3, fw::data_layout::SoA>& y, const array_type<3>& n)
+        double kernel<element_type>::log<3, 3>(const fw::Field<element_type, 3, ::fw::memory::DataLayout::SoA>& x, fw::Field<element_type, 3, ::fw::memory::DataLayout::SoA>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -995,7 +995,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 1>(const fw::Field<element_type, 1, fw::data_layout::SoA>& x, fw::Field<element_type, 1, fw::data_layout::SoA>& y, const array_type<3>& n)
+        double kernel<element_type>::log<3, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoA>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -1026,7 +1026,7 @@ using namespace fw;
     #if defined(VECTOR_PRODUCT)
         template <>
         template <>
-        double kernel<element_type>::cross<1, 1>(const fw::Field<element_type, 1, fw::data_layout::SoAi>& x_1, const fw::Field<element_type, 1, fw::data_layout::SoAi>& x_2, fw::Field<element_type, 1, fw::data_layout::SoAi>& y, const array_type<1>& n)
+        double kernel<element_type>::cross<1, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x_1, const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x_2, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& y, const array_type<1>& n)
         {
             double time = omp_get_wtime();
 
@@ -1044,7 +1044,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::cross<2, 2>(const fw::Field<element_type, 2, fw::data_layout::SoAi>& x_1, const fw::Field<element_type, 2, fw::data_layout::SoAi>& x_2, fw::Field<element_type, 2, fw::data_layout::SoAi>& y, const array_type<2>& n)
+        double kernel<element_type>::cross<2, 2>(const fw::Field<element_type, 2, ::fw::memory::DataLayout::SoAi>& x_1, const fw::Field<element_type, 2, ::fw::memory::DataLayout::SoAi>& x_2, fw::Field<element_type, 2, ::fw::memory::DataLayout::SoAi>& y, const array_type<2>& n)
         {
             double time = omp_get_wtime();
 
@@ -1065,7 +1065,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::cross<3, 3>(const fw::Field<element_type, 3, fw::data_layout::SoAi>& x_1, const fw::Field<element_type, 3, fw::data_layout::SoAi>& x_2, fw::Field<element_type, 3, fw::data_layout::SoAi>& y, const array_type<3>& n)
+        double kernel<element_type>::cross<3, 3>(const fw::Field<element_type, 3, ::fw::memory::DataLayout::SoAi>& x_1, const fw::Field<element_type, 3, ::fw::memory::DataLayout::SoAi>& x_2, fw::Field<element_type, 3, ::fw::memory::DataLayout::SoAi>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -1089,7 +1089,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::cross<3, 1>(const fw::Field<element_type, 1, fw::data_layout::SoAi>& x_1, const fw::Field<element_type, 1, fw::data_layout::SoAi>& x_2, fw::Field<element_type, 1, fw::data_layout::SoAi>& y, const array_type<3>& n)
+        double kernel<element_type>::cross<3, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x_1, const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x_2, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -1114,7 +1114,7 @@ using namespace fw;
     #else
         template <>
         template <>
-        double kernel<element_type>::exp<1, 1>(fw::Field<element_type, 1, fw::data_layout::SoAi>& x, const array_type<1>& n)
+        double kernel<element_type>::exp<1, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -1136,7 +1136,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<2, 2>(fw::Field<element_type, 2, fw::data_layout::SoAi>& x, const array_type<2>& n)
+        double kernel<element_type>::exp<2, 2>(fw::Field<element_type, 2, ::fw::memory::DataLayout::SoAi>& x, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -1161,7 +1161,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 3>(fw::Field<element_type, 3, fw::data_layout::SoAi>& x, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 3>(fw::Field<element_type, 3, ::fw::memory::DataLayout::SoAi>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -1189,7 +1189,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 1>(fw::Field<element_type, 1, fw::data_layout::SoAi>& x, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -1218,7 +1218,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<1, 1>(fw::Field<element_type, 1, fw::data_layout::SoAi>& x, const array_type<1>& n)
+        double kernel<element_type>::log<1, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -1240,7 +1240,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<2, 2>(fw::Field<element_type, 2, fw::data_layout::SoAi>& x, const array_type<2>& n)
+        double kernel<element_type>::log<2, 2>(fw::Field<element_type, 2, ::fw::memory::DataLayout::SoAi>& x, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -1265,7 +1265,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 3>(fw::Field<element_type, 3, fw::data_layout::SoAi>& x, const array_type<3>& n)
+        double kernel<element_type>::log<3, 3>(fw::Field<element_type, 3, ::fw::memory::DataLayout::SoAi>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -1293,7 +1293,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 1>(fw::Field<element_type, 1, fw::data_layout::SoAi>& x, const array_type<3>& n)
+        double kernel<element_type>::log<3, 1>(fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -1322,7 +1322,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<1, 1>(const fw::Field<element_type, 1, fw::data_layout::SoAi>& x, fw::Field<element_type, 1, fw::data_layout::SoAi>& y, const array_type<1>& n)
+        double kernel<element_type>::exp<1, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& y, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -1344,7 +1344,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<2, 2>(const fw::Field<element_type, 2, fw::data_layout::SoAi>& x, fw::Field<element_type, 2, fw::data_layout::SoAi>& y, const array_type<2>& n)
+        double kernel<element_type>::exp<2, 2>(const fw::Field<element_type, 2, ::fw::memory::DataLayout::SoAi>& x, fw::Field<element_type, 2, ::fw::memory::DataLayout::SoAi>& y, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -1369,7 +1369,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 3>(const fw::Field<element_type, 3, fw::data_layout::SoAi>& x, fw::Field<element_type, 3, fw::data_layout::SoAi>& y, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 3>(const fw::Field<element_type, 3, ::fw::memory::DataLayout::SoAi>& x, fw::Field<element_type, 3, ::fw::memory::DataLayout::SoAi>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -1397,7 +1397,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::exp<3, 1>(const fw::Field<element_type, 1, fw::data_layout::SoAi>& x, fw::Field<element_type, 1, fw::data_layout::SoAi>& y, const array_type<3>& n)
+        double kernel<element_type>::exp<3, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
             
@@ -1426,7 +1426,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<1, 1>(const fw::Field<element_type, 1, fw::data_layout::SoAi>& x, fw::Field<element_type, 1, fw::data_layout::SoAi>& y, const array_type<1>& n)
+        double kernel<element_type>::log<1, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& y, const array_type<1>& n)
         {
             double time = omp_get_wtime();
             
@@ -1448,7 +1448,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<2, 2>(const fw::Field<element_type, 2, fw::data_layout::SoAi>& x, fw::Field<element_type, 2, fw::data_layout::SoAi>& y, const array_type<2>& n)
+        double kernel<element_type>::log<2, 2>(const fw::Field<element_type, 2, ::fw::memory::DataLayout::SoAi>& x, fw::Field<element_type, 2, ::fw::memory::DataLayout::SoAi>& y, const array_type<2>& n)
         {
             double time = omp_get_wtime();
             
@@ -1473,7 +1473,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 3>(const fw::Field<element_type, 3, fw::data_layout::SoAi>& x, fw::Field<element_type, 3, fw::data_layout::SoAi>& y, const array_type<3>& n)
+        double kernel<element_type>::log<3, 3>(const fw::Field<element_type, 3, ::fw::memory::DataLayout::SoAi>& x, fw::Field<element_type, 3, ::fw::memory::DataLayout::SoAi>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 
@@ -1501,7 +1501,7 @@ using namespace fw;
 
         template <>
         template <>
-        double kernel<element_type>::log<3, 1>(const fw::Field<element_type, 1, fw::data_layout::SoAi>& x, fw::Field<element_type, 1, fw::data_layout::SoAi>& y, const array_type<3>& n)
+        double kernel<element_type>::log<3, 1>(const fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& x, fw::Field<element_type, 1, ::fw::memory::DataLayout::SoAi>& y, const array_type<3>& n)
         {
             double time = omp_get_wtime();
 

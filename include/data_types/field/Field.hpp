@@ -47,7 +47,7 @@ namespace XXX_NAMESPACE
         //! \tparam Data_layout any of SoA (struct of arrays) and AoS (array of structs)
         //! \tparam Enabled needed for partial specialization for data types providing a proxy type
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename ElementT, SizeType C_N, SizeType C_D, data_layout C_Layout>
+        template <typename ElementT, SizeType C_N, SizeType C_D, ::XXX_NAMESPACE::memory::DataLayout C_Layout>
         class Accessor
         {
             using BasePointerType = typename std::conditional<std::is_const<ElementT>::value, const typename internal::traits<ElementT, C_Layout>::BasePointerType, typename internal::traits<ElementT, C_Layout>::BasePointerType>::type;
@@ -87,11 +87,11 @@ namespace XXX_NAMESPACE
             }
         };
         
-        template <typename ElementT, SizeType C_D, data_layout C_Layout>
+        template <typename ElementT, SizeType C_D, ::XXX_NAMESPACE::memory::DataLayout C_Layout>
         class Accessor<ElementT, 1, C_D, C_Layout>
         {
             using BasePointerType = typename std::conditional<std::is_const<ElementT>::value, const typename internal::traits<ElementT, C_Layout>::BasePointerType, typename internal::traits<ElementT, C_Layout>::BasePointerType>::type;
-            static constexpr bool UseProxyType = (C_Layout != data_layout::AoS && internal::provides_proxy_type<ElementT>::value);
+            static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && internal::provides_proxy_type<ElementT>::value);
             using value_type = typename std::conditional<UseProxyType, typename internal::traits<ElementT, C_Layout>::ProxyType, ElementT&>::type;
             using const_value_type = typename std::conditional<UseProxyType, const typename internal::traits<const ElementT, C_Layout>::ProxyType, const ElementT&>::type;
             
@@ -131,38 +131,38 @@ namespace XXX_NAMESPACE
                 return std::get<0>(data.access(stab_idx, idx));
             }
 
-            template <bool Enable = true, data_layout Layout = C_Layout>
+            template <bool Enable = true, ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout>
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto operator[] (const SizeType idx)
-                -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoAi && Enable), value_type>::type
+                -> typename std::enable_if<(UseProxyType && Layout == ::XXX_NAMESPACE::memory::DataLayout::SoAi && Enable), value_type>::type
             {
                 return data.access(stab_idx, idx);
             }
 
-            template <bool Enable = true, data_layout Layout = C_Layout>
+            template <bool Enable = true, ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout>
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto operator[] (const SizeType idx) const
-                -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoAi && Enable), value_type>::type
+                -> typename std::enable_if<(UseProxyType && Layout == ::XXX_NAMESPACE::memory::DataLayout::SoAi && Enable), value_type>::type
             {
                 return data.access(stab_idx, idx);
             }
 
-            template <bool Enable = true, data_layout Layout = C_Layout>
+            template <bool Enable = true, ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout>
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto operator[] (const SizeType idx)
-                -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoA && Enable), value_type>::type
+                -> typename std::enable_if<(UseProxyType && Layout == ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), value_type>::type
             {
                 return data.access(0, stab_idx * n[0] + idx);
             }
 
-            template <bool Enable = true, data_layout Layout = C_Layout>
+            template <bool Enable = true, ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout>
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto operator[] (const SizeType idx) const
-                -> typename std::enable_if<(UseProxyType && Layout == data_layout::SoA && Enable), value_type>::type
+                -> typename std::enable_if<(UseProxyType && Layout == ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), value_type>::type
             {
                 return data.access(0, stab_idx * n[0] + idx);
             }            
@@ -209,10 +209,10 @@ namespace XXX_NAMESPACE
     //! \tparam C_D dimension
     //! \tparam C_Layout any of SoA (struct of arrays) and AoS (array of structs)
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    template <typename T, SizeType C_D, data_layout C_Layout = data_layout::AoS>
+    template <typename T, SizeType C_D, ::XXX_NAMESPACE::memory::DataLayout C_Layout = ::XXX_NAMESPACE::memory::DataLayout::AoS>
     class Field;
 
-    template <typename ElementT, SizeType C_Dimension, data_layout C_Layout, target C_Target>
+    template <typename ElementT, SizeType C_Dimension, ::XXX_NAMESPACE::memory::DataLayout C_Layout, target C_Target>
     class Container
     {
         using Self = Container<ElementT, C_Dimension, C_Layout, C_Target>;
@@ -223,7 +223,7 @@ namespace XXX_NAMESPACE
 
         using ElementType = ElementT;
         static constexpr SizeType Dimension = C_Dimension;
-        static constexpr data_layout Layout = C_Layout;
+        static constexpr ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout;
         static constexpr target Target = C_Target;
 
     private:
@@ -257,7 +257,7 @@ namespace XXX_NAMESPACE
             const_ptr(*data)
         {}
 
-        static constexpr bool UseProxyType = (C_Layout != data_layout::AoS && internal::provides_proxy_type<ElementT>::value);
+        static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && internal::provides_proxy_type<ElementT>::value);
         using return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, typename internal::traits<ElementT, C_Layout>::ProxyType, ElementT&>, internal::Accessor<ElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
         using const_return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, const typename internal::traits<const ElementT, C_Layout>::ProxyType, const ElementT&>, internal::Accessor<ConstElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
 
@@ -329,7 +329,7 @@ namespace XXX_NAMESPACE
         BasePointerType<ConstElementT> const_ptr;
     };
 
-    template <typename T, SizeType C_D, data_layout C_Layout>
+    template <typename T, SizeType C_D, ::XXX_NAMESPACE::memory::DataLayout C_Layout>
     class Field
     {
         static_assert(!std::is_const<T>::value, "error: field with const elements is not allowed");
@@ -338,7 +338,7 @@ namespace XXX_NAMESPACE
 
         using element_type = T;
         static constexpr SizeType dimension = C_D;
-        static constexpr data_layout layout = C_Layout;
+        static constexpr ::XXX_NAMESPACE::memory::DataLayout layout = C_Layout;
 
     private:
 
@@ -391,7 +391,7 @@ namespace XXX_NAMESPACE
             // TODO: implementation; if (owns_data) {..}
         }
 
-        static constexpr bool UseProxyType = (C_Layout != data_layout::AoS && internal::provides_proxy_type<T>::value);
+        static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && internal::provides_proxy_type<T>::value);
         using value_type = std::conditional_t<(C_D == 1), std::conditional_t<UseProxyType, typename internal::traits<T, C_Layout>::ProxyType, T&>, internal::Accessor<element_type, C_D - 1, C_D, C_Layout>>;
         using const_value_type = std::conditional_t<(C_D == 1), std::conditional_t<UseProxyType, const typename internal::traits<const T, C_Layout>::ProxyType, const T&>, internal::Accessor<const_element_type, C_D - 1, C_D, C_Layout>>;
 

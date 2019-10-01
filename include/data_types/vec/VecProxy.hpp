@@ -32,7 +32,7 @@ namespace XXX_NAMESPACE
 {
     namespace internal 
     {
-        template <typename X, SizeType N, SizeType D, XXX_NAMESPACE::data_layout L>
+        template <typename X, SizeType N, SizeType D, ::XXX_NAMESPACE::memory::DataLayout L>
         class Accessor;
     }
 }
@@ -62,7 +62,7 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename, SizeType, SizeType, XXX_NAMESPACE::data_layout>
+            template <typename, SizeType, SizeType, ::XXX_NAMESPACE::memory::DataLayout>
             friend class XXX_NAMESPACE::internal::Accessor;
 
         public:
@@ -172,7 +172,7 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename, SizeType, SizeType, XXX_NAMESPACE::data_layout>
+            template <typename, SizeType, SizeType, ::XXX_NAMESPACE::memory::DataLayout>
             friend class XXX_NAMESPACE::internal::Accessor;
 
         public:
@@ -289,7 +289,7 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename, SizeType, SizeType, XXX_NAMESPACE::data_layout>
+            template <typename, SizeType, SizeType, ::XXX_NAMESPACE::memory::DataLayout>
             friend class XXX_NAMESPACE::internal::Accessor;
 
         public:

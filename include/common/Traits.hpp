@@ -40,7 +40,7 @@ namespace XXX_NAMESPACE
         //!
         //! \tparam T data type
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, data_layout L, typename Enabled = void>
+        template <typename T, ::XXX_NAMESPACE::memory::DataLayout L, typename Enabled = void>
         struct traits
         {
             using Type = T;
@@ -49,8 +49,8 @@ namespace XXX_NAMESPACE
             using BasePointerType = typename XXX_NAMESPACE::pointer<T>;
         };
 
-        template <typename T, data_layout L>
-        struct traits<T, L, std::enable_if_t<(L != data_layout::AoS && provides_proxy_type<T>::value)>>
+        template <typename T, ::XXX_NAMESPACE::memory::DataLayout L>
+        struct traits<T, L, std::enable_if_t<(L != ::XXX_NAMESPACE::memory::DataLayout::AoS && provides_proxy_type<T>::value)>>
         {
             using Type = T;
             using ConstType = const T;
