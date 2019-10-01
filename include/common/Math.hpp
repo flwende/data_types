@@ -14,6 +14,7 @@
 #endif
 
 #include <data_types/DataTypes.hpp>
+#include <platform/Target.hpp>
 
 namespace XXX_NAMESPACE
 {
@@ -30,6 +31,8 @@ namespace XXX_NAMESPACE
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         constexpr auto GreatestCommonDivisor(T x_1, T x_2)
         {
             static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
@@ -61,6 +64,8 @@ namespace XXX_NAMESPACE
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         constexpr auto LeastCommonMultiple(T x_1, T x_2)
         {
             static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
@@ -79,6 +84,8 @@ namespace XXX_NAMESPACE
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <SizeType C_N, typename T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         constexpr auto IsPowerOf(T x)
         {
             static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
@@ -112,6 +119,8 @@ namespace XXX_NAMESPACE
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <SizeType C_N>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         constexpr auto PrefixSum(const SizeArray<C_N>& x)
         {
             SizeArray<C_N> y{0};
@@ -145,6 +154,8 @@ namespace XXX_NAMESPACE
             //! \param x argument
             //! \return the square root of `x`
             //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             static auto sqrt(const T x) { return std::sqrt(x); }
 
             //!
@@ -153,6 +164,8 @@ namespace XXX_NAMESPACE
             //! \param x argument
             //! \return the logarithm of `x`
             //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             static auto log(const T x) { return std::log(x); }
 
             //!
@@ -161,6 +174,8 @@ namespace XXX_NAMESPACE
             //! \param x argument
             //! \return the exponential of `x`
             //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             static auto exp(const T x) { return std::exp(x); }
         };
 
@@ -173,10 +188,16 @@ namespace XXX_NAMESPACE
             static constexpr float One = 1.0F;
             static constexpr float MinusOne = -1.0F;
 
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             static auto sqrt(const float x) { return sqrtf(x); }
 
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             static auto log(const float x) { return logf(x); }
 
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             static auto exp(const float x) { return expf(x); }
         };
     } // namespace math
