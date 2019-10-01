@@ -7,308 +7,411 @@
 #define AUXILIARY_TEMPLATE_HPP
 
 #include <cstdint>
+#include <type_traits>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
 
-#if !defined(AUXILIARY_NAMESPACE_NAMESPACE)
-#define AUXILIARY_NAMESPACE XXX_NAMESPACE
-#endif
-
-#include <data_types/DataTypes.hpp>
 #include <auxiliary/Macro.hpp>
+#include <data_types/DataTypes.hpp>
 
-namespace AUXILIARY_NAMESPACE
+namespace XXX_NAMESPACE
 {
     namespace variadic
     {
         namespace
         {
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //! \brief Get the number of arguments in the variadic list
             //!
-            //! \tparam T variadic argument list
-            //! \return number of arguments
+            //! \brief Get the number of parameters in the variadic list.
+            //!
+            //! \tparam T variadic parameter list
+            //! \return number of parameters
+            //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <typename ...T>
-            constexpr SizeType get_num_arguments()
+            template <typename... T>
+            constexpr auto GetNumParameters()
             {
-                return sizeof ...(T);
+                return sizeof...(T);
             }
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //! \brief Get the value of the N-th argument and its type in the variadic list
             //!
-            //! \tparam N element to access
-            //! \tparam T_head data type (head)
-            //! \tparam T_tail variadic argument list (tail)
+            //! \brief Get the value of the C_N-th parameter and its type in the variadic list.
+            //!
+            //! \tparam C_N parameter index
+            //! \tparam Head type of the front most parameter (head)
+            //! \tparam Tail variadic parameter list (tail)
+            //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <SizeType N, typename T_head, typename ...T_tail>
-            struct argument
+            template <SizeType C_N, typename Head, typename... Tail>
+            struct Parameter
             {
-                //! Data type of the N-th argument
-                using type = typename argument<N - 1, T_tail...>::type;
+                //! Type of the C_N-th parameter
+                using Type = typename Parameter<C_N - 1, Tail...>::Type;
 
-                //! \brief Get the value of the N-th argument through recursion
+                //!
+                //! \brief Get the value of the C_N-th parameter through recursion.
                 //!
                 //! \param head frontmost argument
                 //! \param tail remaining arguments
-                //! \return argument list without the frontmost argument
-                static constexpr T_head value(T_head head, T_tail... tail)
-                {
-                    return argument<N - 1, T_tail...>::value(tail ...);
-                }
-            };
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //! \brief N = 0 Specialization (recursion ancher definition)
-            //!
-            //! \tparam T_head data type of the N-th element
-            //! \tparam T_tail variadic argument list (tail)
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <typename T_head, typename ...T_tail>
-            struct argument<0, T_head, T_tail...>
-            {
-                //! Data type of the N-the element
-                using type = T_head;
-
-                //! \brief Value of the N-th argument
+                //! \return recursive list definition
                 //!
-                //! \param head N-the argument
-                //! \param tail remaining arguments
-                //! \return N-the argument
-                static constexpr T_head value(T_head head, T_tail... tail)
-                {
-                    return head;
-                }
+                static constexpr auto Value(Head head, Tail... tail) { return Parameter<C_N - 1, Tail...>::Value(tail...); }
             };
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //! \brief Accumulate values of the variadic list
             //!
-            //! \tparam T variadic argument list
-            //! \return accumulate
+            //! \brief C_N = 0 specialization (recursion ancher definition).
+            //!
+            //! \tparam Head type of the C_N-th parameter
+            //! \tparam Tail variadic parameter list (tail)
+            //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <typename A, typename ...T>
-            struct accumulate;
-
-            template <typename A, typename Head, typename ...Tail>
-            struct accumulate<A, Head, Tail...>
+            template <typename Head, typename... Tail>
+            struct Parameter<0, Head, Tail...>
             {
-                static constexpr A add(A aggregate, const Head head, const Tail... tail)
-                {
-                    return accumulate<A, Tail...>::add(aggregate + head, tail...);
-                }
+                //! \brief Type of the C_N-th parameter.
+                using Type = Head;
 
-                static constexpr A max(A aggregate, const Head head, const Tail... tail)
-                {
-                    return accumulate<A, Tail...>::max(std::max(aggregate, head), tail...);
-                }
+                //!
+                //! \brief Value of the C_N-th parameter.
+                //!
+                //! \param head C_N-the argument
+                //! \param tail remaining arguments
+                //! \return the C_N-th argument
+                //!
+                static constexpr auto Value(Head head, Tail... tail) { return head; }
             };
 
-            template <typename A, typename Head>
-            struct accumulate<A, Head>
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //!
+            //! \brief Accumulate the variadic parameter/argument list.
+            //!
+            //! \tparam AggregateT type of the aggregate
+            //! \tparam T variadic parameter list
+            //!
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            template <typename AggregateT, typename... T>
+            struct Accumulate;
+
+            //!
+            //! \brief Accumulate the variadic parameter/argument list.
+            //!
+            //! \tparam AggregateT type of the aggregate
+            //! \tparam Head type of the front most parameter (head)
+            //! \tparam Tail variadic parameter list (tail)
+            //!
+            template <typename AggregateT, typename Head, typename... Tail>
+            struct Accumulate<AggregateT, Head, Tail...>
             {
-                static constexpr A add(A aggregate, const Head head)
-                {
-                    return aggregate + head;
-                }
+                //!
+                //! \brief Get the sum over all arguments.
+                //!
+                //! \param aggregate value of the aggregate
+                //! \param head frontmost argument
+                //! \param tail remaining arguments
+                //! \return recursive list definition
+                //!
+                static constexpr auto Add(AggregateT aggregate, const Head head, const Tail... tail) { return Accumulate<AggregateT, Tail...>::Add(aggregate + head, tail...); }
 
-                static constexpr A max(A aggregate, const Head head)
-                {
-                    return std::max(aggregate, head);
-                }
+                //!
+                //! \brief Get the maximum value among all arguments.
+                //!
+                //! \param aggregate value of the aggregate
+                //! \param head frontmost argument
+                //! \param tail remaining arguments
+                //! \return recursive list definition
+                //!
+                static constexpr auto Max(AggregateT aggregate, const Head head, const Tail... tail) { return Accumulate<AggregateT, Tail...>::Max(std::max(aggregate, head), tail...); }
             };
-        }
 
-        template <typename ...T>
-        struct pack
+            //!
+            //! \brief Accumulate the variadic parameter/argument list (recursion anchor).
+            //!
+            //! \tparam AggregateT type of the aggregate
+            //! \tparam Head type of the front most parameter (head)
+            //!
+            template <typename AggregateT, typename Head>
+            struct Accumulate<AggregateT, Head>
+            {
+                //!
+                //! \brief Get the sum over all arguments.
+                //!
+                //! \param aggregate value of the aggregate
+                //! \param head frontmost argument
+                //! \return the sum over all arguments
+                //!
+                static constexpr auto Add(AggregateT aggregate, const Head head) { return aggregate + head; }
+
+                //!
+                //! \brief Get the maximum value among all arguments.
+                //!
+                //! \param aggregate value of the aggregate
+                //! \param head frontmost argument
+                //! \return the maximum value among all arguments
+                //!
+                static constexpr auto Max(AggregateT aggregate, const Head head) { return std::max(aggregate, head); }
+            };
+        } // namespace
+
+        //!
+        //! \brief A template parameter pack info data structure.
+        //!
+        //! \tparam T variadic parameter list
+        //!
+        template <typename... T>
+        struct Pack
         {
-            template <SizeType N>
-            using type = typename argument<N, T...>::type;
+            //! \brief Type of the C_N-th parameter.
+            template <SizeType C_N>
+            using Type = typename Parameter<C_N, T...>::Type;
 
-            static constexpr SizeType length = get_num_arguments<T...>();
+            //! \brief Number of parameters.
+            static constexpr SizeType Size = GetNumParameters<T...>();
 
-            template <SizeType N>
-            static constexpr auto value(T... values)
+            //!
+            //! \brief Get the value of the C_N-th parameter.
+            //!
+            //! \tparam C_N parameter index
+            //! \param values variadic argument list
+            //! \return the C_N-th argument
+            //!
+            template <SizeType C_N>
+            static constexpr auto Value(T... values)
             {
-                static_assert(sizeof...(T) > 0, "error: empty parameter pack");
+                static_assert(Size > 0, "error: empty parameter pack");
 
-                return argument<N, T...>::value(values...);
+                return Parameter<C_N, T...>::Value(values...);
             }
 
-            static constexpr bool is_same()
+            //!
+            //! \brief Test for all parameters having the same type.
+            //!
+            //! \return `true` if all parameters have the same type, otherwise `false`
+            //!
+            static constexpr auto IsSame()
             {
-                static_assert(sizeof...(T) > 0, "error: empty parameter pack");
+                static_assert(Size > 0, "error: empty parameter pack");
 
-                using T_Head = typename argument<0, T...>::type;
+                using Head = typename Parameter<0, T...>::Type;
 
-                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, (std::is_same<T_Head, T>::value ? 1 : 0)...) == sizeof...(T);
+                return Accumulate<SizeType, std::conditional_t<sizeof(T) == 0, T, SizeType>...>::Add(0, (std::is_same<Head, T>::value ? 1 : 0)...) == Size;
             }
 
-            static constexpr bool has_same_size()
+            //!
+            //! \brief Test for all parameters having the same size.
+            //!
+            //! \return `true` if all parameters have the same size, otherwise `false`
+            //!
+            static constexpr auto SameSize()
             {
-                static_assert(sizeof...(T) > 0, "error: empty parameter pack");
+                static_assert(Size > 0, "error: empty parameter pack");
 
-                using T_Head = typename argument<0, T...>::type;
+                using Head = typename Parameter<0, T...>::Type;
 
-                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, (sizeof(T_Head) == sizeof(T) ? 1 : 0)...) == sizeof...(T);
+                return Accumulate<SizeType, std::conditional_t<sizeof(T) == 0, T, SizeType>...>::Add(0, (sizeof(Head) == sizeof(T) ? 1 : 0)...) == Size;
             }
 
-            static constexpr bool is_convertible()
+            //!
+            //! \brief Test for all parameters are convertible amongst eachother.
+            //!
+            //! \return `true` if all parameters are convertible amongst eachother, otherwise `false`
+            //!
+            static constexpr auto IsConvertible()
             {
-                static_assert(sizeof...(T) > 0, "error: empty parameter pack");
+                static_assert(Size > 0, "error: empty parameter pack");
 
-                using T_Head = typename argument<0, T...>::type;
+                using Head = typename Parameter<0, T...>::Type;
 
-                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, (std::is_convertible<T_Head, T>::value ? 1 : 0)...) == sizeof...(T);
+                return Accumulate<SizeType, std::conditional_t<sizeof(T) == 0, T, SizeType>...>::Add(0, (std::is_convertible<Head, T>::value ? 1 : 0)...) == Size;
             }
 
-            static constexpr bool is_const()
+            //!
+            //! \brief Test for all parameters are constant qualified.
+            //!
+            //! \return `true` if all parameters are constant qualified, otherwise `false`
+            //!
+            static constexpr auto IsConst()
             {
-                static_assert(sizeof...(T) > 0, "error: empty parameter pack");
+                static_assert(Size > 0, "error: empty parameter pack");
 
-                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, (std::is_const<T>::value ? 1 : 0)...) == sizeof...(T);
+                return Accumulate<SizeType, std::conditional_t<sizeof(T) == 0, T, SizeType>...>::Add(0, (std::is_const<T>::value ? 1 : 0)...) == Size;
             }
 
-            static constexpr SizeType size_of_largest_type()
+            //!
+            //! \brief Get the size of the parameter with the largest type.
+            //!
+            //! \return the size of the parameter with the largest type
+            //!
+            static constexpr auto SizeOfLargestParameter()
             {
-                static_assert(sizeof...(T) > 0, "error: empty parameter pack");
+                static_assert(Size > 0, "error: empty parameter pack");
 
-                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::max(0, sizeof(T)...);
+                return Accumulate<SizeType, std::conditional_t<sizeof(T) == 0, T, SizeType>...>::Max(0, sizeof(T)...);
             }
 
-            static constexpr SizeType size_of_pack()
+            //!
+            //! \brief Get the total size of the parameter pack.
+            //!
+            //! \return the total size of the parameter pack
+            //!
+            static constexpr auto SizeOfPack()
             {
-                static_assert(sizeof...(T) > 0, "error: empty parameter pack");
+                static_assert(Size > 0, "error: empty parameter pack");
 
-                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, sizeof(T)...);
+                return Accumulate<SizeType, std::conditional_t<sizeof(T) == 0, T, SizeType>...>::Add(0, sizeof(T)...);
             }
 
-            static constexpr SizeType size_of_pack_excluding_largest_type()
+            //!
+            //! \brief Get the total size of all parameters excluding those with the largest type.
+            //!
+            //! \return the total size of all parameters excluding those with the largest type
+            //!
+            static constexpr auto SizeOfPackExcludingLargestParameter()
             {
-                static_assert(sizeof...(T) > 0, "error: empty parameter pack");
+                static_assert(Size > 0, "error: empty parameter pack");
 
-                constexpr SizeType size_largest_type = size_of_largest_type();
+                constexpr SizeType size_of_largest_parameter = SizeOfLargestParameter();
 
-                return accumulate<SizeType, typename std::conditional<sizeof(T) == 0, T, SizeType>::type...>::add(0, (sizeof(T) == size_largest_type ? 0 : sizeof(T))...);
+                return Accumulate<SizeType, std::conditional_t<sizeof(T) == 0, T, SizeType>...>::Add(0, (sizeof(T) == size_of_largest_parameter ? 0 : sizeof(T))...);
             }
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //! \brief Fold function
         //!
-        //! \tparam F function type (must be constexpr: C++17)
-        //! \tparam A aggregate type  
-        //! \tparam T_head data type (head)
-        //! \tparam T_tail variadic argument list (tail)
-        //! \param op lambda to be used for folding
-        //! \param aggregate 
-        //! \param head frontmost argument
-        //! \param tail remaining arguments
-        //! \return aggregate
+        //! \brief Generate a type with up to 'FW_SEQ_MAX_N' template parameters
+        //!
+        //! Remove from a parameter pack (Head..., Tail...) 'M = |Head...| = (FW_SEQ_MAX_N - C_N) >= 0'
+        //! parameters recursively, and take the remaining parameter list (Tail...) of length 'C_N' to
+        //! define the type TYPE_NAME<Tail...>.
+        //!
+        //! \param TYPE_NAME name of the type to be generated
+        //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename F, typename A>
-        constexpr A fold(F op, A aggregate)
-        {
-            return aggregate;
-        }
+#define MACRO_TYPE_GEN(TYPE_NAME)                                                                                                                                                                                 \
+    template <SizeType C_N, typename Head, typename ...Tail>                                                                                                                                                               \
+    struct TypeGenImplementation                                                                                                                                                                                                   \
+    {                                                                                                                                                                                                                      \
+        using Type = typename TypeGenImplementation<C_N - 1, Tail...>::Type;                                                                                                                                                       \
+    };                                                                                                                                                                                                                     \
+                                                                                                                                                                                                                           \
+    template <typename Head, typename ...Tail>                                                                                                                                                                             \
+    struct TypeGenImplementation<0, Head, Tail...>                                                                                                                                                                                 \
+    {                                                                                                                                                                                                                      \
+        using Type = TYPE_NAME<Head, Tail...>;                                                                                                                                                                             \
+    };                                                                                                                                                                                                                     \
+                                                                                                                                                                                                                           \
+    template <typename T, SizeType C_N>                                                                                                                                                                                    \
+    struct TypeGen                                                                                                                                                                                                        \
+    {                                                                                                                                                                                                                      \
+        static_assert(C_N > 0, "error: no template parameters specified");                                                                                                                                                  \
+        static_assert(C_N <= FW_SEQ_MAX_N, "error: not implemented");                                                                                                                                                      \
+                                                                                                                                                                                                                           \
+        using Type = typename TypeGenImplementation<FW_SEQ_MAX_N - C_N, FW_SEQ_N(T)>::Type;                                                                                                                                        \
+    };
+    } // namespace variadic
 
-        template <typename F, typename A, typename T_head, typename ...T_tail>
-        constexpr A fold(F op, A aggregate, T_head head, T_tail... tail)
-        {
-            return fold(op, op(aggregate, head), tail...);
-        }        
-
+    namespace compileTime
+    {
         /////////////////////////////////////////////////////////////////
-        // compile time loop
         //
-        // NOTE: loop<begin, end>::execute([..](auto& I) { constexpr SizeType i = I.value; body(i[,..]); }) 
-        //       corresponds to
-        //       
-        //       for (SizeType i = begin; i < end; ++i)
-        //         body(i[,..]);
+        // A compile-time loop.
+        //
         /////////////////////////////////////////////////////////////////
         namespace
         {
-            template <typename T, T X>
-            struct template_parameter_t
+            //!
+            //! \brief Recursive definition of the loop.
+            //!
+            //! \tparam I value of the iteration variable
+            //! \tparam C_Begin start value of the iteration variable
+            //!
+            template <SizeType I, SizeType C_Begin>
+            struct LoopImplementation
             {
-                static constexpr T value = X;
-            };
-
-            template <SizeType I, SizeType Shift>
-            struct loop_implementation
-            {
-                template <typename F>
-                static void execute(F body)
+                //!
+                //! \brief Loop body invocation.
+                //!
+                //! The recursion must happen before the loop body invocation.
+                //!
+                //! \tparam FuncT the type of a callable (loop body)
+                //! \param loop_body the loop body
+                //!
+                template <typename FuncT>
+                static constexpr auto Execute(FuncT loop_body) -> void
                 {
-                    loop_implementation<I - 1, Shift>::execute(body);
+                    LoopImplementation<I - 1, C_Begin>::Execute(loop_body);
 
-                    template_parameter_t<SizeType, Shift + I> i; 
-                    body(i);
+                    loop_body(std::integral_constant<SizeType, C_Begin + I>{});
                 }
             };
 
-            template <SizeType Shift>
-            struct loop_implementation<0, Shift>
+            //!
+            //! \brief Recursive definition of the loop (recursion anchor).
+            //!
+            //! This is the first iteration of the loop.
+            //!
+            //! \tparam C_Begin start value of the iteration variable
+            //!
+            template <SizeType C_Begin>
+            struct LoopImplementation<0, C_Begin>
             {
-                template <typename F>
-                static void execute(F body)
+                //!
+                //! \brief Loop body invocation.
+                //!
+                //! The recursion stops here.
+                //!
+                //! \tparam FuncT the type of a callable (loop body)
+                //! \param loop_body the loop body
+                //!
+                template <typename FuncT>
+                static constexpr auto Execute(FuncT loop_body) -> void
                 {
-                    template_parameter_t<SizeType, Shift> i; 
-                    body(i);
+                    loop_body(std::integral_constant<SizeType, C_Begin>{});
                 }
             };
-        }
+        } // namespace
 
-        template <SizeType A, SizeType B = 0>
-        struct loop
+
+        /////////////////////////////////////////////////////////////////
+        //!
+        //! \brief A compile-time loop.
+        //!
+        //! ```
+        //! Loop<C_Begin, C_End>::Execute([..] (const auto I) { loop_body(I); })
+        //! ```
+        //! corresponds to
+        //! ```
+        //!    for (SizeType I = C_Begin; I < C_End; ++I)
+        //!        loop_body(I);
+        //! ```
+        //!
+        //! \tparam C_Begin lower loop bound
+        //! \tparam C_End upper loop bound
+        //!
+        template <SizeType C_Begin, SizeType C_End = 0>
+        struct Loop
         {
-            static constexpr SizeType begin = (B == 0 ? 0 : A);
-            static constexpr SizeType end = (B == 0 ? A : B);
+            static constexpr SizeType Begin = (C_End == 0 ? 0 : C_Begin);
+            static constexpr SizeType End = (C_End == 0 ? C_Begin : C_End);
 
-            static_assert(end > begin, "error: end <= begin");
+            static_assert(Begin < End, "error: End <= Begin");
 
+            //!
+            //! \brief Loop body invocation.
+            //!
+            //! \tparam FuncT the type of a callable (loop body)
+            //! \param loop_body the loop body
+            //!
             template <typename F>
-            static void execute(F body)
+            static constexpr auto Execute(F loop_body) -> void
             {
-                loop_implementation<(end - begin - 1), begin>::execute(body);
+                LoopImplementation<(End - Begin - 1), Begin>::Execute(loop_body);
             }
         };
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //! \brief Generate a variadic type with up to 'FW_SEQ_MAX_N' template parameters
-        //!
-        //! Remove from a parameter argument (T_front..., T_tail...) 'M = |T_front...| = (FW_SEQ_MAX_N - N) >= 0'
-        //! parameters in a recursive way, and take the remaining parameter argument (T_tail...) of length 'N' to 
-        //! define the type TYPE_NAME<T_tail...>.
-        //!
-        //! \param TYPE_NAME name of the variadic type to be generated
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    #define MACRO_VARIADIC_TYPE_GEN(TYPE_NAME)                                          \
-        template <SizeType N, typename T_head, typename ...T_tail>                   \
-        struct type_gen_impl                                                            \
-        {                                                                               \
-            using type = typename type_gen_impl<N - 1, T_tail...>::type;                \
-        };                                                                              \
-                                                                                        \
-        template <typename T_head, typename ...T_tail>                                  \
-        struct type_gen_impl<0, T_head, T_tail...>                                      \
-        {                                                                               \
-            using type = TYPE_NAME<T_head, T_tail...>;                                  \
-        };                                                                              \
-                                                                                        \
-        template <typename T, SizeType N>                                            \
-        struct type_gen                                                                 \
-        {                                                                               \
-            static_assert(N > 0, "error: no template arguments specified");             \
-            static_assert(N <= FW_SEQ_MAX_N, "error: not implemented");                 \
-                                                                                        \
-            using type = typename type_gen_impl<FW_SEQ_MAX_N - N, FW_SEQ_N(T)>::type;   \
-        };
-    }
-}
+    } // namespace compileTime
+} // namespace XXX_NAMESPACE
 
 #endif

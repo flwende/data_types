@@ -64,8 +64,8 @@ namespace TUPLE_NAMESPACE
             using T_2_unqualified = typename std::remove_cv<T_2>::type;
             using T_3_unqualified = typename std::remove_cv<T_3>::type;
 
-            static constexpr bool is_const_type = AUXILIARY_NAMESPACE::variadic::pack<T_1, T_2, T_3>::is_const();
-            static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::pack<T_1, T_2, T_3>::is_same() || AUXILIARY_NAMESPACE::variadic::pack<T_1, T_2, T_3>::has_same_size();
+            static constexpr bool is_const_type = ::XXX_NAMESPACE::variadic::Pack<T_1, T_2, T_3>::IsConst();
+            static constexpr bool is_homogeneous = ::XXX_NAMESPACE::variadic::Pack<T_1, T_2, T_3>::IsSame() || ::XXX_NAMESPACE::variadic::Pack<T_1, T_2, T_3>::SameSize();
 
         public:
 

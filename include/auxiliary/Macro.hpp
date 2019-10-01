@@ -9,7 +9,7 @@
 #define FW_CONCAT_(X_1, X_2) X_1 ## X_2
 #define FW_CONCAT(X_1, X_2) FW_CONCAT_(X_1, X_2)
 
-#define FW_SEQ_MAX_N 64
+#define FW_SEQ_MAX_N 16
 
 #define FW_SEQ_1(X) X
 #define FW_SEQ_2(X) FW_SEQ_1(X), FW_SEQ_1(X)

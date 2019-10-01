@@ -48,14 +48,14 @@ namespace XXX_NAMESPACE
         friend class pointer;
 
         // number of data members
-        static constexpr SizeType N = AUXILIARY_NAMESPACE::variadic::pack<T...>::length;
+        static constexpr SizeType N = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
         static_assert(N > 0, "error: empty parameter pack");
 
         // all members have the same type: get this type
-        using value_type = typename AUXILIARY_NAMESPACE::variadic::pack<T...>::template type<0>;
+        using value_type = typename ::XXX_NAMESPACE::variadic::Pack<T...>::template Type<0>;
 
         // check if all types are the same
-        static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::pack<T...>::is_same() || AUXILIARY_NAMESPACE::variadic::pack<T...>::has_same_size();
+        static constexpr bool is_homogeneous = ::XXX_NAMESPACE::variadic::Pack<T...>::IsSame() || ::XXX_NAMESPACE::variadic::Pack<T...>::SameSize();
         static_assert(is_homogeneous, "error: use the inhomogeneous multi_pointer instead");
 
         // create tuple from the base pointer
@@ -131,7 +131,7 @@ namespace XXX_NAMESPACE
             n_0(p.n_0),
             ptr(reinterpret_cast<value_type*>(p.ptr)) 
         {
-            static_assert(AUXILIARY_NAMESPACE::variadic::pack<value_type, OtherT...>::is_convertible(), "error: types are not convertible");
+            static_assert(::XXX_NAMESPACE::variadic::Pack<value_type, OtherT...>::IsConvertible(), "error: types are not convertible");
         }
 
         auto operator=(const pointer& p)
@@ -376,12 +376,12 @@ namespace XXX_NAMESPACE
     // define N-dimensional homogeneous structured type
     namespace
     {
-        // defines 'template <T, N> struct type_gen {..};'
-        MACRO_VARIADIC_TYPE_GEN(XXX_NAMESPACE::pointer);
+        // defines 'template <T, N> struct TypeGen {..};'
+        MACRO_TYPE_GEN(XXX_NAMESPACE::pointer);
     }
 
-    template <typename T, SizeType N>
-    using pointer_n = typename type_gen<T, N>::type;
+    template <typename T, SizeType C_N>
+    using pointer_n = typename TypeGen<T, C_N>::Type;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     //! \brief A pointer wrapper for inhomogeneous structured types and SoA data layout
@@ -406,21 +406,21 @@ namespace XXX_NAMESPACE
         static constexpr SizeType one = static_cast<SizeType>(1);
 
         // number of data members
-        static constexpr SizeType N = AUXILIARY_NAMESPACE::variadic::pack<T...>::length;
+        static constexpr SizeType N = ::XXX_NAMESPACE::variadic::Pack<T...>::length;
         static_assert(N > 0, "error: empty parameter pack");
         
         // check if all types are the same: we don't want that here
-        static constexpr bool is_homogeneous = AUXILIARY_NAMESPACE::variadic::pack<T...>::is_same() || AUXILIARY_NAMESPACE::variadic::pack<T...>::has_same_size();
+        static constexpr bool is_homogeneous = ::XXX_NAMESPACE::variadic::Pack<T...>::IsSame() || ::XXX_NAMESPACE::variadic::Pack<T...>::SameSize();
         static_assert(!is_homogeneous, "error: use the homogeneous pointer instead");
 
         // find out the byte-size of the largest type
-        static constexpr SizeType size_largest_type = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_largest_type();
+        static constexpr SizeType size_largest_type = ::XXX_NAMESPACE::variadic::Pack<T...>::size_of_largest_type();
 
         // determine the total byte-size of all data members that have a size different (smaller) than the largest type
-        static constexpr SizeType size_rest = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_pack_excluding_largest_type();
+        static constexpr SizeType size_rest = ::XXX_NAMESPACE::variadic::Pack<T...>::size_of_pack_excluding_largest_type();
 
         // size of the inhomogeneous structured type
-        static constexpr SizeType record_size = AUXILIARY_NAMESPACE::variadic::pack<T...>::size_of_pack();
+        static constexpr SizeType record_size = ::XXX_NAMESPACE::variadic::Pack<T...>::size_of_pack();
 
         // determine the number of elements of the structured type that is needed so that their overall size
         // is an integral multiple of each data member type
@@ -454,7 +454,7 @@ namespace XXX_NAMESPACE
         inline constexpr auto increment_pointer_tuple(const SizeType inc = 1)
             -> void
         {
-            AUXILIARY_NAMESPACE::variadic::loop<N>::execute([inc, this] (auto& I) {std::get<I.value>(ptr) += inc;});
+            ::XXX_NAMESPACE::compileTime::Loop<N>::Execute([inc, this] (auto I) {std::get<I>(ptr) += inc;});
         }
 
         // create tuple from the base pointer
@@ -533,7 +533,7 @@ namespace XXX_NAMESPACE
             num_units(mp.num_units),
             ptr(mp.ptr) 
         {
-            static_assert(AUXILIARY_NAMESPACE::variadic::pack<value_type, OtherT...>::is_convertible(), "error: types are not convertible");
+            static_assert(::XXX_NAMESPACE::variadic::Pack<value_type, OtherT...>::IsConvertible(), "error: types are not convertible");
         }
 
         auto operator=(const multi_pointer& mp)
