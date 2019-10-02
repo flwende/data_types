@@ -119,7 +119,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const SizeType idx)
                 -> typename std::enable_if<(!UseProxyType && Enable), value_type>::type
             {
-                return std::get<0>(data.access(stab_idx, idx));
+                return std::get<0>(data.At(stab_idx, idx));
             }
 
             template <bool Enable = true>
@@ -128,7 +128,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const SizeType idx) const
                 -> typename std::enable_if<(!UseProxyType && Enable), const_value_type>::type
             {
-                return std::get<0>(data.access(stab_idx, idx));
+                return std::get<0>(data.At(stab_idx, idx));
             }
 
             template <bool Enable = true, ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout>
@@ -137,7 +137,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const SizeType idx)
                 -> typename std::enable_if<(UseProxyType && Layout == ::XXX_NAMESPACE::memory::DataLayout::SoAi && Enable), value_type>::type
             {
-                return data.access(stab_idx, idx);
+                return data.At(stab_idx, idx);
             }
 
             template <bool Enable = true, ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout>
@@ -146,7 +146,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const SizeType idx) const
                 -> typename std::enable_if<(UseProxyType && Layout == ::XXX_NAMESPACE::memory::DataLayout::SoAi && Enable), value_type>::type
             {
-                return data.access(stab_idx, idx);
+                return data.At(stab_idx, idx);
             }
 
             template <bool Enable = true, ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout>
@@ -155,7 +155,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const SizeType idx)
                 -> typename std::enable_if<(UseProxyType && Layout == ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), value_type>::type
             {
-                return data.access(0, stab_idx * n[0] + idx);
+                return data.At(stab_idx * n[0] + idx);
             }
 
             template <bool Enable = true, ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout>
@@ -164,7 +164,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const SizeType idx) const
                 -> typename std::enable_if<(UseProxyType && Layout == ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), value_type>::type
             {
-                return data.access(0, stab_idx * n[0] + idx);
+                return data.At(stab_idx * n[0] + idx);
             }            
         };
     }
@@ -176,7 +176,7 @@ namespace XXX_NAMESPACE
     //! In case of C_D > 1, its is determined as the product of all dimensions with the
     //! innermost dimension padded according to ElementT, the data layout and the (default) data alignment.
     //! All memory is contiguous and can be moved as a whole (important e.g. for data transfers).
-    //! The field, however, allows access to the data using array subscript operator chaining together with proxy objects.
+    //! The field, however, allows At to the data using array subscript operator chaining together with proxy objects.
     //! \n\n
     //! In case of Data_layout = AoS, data is stored with all elements placed in main memory one after the other.
     //! \n
@@ -200,7 +200,7 @@ namespace XXX_NAMESPACE
     //!     [1][1].y
     //!     [1][2].y
     //! </pre>
-    //! You can access the individual components of field<vec<double, 3>, 2, SoA> b({3,2})
+    //! You can At the individual components of field<vec<double, 3>, 2, SoA> b({3,2})
     //! as usual, e.g., b[1][0].x = ...
     //! \n
     //! GNU and Clang/LLVM seem to optimize the proxies away.
@@ -231,14 +231,15 @@ namespace XXX_NAMESPACE
         using ConstElementT = typename internal::traits<ElementT, C_Layout>::ConstType;
         template <typename T>
         using BasePointerType = typename internal::traits<T, C_Layout>::BasePointerType;
-        using AllocatorT = typename BasePointerType<ElementT>::allocator;
+        using AllocatorT = typename BasePointerType<ElementT>::Allocator;
+        using AllocationShape = typename AllocatorT::AllocationShape;
 
         struct Deleter
         {
-            auto operator()(BasePointerType<ElementT>* ptr) const
+            auto operator()(BasePointerType<ElementT>* pointer) const
                 -> void
             {
-                AllocatorT::template deallocate<C_Target>(*ptr);
+                AllocatorT::template Deallocate<C_Target>(*pointer);
             }
         };
 
@@ -251,8 +252,8 @@ namespace XXX_NAMESPACE
         Container(const SizeArray<C_Dimension>& n)
             :
             n(n),
-            allocation_shape(AllocatorT::template get_allocation_shape<C_Layout>(n)),
-            data(new BasePointerType<ElementT>(AllocatorT::template allocate<Target>(allocation_shape), allocation_shape.first), Deleter()),
+            allocation_shape(AllocatorT::template GetAllocationShape<C_Layout>(n)),
+            data(new BasePointerType<ElementT>(AllocatorT::template Allocate<Target>(allocation_shape), allocation_shape.n_0), Deleter()),
 	        ptr(*data),
             const_ptr(*data)
         {}
@@ -282,16 +283,13 @@ namespace XXX_NAMESPACE
         template <typename FuncT>
         auto Set(FuncT func)
         {
-            const SizeType pitch = allocation_shape.first;
-            const SizeType num_stabs = allocation_shape.second;
-
             if (data.get())
             {   
-                for (size_t stab_index = 0; stab_index < num_stabs; ++stab_index)
+                for (size_t stab_index = 0; stab_index < allocation_shape.num_stabs; ++stab_index)
                 {
                     for (size_t i = 0; i < n[0]; ++i)
                     {
-                        std::get<0>(data.get()->access(stab_index, i)) = func();
+                        std::get<0>(data.get()->At(stab_index, i)) = func();
                     }
                 }
                 
@@ -311,19 +309,19 @@ namespace XXX_NAMESPACE
         }
 
     private:
-
+        
         auto GetByteSize() const
         {
-            return AllocatorT::get_byte_size(allocation_shape);
+            return allocation_shape.GetByteSize();
         }
 
         auto GetBasePointer()
         {
-            return data.get()->get_pointer();
+            return data.get()->GetBasePointer();
         }
-
+        
         SizeArray<C_Dimension> n;
-        std::pair<SizeType, SizeType> allocation_shape;
+        AllocationShape allocation_shape;
 	    std::shared_ptr<BasePointerType<ElementT>> data;
 	    BasePointerType<ElementT> ptr;
         BasePointerType<ConstElementT> const_ptr;

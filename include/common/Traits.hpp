@@ -46,7 +46,7 @@ namespace XXX_NAMESPACE
             using Type = T;
             using ConstType = const T;
             using ProxyType = T;
-            using BasePointerType = typename XXX_NAMESPACE::pointer<T>;
+            using BasePointerType = typename ::XXX_NAMESPACE::memory::Pointer<T>;
         };
 
         template <typename T, ::XXX_NAMESPACE::memory::DataLayout L>
