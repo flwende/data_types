@@ -8,7 +8,6 @@
 
 #include <array>
 #include <cassert>
-//#include <cstdint>
 #include <iostream>
 
 #if !defined(XXX_NAMESPACE)
@@ -16,7 +15,6 @@
 #endif
 
 #include <auxiliary/CPPStandard.hpp>
-#include <auxiliary/Template.hpp>
 #include <data_types/DataTypes.hpp>
 #include <platform/Target.hpp>
 
@@ -37,11 +35,10 @@ namespace XXX_NAMESPACE
         {
             template <typename, SizeType>
             friend class Array;
-        
+
             T data[C_N];
 
-        public:
-
+          public:
             // Template paramteres.
             using ValueType = T;
             static constexpr SizeType N = C_N;
@@ -51,10 +48,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Array() 
-                : 
-                data{} 
-            {}
+            constexpr Array() : data{} {}
 
             //!
             //! \brief Constructor.
@@ -65,7 +59,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Array(const T& x) 
+            constexpr Array(const T& x)
             {
                 for (SizeType i = 0; i < C_N; ++i)
                 {
@@ -81,13 +75,10 @@ namespace XXX_NAMESPACE
             //! \tparam Args parameter pack
             //! \param args variadic argument list
             //!
-            template <typename ...Args>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr Array(const Args... args) 
-                : 
-                data{static_cast<T>(std::move(args))...}
-            {}
+            template <typename... Args>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Array(const Args... args) : data{static_cast<T>(std::move(args))...}
+            {
+            }
 
             //!
             //! \brief Copy constructor.
@@ -96,9 +87,7 @@ namespace XXX_NAMESPACE
             //! \param array another Array
             //!
             template <SizeType C_X>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr Array(const Array<T, C_X>& array)
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Array(const Array<T, C_X>& array)
             {
                 for (SizeType i = 0; i < std::min(C_X, C_N); ++i)
                 {
@@ -120,7 +109,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Array(const std::array<T, C_N>& array) 
+            constexpr Array(const std::array<T, C_N>& array)
             {
                 for (SizeType i = 0; i < C_N; ++i)
                 {
@@ -159,7 +148,7 @@ namespace XXX_NAMESPACE
             inline constexpr auto operator[](const SizeType index) -> T&
             {
                 assert(index < C_N);
-                
+
                 return data[index];
             }
 
@@ -192,9 +181,9 @@ namespace XXX_NAMESPACE
             inline constexpr auto Replace(const T x, const SizeType index) -> Array&
             {
                 assert(index < C_N);
-                
+
                 data[index] = x;
-                
+
                 return *this;
             }
 
@@ -291,7 +280,7 @@ namespace XXX_NAMESPACE
                         result.data[i + 1] = data[i];
                     }
                 }
-            
+
                 return result;
             }
 
@@ -323,10 +312,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline constexpr auto operator!=(const Array& other) const
-            {
-                return !(*this == other);
-            }
+            inline constexpr auto operator!=(const Array& other) const { return !(*this == other); }
 
             //!
             //! \brief Reduction across all elements of the Array.
@@ -339,9 +325,7 @@ namespace XXX_NAMESPACE
             //! \return the value of the aggregate
             //!
             template <typename FuncT>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline constexpr auto Reduce(const FuncT func, const T initial_value, const SizeType begin = 0, const SizeType end = C_N) const
+            HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto Reduce(const FuncT func, const T initial_value, const SizeType begin = 0, const SizeType end = C_N) const
             {
                 T aggregate = initial_value;
 
@@ -349,7 +333,7 @@ namespace XXX_NAMESPACE
                 {
                     aggregate = func(aggregate, data[i]);
                 }
-                
+
                 return aggregate;
             }
 
@@ -359,25 +343,28 @@ namespace XXX_NAMESPACE
             //! \param begin the lower bound index for the reduction
             //! \param end the upper bound index for the reduciton
             //! \return the value of the aggregate
-            //! 
+            //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline constexpr T ReduceMul(const SizeType begin = 0, const SizeType end = C_N) const
             {
-            #if (__cplusplus > 201402L)
+#if (__cplusplus > 201402L)
                 return Reduce([](const T product, const T element) { return (product * element); }, 1, begin, end);
-            #else
+#else
                 T aggregate = static_cast<T>(1);
 
                 for (SizeType i = begin; i < end; ++i)
                 {
                     aggregate *= data[i];
                 }
-                
+
                 return aggregate;
-            #endif
+#endif
             }
         };
+
+        template <SizeType C_N>
+        using SizeArray = Array<SizeType, C_N>;
 
         template <typename T, SizeType C_N>
         std::ostream& operator<<(std::ostream& os, const Array<T, C_N>& array)
@@ -389,7 +376,7 @@ namespace XXX_NAMESPACE
 
             return os;
         }
-    }
-}
+    } // namespace dataTypes
+} // namespace XXX_NAMESPACE
 
 #endif

@@ -7,7 +7,6 @@
 #define COMMON_DATA_TYPES_HPP
 
 #include <cstdint>
-//#include <cstdlib>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -61,15 +60,5 @@ namespace XXX_NAMESPACE
 }
 
 #include <data_types/array/Array.hpp>
-
-namespace XXX_NAMESPACE
-{
-    namespace dataTypes
-    {
-        template <SizeType C_N>
-        using SizeArray = Array<SizeType, C_N>;
-    }
-}
-
 
 #endif
