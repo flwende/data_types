@@ -52,7 +52,7 @@ namespace XXX_NAMESPACE
         {
             using BasePointerType = typename std::conditional<std::is_const<ElementT>::value, const typename Traits<ElementT, C_Layout>::BasePointerType, typename Traits<ElementT, C_Layout>::BasePointerType>::type;
             BasePointerType& data;
-            const SizeArray<C_D>& n;
+            const ::XXX_NAMESPACE::dataTypes::SizeArray<C_D>& n;
             const SizeType stab_idx;
 
         public:
@@ -64,7 +64,7 @@ namespace XXX_NAMESPACE
             //! \param stab_idx the offset in units of 'innermost dimension n[0]'
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            Accessor(BasePointerType& data, const SizeArray<C_D>& n, const SizeType stab_idx = 0) 
+            Accessor(BasePointerType& data, const ::XXX_NAMESPACE::dataTypes::SizeArray<C_D>& n, const SizeType stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
@@ -96,7 +96,7 @@ namespace XXX_NAMESPACE
             using const_value_type = typename std::conditional<UseProxyType, const typename Traits<const ElementT, C_Layout>::ProxyType, const ElementT&>::type;
             
             BasePointerType& data;
-            const SizeArray<C_D>& n;
+            const ::XXX_NAMESPACE::dataTypes::SizeArray<C_D>& n;
             const SizeType stab_idx;
 
         public:
@@ -107,7 +107,7 @@ namespace XXX_NAMESPACE
             //! \param n extent of the C_D-dimensional array
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            Accessor(BasePointerType& data, const SizeArray<C_D>& n, const SizeType stab_idx = 0) 
+            Accessor(BasePointerType& data, const ::XXX_NAMESPACE::dataTypes::SizeArray<C_D>& n, const SizeType stab_idx = 0) 
                 : 
                 data(data), 
                 n(n), 
@@ -249,7 +249,7 @@ namespace XXX_NAMESPACE
             allocation_shape{}
         {}
 
-        Container(const SizeArray<C_Dimension>& n)
+        Container(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_Dimension>& n)
             :
             n(n),
             allocation_shape(AllocatorT::template GetAllocationShape<C_Layout>(n)),
@@ -320,7 +320,7 @@ namespace XXX_NAMESPACE
             return data.get()->GetBasePointer();
         }
         
-        SizeArray<C_Dimension> n;
+        ::XXX_NAMESPACE::dataTypes::SizeArray<C_Dimension> n;
         AllocationShape allocation_shape;
 	    std::shared_ptr<BasePointerType<ElementT>> data;
 	    BasePointerType<ElementT> ptr;
@@ -346,14 +346,14 @@ namespace XXX_NAMESPACE
 
         Field() = default;
             
-        Field(const SizeArray<C_D>& n, const bool initialize_to_zero = false)
+        Field(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_D>& n, const bool initialize_to_zero = false)
             :
             n(n)
         {
             Resize(n, initialize_to_zero);
         }
 
-        auto Resize(const SizeArray<C_D>& new_n, const bool initialize_to_zero = false)
+        auto Resize(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_D>& new_n, const bool initialize_to_zero = false)
             -> void
         {
             if (n != new_n)
@@ -408,7 +408,7 @@ namespace XXX_NAMESPACE
         HOST_VERSION
         CUDA_DEVICE_VERSION    
         inline auto size() const
-            -> const SizeArray<C_D>&
+            -> const ::XXX_NAMESPACE::dataTypes::SizeArray<C_D>&
         {
             return n;   
         }
@@ -449,7 +449,7 @@ namespace XXX_NAMESPACE
         }
     #endif
 
-        SizeArray<C_D> n;
+        ::XXX_NAMESPACE::dataTypes::SizeArray<C_D> n;
         Container<T, C_D, C_Layout, target::Host> data;
     #if defined(__CUDACC__)
         Container<T, C_D, C_Layout, target::GPU_CUDA> device_data;

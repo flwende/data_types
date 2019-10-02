@@ -394,7 +394,7 @@ namespace XXX_NAMESPACE
                 //! \return an allocation shape
                 //!
                 template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
-                static auto GetAllocationShape(const SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
                     -> std::enable_if_t<(C_DataLayout != DataLayout::SoA && Enable), AllocationShape>
                 {
                     return {Padding(n[0], alignment), N * n.reduce_mul(1), alignment};
@@ -415,7 +415,7 @@ namespace XXX_NAMESPACE
                 //! \return an allocation shape
                 //!
                 template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
-                static auto GetAllocationShape(const SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
                     -> std::enable_if_t<(C_DataLayout == DataLayout::SoA && Enable), AllocationShape>
                 {
                     return {Padding(n.reduce_mul(), alignment), N, alignment};
@@ -494,7 +494,7 @@ namespace XXX_NAMESPACE
             static constexpr SizeType RecordSize = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfPack();
 
             // The member type sizes in relative to the size of the largest paramter type.
-            static constexpr ::XXX_NAMESPACE::SizeArray<N> SizeScalingFactor{(SizeOfLargestParameter / sizeof(T))...};
+            static constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<N> SizeScalingFactor{(SizeOfLargestParameter / sizeof(T))...};
 
             // All members have different type: use std::uint8_t as the base pointer type.
             using ValueType = std::uint8_t;
@@ -515,7 +515,7 @@ namespace XXX_NAMESPACE
             inline auto make_pointer_tuple(ValueType* ptr, const SizeType n_0, std::integer_sequence<SizeType, I...>) -> std::tuple<T*...>
             {
                 // (Exclusive) prefix sums over the byte-sizes of the member types of the IST.
-                constexpr ::XXX_NAMESPACE::SizeArray<N> Offset = ::XXX_NAMESPACE::math::PrefixSum(::XXX_NAMESPACE::SizeArray<N>{sizeof(T)...});
+                constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<N> Offset = ::XXX_NAMESPACE::math::PrefixSum(::XXX_NAMESPACE::dataTypes::SizeArray<N>{sizeof(T)...});
 
                 return {reinterpret_cast<T*>(&ptr[Offset[I] * n_0])...};
             }
@@ -735,7 +735,7 @@ namespace XXX_NAMESPACE
                 //! \return an allocation shape
                 //!
                 template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
-                static auto GetAllocationShape(const SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
                     -> std::enable_if_t<(C_DataLayout != DataLayout::SoA && Enable), AllocationShape>
                 {
                     return {Padding(n[0], alignment), n.reduce_mul(1), alignment};
@@ -756,7 +756,7 @@ namespace XXX_NAMESPACE
                 //! \return an allocation shape
                 //!
                 template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
-                static auto GetAllocationShape(const SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
                     -> std::enable_if_t<(C_DataLayout == DataLayout::SoA && Enable), AllocationShape>
                 {
                     return {Padding(n.reduce_mul(), alignment), 1, alignment};

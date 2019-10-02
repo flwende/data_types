@@ -64,8 +64,11 @@ namespace XXX_NAMESPACE
 
 namespace XXX_NAMESPACE
 {
-    template <SizeType C_N>
-    using SizeArray = fw::sarray<SizeType, C_N>;
+    namespace dataTypes
+    {
+        template <SizeType C_N>
+        using SizeArray = Array<SizeType, C_N>;
+    }
 }
 
 

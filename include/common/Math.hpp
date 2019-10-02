@@ -121,9 +121,9 @@ namespace XXX_NAMESPACE
         template <SizeType C_N>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        constexpr auto PrefixSum(const SizeArray<C_N>& x)
+        constexpr auto PrefixSum(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& x)
         {
-            SizeArray<C_N> y{0};
+            ::XXX_NAMESPACE::dataTypes::SizeArray<C_N> y{0};
 
             for (SizeType i = 1; i < C_N; ++i)
             {
