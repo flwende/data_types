@@ -7,6 +7,7 @@
 #define DATA_TYPES_ARRAY_ARRAY_HPP
 
 #include <array>
+#include <cassert>
 //#include <cstdint>
 #include <iostream>
 
@@ -14,6 +15,8 @@
 #define XXX_NAMESPACE fw
 #endif
 
+#include <auxiliary/CPPStandard.hpp>
+#include <auxiliary/Template.hpp>
 #include <data_types/DataTypes.hpp>
 #include <platform/Target.hpp>
 
@@ -22,10 +25,12 @@ namespace XXX_NAMESPACE
     namespace dataTypes
     {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //! \brief A fixed sized array
+        //!
+        //! \brief A fixed sized array.
         //!
         //! \tparam T data type
         //! \tparam C_N array size
+        //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename T, SizeType C_N>
         class Array
@@ -37,233 +42,353 @@ namespace XXX_NAMESPACE
 
         public:
 
-            using element_type = T;
-            static constexpr SizeType size = C_N;
+            // Template paramteres.
+            using ValueType = T;
+            static constexpr SizeType N = C_N;
 
-            //! \brief Standard constructor
+            //!
+            //! \brief Standard constructor.
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             constexpr Array() 
                 : 
-                data{} {}
+                data{} 
+            {}
 
+            //!
+            //! \brief Constructor.
+            //!
+            //! Assignt the same value to each element.
+            //!
+            //! \param x some value
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             constexpr Array(const T& x) 
             {
                 for (SizeType i = 0; i < C_N; ++i)
+                {
                     data[i] = x;
+                }
             }
 
-            //! \brief Constructor taking C_N (or less) arguments to initialize the array
             //!
-            //! \tparam Args variadic template type parameter list
-            //! \param args parameters
-            template <typename ... Args>
-            constexpr Array(const Args ... args) 
+            //! \brief Constructor taking C_N (or less) arguments for the array initialization.
+            //!
+            //! If the argument count is less than C_N, all elements above C_N are zeroed.
+            //!
+            //! \tparam Args parameter pack
+            //! \param args variadic argument list
+            //!
+            template <typename ...Args>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Array(const Args... args) 
                 : 
-                data{ static_cast<T>(std::move(args)) ... } {}
+                data{static_cast<T>(std::move(args))...}
+            {}
 
-            //! \brief Copy constructor
             //!
-            //! \tparam X array size
-            //! \param x an Array object of type T with size X
-            template <SizeType X>
-            constexpr Array(const Array<T, X>& x)
+            //! \brief Copy constructor.
+            //!
+            //! \tparam C_X the size of another Array
+            //! \param array another Array
+            //!
+            template <SizeType C_X>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Array(const Array<T, C_X>& array)
             {
-                constexpr SizeType i_max = (X < C_N ? X : C_N);
-
-                for (SizeType i = 0; i < i_max; ++i)
+                for (SizeType i = 0; i < std::min(C_X, C_N); ++i)
                 {
-                    data[i] = x.data[i];
+                    data[i] = array.data[i];
                 }
 
-                for (SizeType i = i_max; i < C_N; ++i)
+                for (SizeType i = std::min(C_X, C_N); i < C_N; ++i)
                 {
                     data[i] = static_cast<T>(0);
                 }
             }
 
-            //! \brief Construct from std::array
             //!
-            //! \param x an std::array object
-            constexpr Array(const std::array<T, C_N>& x) 
+            //! \brief Constructor.
+            //!
+            //! Construct from and std::array type.
+            //!
+            //! \param array an std::array argument
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Array(const std::array<T, C_N>& array) 
             {
                 for (SizeType i = 0; i < C_N; ++i)
                 {
-                    data[i] = x[i];
+                    data[i] = array[i];
                 }
             }
 
-            //! \brief Swap content
             //!
-            //! \param x an std::array object
+            //! \brief Exchange the content with another Array.
+            //!
+            //! \param array another Array
             //! \return a reference to this object with the new content
-            inline constexpr Array& swap(Array& x)
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto Swap(Array& array) -> Array&
             {
                 for (SizeType i = 0; i < C_N; ++i)
                 {
                     const T tmp = data[i];
-                    data[i] = x.data[i];
-                    x.data[i] = tmp;
+                    data[i] = array.data[i];
+                    array.data[i] = tmp;
                 }
 
                 return *this;
             }
 
-            //! \brief Array subscript operator
             //!
-            //! \param idx element index
+            //! \brief Array subscript operator.
+            //!
+            //! \param index element index
             //! \return reference to the element
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline constexpr T& operator[](const SizeType idx)
-            {
-                return data[idx];
-            }
-
-            //! \brief Array subscript operator
             //!
-            //! \param idx element index
-            //! \return const reference to the element
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline constexpr const T& operator[](const SizeType idx) const
+            inline constexpr auto operator[](const SizeType index) -> T&
             {
-                return data[idx];
+                assert(index < C_N);
+                
+                return data[index];
             }
 
-            //! \brief Replace element at position 'idx'
+            //!
+            //! \brief Array subscript operator.
+            //!
+            //! \param index element index
+            //! \return const reference to the element
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto operator[](const SizeType index) const -> const T&
+            {
+                assert(index < C_N);
+
+                return data[index];
+            }
+
+            //!
+            //! \brief Replace the element at position 'index' by a new one.
+            //!
+            //! The replacement happens in place.
             //!
             //! \param x replacement
-            //! \param idx element index
-            //! \return an Array object
-            inline constexpr Array<T, C_N> replace(const T x, const SizeType idx) const 
+            //! \param index element index
+            //! \return a reference to this Array
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto Replace(const T x, const SizeType index) -> Array&
             {
-                Array<T, C_N> result = *this;
-
-                if (idx < C_N) 
-                {
-                    result.data[idx] = x;
-                }
-
-                return result;
+                assert(index < C_N);
+                
+                data[index] = x;
+                
+                return *this;
             }
 
-            //! \brief Insert element at position 'idx'
             //!
-            //! Note: the last element of the array will be removed (chopped)!
+            //! \brief Replace the element at position 'index' by a new one.
+            //!
+            //! \param x replacement
+            //! \param index element index
+            //! \return a new Array object
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto Replace(const T x, const SizeType index) const
+            {
+                Array<T, C_N> result{*this};
+
+                return result.Replace(x, index);
+            }
+
+            //!
+            //! \brief Insert a new element at position 'index'.
+            //!
+            //! The last element of the array will be removed (chopped)!
             //!
             //! \param x element to be inserted
-            //! \param idx element index
-            //! \return an Array object
-            inline constexpr Array<T, C_N> insert_and_chop(const T x, const SizeType idx = 0) const
+            //! \param index element index
+            //! \return a reference to this Array
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto InsertAndChop(const T x, const SizeType index = 0) -> Array&
             {
-                if (idx >= C_N) return *this;
+                static_assert(C_N > 0, "error: this is an empty array");
+                assert(index <= C_N);
 
-                Array<T, C_N> result;
+                // Keep everything behind position 'index'.
+                for (SizeType i = (C_N - 1); i > index; --i)
+                {
+                    data[i] = data[i - 1];
+                }
 
-                // take everything before position 'idx'
-                for (SizeType i = 0; i < idx; ++i)
+                // Insert element at position 'index'
+                data[index] = x;
+
+                return *this;
+            }
+
+            //!
+            //! \brief Insert a new element at position 'index'.
+            //!
+            //! The last element of the array will be removed (chopped)!
+            //!
+            //! \param x element to be inserted
+            //! \param index element index
+            //! \return a new Array object
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto InsertAndChop(const T x, const SizeType index = 0) const
+            {
+                Array<T, C_N> result{*this};
+
+                return result.InsertAndChop(x, index);
+            }
+
+            //!
+            //! \brief Insert element at position 'index'
+            //!
+            //! \param x element to be inserted
+            //! \param index element index
+            //! \return a new Array object
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto Insert(const T x, const SizeType index = 0) const
+            {
+                assert(index <= C_N);
+
+                Array<T, C_N + 1> result{};
+
+                for (SizeType i = 0; i < std::min(index, C_N); ++i)
                 {
                     result.data[i] = data[i];
                 }
 
-                // insert element at position 'idx'
-                result.data[idx] = x;
-
-                // take everything behind position 'idx' 
-                for (SizeType i = idx; i < (C_N - 1); ++i)
+                if (index <= C_N)
                 {
-                    result.data[i + 1] = data[i];
-                }
+                    // Insert element at position 'index'.
+                    result.data[index] = x;
 
-                return result;
-            }
-
-            //! \brief Insert element at position 'idx'
-            //!
-            //! \param x element to be inserted
-            //! \param idx element index
-            //! \return an Array object
-            inline constexpr Array<T, C_N + 1> insert(const T x, const SizeType idx = 0) const
-            {
-                Array<T, C_N + 1> result(*this);
-
-                if (idx < (C_N + 1))
-                {
-                    // insert element at position 'idx'
-                    result.data[idx] = x;
-
-                    // take everything behind position 'idx' 
-                    for (SizeType i = idx; i < C_N; ++i)
+                    // Keep everything behind position 'index'.
+                    for (SizeType i = index; i < C_N; ++i)
                     {
                         result.data[i + 1] = data[i];
                     }
                 }
-
+            
                 return result;
             }
 
-            //! \brief Test whether two sarrays are the same
             //!
-            //! \param rhs
-            //! \return result of the element-wise comparison of the Array contents
-            inline constexpr bool operator==(const Array& rhs) const
+            //! \brief Test for two Arrays having the same content.
+            //!
+            //! \param other another Array
+            //! \return `true` if the content is the same, otherwise `false`
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto operator==(const Array& other) const
             {
                 bool is_same = true;
 
                 for (SizeType i = 0; i < C_N; ++i)
                 {
-                    is_same &= (data[i] == rhs.data[i]);
+                    is_same &= (data[i] == other.data[i]);
                 }
 
                 return is_same;
             }
 
-            //! \brief Test whether two sarrays are the same
             //!
-            //! \param rhs
-            //! \return result of the element-wise comparison of the Array contents
-            inline constexpr bool operator!=(const Array& rhs) const
-            {
-                return !(*this == rhs);
-            }
-
-            //! \brief Reduce across all entries
+            //! \brief Test for two Arrays having not the same content.
             //!
-            //! \param func a lambda implementing the reduction
-            //! \param r_0 start value for the reduction
-            //! \return reduction
-            template <typename F>
+            //! \param other another Array
+            //! \return `false` if the content is the same, otherwise `true`
+            //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline constexpr T reduce(F func, const T r_0, const SizeType begin = 0, const SizeType end = C_N) const
+            inline constexpr auto operator!=(const Array& other) const
             {
-                T r = r_0;
+                return !(*this == other);
+            }
+
+            //!
+            //! \brief Reduction across all elements of the Array.
+            //!
+            //! \tparam FuncT the type of the callable
+            //! \param func a callable implementing the reduction
+            //! \param initial_value the initial value of the aggregate
+            //! \param begin the lower bound index for the reduction
+            //! \param end the upper bound index for the reduciton
+            //! \return the value of the aggregate
+            //!
+            template <typename FuncT>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto Reduce(const FuncT func, const T initial_value, const SizeType begin = 0, const SizeType end = C_N) const
+            {
+                T aggregate = initial_value;
 
                 for (SizeType i = begin; i < end; ++i)
                 {
-                    r = func(r, data[i]);
+                    aggregate = func(aggregate, data[i]);
                 }
                 
-                return r;
+                return aggregate;
             }
 
+            //!
+            //! \brief //! \brief Multiply reduction across all elements of the Array.
+            //!
+            //! \param begin the lower bound index for the reduction
+            //! \param end the upper bound index for the reduciton
+            //! \return the value of the aggregate
+            //! 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline constexpr T reduce_mul(const SizeType begin = 0, const SizeType end = C_N) const
+            inline constexpr T ReduceMul(const SizeType begin = 0, const SizeType end = C_N) const
             {
-                return reduce([&](const T product, const T element) { return (product * element); }, 1, begin, end);
+            #if (__cplusplus > 201402L)
+                return Reduce([](const T product, const T element) { return (product * element); }, 1, begin, end);
+            #else
+                T aggregate = static_cast<T>(1);
+
+                for (SizeType i = begin; i < end; ++i)
+                {
+                    aggregate *= data[i];
+                }
+                
+                return aggregate;
+            #endif
             }
         };
-    }
 
-    template <typename T, typename SizeType, SizeType C_N>
-    std::ostream& operator<<(std::ostream& os, const dataTypes::Array<T, C_N>& x)
-    {
-        for (SizeType i = 0; i < C_N; ++i)
+        template <typename T, SizeType C_N>
+        std::ostream& operator<<(std::ostream& os, const Array<T, C_N>& array)
         {
-            os << x[i] << ((i + 1) < C_N ? " " : "");
-        }
+            for (SizeType i = 0; i < C_N; ++i)
+            {
+                os << array[i] << ((i + 1) < C_N ? " " : "");
+            }
 
-        return os;
+            return os;
+        }
     }
 }
 

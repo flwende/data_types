@@ -12,6 +12,7 @@
 #define XXX_NAMESPACE fw
 #endif
 
+#include <auxiliary/CPPStandard.hpp>
 #include <auxiliary/Macro.hpp>
 #include <data_types/DataTypes.hpp>
 
@@ -409,6 +410,26 @@ namespace XXX_NAMESPACE
                 LoopImplementation<(End - Begin - 1), Begin>::Execute(loop_body);
             }
         };
+
+        /////////////////////////////////////////////////////////////////
+        //
+        // A compile-time if-else.
+        //
+        /////////////////////////////////////////////////////////////////
+        template <bool C_Predicate, typename T_1, typename T_2>
+        auto IfElse(const T_1& x, const T_2& y)
+            -> std::enable_if_t<C_Predicate, T_1&>
+        {
+            return x;
+        }
+
+        template <bool C_Predicate, typename T_1, typename T_2>
+        auto IfElse(const T_1& x, const T_2& y)
+            -> std::enable_if_t<C_Predicate, T_2&>
+        {
+            return y;
+        }
+
     } // namespace compileTime
 } // namespace XXX_NAMESPACE
 

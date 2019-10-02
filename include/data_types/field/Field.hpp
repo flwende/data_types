@@ -75,7 +75,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const SizeType idx)
                 -> Accessor<ElementT, C_N - 1, C_D, C_Layout>
             {
-                return {data, n, stab_idx + idx * n.reduce_mul(1, C_N - 1)};
+                return {data, n, stab_idx + idx * n.ReduceMul(1, C_N - 1)};
             }
 	    
             HOST_VERSION
@@ -83,7 +83,7 @@ namespace XXX_NAMESPACE
             inline auto operator[] (const SizeType idx) const
                 -> Accessor<ElementT, C_N - 1, C_D, C_Layout>
             {
-                return {data, n, stab_idx + idx * n.reduce_mul(1, C_N - 1)};
+                return {data, n, stab_idx + idx * n.ReduceMul(1, C_N - 1)};
             }
         };
         

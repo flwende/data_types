@@ -12,6 +12,7 @@
 #define XXX_NAMESPACE fw
 #endif
 
+#include <auxiliary/CPPStandard.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Memory.hpp>
 

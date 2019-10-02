@@ -13,6 +13,7 @@
 #define XXX_NAMESPACE fw
 #endif
 
+#include <auxiliary/CPPStandard.hpp>
 #include <auxiliary/Template.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Math.hpp>
@@ -397,7 +398,7 @@ namespace XXX_NAMESPACE
                 static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
                     -> std::enable_if_t<(C_DataLayout != DataLayout::SoA && Enable), AllocationShape>
                 {
-                    return {Padding(n[0], alignment), N * n.reduce_mul(1), alignment};
+                    return {Padding(n[0], alignment), N * n.ReduceMul(1), alignment};
                 }
 
                 //!
@@ -418,7 +419,7 @@ namespace XXX_NAMESPACE
                 static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
                     -> std::enable_if_t<(C_DataLayout == DataLayout::SoA && Enable), AllocationShape>
                 {
-                    return {Padding(n.reduce_mul(), alignment), N, alignment};
+                    return {Padding(n.ReduceMul(), alignment), N, alignment};
                 }
             };
 
@@ -738,7 +739,7 @@ namespace XXX_NAMESPACE
                 static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
                     -> std::enable_if_t<(C_DataLayout != DataLayout::SoA && Enable), AllocationShape>
                 {
-                    return {Padding(n[0], alignment), n.reduce_mul(1), alignment};
+                    return {Padding(n[0], alignment), n.ReduceMul(1), alignment};
                 }
 
                 //!
@@ -759,7 +760,7 @@ namespace XXX_NAMESPACE
                 static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
                     -> std::enable_if_t<(C_DataLayout == DataLayout::SoA && Enable), AllocationShape>
                 {
-                    return {Padding(n.reduce_mul(), alignment), 1, alignment};
+                    return {Padding(n.ReduceMul(), alignment), 1, alignment};
                 }
             };
 

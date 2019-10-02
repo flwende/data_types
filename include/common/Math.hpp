@@ -13,6 +13,7 @@
 #define XXX_NAMESPACE fw
 #endif
 
+#include <auxiliary/CPPStandard.hpp>
 #include <data_types/DataTypes.hpp>
 #include <platform/Target.hpp>
 
