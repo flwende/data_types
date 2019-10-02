@@ -180,7 +180,7 @@ namespace XXX_NAMESPACE
             template <typename...>
             friend class Pointer;
 
-            template <typename, SizeType, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::target>
+            template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
             friend class ::XXX_NAMESPACE::Container;
 
             // Number of parameters (members of the HST).
@@ -393,9 +393,9 @@ namespace XXX_NAMESPACE
                 //! \param alignment the alignment (bytes) to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <::XXX_NAMESPACE::memory::DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
+                template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
                 static auto GetAllocationShape(const SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<(C_DataLayout != ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), AllocationShape>
+                    -> std::enable_if_t<(C_DataLayout != DataLayout::SoA && Enable), AllocationShape>
                 {
                     return {Padding(n[0], alignment), N * n.reduce_mul(1), alignment};
                 }
@@ -414,9 +414,9 @@ namespace XXX_NAMESPACE
                 //! \param alignment the alignment to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <::XXX_NAMESPACE::memory::DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
+                template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
                 static auto GetAllocationShape(const SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<(C_DataLayout == ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), AllocationShape>
+                    -> std::enable_if_t<(C_DataLayout == DataLayout::SoA && Enable), AllocationShape>
                 {
                     return {Padding(n.reduce_mul(), alignment), N, alignment};
                 }
@@ -471,7 +471,7 @@ namespace XXX_NAMESPACE
             template <typename... X>
             friend class MultiPointer;
 
-            template <typename, SizeType, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::target>
+            template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
             friend class ::XXX_NAMESPACE::Container;
 
             static constexpr SizeType One = static_cast<SizeType>(1);
@@ -734,9 +734,9 @@ namespace XXX_NAMESPACE
                 //! \param alignment the alignment (bytes) to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <::XXX_NAMESPACE::memory::DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
+                template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
                 static auto GetAllocationShape(const SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<(C_DataLayout != ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), AllocationShape>
+                    -> std::enable_if_t<(C_DataLayout != DataLayout::SoA && Enable), AllocationShape>
                 {
                     return {Padding(n[0], alignment), n.reduce_mul(1), alignment};
                 }
@@ -755,9 +755,9 @@ namespace XXX_NAMESPACE
                 //! \param alignment the alignment to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <::XXX_NAMESPACE::memory::DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
+                template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
                 static auto GetAllocationShape(const SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<(C_DataLayout == ::XXX_NAMESPACE::memory::DataLayout::SoA && Enable), AllocationShape>
+                    -> std::enable_if_t<(C_DataLayout == DataLayout::SoA && Enable), AllocationShape>
                 {
                     return {Padding(n.reduce_mul(), alignment), 1, alignment};
                 }
