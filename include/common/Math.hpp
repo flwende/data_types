@@ -143,8 +143,6 @@ namespace XXX_NAMESPACE
         template <typename T>
         struct Func
         {
-            static_assert(std::is_floating_point<T>::value, "error: this is not a floating point type");
-
             static constexpr T One = static_cast<T>(1.0);
             static constexpr T MinusOne = static_cast<T>(-1.0);
 
