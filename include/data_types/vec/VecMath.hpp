@@ -23,7 +23,7 @@ namespace XXX_NAMESPACE
     {
     #define MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                               \
         template <typename T_1, typename T_2, SizeType D,                                                                                    \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline vec<X, D> operator OP (IN_T_1<T_1, D>& x_1, IN_T_2<T_2, D>& x_2)                                                                 \
         {                                                                                                                                       \
             vec<X, D> y(x_1);                                                                                                                   \
@@ -54,7 +54,7 @@ namespace XXX_NAMESPACE
 
     #define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
         template <typename T_1, typename T_2, SizeType D,                                                                                    \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline vec<X, D> operator OP (IN_T<T_1, D>& x_1, const T_2 x_2)                                                                         \
         {                                                                                                                                       \
             vec<X, D> y(x_1);                                                                                                                   \
@@ -63,7 +63,7 @@ namespace XXX_NAMESPACE
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2, SizeType D,                                                                                    \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline vec<X, D> operator OP (const T_1 x_1, IN_T<T_2, D>& x_2)                                                                         \
         {                                                                                                                                       \
             vec<X, D> y(x_1);                                                                                                                   \
@@ -134,28 +134,28 @@ namespace XXX_NAMESPACE
 
     #define MACRO_UNQUALIFIED(IN_T_1, IN_T_2)                                                                                                   \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot_product(IN_T_1<T_1, 1>& x_1, IN_T_2<T_2, 1>& x_2)                                                                          \
         {                                                                                                                                       \
             return (x_1.x * x_2.x);                                                                                                             \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot_product(IN_T_1<T_1, 2>& x_1, IN_T_2<T_2, 2>& x_2)                                                                          \
         {                                                                                                                                       \
             return (x_1.x * x_2.x + x_1.y * x_2.y);                                                                                             \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot_product(IN_T_1<T_1, 3>& x_1, IN_T_2<T_2, 3>& x_2)                                                                          \
         {                                                                                                                                       \
             return (x_1.x * x_2.x + x_1.y * x_2.y + x_1.z * x_2.z);                                                                             \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2, SizeType D,                                                                                    \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot(IN_T_1<T_1, D>& x_1, IN_T_2<T_2, D>& x_2)                                                                                  \
         {                                                                                                                                       \
             return dot_product(x_1, x_2);                                                                                                       \
@@ -181,56 +181,56 @@ namespace XXX_NAMESPACE
 
     #define MACRO_UNQUALIFIED(IN_T)                                                                                                             \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot_product(IN_T<T_1, 1>& x_1, const T_2 x_2)                                                                                  \
         {                                                                                                                                       \
             return (x_1.x * x_2);                                                                                                               \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot_product(IN_T<T_1, 2>& x_1, const T_2 x_2)                                                                                  \
         {                                                                                                                                       \
             return (x_1.x + x_1.y) * x_2;                                                                                                       \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot_product(IN_T<T_1, 3>& x_1, const T_2 x_2)                                                                                  \
         {                                                                                                                                       \
             return (x_1.x + x_1.y + x_1.z) * x_2;                                                                                               \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot_product(const T_1 x_1, IN_T<T_2, 1>& x_2)                                                                                  \
         {                                                                                                                                       \
             return (x_1 * x_2.x);                                                                                                               \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot_product(const T_1 x_1, IN_T<T_2, 2>& x_2)                                                                                  \
         {                                                                                                                                       \
             return x_1 * (x_2.x + x_2.y);                                                                                                       \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot_product(const T_1 x_1, IN_T<T_2, 3>& x_2)                                                                                  \
         {                                                                                                                                       \
             return x_1 * (x_2.x + x_2.y + x_2.z);                                                                                               \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2, SizeType D,                                                                                    \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot(IN_T<T_1, D>& x_1, const T_2 x_2)                                                                                          \
         {                                                                                                                                       \
             return dot_product(x_1, x_2);                                                                                                       \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2, SizeType D,                                                                                    \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline X dot(const T_1 x_1, IN_T<T_2, D>& x_2)                                                                                          \
         {                                                                                                                                       \
             return dot_product(x_1, x_2);                                                                                                       \
@@ -252,14 +252,14 @@ namespace XXX_NAMESPACE
 
     #define MACRO_UNQUALIFIED(IN_T_1, IN_T_2)                                                                                                   \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline vec<X, 3> cross_product(IN_T_1<T_1, 3>& x_1, IN_T_2<T_2, 3>& x_2)                                                                \
         {                                                                                                                                       \
             return vec<X, 3>(x_1.y * x_2.z - x_1.z * x_2.y, x_1.z * x_2.x - x_1.x * x_2.z, x_1.x * x_2.y - x_1.y * x_2.x);                      \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline vec<X, 3> cross(IN_T_1<T_1, 3>& x_1, IN_T_2<T_2, 3>& x_2)                                                                        \
         {                                                                                                                                       \
             return cross_product(x_1, x_2);                                                                                                     \
@@ -285,28 +285,28 @@ namespace XXX_NAMESPACE
 
     #define MACRO_UNQUALIFIED(IN_T)                                                                                                             \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline vec<X, 3> cross_product(IN_T<T_1, 3>& x_1, const T_2 x_2)                                                                        \
         {                                                                                                                                       \
             return vec<X, 3>(x_1.y - x_1.z, x_1.z - x_1.x, x_1.x - x_1.y) * x_2;                                                                \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline vec<X, 3> cross_product(const T_1 x_1, IN_T<T_2, 3>& x_2)                                                                        \
         {                                                                                                                                       \
             return x_1 * vec<X, 3>(x_2.z - x_2.y, x_2.x - x_2.z, x_2.y - x_2.x);                                                                \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline vec<X, 3> cross(IN_T<T_1, 3>& x_1, const T_2 x_2)                                                                                \
         {                                                                                                                                       \
             return cross_product(x_1, x_2);                                                                                                     \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
-                typename X = typename XXX_NAMESPACE::internal::compare<T_1, T_2>::stronger_type_unqualified>                                  \
+                typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified>                                  \
         inline vec<X, 3> cross(const T_1 x_1, IN_T<T_2, 3>& x_2)                                                                                \
         {                                                                                                                                       \
             return cross_product(x_1, x_2);                                                                                                     \

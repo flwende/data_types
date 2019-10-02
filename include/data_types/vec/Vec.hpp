@@ -389,13 +389,13 @@ namespace XXX_NAMESPACE
     namespace internal
     {
         template <typename T, SizeType D>
-        struct provides_proxy_type<VEC_NAMESPACE::vec<T, D>>
+        struct ProvidesProxyType<VEC_NAMESPACE::vec<T, D>>
         {
             static constexpr bool value = true;
         };
 
         template <typename T, SizeType D>
-        struct provides_proxy_type<const VEC_NAMESPACE::vec<T, D>>
+        struct ProvidesProxyType<const VEC_NAMESPACE::vec<T, D>>
         {
             static constexpr bool value = true;
         };

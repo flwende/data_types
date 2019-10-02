@@ -55,7 +55,7 @@ namespace TUPLE_NAMESPACE
 
         using type = tuple<T_1, T_2, T_3>;
         using ProxyType = typename internal::tuple_proxy<T_1, T_2, T_3>;
-        using value_type = typename XXX_NAMESPACE::internal::compare<T_1, typename XXX_NAMESPACE::internal::compare<T_2, T_3>::stronger_type>::stronger_type;
+        using value_type = typename XXX_NAMESPACE::dataTypes::Compare<T_1, typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_3>::StrongerType>::StrongerType;
 
         T_1 x;
         T_2 y;
@@ -148,13 +148,13 @@ namespace XXX_NAMESPACE
     namespace internal
     {
         template <typename T_1, typename T_2, typename T_3>
-        struct provides_proxy_type<TUPLE_NAMESPACE::tuple<T_1, T_2, T_3>>
+        struct ProvidesProxyType<TUPLE_NAMESPACE::tuple<T_1, T_2, T_3>>
         {
             static constexpr bool value = true;
         };
 
         template <typename T_1, typename T_2, typename T_3>
-        struct provides_proxy_type<const TUPLE_NAMESPACE::tuple<T_1, T_2, T_3>>
+        struct ProvidesProxyType<const TUPLE_NAMESPACE::tuple<T_1, T_2, T_3>>
         {
             static constexpr bool value = true;
         };

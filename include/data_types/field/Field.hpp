@@ -50,7 +50,7 @@ namespace XXX_NAMESPACE
         template <typename ElementT, SizeType C_N, SizeType C_D, ::XXX_NAMESPACE::memory::DataLayout C_Layout>
         class Accessor
         {
-            using BasePointerType = typename std::conditional<std::is_const<ElementT>::value, const typename internal::traits<ElementT, C_Layout>::BasePointerType, typename internal::traits<ElementT, C_Layout>::BasePointerType>::type;
+            using BasePointerType = typename std::conditional<std::is_const<ElementT>::value, const typename Traits<ElementT, C_Layout>::BasePointerType, typename Traits<ElementT, C_Layout>::BasePointerType>::type;
             BasePointerType& data;
             const SizeArray<C_D>& n;
             const SizeType stab_idx;
@@ -90,10 +90,10 @@ namespace XXX_NAMESPACE
         template <typename ElementT, SizeType C_D, ::XXX_NAMESPACE::memory::DataLayout C_Layout>
         class Accessor<ElementT, 1, C_D, C_Layout>
         {
-            using BasePointerType = typename std::conditional<std::is_const<ElementT>::value, const typename internal::traits<ElementT, C_Layout>::BasePointerType, typename internal::traits<ElementT, C_Layout>::BasePointerType>::type;
-            static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && internal::provides_proxy_type<ElementT>::value);
-            using value_type = typename std::conditional<UseProxyType, typename internal::traits<ElementT, C_Layout>::ProxyType, ElementT&>::type;
-            using const_value_type = typename std::conditional<UseProxyType, const typename internal::traits<const ElementT, C_Layout>::ProxyType, const ElementT&>::type;
+            using BasePointerType = typename std::conditional<std::is_const<ElementT>::value, const typename Traits<ElementT, C_Layout>::BasePointerType, typename Traits<ElementT, C_Layout>::BasePointerType>::type;
+            static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && internal::ProvidesProxyType<ElementT>::value);
+            using value_type = typename std::conditional<UseProxyType, typename Traits<ElementT, C_Layout>::ProxyType, ElementT&>::type;
+            using const_value_type = typename std::conditional<UseProxyType, const typename Traits<const ElementT, C_Layout>::ProxyType, const ElementT&>::type;
             
             BasePointerType& data;
             const SizeArray<C_D>& n;
@@ -228,9 +228,9 @@ namespace XXX_NAMESPACE
 
     private:
 
-        using ConstElementT = typename internal::traits<ElementT, C_Layout>::ConstType;
+        using ConstElementT = typename internal::Traits<ElementT, C_Layout>::ConstType;
         template <typename T>
-        using BasePointerType = typename internal::traits<T, C_Layout>::BasePointerType;
+        using BasePointerType = typename internal::Traits<T, C_Layout>::BasePointerType;
         using AllocatorT = typename BasePointerType<ElementT>::Allocator;
         using AllocationShape = typename AllocatorT::AllocationShape;
 
@@ -258,9 +258,9 @@ namespace XXX_NAMESPACE
             const_ptr(*data)
         {}
 
-        static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && internal::provides_proxy_type<ElementT>::value);
-        using return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, typename internal::traits<ElementT, C_Layout>::ProxyType, ElementT&>, internal::Accessor<ElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
-        using const_return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, const typename internal::traits<const ElementT, C_Layout>::ProxyType, const ElementT&>, internal::Accessor<ConstElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
+        static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && internal::ProvidesProxyType<ElementT>::value);
+        using return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, typename internal::Traits<ElementT, C_Layout>::ProxyType, ElementT&>, internal::Accessor<ElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
+        using const_return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, const typename internal::Traits<const ElementT, C_Layout>::ProxyType, const ElementT&>, internal::Accessor<ConstElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
 
     public:
 
@@ -340,7 +340,7 @@ namespace XXX_NAMESPACE
 
     private:
 
-        using const_element_type = typename internal::traits<element_type, C_Layout>::ConstType;
+        using const_element_type = typename internal::Traits<element_type, C_Layout>::ConstType;
         
     public:
 
@@ -389,9 +389,9 @@ namespace XXX_NAMESPACE
             // TODO: implementation; if (owns_data) {..}
         }
 
-        static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && internal::provides_proxy_type<T>::value);
-        using value_type = std::conditional_t<(C_D == 1), std::conditional_t<UseProxyType, typename internal::traits<T, C_Layout>::ProxyType, T&>, internal::Accessor<element_type, C_D - 1, C_D, C_Layout>>;
-        using const_value_type = std::conditional_t<(C_D == 1), std::conditional_t<UseProxyType, const typename internal::traits<const T, C_Layout>::ProxyType, const T&>, internal::Accessor<const_element_type, C_D - 1, C_D, C_Layout>>;
+        static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && internal::ProvidesProxyType<T>::value);
+        using value_type = std::conditional_t<(C_D == 1), std::conditional_t<UseProxyType, typename internal::Traits<T, C_Layout>::ProxyType, T&>, internal::Accessor<element_type, C_D - 1, C_D, C_Layout>>;
+        using const_value_type = std::conditional_t<(C_D == 1), std::conditional_t<UseProxyType, const typename internal::Traits<const T, C_Layout>::ProxyType, const T&>, internal::Accessor<const_element_type, C_D - 1, C_D, C_Layout>>;
 
         inline auto operator[](const SizeType idx)
             -> value_type
