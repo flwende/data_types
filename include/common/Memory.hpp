@@ -180,12 +180,6 @@ namespace XXX_NAMESPACE
         template <typename... T>
         class Pointer
         {
-            template <typename...>
-            friend class Pointer;
-
-            template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
-            friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
-
             // Number of parameters (members of the HST).
             static constexpr SizeType N = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
             static_assert(N > 0, "error: empty parameter pack");
@@ -196,6 +190,13 @@ namespace XXX_NAMESPACE
             // Check if all types are the same (same size is sufficient).
             static constexpr bool IsHomogeneous = ::XXX_NAMESPACE::variadic::Pack<T...>::SameSize();
             static_assert(IsHomogeneous, "error: use the inhomogeneous MultiPointer instead");
+
+            // Friend declarations.
+            template <typename...>
+            friend class Pointer;
+            template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
+            friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
+            friend class AllocatorBase<ValueType>;
 
             //!
             //! \brief Create a tuple of member references from the base pointer.
@@ -348,9 +349,6 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             inline auto At(const SizeType stab_index, const SizeType index) const { return GetValues(stab_index, index, std::make_integer_sequence<SizeType, N>{}); }
 
-          public:
-            friend class AllocatorBase<ValueType>;
-
             //!
             //! \brief An allocator class.
             //!
@@ -437,7 +435,7 @@ namespace XXX_NAMESPACE
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         namespace
         {
-            // defines 'template <T, N> struct TypeGen {..};'
+            // Defines 'template <T, N> struct TypeGen {..};'.
             MACRO_TYPE_GEN(::XXX_NAMESPACE::memory::Pointer);
         } // namespace
 
@@ -469,17 +467,12 @@ namespace XXX_NAMESPACE
         template <typename... T>
         class MultiPointer
         {
-            template <typename... X>
-            friend class MultiPointer;
-
-            template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
-            friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
-
-            static constexpr SizeType One = static_cast<SizeType>(1);
-
             // Number of parameters (members of the HST).
             static constexpr SizeType N = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
             static_assert(N > 0, "error: empty parameter pack");
+
+            // All members have different type: use std::uint8_t as the base pointer type.
+            using ValueType = std::uint8_t;
 
             // All members have the same type: we don't want that here.
             static constexpr bool IsHomogeneous = ::XXX_NAMESPACE::variadic::Pack<T...>::SameSize();
@@ -488,17 +481,18 @@ namespace XXX_NAMESPACE
             // Find out the byte-size of the largest parameter type.
             static constexpr SizeType SizeOfLargestParameter = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfLargestParameter();
 
-            // Determine the total byte-size of all data members that have a size different from (smaller than) the largest parameter type.
-            static constexpr SizeType SizeRest = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfPackExcludingLargestParameter();
-
             // Size of the inhomogeneous structured type.
             static constexpr SizeType RecordSize = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfPack();
 
             // The member type sizes in relative to the size of the largest paramter type.
             static constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<N> SizeScalingFactor{(SizeOfLargestParameter / sizeof(T))...};
 
-            // All members have different type: use std::uint8_t as the base pointer type.
-            using ValueType = std::uint8_t;
+            // Friend declarations.
+            template <typename... X>
+            friend class MultiPointer;
+            template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
+            friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
+            friend class AllocatorBase<ValueType>;
 
             //!
             //! \brief Create a tuple of (base) pointers from a pointer.
@@ -684,9 +678,6 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             inline auto At(const SizeType stab_index, const SizeType index) const { return GetValues(stab_index, index, std::make_integer_sequence<SizeType, N>{}); }
 
-          public:
-            friend class AllocatorBase<ValueType>;
-
             //!
             //! \brief An allocator class.
             //!
@@ -710,6 +701,9 @@ namespace XXX_NAMESPACE
                 {
                     assert(::XXX_NAMESPACE::math::IsPowerOf<2>(alignment));
 
+                    constexpr SizeType One = static_cast<SizeType>(1);
+                    // Determine the total byte-size of all data members that have a size different from (smaller than) the largest parameter type.
+                    constexpr SizeType SizeRest = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfPackExcludingLargestParameter();
                     // Determine the number of ISTs that is needed so that their overall size is an integral multiple of each data member type.
                     constexpr SizeType RecordPaddingFactor = std::max(One, ::XXX_NAMESPACE::math::LeastCommonMultiple(SizeOfLargestParameter, SizeRest) / std::max(One, SizeRest));
                     const SizeType parameter_padding_factor = ::XXX_NAMESPACE::math::LeastCommonMultiple(alignment, SizeOfLargestParameter) / SizeOfLargestParameter;
