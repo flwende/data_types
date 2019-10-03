@@ -24,7 +24,8 @@ constexpr double SPREAD = 1.0;
 constexpr double OFFSET = 3.0;
 
 #if defined(__CUDACC__)
-__global__ void foo(XXX_NAMESPACE::Container<element_type, 3, layout, XXX_NAMESPACE::target::GPU_CUDA> a)
+template <typename FieldT>
+__global__ void foo(FieldT a)
 {
     const std::size_t x = blockIdx.x * blockDim.x + threadIdx.x;
     const std::size_t y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -49,7 +50,6 @@ __global__ void foo(XXX_NAMESPACE::Container<element_type, 3, layout, XXX_NAMESP
     }
 }
 #endif
-
 
 int main(int argc, char** argv)
 {
