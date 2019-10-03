@@ -25,9 +25,12 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
-        // Forward declarations.
-        template <typename, SizeType, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::target>
-        class Container;
+        namespace internal
+        {
+            // Forward declarations.
+            template <typename, SizeType, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::target>
+            class Container;
+        }
     }
 
     namespace memory
@@ -181,7 +184,7 @@ namespace XXX_NAMESPACE
             friend class Pointer;
 
             template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
-            friend class ::XXX_NAMESPACE::dataTypes::Container;
+            friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
 
             // Number of parameters (members of the HST).
             static constexpr SizeType N = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
@@ -470,7 +473,7 @@ namespace XXX_NAMESPACE
             friend class MultiPointer;
 
             template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
-            friend class ::XXX_NAMESPACE::dataTypes::Container;
+            friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
 
             static constexpr SizeType One = static_cast<SizeType>(1);
 

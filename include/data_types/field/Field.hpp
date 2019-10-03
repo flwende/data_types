@@ -118,7 +118,7 @@ namespace XXX_NAMESPACE
             //!
             //! \brief Accessor type for array subscript operator chaining [][]..[] (recursion anchor).
             //!
-            //! This is the recursion anchor. Depending on the element type and the data layout, either a reference
+            //! This is the recursion anchor (`C_N=1`). Depending on the element type and the data layout, either a reference
             //! to an element or a proxy type is returned by the array subscript operator.
             //!
             //! \tparam ElementT element type
@@ -156,7 +156,7 @@ namespace XXX_NAMESPACE
                     n(n), 
                     stab_index(stab_index) 
                 {}
-                
+
                 //!
                 //! \brief Array subscript operator (AoS data layout).
                 //!
@@ -269,7 +269,129 @@ namespace XXX_NAMESPACE
             };
         }
         
+        template <typename T, SizeType C_D, ::XXX_NAMESPACE::memory::DataLayout C_Layout = ::XXX_NAMESPACE::memory::DataLayout::AoS>
+        class Field;
+
+        namespace internal
+        {
+            template <typename ElementT, SizeType C_Dimension, ::XXX_NAMESPACE::memory::DataLayout C_Layout, target C_Target>
+            class Container
+            {
+                using Self = Container<ElementT, C_Dimension, C_Layout, C_Target>;
+
+                friend class ::XXX_NAMESPACE::dataTypes::Field<ElementT, C_Dimension, C_Layout>;
+
+            public:
+
+                using ElementType = ElementT;
+                static constexpr SizeType Dimension = C_Dimension;
+                static constexpr ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout;
+                static constexpr target Target = C_Target;
+
+            private:
+
+                using ConstElementT = typename ::XXX_NAMESPACE::internal::Traits<ElementT, C_Layout>::ConstType;
+                template <typename T>
+                using BasePointerType = typename ::XXX_NAMESPACE::internal::Traits<T, C_Layout>::BasePointerType;
+                using AllocatorT = typename BasePointerType<ElementT>::Allocator;
+                using AllocationShape = typename AllocatorT::AllocationShape;
+
+                struct Deleter
+                {
+                    auto operator()(BasePointerType<ElementT>* pointer) const
+                        -> void
+                    {
+                        AllocatorT::template Deallocate<C_Target>(*pointer);
+                    }
+                };
+
+                Container()
+                    :
+                    n{},
+                    allocation_shape{}
+                {}
+
+                Container(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_Dimension>& n)
+                    :
+                    n(n),
+                    allocation_shape(AllocatorT::template GetAllocationShape<C_Layout>(n)),
+                    data(new BasePointerType<ElementT>(AllocatorT::template Allocate<Target>(allocation_shape), allocation_shape.n_0), Deleter()),
+                    ptr(*data),
+                    const_ptr(*data)
+                {}
+
+                static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && ::XXX_NAMESPACE::internal::ProvidesProxyType<ElementT>::value);
+                using return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, typename ::XXX_NAMESPACE::internal::Traits<ElementT, C_Layout>::ProxyType, ElementT&>, internal::Accessor<ElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
+                using const_return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, const typename ::XXX_NAMESPACE::internal::Traits<const ElementT, C_Layout>::ProxyType, const ElementT&>, internal::Accessor<ConstElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
+
+            public:
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto operator[](const SizeType index)
+                    -> return_type
+                {
+                    return internal::Accessor<ElementT, C_Dimension, C_Dimension, C_Layout>(ptr, n)[index];
+                }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto operator[](const SizeType index) const
+                    -> const_return_type
+                {
+                    return internal::Accessor<ConstElementT, C_Dimension, C_Dimension, C_Layout>(const_ptr, n)[index];
+                }
+
+                template <typename FuncT>
+                auto Set(FuncT func)
+                {
+                    if (data.get())
+                    {   
+                        for (size_t stab_index = 0; stab_index < allocation_shape.num_stabs; ++stab_index)
+                        {
+                            for (size_t i = 0; i < n[0]; ++i)
+                            {
+                                std::get<0>(data.get()->At(stab_index, i)) = func();
+                            }
+                        }
+                        
+                    }
+                }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION    
+                const auto& Size() const
+                {
+                    return n;   
+                }
+
+                auto IsEmpty() const
+                {
+                    return (data.get() == nullptr);
+                }
+
+            private:
+                
+                auto GetByteSize() const
+                {
+                    return allocation_shape.GetByteSize();
+                }
+
+                auto GetBasePointer()
+                {
+                    return data.get()->GetBasePointer();
+                }
+                
+                ::XXX_NAMESPACE::dataTypes::SizeArray<C_Dimension> n;
+                AllocationShape allocation_shape;
+                std::shared_ptr<BasePointerType<ElementT>> data;
+                BasePointerType<ElementT> ptr;
+                BasePointerType<ConstElementT> const_ptr;
+            };
+        }
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
         //! \brief Multi-dimensional field data type
         //!
         //! This field data type uses a plain C-pointer to dynamically adapt to the needed memory requirement.
@@ -308,125 +430,8 @@ namespace XXX_NAMESPACE
         //! \tparam ElementT data type
         //! \tparam C_D dimension
         //! \tparam C_Layout any of SoA (struct of arrays) and AoS (array of structs)
+        //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, SizeType C_D, ::XXX_NAMESPACE::memory::DataLayout C_Layout = ::XXX_NAMESPACE::memory::DataLayout::AoS>
-        class Field;
-
-        template <typename ElementT, SizeType C_Dimension, ::XXX_NAMESPACE::memory::DataLayout C_Layout, target C_Target>
-        class Container
-        {
-            using Self = Container<ElementT, C_Dimension, C_Layout, C_Target>;
-
-            friend class Field<ElementT, C_Dimension, C_Layout>;
-
-        public:
-
-            using ElementType = ElementT;
-            static constexpr SizeType Dimension = C_Dimension;
-            static constexpr ::XXX_NAMESPACE::memory::DataLayout Layout = C_Layout;
-            static constexpr target Target = C_Target;
-
-        private:
-
-            using ConstElementT = typename ::XXX_NAMESPACE::internal::Traits<ElementT, C_Layout>::ConstType;
-            template <typename T>
-            using BasePointerType = typename ::XXX_NAMESPACE::internal::Traits<T, C_Layout>::BasePointerType;
-            using AllocatorT = typename BasePointerType<ElementT>::Allocator;
-            using AllocationShape = typename AllocatorT::AllocationShape;
-
-            struct Deleter
-            {
-                auto operator()(BasePointerType<ElementT>* pointer) const
-                    -> void
-                {
-                    AllocatorT::template Deallocate<C_Target>(*pointer);
-                }
-            };
-
-            Container()
-                :
-                n{},
-                allocation_shape{}
-            {}
-
-            Container(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_Dimension>& n)
-                :
-                n(n),
-                allocation_shape(AllocatorT::template GetAllocationShape<C_Layout>(n)),
-                data(new BasePointerType<ElementT>(AllocatorT::template Allocate<Target>(allocation_shape), allocation_shape.n_0), Deleter()),
-                ptr(*data),
-                const_ptr(*data)
-            {}
-
-            static constexpr bool UseProxyType = (C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && ::XXX_NAMESPACE::internal::ProvidesProxyType<ElementT>::value);
-            using return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, typename ::XXX_NAMESPACE::internal::Traits<ElementT, C_Layout>::ProxyType, ElementT&>, internal::Accessor<ElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
-            using const_return_type = std::conditional_t<(C_Dimension == 1), std::conditional_t<UseProxyType, const typename ::XXX_NAMESPACE::internal::Traits<const ElementT, C_Layout>::ProxyType, const ElementT&>, internal::Accessor<ConstElementT, C_Dimension - 1, C_Dimension, C_Layout>>;
-
-        public:
-
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline auto operator[](const SizeType index)
-                -> return_type
-            {
-                return internal::Accessor<ElementT, C_Dimension, C_Dimension, C_Layout>(ptr, n)[index];
-            }
-
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline auto operator[](const SizeType index) const
-                -> const_return_type
-            {
-                return internal::Accessor<ConstElementT, C_Dimension, C_Dimension, C_Layout>(const_ptr, n)[index];
-            }
-
-            template <typename FuncT>
-            auto Set(FuncT func)
-            {
-                if (data.get())
-                {   
-                    for (size_t stab_index = 0; stab_index < allocation_shape.num_stabs; ++stab_index)
-                    {
-                        for (size_t i = 0; i < n[0]; ++i)
-                        {
-                            std::get<0>(data.get()->At(stab_index, i)) = func();
-                        }
-                    }
-                    
-                }
-            }
-
-            HOST_VERSION
-            CUDA_DEVICE_VERSION    
-            const auto& Size() const
-            {
-                return n;   
-            }
-
-            auto IsEmpty() const
-            {
-                return (data.get() == nullptr);
-            }
-
-        private:
-            
-            auto GetByteSize() const
-            {
-                return allocation_shape.GetByteSize();
-            }
-
-            auto GetBasePointer()
-            {
-                return data.get()->GetBasePointer();
-            }
-            
-            ::XXX_NAMESPACE::dataTypes::SizeArray<C_Dimension> n;
-            AllocationShape allocation_shape;
-            std::shared_ptr<BasePointerType<ElementT>> data;
-            BasePointerType<ElementT> ptr;
-            BasePointerType<ConstElementT> const_ptr;
-        };
-
         template <typename T, SizeType C_D, ::XXX_NAMESPACE::memory::DataLayout C_Layout>
         class Field
         {
@@ -441,6 +446,8 @@ namespace XXX_NAMESPACE
         private:
 
             using const_element_type = typename ::XXX_NAMESPACE::internal::Traits<element_type, C_Layout>::ConstType;
+            template <::XXX_NAMESPACE::target C_Target>
+            using ContainerType = internal::Container<T, C_D, C_Layout, C_Target>;
             
         public:
 
@@ -459,7 +466,7 @@ namespace XXX_NAMESPACE
                 if (n != new_n)
                 {
                     n = new_n;
-                    data = Container<T, C_D, C_Layout, XXX_NAMESPACE::target::Host>(n);
+                    data = ContainerType<::XXX_NAMESPACE::target::Host>(n);
                     
                     if (initialize_to_zero)
                     {
@@ -467,7 +474,7 @@ namespace XXX_NAMESPACE
                     }
 
                 #if defined(__CUDACC__)
-                    device_data = Container<T, C_D, C_Layout, target::GPU_CUDA>(n);
+                    device_data = ContainerType<::XXX_NAMESPACE::target::GPU_CUDA>(n);
 
                     if (initialize_to_zero)
                     {
@@ -515,11 +522,11 @@ namespace XXX_NAMESPACE
 
         #if defined(__CUDACC__)
             auto GetDeviceAccess(const bool sync_with_host = false)
-                -> Container<T, C_D, C_Layout, target::GPU_CUDA>&
+                -> ContainerType<::XXX_NAMESPACE::target::GPU_CUDA>&
             {
                 if (device_data.IsEmpty())
                 {
-                    device_data = Container<T, C_D, C_Layout, target::GPU_CUDA>(n);
+                    device_data = ContainerType<::XXX_NAMESPACE::target::GPU_CUDA>(n);
                 }
 
                 if (sync_with_host)
@@ -550,9 +557,9 @@ namespace XXX_NAMESPACE
         #endif
 
             ::XXX_NAMESPACE::dataTypes::SizeArray<C_D> n;
-            Container<T, C_D, C_Layout, target::Host> data;
+            ContainerType<::XXX_NAMESPACE::target::Host> data;
         #if defined(__CUDACC__)
-            Container<T, C_D, C_Layout, target::GPU_CUDA> device_data;
+            ContainerType<::XXX_NAMESPACE::target::GPU_CUDA> device_data;
         #endif
         };
     }
