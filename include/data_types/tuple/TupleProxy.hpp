@@ -58,7 +58,7 @@ namespace TUPLE_NAMESPACE
             static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
 
             template <typename, SizeType, SizeType, ::XXX_NAMESPACE::memory::DataLayout>
-            friend class XXX_NAMESPACE::internal::Accessor;
+            friend class XXX_NAMESPACE::dataTypes::internal::Accessor;
 
             using T_1_unqualified = typename std::remove_cv<T_1>::type;
             using T_2_unqualified = typename std::remove_cv<T_2>::type;
