@@ -23,9 +23,12 @@
 
 namespace XXX_NAMESPACE
 {
-    // Forward declarations.
-    template <typename, SizeType, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::target>
-    class Container;
+    namespace dataTypes
+    {
+        // Forward declarations.
+        template <typename, SizeType, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::target>
+        class Container;
+    }
 
     namespace memory
     {
@@ -89,12 +92,11 @@ namespace XXX_NAMESPACE
                 //!
                 //! \tparam C_Target the target platform memory should be allocated for/on
                 //! \tparam AllocationShapeT the type of the allocation shape
-                //! \tparam Enable used for multi-versioning of this function depending on the target platform
                 //! \param allocation_shape the allocation shape used for the memory allocation
                 //! \return a pointer to memory according to the allocation shape
                 //!
-                template <::XXX_NAMESPACE::target C_Target, typename AllocationShapeT, bool Enable = true>
-                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<(C_Target == ::XXX_NAMESPACE::target::Host && Enable), T*>::type
+                template <::XXX_NAMESPACE::target C_Target, typename AllocationShapeT>
+                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<C_Target == ::XXX_NAMESPACE::target::Host, T*>::type
                 {
                     return reinterpret_cast<T*>(_mm_malloc(allocation_shape.GetByteSize(), allocation_shape.alignment));
                 }
@@ -104,11 +106,10 @@ namespace XXX_NAMESPACE
                 //!
                 //! \tparam C_Target the target platform memory should be allocated for/on
                 //! \tparam PointerT the type of the pointer
-                //! \tparam Enable used for multi-versioning of this function depending on the target platform
                 //! \param pointer a pointer variable
                 //!
-                template <::XXX_NAMESPACE::target C_Target, typename PointerT, bool Enable = true>
-                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<(C_Target == ::XXX_NAMESPACE::target::Host && Enable), void>::type
+                template <::XXX_NAMESPACE::target C_Target, typename PointerT>
+                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<C_Target == ::XXX_NAMESPACE::target::Host, void>::type
                 {
                     if (pointer.GetBasePointer())
                     {
@@ -122,12 +123,11 @@ namespace XXX_NAMESPACE
                 //!
                 //! \tparam C_Target the target platform memory should be allocated for/on
                 //! \tparam AllocationShapeT the type of the allocation shape
-                //! \tparam Enable used for multi-versioning of this function depending on the target platform
                 //! \param allocation_shape the allocation shape used for the memory allocation
                 //! \return a pointer to memory according to the allocation shape
                 //!
-                template <::XXX_NAMESPACE::target C_Target, typename AllocationShapeT, bool Enable = true>
-                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<(C_Target == ::XXX_NAMESPACE::target::GPU_CUDA && Enable), T*>::type
+                template <::XXX_NAMESPACE::target C_Target, typename AllocationShapeT>
+                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<C_Target == ::XXX_NAMESPACE::target::GPU_CUDA, T*>::type
                 {
                     T* d_ptr = nullptr;
 
@@ -141,11 +141,10 @@ namespace XXX_NAMESPACE
                 //!
                 //! \tparam C_Target the target platform memory should be allocated for/on
                 //! \tparam PointerT the type of the pointer
-                //! \tparam Enable used for multi-versioning of this function depending on the target platform
                 //! \param pointer a pointer variable
                 //!
-                template <::XXX_NAMESPACE::target C_Target, typename PointerT, bool Enable = true>
-                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<(C_Target == ::XXX_NAMESPACE::target::GPU_CUDA && Enable), void>::type
+                template <::XXX_NAMESPACE::target C_Target, typename PointerT>
+                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<C_Target == ::XXX_NAMESPACE::target::GPU_CUDA, void>::type
                 {
                     if (pointer.GetBasePointer())
                     {
@@ -182,7 +181,7 @@ namespace XXX_NAMESPACE
             friend class Pointer;
 
             template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
-            friend class ::XXX_NAMESPACE::Container;
+            friend class ::XXX_NAMESPACE::dataTypes::Container;
 
             // Number of parameters (members of the HST).
             static constexpr SizeType N = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
@@ -269,10 +268,10 @@ namespace XXX_NAMESPACE
             //! Create a copy of another Pointer if their types are convertible.
             //!
             //! \tparam OtherT parameter pack (member types) of the other Pointer
-            //! \param pointer another Pointer
+            //! \param other another Pointer
             //!
             template <typename... OtherT>
-            Pointer(const Pointer<OtherT...>& pointer) : n_0(pointer.n_0), ptr(reinterpret_cast<ValueType*>(pointer.ptr))
+            Pointer(const Pointer<OtherT...>& other) : n_0(other.n_0), ptr(reinterpret_cast<ValueType*>(other.ptr))
             {
                 static_assert(::XXX_NAMESPACE::variadic::Pack<ValueType, OtherT...>::IsConvertible(), "error: types are not convertible");
             }
@@ -280,18 +279,18 @@ namespace XXX_NAMESPACE
             //!
             //! \brief Exchange this Pointer's members with another Pointer.
             //!
-            //! \param pointer another Pointer
+            //! \param other another Pointer
             //! \return this Pointer
             //!
-            inline auto Swap(Pointer& pointer) -> Pointer&
+            inline auto Swap(Pointer& other) -> Pointer&
             {
                 SizeType this_n_0 = n_0;
-                n_0 = pointer.n_0;
-                pointer.n_0 = this_n_0;
+                n_0 = other.n_0;
+                other.n_0 = this_n_0;
 
                 ValueType* this_ptr = ptr;
-                ptr = pointer.ptr;
-                pointer.ptr = this_ptr;
+                ptr = other.ptr;
+                other.ptr = this_ptr;
 
                 return *this;
             }
@@ -389,14 +388,13 @@ namespace XXX_NAMESPACE
                 //!
                 //! \tparam C_DataLayout the data layout
                 //! \tparam C_N the dimension of the SizeArray
-                //! \tparam Enable used for multi-versioning of this function depending on the data layout
                 //! \param n a SizeArray
                 //! \param alignment the alignment (bytes) to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
+                template <DataLayout C_DataLayout, SizeType C_N>
                 static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<(C_DataLayout != DataLayout::SoA && Enable), AllocationShape>
+                    -> std::enable_if_t<C_DataLayout != DataLayout::SoA, AllocationShape>
                 {
                     return {Padding(n[0], alignment), N * n.ReduceMul(1), alignment};
                 }
@@ -410,14 +408,13 @@ namespace XXX_NAMESPACE
                 //!
                 //! \tparam C_DataLayout the data layout
                 //! \tparam C_N the dimension of the SizeArray
-                //! \tparam Enable used for multi-versioning of this function depending on the data layout
                 //! \param n a SizeArray
                 //! \param alignment the alignment to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
+                template <DataLayout C_DataLayout, SizeType C_N>
                 static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<(C_DataLayout == DataLayout::SoA && Enable), AllocationShape>
+                    -> std::enable_if_t<C_DataLayout == DataLayout::SoA, AllocationShape>
                 {
                     return {Padding(n.ReduceMul(), alignment), N, alignment};
                 }
@@ -473,7 +470,7 @@ namespace XXX_NAMESPACE
             friend class MultiPointer;
 
             template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
-            friend class ::XXX_NAMESPACE::Container;
+            friend class ::XXX_NAMESPACE::dataTypes::Container;
 
             static constexpr SizeType One = static_cast<SizeType>(1);
 
@@ -607,10 +604,10 @@ namespace XXX_NAMESPACE
             //! Create a copy of another MultiPointer if their types are convertible.
             //!
             //! \tparam OtherT parameter pack (member types) of the other MultiPointer
-            //! \param pointer another MultiPointer
+            //! \param other another MultiPointer
             //!
             template <typename... OtherT>
-            MultiPointer(const MultiPointer<OtherT...>& pointer) : n_0x(pointer.n_0x), ptr(pointer.ptr)
+            MultiPointer(const MultiPointer<OtherT...>& other) : n_0x(other.n_0x), ptr(other.ptr)
             {
                 static_assert(::XXX_NAMESPACE::variadic::Pack<ValueType, OtherT...>::IsConvertible(), "error: types are not convertible");
             }
@@ -618,18 +615,18 @@ namespace XXX_NAMESPACE
             //!
             //! \brief Exchange this MultiPointer's members with another MultiPointer.
             //!
-            //! \param pointer another MultiPointer
+            //! \param other another MultiPointer
             //! \return this MultiPointer
             //!
-            inline auto swap(MultiPointer& pointer) -> MultiPointer&
+            inline auto swap(MultiPointer& other) -> MultiPointer&
             {
                 SizeType this_num_units = n_0x;
-                n_0x = pointer.n_0x;
-                pointer.n_0x = this_num_units;
+                n_0x = other.n_0x;
+                other.n_0x = this_num_units;
 
                 std::tuple<T*...> this_ptr = ptr;
-                ptr = pointer.ptr;
-                pointer.ptr = this_ptr;
+                ptr = other.ptr;
+                other.ptr = this_ptr;
 
                 return *this;
             }
@@ -720,7 +717,7 @@ namespace XXX_NAMESPACE
 
               public:
                 using AllocationShape = typename Base::template AllocationShape<RecordSize>;
-
+                
                 //!
                 //! \brief Get the allocation shape for given SizeArray (not SoA data layout).
                 //!
@@ -730,14 +727,13 @@ namespace XXX_NAMESPACE
                 //!
                 //! \tparam C_DataLayout the data layout
                 //! \tparam C_N the dimension of the SizeArray
-                //! \tparam Enable used for multi-versioning of this function depending on the data layout
                 //! \param n a SizeArray
                 //! \param alignment the alignment (bytes) to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
+                template <DataLayout C_DataLayout, SizeType C_N>
                 static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<(C_DataLayout != DataLayout::SoA && Enable), AllocationShape>
+                    -> std::enable_if_t<C_DataLayout != DataLayout::SoA, AllocationShape>
                 {
                     return {Padding(n[0], alignment), n.ReduceMul(1), alignment};
                 }
@@ -751,14 +747,13 @@ namespace XXX_NAMESPACE
                 //!
                 //! \tparam C_DataLayout the data layout
                 //! \tparam C_N the dimension of the SizeArray
-                //! \tparam Enable used for multi-versioning of this function depending on the data layout
                 //! \param n a SizeArray
                 //! \param alignment the alignment to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <DataLayout C_DataLayout, SizeType C_N, bool Enable = true>
+                template <DataLayout C_DataLayout, SizeType C_N>
                 static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<(C_DataLayout == DataLayout::SoA && Enable), AllocationShape>
+                    -> std::enable_if_t<C_DataLayout == DataLayout::SoA, AllocationShape>
                 {
                     return {Padding(n.ReduceMul(), alignment), 1, alignment};
                 }
