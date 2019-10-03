@@ -30,7 +30,7 @@ namespace XXX_NAMESPACE
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename T>
-        struct ProvidesProxyType
+        struct ProvidesProxy
         {
             static constexpr bool value = false;
         };
@@ -40,17 +40,16 @@ namespace XXX_NAMESPACE
         //! \brief Query information for data type T (particularly relevant for data layout stuff).
         //!
         //! \tparam T some type
-        //! \tparam C_Layout the data layout
+        //! \tparam Layout the data layout
         //! \tparam Enable template parameter used for multi-versioning
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, ::XXX_NAMESPACE::memory::DataLayout C_Layout, typename Enabled = void>
+        template <typename T, ::XXX_NAMESPACE::memory::DataLayout Layout, typename Enabled = void>
         struct Traits
         {
-            using Type = T;
-            using ConstType = const T;
-            using ProxyType = T;
-            using BasePointerType = typename ::XXX_NAMESPACE::memory::Pointer<T>;
+            using ConstT = const T;
+            using Proxy = T;
+            using BasePointer = typename ::XXX_NAMESPACE::memory::Pointer<T>;
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,16 +59,15 @@ namespace XXX_NAMESPACE
         //! Specialization for non-AoS data layouts.
         //!
         //! \tparam T some type
-        //! \tparam C_Layout the data layout
+        //! \tparam Layout the data layout
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, ::XXX_NAMESPACE::memory::DataLayout C_Layout>
-        struct Traits<T, C_Layout, std::enable_if_t<(C_Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && ProvidesProxyType<T>::value)>>
+        template <typename T, ::XXX_NAMESPACE::memory::DataLayout Layout>
+        struct Traits<T, Layout, std::enable_if_t<(Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && ProvidesProxy<T>::value)>>
         {
-            using Type = T;
-            using ConstType = const T;
-            using ProxyType = std::conditional_t<std::is_const<T>::value, typename T::ProxyType::ConstType, typename T::ProxyType>;
-            using BasePointerType = typename ProxyType::BasePointerType;
+            using ConstT = const T;
+            using Proxy = std::conditional_t<std::is_const<T>::value, typename T::Proxy::ConstT, typename T::Proxy>;
+            using BasePointer = typename Proxy::BasePointer;
         };
     } // namespace internal
 } // namespace XXX_NAMESPACE

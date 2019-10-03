@@ -28,7 +28,7 @@ namespace XXX_NAMESPACE
         namespace internal
         {
             // Forward declarations.
-            template <typename, SizeType, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::target>
+            template <typename, SizeT, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::target>
             class Container;
         }
     }
@@ -48,16 +48,14 @@ namespace XXX_NAMESPACE
             class AllocatorBase
             {
               protected:
-                static constexpr SizeType DefaultAlignment = SIMD_NAMESPACE::simd::alignment;
+                static constexpr SizeT DefaultAlignment = SIMD_NAMESPACE::simd::alignment;
 
                 //!
                 //! \brief Allocation shape type.
                 //!
-                template <SizeType C_UnitSize>
+                template <SizeT UnitSize>
                 struct AllocationShape
                 {
-                    static constexpr SizeType UnitSize = C_UnitSize;
-
                     //!
                     //! \brief Standard constructor.
                     //!
@@ -72,7 +70,7 @@ namespace XXX_NAMESPACE
                     //! \param num_stabs the number of stabs
                     //! \param alignment the alignment (bytes) used for padding of `n_0`
                     //!
-                    AllocationShape(const SizeType n_0, const SizeType num_stabs, const SizeType alignment) : n_0(n_0), num_stabs(num_stabs), alignment(alignment) {}
+                    AllocationShape(const SizeT n_0, const SizeT num_stabs, const SizeT alignment) : n_0(n_0), num_stabs(num_stabs), alignment(alignment) {}
 
                     //!
                     //! \brief Get the number of bytes of this allocation shape.
@@ -80,11 +78,11 @@ namespace XXX_NAMESPACE
                     //! \param allocation_shape the allocation shape
                     //! \return the number of bytes of the allocation shape
                     //!
-                    auto GetByteSize() const -> SizeType { return n_0 * num_stabs * C_UnitSize; }
+                    auto GetByteSize() const -> SizeT { return n_0 * num_stabs * UnitSize; }
 
-                    SizeType n_0;
-                    SizeType num_stabs;
-                    SizeType alignment;
+                    SizeT n_0;
+                    SizeT num_stabs;
+                    SizeT alignment;
                 };
 
               public:
@@ -93,13 +91,13 @@ namespace XXX_NAMESPACE
                 //!
                 //! NOTE: aligned_alloc results in a segfault here -> use _mm_malloc.
                 //!
-                //! \tparam C_Target the target platform memory should be allocated for/on
+                //! \tparam Target the target platform memory should be allocated for/on
                 //! \tparam AllocationShapeT the type of the allocation shape
                 //! \param allocation_shape the allocation shape used for the memory allocation
                 //! \return a pointer to memory according to the allocation shape
                 //!
-                template <::XXX_NAMESPACE::target C_Target, typename AllocationShapeT>
-                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<C_Target == ::XXX_NAMESPACE::target::Host, T*>::type
+                template <::XXX_NAMESPACE::target Target, typename AllocationShapeT>
+                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<Target == ::XXX_NAMESPACE::target::Host, T*>::type
                 {
                     return reinterpret_cast<T*>(_mm_malloc(allocation_shape.GetByteSize(), allocation_shape.alignment));
                 }
@@ -107,12 +105,12 @@ namespace XXX_NAMESPACE
                 //!
                 //! \brief Memory deallocation (Host).
                 //!
-                //! \tparam C_Target the target platform memory should be allocated for/on
+                //! \tparam Target the target platform memory should be allocated for/on
                 //! \tparam PointerT the type of the pointer
                 //! \param pointer a pointer variable
                 //!
-                template <::XXX_NAMESPACE::target C_Target, typename PointerT>
-                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<C_Target == ::XXX_NAMESPACE::target::Host, void>::type
+                template <::XXX_NAMESPACE::target Target, typename PointerT>
+                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<Target == ::XXX_NAMESPACE::target::Host, void>::type
                 {
                     if (pointer.GetBasePointer())
                     {
@@ -124,13 +122,13 @@ namespace XXX_NAMESPACE
                 //!
                 //! \brief Memory allocation (GPU).
                 //!
-                //! \tparam C_Target the target platform memory should be allocated for/on
+                //! \tparam Target the target platform memory should be allocated for/on
                 //! \tparam AllocationShapeT the type of the allocation shape
                 //! \param allocation_shape the allocation shape used for the memory allocation
                 //! \return a pointer to memory according to the allocation shape
                 //!
-                template <::XXX_NAMESPACE::target C_Target, typename AllocationShapeT>
-                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<C_Target == ::XXX_NAMESPACE::target::GPU_CUDA, T*>::type
+                template <::XXX_NAMESPACE::target Target, typename AllocationShapeT>
+                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<Target == ::XXX_NAMESPACE::target::GPU_CUDA, T*>::type
                 {
                     T* d_ptr = nullptr;
 
@@ -142,12 +140,12 @@ namespace XXX_NAMESPACE
                 //!
                 //! \brief Memory deallocation (GPU).
                 //!
-                //! \tparam C_Target the target platform memory should be allocated for/on
+                //! \tparam Target the target platform memory should be allocated for/on
                 //! \tparam PointerT the type of the pointer
                 //! \param pointer a pointer variable
                 //!
-                template <::XXX_NAMESPACE::target C_Target, typename PointerT>
-                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<C_Target == ::XXX_NAMESPACE::target::GPU_CUDA, void>::type
+                template <::XXX_NAMESPACE::target Target, typename PointerT>
+                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<Target == ::XXX_NAMESPACE::target::GPU_CUDA, void>::type
                 {
                     if (pointer.GetBasePointer())
                     {
@@ -166,7 +164,7 @@ namespace XXX_NAMESPACE
         //! dimensional case with different data layouts: AoS, SoA, SoAi.
         //!
         //! Idea: Multidimensional fields are contiguous sequences of stabs (innermost dimension n_0).
-        //! Stabs are separated by 'N x n_0' elements of type T, with N being the size of the parameter pack (for HSTs).
+        //! Stabs are separated by 'NumParameters x n_0' elements of type T, with NumParameters being the size of the parameter pack (for HSTs).
         //! All elements of the field can be Ated through jumping to the stab using a stab index and the
         //! base pointer to the 1st member of the 0th element of the field, and within the stab by adding
         //! a multiple of n_0 according to the member that should be Ated.
@@ -181,11 +179,11 @@ namespace XXX_NAMESPACE
         class Pointer
         {
             // Number of parameters (members of the HST).
-            static constexpr SizeType N = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
-            static_assert(N > 0, "error: empty parameter pack");
+            static constexpr SizeT NumParameters = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
+            static_assert(NumParameters > 0, "error: empty parameter pack");
 
             // All members have the same type: get this type.
-            using ValueType = typename ::XXX_NAMESPACE::variadic::Pack<T...>::template Type<0>;
+            using ValueT = typename ::XXX_NAMESPACE::variadic::Pack<T...>::template Type<0>;
 
             // Check if all types are the same (same size is sufficient).
             static constexpr bool IsHomogeneous = ::XXX_NAMESPACE::variadic::Pack<T...>::SameSize();
@@ -194,9 +192,9 @@ namespace XXX_NAMESPACE
             // Friend declarations.
             template <typename...>
             friend class Pointer;
-            template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
+            template <typename, SizeT, DataLayout, ::XXX_NAMESPACE::target>
             friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
-            friend class AllocatorBase<ValueType>;
+            friend class AllocatorBase<ValueT>;
 
             //!
             //! \brief Create a tuple of member references from the base pointer.
@@ -210,10 +208,10 @@ namespace XXX_NAMESPACE
             //! \param unnamed used for template paramter deduction
             //! \return a tuple of references (one reference for each member of the HST)
             //!
-            template <SizeType... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeType stab_index, const SizeType index, std::integer_sequence<SizeType, I...>) -> std::tuple<T&...>
+            template <SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::tuple<T&...>
             {
-                return {reinterpret_cast<T&>(ptr[(stab_index * N + I) * n_0 + index])...};
+                return {reinterpret_cast<T&>(ptr[(stab_index * NumParameters + I) * n_0 + index])...};
             }
 
             //!
@@ -228,10 +226,10 @@ namespace XXX_NAMESPACE
             //! \param unnamed used for template paramter deduction
             //! \return a tuple of references (one reference for each member of the HST)
             //!
-            template <SizeType... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeType stab_index, const SizeType index, std::integer_sequence<SizeType, I...>) const -> std::tuple<const T&...>
+            template <SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::tuple<const T&...>
             {
-                return {reinterpret_cast<const T&>(ptr[(stab_index * N + I) * n_0 + index])...};
+                return {reinterpret_cast<const T&>(ptr[(stab_index * NumParameters + I) * n_0 + index])...};
             }
 
             //!
@@ -239,14 +237,14 @@ namespace XXX_NAMESPACE
             //!
             //! \return the base pointer
             //!
-            inline auto GetBasePointer() -> ValueType* { return ptr; }
+            inline auto GetBasePointer() -> ValueT* { return ptr; }
 
             //!
             //! \brief Get the base pointer.
             //!
             //! \return the base pointer
             //!
-            inline auto GetBasePointer() const -> const ValueType* { return ptr; }
+            inline auto GetBasePointer() const -> const ValueT* { return ptr; }
 
           public:
             //!
@@ -264,7 +262,7 @@ namespace XXX_NAMESPACE
             //! \param ptr an external pointer that is used as the base pointer internally
             //! \param n_0 the innermost dimension of the field
             //!
-            Pointer(ValueType* ptr, const SizeType n_0) : n_0(n_0), ptr(ptr) { assert(ptr != nullptr); }
+            Pointer(ValueT* ptr, const SizeT n_0) : n_0(n_0), ptr(ptr) { assert(ptr != nullptr); }
 
             //!
             //! \brief Copy/conversion constructor.
@@ -275,9 +273,9 @@ namespace XXX_NAMESPACE
             //! \param other another Pointer
             //!
             template <typename... OtherT>
-            Pointer(const Pointer<OtherT...>& other) : n_0(other.n_0), ptr(reinterpret_cast<ValueType*>(other.ptr))
+            Pointer(const Pointer<OtherT...>& other) : n_0(other.n_0), ptr(reinterpret_cast<ValueT*>(other.ptr))
             {
-                static_assert(::XXX_NAMESPACE::variadic::Pack<ValueType, OtherT...>::IsConvertible(), "error: types are not convertible");
+                static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT, OtherT...>::IsConvertible(), "error: types are not convertible");
             }
 
             //!
@@ -288,11 +286,11 @@ namespace XXX_NAMESPACE
             //!
             inline auto Swap(Pointer& other) -> Pointer&
             {
-                SizeType this_n_0 = n_0;
+                SizeT this_n_0 = n_0;
                 n_0 = other.n_0;
                 other.n_0 = this_n_0;
 
-                ValueType* this_ptr = ptr;
+                ValueT* this_ptr = ptr;
                 ptr = other.ptr;
                 other.ptr = this_ptr;
 
@@ -309,7 +307,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeType index) { return GetValues(0, index, std::make_integer_sequence<SizeType, N>{}); }
+            inline auto At(const SizeT index) { return GetValues(0, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -321,7 +319,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeType index) const { return GetValues(0, index, std::make_integer_sequence<SizeType, N>{}); }
+            inline auto At(const SizeT index) const { return GetValues(0, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -334,7 +332,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeType stab_index, const SizeType index) { return GetValues(stab_index, index, std::make_integer_sequence<SizeType, N>{}); }
+            inline auto At(const SizeT stab_index, const SizeT index) { return GetValues(stab_index, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -347,7 +345,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeType stab_index, const SizeType index) const { return GetValues(stab_index, index, std::make_integer_sequence<SizeType, N>{}); }
+            inline auto At(const SizeT stab_index, const SizeT index) const { return GetValues(stab_index, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
 
             //!
             //! \brief An allocator class.
@@ -355,11 +353,11 @@ namespace XXX_NAMESPACE
             //! This class implements data allocation and deallocation functionality Padding and data alignment
             //! for the different target platforms.
             //!
-            class Allocator : public AllocatorBase<ValueType>
+            class Allocator : public AllocatorBase<ValueT>
             {
-                using Base = AllocatorBase<ValueType>;
+                using Base = AllocatorBase<ValueT>;
 
-                static constexpr SizeType DefaultAlignment = Base::DefaultAlignment;
+                static constexpr SizeT DefaultAlignment = Base::DefaultAlignment;
 
                 //!
                 //! \brief Pad the value of n to a given alignment.
@@ -368,17 +366,17 @@ namespace XXX_NAMESPACE
                 //! \param alignment the alignment
                 //! \return `n` padded to `alignment`
                 //!
-                static auto Padding(const SizeType n, const SizeType alignment = DefaultAlignment)
+                static auto Padding(const SizeT n, const SizeT alignment = DefaultAlignment)
                 {
                     assert(::XXX_NAMESPACE::math::IsPowerOf<2>(alignment));
 
-                    const SizeType n_unit = ::XXX_NAMESPACE::math::LeastCommonMultiple(alignment, static_cast<SizeType>(sizeof(ValueType))) / static_cast<SizeType>(sizeof(ValueType));
+                    const SizeT n_unit = ::XXX_NAMESPACE::math::LeastCommonMultiple(alignment, static_cast<SizeT>(sizeof(ValueT))) / static_cast<SizeT>(sizeof(ValueT));
 
                     return ((n + n_unit - 1) / n_unit) * n_unit;
                 }
 
               public:
-                using AllocationShape = typename Base::template AllocationShape<sizeof(ValueType)>;
+                using AllocationShape = typename Base::template AllocationShape<sizeof(ValueT)>;
 
                 //!
                 //! \brief Get the allocation shape for given SizeArray (not SoA data layout).
@@ -387,17 +385,17 @@ namespace XXX_NAMESPACE
                 //!     1st component: innermost extent of the SizeArray padded according to the alignment.
                 //!     2nd component: product of all other extents and the number of members of the HST (the number of stabs).
                 //!
-                //! \tparam C_DataLayout the data layout
-                //! \tparam C_N the dimension of the SizeArray
+                //! \tparam Layout the data layout
+                //! \tparam N the dimension of the SizeArray
                 //! \param n a SizeArray
                 //! \param alignment the alignment (bytes) to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <DataLayout C_DataLayout, SizeType C_N>
-                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<C_DataLayout != DataLayout::SoA, AllocationShape>
+                template <DataLayout Layout, SizeT N>
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
+                    -> std::enable_if_t<Layout != DataLayout::SoA, AllocationShape>
                 {
-                    return {Padding(n[0], alignment), N * n.ReduceMul(1), alignment};
+                    return {Padding(n[0], alignment), NumParameters * n.ReduceMul(1), alignment};
                 }
 
                 //!
@@ -407,46 +405,46 @@ namespace XXX_NAMESPACE
                 //!     1st component: total number of elements in SizeArray padded according to the alignment.
                 //!     2nd component: number of members of the HST.
                 //!
-                //! \tparam C_DataLayout the data layout
-                //! \tparam C_N the dimension of the SizeArray
+                //! \tparam Layout the data layout
+                //! \tparam N the dimension of the SizeArray
                 //! \param n a SizeArray
                 //! \param alignment the alignment to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <DataLayout C_DataLayout, SizeType C_N>
-                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<C_DataLayout == DataLayout::SoA, AllocationShape>
+                template <DataLayout Layout, SizeT N>
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
+                    -> std::enable_if_t<Layout == DataLayout::SoA, AllocationShape>
                 {
-                    return {Padding(n.ReduceMul(), alignment), N, alignment};
+                    return {Padding(n.ReduceMul(), alignment), NumParameters, alignment};
                 }
             };
 
           private:
             // Extent of the innermost dimension (w.r.t. a multidimensional field declaration).
-            SizeType n_0;
+            SizeT n_0;
             // Base pointer.
-            ValueType* ptr;
+            ValueT* ptr;
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //
-        // N-dimensional homogeneous structured type (HST).
+        // NumParameters-dimensional homogeneous structured type (HST).
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         namespace
         {
-            // Defines 'template <T, N> struct TypeGen {..};'.
+            // Defines 'template <T, NumParameters> struct TypeGen {..};'.
             MACRO_TYPE_GEN(::XXX_NAMESPACE::memory::Pointer);
         } // namespace
 
         //!
-        //! \brief A homogeneous structured type witn `C_N` members.
+        //! \brief A homogeneous structured type witn `N` members.
         //!
         //! \tparam T the type of the members
-        //! \tparam C_N the number of members
+        //! \tparam N the number of members
         //!
-        template <typename T, SizeType C_N>
-        using PointerN = typename TypeGen<T, C_N>::Type;
+        template <typename T, SizeT N>
+        using PointerN = typename TypeGen<T, N>::Type;
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
@@ -468,31 +466,31 @@ namespace XXX_NAMESPACE
         class MultiPointer
         {
             // Number of parameters (members of the HST).
-            static constexpr SizeType N = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
-            static_assert(N > 0, "error: empty parameter pack");
+            static constexpr SizeT NumParameters = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
+            static_assert(NumParameters > 0, "error: empty parameter pack");
 
             // All members have different type: use std::uint8_t as the base pointer type.
-            using ValueType = std::uint8_t;
+            using ValueT = std::uint8_t;
 
             // All members have the same type: we don't want that here.
             static constexpr bool IsHomogeneous = ::XXX_NAMESPACE::variadic::Pack<T...>::SameSize();
             static_assert(!IsHomogeneous, "error: use the Pointer instead");
 
             // Find out the byte-size of the largest parameter type.
-            static constexpr SizeType SizeOfLargestParameter = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfLargestParameter();
+            static constexpr SizeT SizeOfLargestParameter = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfLargestParameter();
 
             // Size of the inhomogeneous structured type.
-            static constexpr SizeType RecordSize = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfPack();
+            static constexpr SizeT RecordSize = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfPack();
 
             // The member type sizes in relative to the size of the largest paramter type.
-            static constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<N> SizeScalingFactor{(SizeOfLargestParameter / sizeof(T))...};
+            static constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<NumParameters> SizeScalingFactor{(SizeOfLargestParameter / sizeof(T))...};
 
             // Friend declarations.
             template <typename... X>
             friend class MultiPointer;
-            template <typename, SizeType, DataLayout, ::XXX_NAMESPACE::target>
+            template <typename, SizeT, DataLayout, ::XXX_NAMESPACE::target>
             friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
-            friend class AllocatorBase<ValueType>;
+            friend class AllocatorBase<ValueT>;
 
             //!
             //! \brief Create a tuple of (base) pointers from a pointer.
@@ -506,11 +504,11 @@ namespace XXX_NAMESPACE
             //! \param unnamed used for template paramter deduction
             //! \return a tuple of (base) pointers (one pointer for each member of the IST)
             //!
-            template <SizeType... I>
-            inline auto make_pointer_tuple(ValueType* ptr, const SizeType n_0, std::integer_sequence<SizeType, I...>) -> std::tuple<T*...>
+            template <SizeT... I>
+            inline auto make_pointer_tuple(ValueT* ptr, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::tuple<T*...>
             {
                 // (Exclusive) prefix sums over the byte-sizes of the member types of the IST.
-                constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<N> Offset = ::XXX_NAMESPACE::math::PrefixSum(::XXX_NAMESPACE::dataTypes::SizeArray<N>{sizeof(T)...});
+                constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<NumParameters> Offset = ::XXX_NAMESPACE::math::PrefixSum(::XXX_NAMESPACE::dataTypes::SizeArray<NumParameters>{sizeof(T)...});
 
                 return {reinterpret_cast<T*>(&ptr[Offset[I] * n_0])...};
             }
@@ -531,8 +529,8 @@ namespace XXX_NAMESPACE
             //! \param unnamed used for template paramter deduction
             //! \return a tuple of references (one reference for each member of the HST)
             //!
-            template <SizeType... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeType stab_index, const SizeType index, std::integer_sequence<SizeType, I...>) -> std::tuple<T&...>
+            template <SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::tuple<T&...>
             {
                 return {std::get<I>(ptr)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
             }
@@ -553,8 +551,8 @@ namespace XXX_NAMESPACE
             //! \param unnamed used for template paramter deduction
             //! \return a tuple of references (one reference for each member of the HST)
             //!
-            template <SizeType... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeType stab_index, const SizeType index, std::integer_sequence<SizeType, I...>) const -> std::tuple<const T&...>
+            template <SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::tuple<const T&...>
             {
                 return {std::get<I>(ptr)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
             }
@@ -564,14 +562,14 @@ namespace XXX_NAMESPACE
             //!
             //! \return the base pointer
             //!
-            inline auto GetBasePointer() -> ValueType* { return reinterpret_cast<ValueType*>(std::get<0>(ptr)); }
+            inline auto GetBasePointer() -> ValueT* { return reinterpret_cast<ValueT*>(std::get<0>(ptr)); }
 
             //!
             //! \brief Get the base pointer.
             //!
             //! \return the base pointer
             //!
-            inline auto GetBasePointer() const -> const ValueType* { return reinterpret_cast<const ValueType*>(std::get<0>(ptr)); }
+            inline auto GetBasePointer() const -> const ValueT* { return reinterpret_cast<const ValueT*>(std::get<0>(ptr)); }
 
           public:
             //!
@@ -589,7 +587,7 @@ namespace XXX_NAMESPACE
             //! \param ptr an external pointer that is used as the base pointer internally (it is the 0th element of the pointer tuple)
             //! \param n_0 the innermost dimension of the field
             //!
-            MultiPointer(ValueType* ptr, const SizeType n_0) : n_0x((n_0 * RecordSize) / SizeOfLargestParameter), ptr(make_pointer_tuple(ptr, n_0, std::make_integer_sequence<SizeType, N>{}))
+            MultiPointer(ValueT* ptr, const SizeT n_0) : n_0x((n_0 * RecordSize) / SizeOfLargestParameter), ptr(make_pointer_tuple(ptr, n_0, std::make_integer_sequence<SizeT, NumParameters>{}))
             {
                 assert(ptr != nullptr);
                 assert(((n_0 * RecordSize) % SizeOfLargestParameter) == 0);
@@ -606,7 +604,7 @@ namespace XXX_NAMESPACE
             template <typename... OtherT>
             MultiPointer(const MultiPointer<OtherT...>& other) : n_0x(other.n_0x), ptr(other.ptr)
             {
-                static_assert(::XXX_NAMESPACE::variadic::Pack<ValueType, OtherT...>::IsConvertible(), "error: types are not convertible");
+                static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT, OtherT...>::IsConvertible(), "error: types are not convertible");
             }
 
             //!
@@ -615,9 +613,9 @@ namespace XXX_NAMESPACE
             //! \param other another MultiPointer
             //! \return this MultiPointer
             //!
-            inline auto swap(MultiPointer& other) -> MultiPointer&
+            inline auto Swap(MultiPointer& other) -> MultiPointer&
             {
-                SizeType this_num_units = n_0x;
+                SizeT this_num_units = n_0x;
                 n_0x = other.n_0x;
                 other.n_0x = this_num_units;
 
@@ -638,7 +636,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeType index) { return GetValues(0, index, std::make_integer_sequence<SizeType, N>{}); }
+            inline auto At(const SizeT index) { return GetValues(0, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -650,7 +648,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeType index) const { return GetValues(0, index, std::make_integer_sequence<SizeType, N>{}); }
+            inline auto At(const SizeT index) const { return GetValues(0, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -663,7 +661,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeType stab_index, const SizeType index) { return GetValues(stab_index, index, std::make_integer_sequence<SizeType, N>{}); }
+            inline auto At(const SizeT stab_index, const SizeT index) { return GetValues(stab_index, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -676,7 +674,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeType stab_index, const SizeType index) const { return GetValues(stab_index, index, std::make_integer_sequence<SizeType, N>{}); }
+            inline auto At(const SizeT stab_index, const SizeT index) const { return GetValues(stab_index, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
 
             //!
             //! \brief An allocator class.
@@ -684,11 +682,11 @@ namespace XXX_NAMESPACE
             //! This class implements data allocation and deallocation functionality Padding and data alignment
             //! for the different target platforms.
             //!
-            class Allocator : public AllocatorBase<ValueType>
+            class Allocator : public AllocatorBase<ValueT>
             {
-                using Base = AllocatorBase<ValueType>;
+                using Base = AllocatorBase<ValueT>;
 
-                static constexpr SizeType DefaultAlignment = Base::DefaultAlignment;
+                static constexpr SizeT DefaultAlignment = Base::DefaultAlignment;
 
                 //!
                 //! \brief Pad the value of n to a given alignment.
@@ -697,17 +695,17 @@ namespace XXX_NAMESPACE
                 //! \param alignment the alignment
                 //! \return `n` padded to `alignment`
                 //!
-                static auto Padding(const SizeType n, const SizeType alignment = DefaultAlignment)
+                static auto Padding(const SizeT n, const SizeT alignment = DefaultAlignment)
                 {
                     assert(::XXX_NAMESPACE::math::IsPowerOf<2>(alignment));
 
-                    constexpr SizeType One = static_cast<SizeType>(1);
+                    constexpr SizeT One = static_cast<SizeT>(1);
                     // Determine the total byte-size of all data members that have a size different from (smaller than) the largest parameter type.
-                    constexpr SizeType SizeRest = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfPackExcludingLargestParameter();
+                    constexpr SizeT SizeRest = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfPackExcludingLargestParameter();
                     // Determine the number of ISTs that is needed so that their overall size is an integral multiple of each data member type.
-                    constexpr SizeType RecordPaddingFactor = std::max(One, ::XXX_NAMESPACE::math::LeastCommonMultiple(SizeOfLargestParameter, SizeRest) / std::max(One, SizeRest));
-                    const SizeType parameter_padding_factor = ::XXX_NAMESPACE::math::LeastCommonMultiple(alignment, SizeOfLargestParameter) / SizeOfLargestParameter;
-                    const SizeType n_unit = ::XXX_NAMESPACE::math::LeastCommonMultiple(RecordPaddingFactor, parameter_padding_factor);
+                    constexpr SizeT RecordPaddingFactor = std::max(One, ::XXX_NAMESPACE::math::LeastCommonMultiple(SizeOfLargestParameter, SizeRest) / std::max(One, SizeRest));
+                    const SizeT parameter_padding_factor = ::XXX_NAMESPACE::math::LeastCommonMultiple(alignment, SizeOfLargestParameter) / SizeOfLargestParameter;
+                    const SizeT n_unit = ::XXX_NAMESPACE::math::LeastCommonMultiple(RecordPaddingFactor, parameter_padding_factor);
 
                     return ((n + n_unit - 1) / n_unit) * n_unit;
                 }
@@ -722,15 +720,15 @@ namespace XXX_NAMESPACE
                 //!     1st component: innermost extent of the SizeArray padded according to the alignment.
                 //!     2nd component: product of all other extents (the number of stabs).
                 //!
-                //! \tparam C_DataLayout the data layout
-                //! \tparam C_N the dimension of the SizeArray
+                //! \tparam Layout the data layout
+                //! \tparam N the dimension of the SizeArray
                 //! \param n a SizeArray
                 //! \param alignment the alignment (bytes) to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <DataLayout C_DataLayout, SizeType C_N>
-                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<C_DataLayout != DataLayout::SoA, AllocationShape>
+                template <DataLayout Layout, SizeT N>
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
+                    -> std::enable_if_t<Layout != DataLayout::SoA, AllocationShape>
                 {
                     return {Padding(n[0], alignment), n.ReduceMul(1), alignment};
                 }
@@ -742,15 +740,15 @@ namespace XXX_NAMESPACE
                 //!     1st component: total number of elements in SizeArray padded according to the alignment.
                 //!     2nd component: 1
                 //!
-                //! \tparam C_DataLayout the data layout
-                //! \tparam C_N the dimension of the SizeArray
+                //! \tparam Layout the data layout
+                //! \tparam N the dimension of the SizeArray
                 //! \param n a SizeArray
                 //! \param alignment the alignment to be used for the padding of the innermost extent of `n`
                 //! \return an allocation shape
                 //!
-                template <DataLayout C_DataLayout, SizeType C_N>
-                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& n, const SizeType alignment = DefaultAlignment)
-                    -> std::enable_if_t<C_DataLayout == DataLayout::SoA, AllocationShape>
+                template <DataLayout Layout, SizeT N>
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
+                    -> std::enable_if_t<Layout == DataLayout::SoA, AllocationShape>
                 {
                     return {Padding(n.ReduceMul(), alignment), 1, alignment};
                 }
@@ -758,7 +756,7 @@ namespace XXX_NAMESPACE
 
           private:
             // Extent of the innermost dimension (w.r.t. a multidimensional field declaration).
-            SizeType n_0x;
+            SizeT n_0x;
             // Base pointers (of different type).
             std::tuple<T*...> ptr;
         };

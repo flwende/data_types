@@ -76,34 +76,34 @@ namespace XXX_NAMESPACE
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
-        //! \brief Power of C_N test.
+        //! \brief Power of N test.
         //!
-        //! \tparam C_N the base
+        //! \tparam N the base
         //! \tparam T the argument type (must be an unsigned integer)
         //! \param x argument
-        //! \return `true` if `x` is power of `C_N`, otherwise `false`
+        //! \return `true` if `x` is power of `N`, otherwise `false`
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <SizeType C_N, typename T>
+        template <SizeT N, typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
         constexpr auto IsPowerOf(T x)
         {
             static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
-            static_assert(C_N > 0, "error: C_N must be at least 1");
+            static_assert(N > 0, "error: N must be at least 1");
 
-            if (x == 1 || x == C_N)
+            if (x == 1 || x == N)
                 return true;
 
-            if (x <= 0 || x < C_N || C_N == 1)
+            if (x <= 0 || x < N || N == 1)
                 return false;
 
             while (true)
             {
-                if (x == 0 || x % C_N)
+                if (x == 0 || x % N)
                     return false;
 
-                x /= C_N;
+                x /= N;
 
                 if (x == 1)
                     return true;
@@ -114,19 +114,19 @@ namespace XXX_NAMESPACE
         //!
         //! \brief Prefix sum calculation.
         //!
-        //! \tparam C_N the array extent
+        //! \tparam N the array extent
         //! \param x argument
         //! \return an array holding the prefix sums
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <SizeType C_N>
+        template <SizeT N>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        constexpr auto PrefixSum(const ::XXX_NAMESPACE::dataTypes::SizeArray<C_N>& x)
+        constexpr auto PrefixSum(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& x)
         {
-            ::XXX_NAMESPACE::dataTypes::SizeArray<C_N> y{0};
+            ::XXX_NAMESPACE::dataTypes::SizeArray<N> y{0};
 
-            for (SizeType i = 1; i < C_N; ++i)
+            for (SizeT i = 1; i < N; ++i)
             {
                 y[i] = y[i - 1] + x[i - 1];
             }

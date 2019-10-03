@@ -50,7 +50,7 @@ namespace SIMD_NAMESPACE
     namespace simd
     {
         //! Memory alignment
-        static constexpr SizeType alignment = SIMD_ALIGNMENT;
+        static constexpr SizeT alignment = SIMD_ALIGNMENT;
 
         //! \brief Test for which fundamental data types there is SIMD equivalents
         //!
@@ -99,7 +99,7 @@ namespace SIMD_NAMESPACE
         template <>                                     \
         struct type<TYPE>                               \
         {                                               \
-            static constexpr SizeType width = SW;    \
+            static constexpr SizeT width = SW;    \
         };                                              \
 
     #define MACRO_C(TYPE, SW)                           \

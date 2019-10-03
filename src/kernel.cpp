@@ -22,7 +22,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd        
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 y[i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[i], ::fw::math::Func<element_type>::exp(x_2[i])));
             }
@@ -36,13 +36,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     y[j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[j][i], ::fw::math::Func<element_type>::exp(x_2[j][i])));
                 }
@@ -57,15 +57,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         y[k][j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[k][j][i], ::fw::math::Func<element_type>::exp(x_2[k][j][i])));
                     }
@@ -81,17 +81,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         y[index] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[index], ::fw::math::Func<element_type>::exp(x_2[index])));
                     }
                 }
@@ -110,7 +110,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::exp(x[i].y);
@@ -128,13 +128,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::exp(x[j][i].y);
@@ -153,15 +153,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::exp(x[k][j][i].y);
@@ -181,17 +181,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::exp(x[index].y);
                         #else
@@ -214,7 +214,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::log(x[i].y);
@@ -232,13 +232,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::log(x[j][i].y);
@@ -257,15 +257,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::log(x[k][j][i].y);
@@ -285,17 +285,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::log(x[index].y);
                         #else
@@ -318,7 +318,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::exp(x[i].y);
@@ -336,13 +336,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::exp(x[j][i].y);
@@ -361,15 +361,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::exp(x[k][j][i].y);
@@ -389,17 +389,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::exp(x[index].y);
                         #else
@@ -422,7 +422,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::log(x[i].y);
@@ -440,13 +440,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::log(x[j][i].y);
@@ -465,15 +465,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::log(x[k][j][i].y);
@@ -493,17 +493,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::log(x[index].y);
                         #else
@@ -528,7 +528,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd        
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 y[i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[i], ::fw::math::Func<element_type>::exp(x_2[i])));
             }
@@ -542,13 +542,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     y[j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[j][i], ::fw::math::Func<element_type>::exp(x_2[j][i])));
                 }
@@ -563,15 +563,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         y[k][j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[k][j][i], ::fw::math::Func<element_type>::exp(x_2[k][j][i])));
                     }
@@ -587,17 +587,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         y[index] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[index], ::fw::math::Func<element_type>::exp(x_2[index])));
                     }
                 }
@@ -616,7 +616,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::exp(x[i].y);
@@ -634,13 +634,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::exp(x[j][i].y);
@@ -659,15 +659,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::exp(x[k][j][i].y);
@@ -687,17 +687,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::exp(x[index].y);
                         #else
@@ -720,7 +720,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::log(x[i].y);
@@ -738,13 +738,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::log(x[j][i].y);
@@ -763,15 +763,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::log(x[k][j][i].y);
@@ -791,17 +791,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::log(x[index].y);
                         #else
@@ -824,7 +824,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::exp(x[i].y);
@@ -842,13 +842,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::exp(x[j][i].y);
@@ -867,15 +867,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::exp(x[k][j][i].y);
@@ -895,17 +895,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::exp(x[index].y);
                         #else
@@ -928,7 +928,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::log(x[i].y);
@@ -946,13 +946,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::log(x[j][i].y);
@@ -971,15 +971,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::log(x[k][j][i].y);
@@ -999,17 +999,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::log(x[index].y);
                         #else
@@ -1034,7 +1034,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd        
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 y[i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[i], ::fw::math::Func<element_type>::exp(x_2[i])));
             }
@@ -1048,13 +1048,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     y[j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[j][i], ::fw::math::Func<element_type>::exp(x_2[j][i])));
                 }
@@ -1069,15 +1069,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         y[k][j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[k][j][i], ::fw::math::Func<element_type>::exp(x_2[k][j][i])));
                     }
@@ -1093,17 +1093,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         y[index] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[index], ::fw::math::Func<element_type>::exp(x_2[index])));
                     }
                 }
@@ -1122,7 +1122,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::exp(x[i].y);
@@ -1140,13 +1140,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::exp(x[j][i].y);
@@ -1165,15 +1165,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::exp(x[k][j][i].y);
@@ -1193,17 +1193,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::exp(x[index].y);
                         #else
@@ -1226,7 +1226,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::log(x[i].y);
@@ -1244,13 +1244,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::log(x[j][i].y);
@@ -1269,15 +1269,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::log(x[k][j][i].y);
@@ -1297,17 +1297,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::log(x[index].y);
                         #else
@@ -1330,7 +1330,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::exp(x[i].y);
@@ -1348,13 +1348,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::exp(x[j][i].y);
@@ -1373,15 +1373,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::exp(x[k][j][i].y);
@@ -1401,17 +1401,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::exp(x[index].y);
                         #else
@@ -1434,7 +1434,7 @@ using namespace fw;
             #pragma forceinline recursive
             #endif
             #pragma omp simd
-            for (SizeType i = 0; i < n[0]; ++i)
+            for (SizeT i = 0; i < n[0]; ++i)
             {
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::log(x[i].y);
@@ -1452,13 +1452,13 @@ using namespace fw;
         {
             double time = omp_get_wtime();
             
-            for (SizeType j = 0; j < n[1]; ++j)
+            for (SizeT j = 0; j < n[1]; ++j)
             {
                 #if defined(__INTEL_COMPILER)
                 #pragma forceinline recursive
                 #endif
                 #pragma omp simd
-                for (SizeType i = 0; i < n[0]; ++i)
+                for (SizeT i = 0; i < n[0]; ++i)
                 {
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::log(x[j][i].y);
@@ -1477,15 +1477,15 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::log(x[k][j][i].y);
@@ -1505,17 +1505,17 @@ using namespace fw;
         {
             double time = omp_get_wtime();
 
-            for (SizeType k = 0; k < n[2]; ++k)
+            for (SizeT k = 0; k < n[2]; ++k)
             {
-                for (SizeType j = 0; j < n[1]; ++j)
+                for (SizeT j = 0; j < n[1]; ++j)
                 {
                     #if defined(__INTEL_COMPILER)
                     #pragma forceinline recursive
                     #endif
                     #pragma omp simd
-                    for (SizeType i = 0; i < n[0]; ++i)
+                    for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        const SizeType index = (k * n[1] + j) * n[0] + i;
+                        const SizeT index = (k * n[1] + j) * n[0] + i;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::log(x[index].y);
                         #else

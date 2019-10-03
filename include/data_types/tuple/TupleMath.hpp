@@ -23,9 +23,9 @@ namespace XXX_NAMESPACE
     {
     #define MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                               \
         template <typename T_1, typename T_2, typename T_3, typename T_4, typename T_5, typename T_6,                                           \
-                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::StrongerTypeUnqualified,                                \
-                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_5>::StrongerTypeUnqualified,                                \
-                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_6>::StrongerTypeUnqualified>                                \
+                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
+                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_5>::UnqualifiedStrongerT,                                \
+                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_6>::UnqualifiedStrongerT>                                \
         inline tuple<X_1, X_2, X_3> operator OP (IN_T_1<T_1, T_2, T_3>& x_1, IN_T_2<T_4, T_5, T_6>& x_2)                                        \
         {                                                                                                                                       \
             tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \
@@ -56,9 +56,9 @@ namespace XXX_NAMESPACE
 
     #define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
         template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::StrongerTypeUnqualified,                                \
-                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::StrongerTypeUnqualified,                                \
-                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::StrongerTypeUnqualified>                                \
+                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
+                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::UnqualifiedStrongerT,                                \
+                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::UnqualifiedStrongerT>                                \
         inline tuple<X_1, X_2, X_3> operator OP (IN_T<T_1, T_2, T_3>& x_1, const T_4 x_2)                                                       \
         {                                                                                                                                       \
             tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \
@@ -67,9 +67,9 @@ namespace XXX_NAMESPACE
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::StrongerTypeUnqualified,                                \
-                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_3>::StrongerTypeUnqualified,                                \
-                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::StrongerTypeUnqualified>                                \
+                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT,                                \
+                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_3>::UnqualifiedStrongerT,                                \
+                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT>                                \
         inline tuple<X_1, X_2, X_3> operator OP (const T_1 x_1, IN_T<T_2, T_3, T_4>& x_2)                                                       \
         {                                                                                                                                       \
             tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \
@@ -131,18 +131,18 @@ namespace XXX_NAMESPACE
 
     #define MACRO_UNQUALIFIED(IN_T_1, IN_T_2)                                                                                                   \
         template <typename T_1, typename T_2, typename T_3, typename T_4, typename T_5, typename T_6,                                           \
-                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::StrongerTypeUnqualified,                                \
-                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_5>::StrongerTypeUnqualified,                                \
-                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_6>::StrongerTypeUnqualified>                                \
+                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
+                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_5>::UnqualifiedStrongerT,                                \
+                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_6>::UnqualifiedStrongerT>                                \
         inline tuple<X_1, X_2, X_3> cross_product(IN_T_1<T_1, T_2, T_3>& x_1, IN_T_2<T_4, T_5, T_6>& x_2)                                       \
         {                                                                                                                                       \
             return tuple<X_1, X_2, X_3>(x_1.y * x_2.z - x_1.z * x_2.y, x_1.z * x_2.x - x_1.x * x_2.z, x_1.x * x_2.y - x_1.y * x_2.x);           \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2, typename T_3, typename T_4, typename T_5, typename T_6,                                           \
-                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::StrongerTypeUnqualified,                                \
-                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_5>::StrongerTypeUnqualified,                                \
-                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_6>::StrongerTypeUnqualified>                                \
+                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
+                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_5>::UnqualifiedStrongerT,                                \
+                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_6>::UnqualifiedStrongerT>                                \
         inline tuple<X_1, X_2, X_3> cross(IN_T_1<T_1, T_2, T_3>& x_1, IN_T_2<T_4, T_5, T_6>& x_2)                                               \
         {                                                                                                                                       \
             return cross_product(x_1, x_2);                                                                                                     \
@@ -168,36 +168,36 @@ namespace XXX_NAMESPACE
 
     #define MACRO_UNQUALIFIED(IN_T)                                                                                                             \
         template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::StrongerTypeUnqualified,                                \
-                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::StrongerTypeUnqualified,                                \
-                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::StrongerTypeUnqualified>                                \
+                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
+                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::UnqualifiedStrongerT,                                \
+                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::UnqualifiedStrongerT>                                \
         inline tuple<X_1, X_2, X_3> cross_product(IN_T<T_1, T_2, T_3>& x_1, const T_4 x_2)                                                      \
         {                                                                                                                                       \
             return tuple<X_1, X_2, X_3>(x_1.y - x_1.z, x_1.z - x_1.x, x_1.x - x_1.y) * x_2;                                                     \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::StrongerTypeUnqualified,                                \
-                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::StrongerTypeUnqualified,                                \
-                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::StrongerTypeUnqualified>                                \
+                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
+                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::UnqualifiedStrongerT,                                \
+                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::UnqualifiedStrongerT>                                \
         inline tuple<X_1, X_2, X_3> cross_product(const T_1 x_1, IN_T<T_2, T_2, T_3>& x_2)                                                      \
         {                                                                                                                                       \
             return x_1 * tuple<X_1, X_2, X_3>(x_2.z - x_2.y, x_2.x - x_2.z, x_2.y - x_2.x);                                                     \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::StrongerTypeUnqualified,                                \
-                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::StrongerTypeUnqualified,                                \
-                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::StrongerTypeUnqualified>                                \
+                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
+                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::UnqualifiedStrongerT,                                \
+                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::UnqualifiedStrongerT>                                \
         inline tuple<X_1, X_2, X_3> cross(IN_T<T_1, T_2, T_3>& x_1, const T_4 x_2)                                                              \
         {                                                                                                                                       \
             return cross_product(x_1, x_2);                                                                                                     \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::StrongerTypeUnqualified,                                \
-                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::StrongerTypeUnqualified,                                \
-                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::StrongerTypeUnqualified>                                \
+                typename X_1 = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
+                typename X_2 = typename XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::UnqualifiedStrongerT,                                \
+                typename X_3 = typename XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::UnqualifiedStrongerT>                                \
         inline tuple<X_1, X_2, X_3> cross(const T_1 x_1, IN_T<T_2, T_2, T_3>& x_2)                                                              \
         {                                                                                                                                       \
             return cross_product(x_1, x_2);                                                                                                     \

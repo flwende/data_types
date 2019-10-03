@@ -8,16 +8,16 @@
 #include <vector>
 #include <kernel.hpp>
 
-constexpr SizeType NX_DEFAULT = 128;
-constexpr SizeType NY_DEFAULT = 128;
-constexpr SizeType NZ_DEFAULT = 128;
+constexpr SizeT NX_DEFAULT = 128;
+constexpr SizeT NY_DEFAULT = 128;
+constexpr SizeT NZ_DEFAULT = 128;
 
 #if defined(CHECK_RESULTS)
-constexpr SizeType WARMUP = 0;
-constexpr SizeType MEASUREMENT = 1;
+constexpr SizeT WARMUP = 0;
+constexpr SizeT MEASUREMENT = 1;
 #else
-constexpr SizeType WARMUP = 10;
-constexpr SizeType MEASUREMENT = 20;
+constexpr SizeT WARMUP = 10;
+constexpr SizeT MEASUREMENT = 20;
 #endif
 
 constexpr double SPREAD = 1.0;
@@ -26,11 +26,11 @@ constexpr double OFFSET = 3.0;
 int main(int argc, char** argv)
 {
     // command line arguments
-    SizeType dim = 0;
-    const SizeType nx = (argc > 1 ? atoi(argv[++dim]) : NX_DEFAULT);
-    const SizeType ny = (argc > 2 ? atoi(argv[++dim]) : NY_DEFAULT);
-    const SizeType nz = (argc > 3 ? atoi(argv[++dim]) : NZ_DEFAULT);
-    const SizeType print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, static_cast<SizeType>(12)));
+    SizeT dim = 0;
+    const SizeT nx = (argc > 1 ? atoi(argv[++dim]) : NX_DEFAULT);
+    const SizeT ny = (argc > 2 ? atoi(argv[++dim]) : NY_DEFAULT);
+    const SizeT nz = (argc > 3 ? atoi(argv[++dim]) : NZ_DEFAULT);
+    const SizeT print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, static_cast<SizeT>(12)));
 
     // initialization
     srand48(nx);
@@ -53,7 +53,7 @@ int main(int argc, char** argv)
         out_1.Resize({nx});
         out_2.Resize({nx});
         
-        for (SizeType i = 0; i < nx; ++i)
+        for (SizeT i = 0; i < nx; ++i)
         {
             const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
             const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
             #endif
         }
 
-        for (SizeType n = 0; n < WARMUP; ++n)
+        for (SizeT n = 0; n < WARMUP; ++n)
         {
             #if defined(VECTOR_PRODUCT)
                 kernel<element_type>::cross<1>(in_1, in_2, out_2, {nx});
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
             #endif
         }
 
-        for (SizeType n = 0; n < MEASUREMENT; ++n)
+        for (SizeT n = 0; n < MEASUREMENT; ++n)
         {
             #if defined(VECTOR_PRODUCT)
                 time += kernel<element_type>::cross<1>(in_1, in_2, out_2, {nx});
@@ -107,10 +107,10 @@ int main(int argc, char** argv)
 
         #if defined(CHECK_RESULTS)
         const double max_abs_error = static_cast<type>(1.0E-6);
-        const SizeType print_num_elements = 128;
+        const SizeT print_num_elements = 128;
         bool not_passed = false;
 
-        for (SizeType i = 0, e = 0; i < nx; ++i, ++e)
+        for (SizeT i = 0, e = 0; i < nx; ++i, ++e)
         {
             const double tmp_1[3] = {static_cast<double>(out_2[i].x), static_cast<double>(out_2[i].y), static_cast<double>(out_2[i].z)};
             const element_type tmp_x = in_orig_1[i];
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
                 #endif
             #endif
 
-            for (SizeType ii = 0; ii < 3; ++ii)
+            for (SizeT ii = 0; ii < 3; ++ii)
             {
                 const type abs_error = std::abs(tmp_2[ii] != static_cast<type>(0) ? (tmp_1[ii] - tmp_2[ii]) / tmp_2[ii] : tmp_1[ii] - tmp_2[ii]);
                 if (abs_error > max_abs_error)
@@ -172,9 +172,9 @@ int main(int argc, char** argv)
         out_1.Resize({nx, ny});
         out_2.Resize({nx, ny});
         
-        for (SizeType j = 0; j < ny; ++j)
+        for (SizeT j = 0; j < ny; ++j)
         {
-            for (SizeType i = 0; i < nx; ++i)
+            for (SizeT i = 0; i < nx; ++i)
             {
                 const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                 const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
@@ -197,7 +197,7 @@ int main(int argc, char** argv)
             }
         }
         
-        for (SizeType n = 0; n < WARMUP; ++n)
+        for (SizeT n = 0; n < WARMUP; ++n)
         {
             #if defined(VECTOR_PRODUCT)
                 kernel<element_type>::cross<2>(in_1, in_2, out_2, {nx, ny});
@@ -212,7 +212,7 @@ int main(int argc, char** argv)
             #endif
         }
 
-        for (SizeType n = 0; n < MEASUREMENT; ++n)
+        for (SizeT n = 0; n < MEASUREMENT; ++n)
         {
             #if defined(VECTOR_PRODUCT)
                 time += kernel<element_type>::cross<2>(in_1, in_2, out_2, {nx, ny});
@@ -229,12 +229,12 @@ int main(int argc, char** argv)
 
         #if defined(CHECK_RESULTS)
         const double max_abs_error = static_cast<type>(1.0E-6);
-        const SizeType print_num_elements = 128;
+        const SizeT print_num_elements = 128;
         bool not_passed = false;
 
-        for (SizeType j = 0, e = 0; j < ny; ++j)
+        for (SizeT j = 0, e = 0; j < ny; ++j)
         {
-            for (SizeType i = 0; i < nx; ++i, ++e)
+            for (SizeT i = 0; i < nx; ++i, ++e)
             {
                 const double tmp_1[3] = {static_cast<double>(out_2[j][i].x), static_cast<double>(out_2[j][i].y), static_cast<double>(out_2[j][i].z)};
                 const element_type tmp_x = in_orig_1[j * nx + i];
@@ -259,7 +259,7 @@ int main(int argc, char** argv)
                     #endif
                 #endif
 
-                for (SizeType ii = 0; ii < 3; ++ii)
+                for (SizeT ii = 0; ii < 3; ++ii)
                 {
                     const type abs_error = std::abs(tmp_2[ii] != static_cast<type>(0) ? (tmp_1[ii] - tmp_2[ii]) / tmp_2[ii] : tmp_1[ii] - tmp_2[ii]);
                     if (abs_error > max_abs_error)
@@ -307,13 +307,13 @@ int main(int argc, char** argv)
             out_2.Resize({nx, ny, nz});
         #endif
         
-        for (SizeType k = 0; k < nz; ++k)
+        for (SizeT k = 0; k < nz; ++k)
         {
-            for (SizeType j = 0; j < ny; ++j)
+            for (SizeT j = 0; j < ny; ++j)
             {
-                for (SizeType i = 0; i < nx; ++i)
+                for (SizeT i = 0; i < nx; ++i)
                 {
-                    const SizeType index = k * nx * ny + j * nx + i;
+                    const SizeT index = k * nx * ny + j * nx + i;
                     const type s_1 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                     const type s_2 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
                     const type s_3 = static_cast<type>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
@@ -348,12 +348,12 @@ int main(int argc, char** argv)
         }
        
         #if defined(USE_1D_BUFFER)
-        constexpr SizeType DD = 1;
+        constexpr SizeT DD = 1;
         #else
-        constexpr SizeType DD = 3;
+        constexpr SizeT DD = 3;
         #endif
 
-        for (SizeType n = 0; n < WARMUP; ++n)
+        for (SizeT n = 0; n < WARMUP; ++n)
         {
             #if defined(VECTOR_PRODUCT)
                 kernel<element_type>::cross<3, DD>(in_1, in_2, out_2, {nx, ny, nz});
@@ -368,7 +368,7 @@ int main(int argc, char** argv)
             #endif
         }
 
-        for (SizeType n = 0; n < MEASUREMENT; ++n)
+        for (SizeT n = 0; n < MEASUREMENT; ++n)
         {
             #if defined(VECTOR_PRODUCT)
                 time += kernel<element_type>::cross<3, DD>(in_1, in_2, out_2, {nx, ny, nz});
@@ -385,16 +385,16 @@ int main(int argc, char** argv)
         
         #if defined(CHECK_RESULTS)
         const double max_abs_error = static_cast<type>(1.0E-6);
-        const SizeType print_num_elements = 128;
+        const SizeT print_num_elements = 128;
         bool not_passed = false;
 
-        for (SizeType k = 0, e = 0; k < nz; ++k)
+        for (SizeT k = 0, e = 0; k < nz; ++k)
         {
-            for (SizeType j = 0; j < ny; ++j)
+            for (SizeT j = 0; j < ny; ++j)
             {
-                for (SizeType i = 0; i < nx; ++i, ++e)
+                for (SizeT i = 0; i < nx; ++i, ++e)
                 {
-                    const SizeType index = k * nx * ny + j * nx + i;
+                    const SizeT index = k * nx * ny + j * nx + i;
                     #if defined(USE_1D_BUFFER)
                         const double tmp_1[3] = {static_cast<double>(out_2[index].x), static_cast<double>(out_2[index].y), static_cast<double>(out_2[index].z)};
                     #else
@@ -422,7 +422,7 @@ int main(int argc, char** argv)
                         #endif
                     #endif
 
-                    for (SizeType ii = 0; ii < 3; ++ii)
+                    for (SizeT ii = 0; ii < 3; ++ii)
                     {
                         const type abs_error = std::abs(tmp_2[ii] != static_cast<type>(0) ? (tmp_1[ii] - tmp_2[ii]) / tmp_2[ii] : tmp_1[ii] - tmp_2[ii]);
                         if (abs_error > max_abs_error)

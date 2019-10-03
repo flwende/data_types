@@ -34,7 +34,7 @@ namespace XXX_NAMESPACE
     {
         namespace internal 
         {
-            template <typename X, SizeType N, SizeType D, ::XXX_NAMESPACE::memory::DataLayout L>
+            template <typename X, SizeT N, SizeT D, ::XXX_NAMESPACE::memory::DataLayout L>
             class Accessor;
         }
     }
@@ -65,19 +65,19 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename, SizeType, SizeType, ::XXX_NAMESPACE::memory::DataLayout>
+            template <typename, SizeT, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
             friend class XXX_NAMESPACE::dataTypes::internal::Accessor;
 
         public:
 
             using type = vec_proxy<T, 1>;
-            using ConstType = vec_proxy<const T, 1>;
+            using ConstT = vec_proxy<const T, 1>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
             using value_type = T;
             //! Remember the template parameter D (=1)
-            static constexpr SizeType d = 1;
-            using BasePointerType = ::XXX_NAMESPACE::memory::PointerN<T, 1>;
+            static constexpr SizeT d = 1;
+            using BasePointer = ::XXX_NAMESPACE::memory::PointerN<T, 1>;
             using original_type = typename std::conditional<std::is_const<T>::value, 
                 const vec<typename std::remove_cv<T>::type, 1>,
                 vec<typename std::remove_cv<T>::type, 1>>::type;
@@ -175,19 +175,19 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename, SizeType, SizeType, ::XXX_NAMESPACE::memory::DataLayout>
+            template <typename, SizeT, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
             friend class XXX_NAMESPACE::dataTypes::internal::Accessor;
 
         public:
 
             using type = vec_proxy<T, 2>;
-            using ConstType = vec_proxy<const T, 2>;
+            using ConstT = vec_proxy<const T, 2>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
             using value_type = T;
             //! Remember the template parameter D (=2)
-            static constexpr SizeType d = 2;
-            using BasePointerType = ::XXX_NAMESPACE::memory::PointerN<T, 2>;
+            static constexpr SizeT d = 2;
+            using BasePointer = ::XXX_NAMESPACE::memory::PointerN<T, 2>;
             using original_type = typename std::conditional<std::is_const<T>::value, 
                 const vec<typename std::remove_cv<T>::type, 2>,
                 vec<typename std::remove_cv<T>::type, 2>>::type;
@@ -292,19 +292,19 @@ namespace VEC_NAMESPACE
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
             static_assert(!std::is_volatile<T>::value, "error: T is volatile -> not allowed");
 
-            template <typename, SizeType, SizeType, ::XXX_NAMESPACE::memory::DataLayout>
+            template <typename, SizeT, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
             friend class XXX_NAMESPACE::dataTypes::internal::Accessor;
 
         public:
 
             using type = vec_proxy<T, 3>;
-            using ConstType = vec_proxy<const T, 3>;
+            using ConstT = vec_proxy<const T, 3>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
             using value_type = T;
             //! Remember the template parameter D (=3)
-            static constexpr SizeType d = 3;
-            using BasePointerType = ::XXX_NAMESPACE::memory::PointerN<T, 3>;
+            static constexpr SizeT d = 3;
+            using BasePointer = ::XXX_NAMESPACE::memory::PointerN<T, 3>;
             using original_type = typename std::conditional<std::is_const<T>::value, 
                 const vec<typename std::remove_cv<T>::type, 3>,
                 vec<typename std::remove_cv<T>::type, 3>>::type;

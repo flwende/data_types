@@ -14,8 +14,8 @@
 
 namespace XXX_NAMESPACE
 {
-    using SizeType = std::size_t;
-    using RealType = float;
+    using SizeT = std::size_t;
+    using RealT = float;
 
     namespace dataTypes
     {
@@ -33,28 +33,28 @@ namespace XXX_NAMESPACE
         template <typename T_1, typename T_2, typename Enabled = void>
         struct Compare
         {
-            using StrongerType = std::conditional_t<(sizeof(T_1) > sizeof(T_2)), T_1, T_2>;
-            using StrongerTypeUnqualified = std::decay_t<StrongerType>;
-            using WeakerType = std::conditional_t<(sizeof(T_1) > sizeof(T_2)), T_2, T_1>;
-            using WeakerTypeUnqualified = std::decay_t<WeakerType>;
+            using StrongerT = std::conditional_t<(sizeof(T_1) > sizeof(T_2)), T_1, T_2>;
+            using UnqualifiedStrongerT = std::decay_t<StrongerT>;
+            using WeakerT = std::conditional_t<(sizeof(T_1) > sizeof(T_2)), T_2, T_1>;
+            using UnqualifiedWeakerT = std::decay_t<WeakerT>;
         };
 
         template <typename T_1, typename T_2>
         struct Compare<T_1, T_2, std::enable_if_t<std::is_floating_point<T_1>::value && !std::is_floating_point<T_2>::value>>
         {
-            using StrongerType = T_1;
-            using StrongerTypeUnqualified = std::decay_t<StrongerType>;
-            using WeakerType = T_2;
-            using WeakerTypeUnqualified = std::decay_t<WeakerType>;
+            using StrongerT = T_1;
+            using UnqualifiedStrongerT = std::decay_t<StrongerT>;
+            using WeakerT = T_2;
+            using UnqualifiedWeakerT = std::decay_t<WeakerT>;
         };
 
         template <typename T_1, typename T_2>
         struct Compare<T_1, T_2, std::enable_if_t<!std::is_floating_point<T_1>::value && std::is_floating_point<T_2>::value>>
         {
-            using StrongerType = T_2;
-            using StrongerTypeUnqualified = std::decay_t<StrongerType>;
-            using WeakerType = T_1;
-            using WeakerTypeUnqualified = std::decay_t<WeakerType>;
+            using StrongerT = T_2;
+            using UnqualifiedStrongerT = std::decay_t<StrongerT>;
+            using WeakerT = T_1;
+            using UnqualifiedWeakerT = std::decay_t<WeakerT>;
         };
     }
 }
