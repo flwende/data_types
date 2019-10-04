@@ -292,14 +292,14 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             inline constexpr auto operator==(const Array& other) const
             {
-                bool is_same = true;
+                bool is_equal = true;
 
                 for (SizeT i = 0; i < N; ++i)
                 {
-                    is_same &= (data[i] == other.data[i]);
+                    is_equal &= (data[i] == other.data[i]);
                 }
 
-                return is_same;
+                return is_equal;
             }
 
             //!
@@ -325,6 +325,9 @@ namespace XXX_NAMESPACE
             template <typename FuncT>
             HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto Reduce(const FuncT func, const ValueT& initial_value, const SizeT begin = 0, const SizeT end = N) const
             {
+                assert(begin < N);
+                assert(end <= N);
+
                 ValueT aggregate = initial_value;
 
                 for (SizeT i = begin; i < end; ++i)
@@ -346,6 +349,9 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             inline constexpr ValueT ReduceMul(const SizeT begin = 0, const SizeT end = N) const
             {
+                assert(begin < N);
+                assert(end <= N);
+
 #if (__cplusplus > 201402L)
                 return Reduce([](const ValueT product, const ValueT element) { return (product * element); }, 1, begin, end);
 #else
