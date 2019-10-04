@@ -16,6 +16,7 @@
 #include <auxiliary/CPPStandard.hpp>
 #include <auxiliary/Macro.hpp>
 #include <data_types/DataTypes.hpp>
+#include <platform/Target.hpp>
 
 namespace XXX_NAMESPACE
 {
@@ -346,6 +347,8 @@ namespace XXX_NAMESPACE
                 //! \param loop_body the loop body
                 //!
                 template <typename FuncT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
                 static constexpr auto Execute(FuncT loop_body) -> void
                 {
                     LoopImplementation<I - 1, C_Begin>::Execute(loop_body);
@@ -373,8 +376,12 @@ namespace XXX_NAMESPACE
                 //! \param loop_body the loop body
                 //!
                 template <typename FuncT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
                 static constexpr auto Execute(FuncT loop_body) -> void
                 {
+                    static_assert(::XXX_NAMESPACE::variadic::IsInvocable<FuncT, std::integral_constant<SizeT, C_Begin>>::value, "error: callable is not invocable. void (*) (std::integral_constant<SizeT,..>) expected.");
+
                     loop_body(std::integral_constant<SizeT, C_Begin>{});
                 }
             };
@@ -411,6 +418,8 @@ namespace XXX_NAMESPACE
             //! \param loop_body the loop body
             //!
             template <typename F>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             static constexpr auto Execute(F loop_body) -> void
             {
                 LoopImplementation<(End - Begin - 1), Begin>::Execute(loop_body);
@@ -423,6 +432,8 @@ namespace XXX_NAMESPACE
         //
         /////////////////////////////////////////////////////////////////
         template <bool C_Predicate, typename T_1, typename T_2>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         auto IfElse(const T_1& x, const T_2& y)
             -> std::enable_if_t<C_Predicate, T_1&>
         {
@@ -430,6 +441,8 @@ namespace XXX_NAMESPACE
         }
 
         template <bool C_Predicate, typename T_1, typename T_2>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         auto IfElse(const T_1& x, const T_2& y)
             -> std::enable_if_t<C_Predicate, T_2&>
         {

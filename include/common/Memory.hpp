@@ -70,7 +70,12 @@ namespace XXX_NAMESPACE
                     //! \param num_stabs the number of stabs
                     //! \param alignment the alignment (bytes) used for padding of `n_0`
                     //!
-                    AllocationShape(const SizeT n_0, const SizeT num_stabs, const SizeT alignment) : n_0(n_0), num_stabs(num_stabs), alignment(alignment) {}
+                    AllocationShape(const SizeT n_0, const SizeT num_stabs, const SizeT alignment) : n_0(n_0), num_stabs(num_stabs), alignment(alignment) 
+                    {
+                        assert(n_0 > 0);
+                        assert(num_stabs > 0);
+                        assert(alignment > 0 && ::XXX_NAMESPACE::math::IsPowerOf<2>(alignment));
+                    }
 
                     //!
                     //! \brief Get the number of bytes of this allocation shape.
@@ -112,6 +117,8 @@ namespace XXX_NAMESPACE
                 template <::XXX_NAMESPACE::target Target, typename PointerT>
                 static auto Deallocate(PointerT& pointer) -> typename std::enable_if<Target == ::XXX_NAMESPACE::target::Host, void>::type
                 {
+                    assert(pointer.IsValid());
+
                     if (pointer.GetBasePointer())
                     {
                         _mm_free(pointer.GetBasePointer());
@@ -147,6 +154,8 @@ namespace XXX_NAMESPACE
                 template <::XXX_NAMESPACE::target Target, typename PointerT>
                 static auto Deallocate(PointerT& pointer) -> typename std::enable_if<Target == ::XXX_NAMESPACE::target::GPU_CUDA, void>::type
                 {
+                    assert(pointer.IsValid());
+
                     if (pointer.GetBasePointer())
                     {
                         cudaFree(pointer.GetBasePointer());
@@ -211,7 +220,9 @@ namespace XXX_NAMESPACE
             template <SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::tuple<T&...>
             {
-                return {reinterpret_cast<T&>(ptr[(stab_index * NumParameters + I) * n_0 + index])...};
+                assert(IsValid());
+
+                return {reinterpret_cast<T&>(raw_c_pointer[(stab_index * NumParameters + I) * n_0 + index])...};
             }
 
             //!
@@ -229,7 +240,9 @@ namespace XXX_NAMESPACE
             template <SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::tuple<const T&...>
             {
-                return {reinterpret_cast<const T&>(ptr[(stab_index * NumParameters + I) * n_0 + index])...};
+                assert(IsValid());
+
+                return {reinterpret_cast<const T&>(raw_c_pointer[(stab_index * NumParameters + I) * n_0 + index])...};
             }
 
             //!
@@ -237,14 +250,24 @@ namespace XXX_NAMESPACE
             //!
             //! \return the base pointer
             //!
-            inline auto GetBasePointer() -> ValueT* { return ptr; }
+            inline auto GetBasePointer() -> ValueT* 
+            { 
+                assert(IsValid());
+
+                return raw_c_pointer; 
+            }
 
             //!
             //! \brief Get the base pointer.
             //!
             //! \return the base pointer
             //!
-            inline auto GetBasePointer() const -> const ValueT* { return ptr; }
+            inline auto GetBasePointer() const -> const ValueT* 
+            { 
+                assert(IsValid());
+
+                return raw_c_pointer;
+            }
 
           public:
             //!
@@ -252,17 +275,20 @@ namespace XXX_NAMESPACE
             //!
             //! Create an invalid Pointer.
             //!
-            Pointer() : n_0(0), ptr(nullptr) {}
+            Pointer() : n_0{}, raw_c_pointer{} {}
 
             //!
             //! \brief Constructor.
             //!
             //! Set up a Pointer from an external pointer.
             //!
-            //! \param ptr an external pointer that is used as the base pointer internally
+            //! \param raw_c_pointer an external pointer that is used as the base pointer internally
             //! \param n_0 the innermost dimension of the field
             //!
-            Pointer(ValueT* ptr, const SizeT n_0) : n_0(n_0), ptr(ptr) { assert(ptr != nullptr); }
+            Pointer(ValueT* raw_c_pointer, const SizeT n_0) : n_0(n_0), raw_c_pointer(raw_c_pointer) 
+            { 
+                assert(raw_c_pointer != nullptr);
+            }
 
             //!
             //! \brief Copy/conversion constructor.
@@ -273,9 +299,22 @@ namespace XXX_NAMESPACE
             //! \param other another Pointer
             //!
             template <typename... OtherT>
-            Pointer(const Pointer<OtherT...>& other) : n_0(other.n_0), ptr(reinterpret_cast<ValueT*>(other.ptr))
+            Pointer(const Pointer<OtherT...>& other) : n_0(other.n_0), raw_c_pointer(reinterpret_cast<ValueT*>(other.raw_c_pointer))
             {
                 static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT, OtherT...>::IsConvertible(), "error: types are not convertible");
+                assert(other.IsValid());
+            }
+
+            //!
+            //! \brief Test for validity.
+            //!
+            //! \return `true` if this `Pointer` is valid, otherwise `false`
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            auto IsValid() const
+            {
+                return (raw_c_pointer != nullptr);
             }
 
             //!
@@ -290,9 +329,9 @@ namespace XXX_NAMESPACE
                 n_0 = other.n_0;
                 other.n_0 = this_n_0;
 
-                ValueT* this_ptr = ptr;
-                ptr = other.ptr;
-                other.ptr = this_ptr;
+                ValueT* this_ptr = raw_c_pointer;
+                raw_c_pointer = other.raw_c_pointer;
+                other.raw_c_pointer = this_ptr;
 
                 return *this;
             }
@@ -368,7 +407,7 @@ namespace XXX_NAMESPACE
                 //!
                 static auto Padding(const SizeT n, const SizeT alignment = DefaultAlignment)
                 {
-                    assert(::XXX_NAMESPACE::math::IsPowerOf<2>(alignment));
+                    assert(alignment > 0 && ::XXX_NAMESPACE::math::IsPowerOf<2>(alignment));
 
                     const SizeT n_unit = ::XXX_NAMESPACE::math::LeastCommonMultiple(alignment, static_cast<SizeT>(sizeof(ValueT))) / static_cast<SizeT>(sizeof(ValueT));
 
@@ -423,7 +462,7 @@ namespace XXX_NAMESPACE
             // Extent of the innermost dimension (w.r.t. a multidimensional field declaration).
             SizeT n_0;
             // Base pointer.
-            ValueT* ptr;
+            ValueT* raw_c_pointer;
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -499,18 +538,20 @@ namespace XXX_NAMESPACE
             //! The latter is stored in `Offset[]` as exclusive prefix sums over the member types of the IST.
             //!
             //! \tparam I parameter pack used for indexed array access
-            //! \param ptr the base pointer
+            //! \param raw_c_pointer the base pointer
             //! \param n_0 distance between successive pointers
             //! \param unnamed used for template paramter deduction
             //! \return a tuple of (base) pointers (one pointer for each member of the IST)
             //!
             template <SizeT... I>
-            inline auto make_pointer_tuple(ValueT* ptr, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::tuple<T*...>
+            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::tuple<T*...>
             {
+                assert(raw_c_pointer != nullptr);
+
                 // (Exclusive) prefix sums over the byte-sizes of the member types of the IST.
                 constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<NumParameters> Offset = ::XXX_NAMESPACE::math::PrefixSum(::XXX_NAMESPACE::dataTypes::SizeArray<NumParameters>{sizeof(T)...});
 
-                return {reinterpret_cast<T*>(&ptr[Offset[I] * n_0])...};
+                return {reinterpret_cast<T*>(&raw_c_pointer[Offset[I] * n_0])...};
             }
 
             //!
@@ -532,7 +573,9 @@ namespace XXX_NAMESPACE
             template <SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::tuple<T&...>
             {
-                return {std::get<I>(ptr)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
+                assert(IsValid());
+
+                return {std::get<I>(pointer)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
             }
 
             //!
@@ -554,7 +597,9 @@ namespace XXX_NAMESPACE
             template <SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::tuple<const T&...>
             {
-                return {std::get<I>(ptr)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
+                assert(IsValid());
+
+                return {std::get<I>(pointer)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
             }
 
             //!
@@ -562,14 +607,24 @@ namespace XXX_NAMESPACE
             //!
             //! \return the base pointer
             //!
-            inline auto GetBasePointer() -> ValueT* { return reinterpret_cast<ValueT*>(std::get<0>(ptr)); }
+            inline auto GetBasePointer() -> ValueT* 
+            { 
+                assert(IsValid());
+
+                return reinterpret_cast<ValueT*>(std::get<0>(pointer));
+            }
 
             //!
             //! \brief Get the base pointer.
             //!
             //! \return the base pointer
             //!
-            inline auto GetBasePointer() const -> const ValueT* { return reinterpret_cast<const ValueT*>(std::get<0>(ptr)); }
+            inline auto GetBasePointer() const -> const ValueT*
+            { 
+                assert(IsValid());
+
+                return reinterpret_cast<const ValueT*>(std::get<0>(pointer));
+            }
 
           public:
             //!
@@ -577,19 +632,18 @@ namespace XXX_NAMESPACE
             //!
             //! Create an invalid MultiPointer.
             //!
-            MultiPointer() : n_0x(0), ptr{} {}
+            MultiPointer() : n_0x{}, pointer{} {}
 
             //!
             //! \brief Constructor.
             //!
             //! Set up a MultiPointer from an external pointer.
             //!
-            //! \param ptr an external pointer that is used as the base pointer internally (it is the 0th element of the pointer tuple)
+            //! \param raw_c_pointer an external pointer that is used as the base pointer internally (it is the 0th element of the pointer tuple)
             //! \param n_0 the innermost dimension of the field
             //!
-            MultiPointer(ValueT* ptr, const SizeT n_0) : n_0x((n_0 * RecordSize) / SizeOfLargestParameter), ptr(make_pointer_tuple(ptr, n_0, std::make_integer_sequence<SizeT, NumParameters>{}))
+            MultiPointer(ValueT* raw_c_pointer, const SizeT n_0) : n_0x((n_0 * RecordSize) / SizeOfLargestParameter), pointer(make_pointer_tuple(raw_c_pointer, n_0, std::make_integer_sequence<SizeT, NumParameters>{}))
             {
-                assert(ptr != nullptr);
                 assert(((n_0 * RecordSize) % SizeOfLargestParameter) == 0);
             }
 
@@ -602,9 +656,25 @@ namespace XXX_NAMESPACE
             //! \param other another MultiPointer
             //!
             template <typename... OtherT>
-            MultiPointer(const MultiPointer<OtherT...>& other) : n_0x(other.n_0x), ptr(other.ptr)
+            MultiPointer(const MultiPointer<OtherT...>& other) : n_0x(other.n_0x), pointer(other.pointer)
             {
                 static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT, OtherT...>::IsConvertible(), "error: types are not convertible");
+            }
+
+            //!
+            //! \brief Test for validity.
+            //!
+            //! \return `true` if this `Pointer` is valid, otherwise `false`
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto IsValid() const
+            {
+                bool contains_nullptr = false;
+
+                ::XXX_NAMESPACE::compileTime::Loop<NumParameters>::Execute([&contains_nullptr, this] (const auto I) -> void { contains_nullptr |= (std::get<I>(pointer) == nullptr); });
+
+                return !contains_nullptr;
             }
 
             //!
@@ -615,13 +685,13 @@ namespace XXX_NAMESPACE
             //!
             inline auto Swap(MultiPointer& other) -> MultiPointer&
             {
-                SizeT this_num_units = n_0x;
+                SizeT this_n0x = n_0x;
                 n_0x = other.n_0x;
-                other.n_0x = this_num_units;
+                other.n_0x = this_n0x;
 
-                std::tuple<T*...> this_ptr = ptr;
-                ptr = other.ptr;
-                other.ptr = this_ptr;
+                std::tuple<T*...> this_ptr = pointer;
+                pointer = other.pointer;
+                other.pointer = this_ptr;
 
                 return *this;
             }
@@ -697,7 +767,7 @@ namespace XXX_NAMESPACE
                 //!
                 static auto Padding(const SizeT n, const SizeT alignment = DefaultAlignment)
                 {
-                    assert(::XXX_NAMESPACE::math::IsPowerOf<2>(alignment));
+                    assert(alignment > 0 && ::XXX_NAMESPACE::math::IsPowerOf<2>(alignment));
 
                     constexpr SizeT One = static_cast<SizeT>(1);
                     // Determine the total byte-size of all data members that have a size different from (smaller than) the largest parameter type.
@@ -758,7 +828,7 @@ namespace XXX_NAMESPACE
             // Extent of the innermost dimension (w.r.t. a multidimensional field declaration).
             SizeT n_0x;
             // Base pointers (of different type).
-            std::tuple<T*...> ptr;
+            std::tuple<T*...> pointer;
         };
     } // namespace memory
 } // namespace XXX_NAMESPACE
