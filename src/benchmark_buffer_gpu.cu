@@ -418,7 +418,7 @@ int main(int argc, char** argv)
         
         for (std::size_t i = 0; i < 10; ++i)
         {
-            foo<<<grid_size, block_size>>>(in_1.GetDeviceAccess());
+            foo<<<grid_size, block_size>>>(in_1.DeviceData());
 	        //foo<<<grid_size, block_size>>>(gpu_buffer);
         }
 
@@ -429,7 +429,7 @@ int main(int argc, char** argv)
         cudaEventRecord(start, 0);
         for (std::size_t i = 0; i < 10; ++i)
         {
-            foo<<<grid_size, block_size>>>(in_1.GetDeviceAccess());
+            foo<<<grid_size, block_size>>>(in_1.DeviceData());
 	        //foo<<<grid_size, block_size>>>(gpu_buffer);
         }
         cudaDeviceSynchronize();

@@ -3,23 +3,21 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#if !defined(FIELD_FIELD_HPP)
-#define FIELD_FIELD_HPP
+#if !defined(DATA_TYPES_FIELD_FIELD_HPP)
+#define DATA_TYPES_FIELD_FIELD_HPP
 
-#include <cstdint>
 #include <memory>
-#include <stdexcept>
-#include <vector>
 #include <type_traits>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
 
+#include <auxiliary/Template.hpp>
 #include <common/DataLayout.hpp>
-#include <data_types/DataTypes.hpp>
 #include <common/Memory.hpp>
 #include <common/Traits.hpp>
+#include <data_types/DataTypes.hpp>
 #include <platform/Target.hpp>
 
 namespace XXX_NAMESPACE
@@ -33,13 +31,13 @@ namespace XXX_NAMESPACE
             //! \brief Accessor type for array subscript operator chaining [][]..[].
             //!
             //! This data type basically collects all array indices and determines the final memory reference recursively.
-            //! 
+            //!
             //! Idea: all memory is allocated as a contiguous set of stabs (innermost dimension n[0] with padding).
             //! For Dimension > 1, the number of stabs is determined as the reduction over all indices, but without accounting for
             //! the innermost dimension: [k][j][i] -> '(k * n[1] + j) * n[0] + i' -> 'stab_index = k * n[1] + j'
             //! The 'memory' type holds a base-pointer-like memory reference to [0][0]..[0] and can deduce the final
             //! memory reference from 'stab_index', 'n[0]' and 'i'.
-            //! The result (recursion anchor, Dimension=1) of the array subscript operator chaining is either a reference of type 
+            //! The result (recursion anchor, Dimension=1) of the array subscript operator chaining is either a reference of type
             //! 'ValueT' in case of the AoS data layout or if there is no proxy type available with the SoA data layout, or
             //! a proxy type that is initialized through the final memory reference type in case of SoA.
             //!
@@ -57,63 +55,63 @@ namespace XXX_NAMESPACE
                 using DataLayout = ::XXX_NAMESPACE::memory::DataLayout;
                 using SizeArray = ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>;
 
-            public:            
+              public:
                 //!
                 //! \brief Constructor.
                 //!
-                //! \param ptr base-pointer-like memory reference
+                //! \param pointer base-pointer-like memory reference
                 //! \param n extent of the Dimension-dimensional field
                 //! \param stab_index the offset in units of 'innermost dimension n[0]'
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                Accessor(Pointer& ptr, const SizeArray& n, const SizeT stab_index = 0) 
-                    : 
-                    ptr(ptr), 
-                    n(n), 
-                    stab_index(stab_index) 
-                {}
-            
-                //!
-                //! \brief Array subscript operator.
-                //!
-                //! This function returns a lower-dimensional accessor type with the `stab_index` shifted 
-                //! by the number of stabs in the (Dimension-1)-dimension sub-volume according to the `index` value.
-                //!
-                //! \param index element index
-                //! \return a lower-dimensional accessor type with a shifted stab_index
-                //!
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto operator[] (const SizeT index)
-                    -> Accessor<ValueT, Level - 1, Dimension, Layout>
+                Accessor(Pointer& pointer, const SizeArray& n, const SizeT stab_index = 0) : pointer(pointer), n(n), stab_index(stab_index)
                 {
-                    return {ptr, n, stab_index + index * n.ReduceMul(1, Level - 1)};
-                }
-            
-                //!
-                //! \brief Array subscript operator.
-                //!
-                //! This function returns a lower-dimensional accessor type with the `stab_index` shifted 
-                //! by the number of stabs in the (Dimension-1)-dimension sub-volume according to the `index` value.
-                //!
-                //! \param index element index
-                //! \return a lower-dimensional accessor type with a shifted stab_index
-                //!
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto operator[] (const SizeT index) const
-                    -> Accessor<ValueT, Level - 1, Dimension, Layout>
-                {
-                    return {ptr, n, stab_index + index * n.ReduceMul(1, Level - 1)};
+                    assert(pointer.IsValid());
                 }
 
-            private:
-                Pointer& ptr;
+                //!
+                //! \brief Array subscript operator.
+                //!
+                //! This function returns a lower-dimensional accessor type with the `stab_index` shifted
+                //! by the number of stabs in the (Dimension-1)-dimension sub-volume according to the `index` value.
+                //!
+                //! \param index element index
+                //! \return a lower-dimensional accessor type with a shifted stab_index
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto operator[](const SizeT index) -> Accessor<ValueT, Level - 1, Dimension, Layout>
+                { 
+                    assert(index < n[Level - 1]);
+
+                    return {pointer, n, stab_index + index * n.ReduceMul(1, Level - 1)};
+                }
+
+                //!
+                //! \brief Array subscript operator.
+                //!
+                //! This function returns a lower-dimensional accessor type with the `stab_index` shifted
+                //! by the number of stabs in the (Dimension-1)-dimension sub-volume according to the `index` value.
+                //!
+                //! \param index element index
+                //! \return a lower-dimensional accessor type with a shifted stab_index
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto operator[](const SizeT index) const -> Accessor<ValueT, Level - 1, Dimension, Layout>
+                {
+                    assert(index < n[Level - 1]);
+
+                    return {pointer, n, stab_index + index * n.ReduceMul(1, Level - 1)};
+                }
+
+              private:
+                Pointer& pointer;
                 const SizeArray& n;
                 const SizeT stab_index;
             };
-            
+
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief Accessor type for array subscript operator chaining [][]..[] (recursion anchor).
@@ -132,26 +130,24 @@ namespace XXX_NAMESPACE
                 using BasePointer = typename ::XXX_NAMESPACE::internal::Traits<ValueT, Layout>::BasePointer;
                 using Pointer = std::conditional_t<std::is_const<ValueT>::value, const BasePointer, BasePointer>;
                 using Proxy = typename ::XXX_NAMESPACE::internal::Traits<ValueT, Layout>::Proxy;
-                using ConstProxy = const typename ::XXX_NAMESPACE::internal::Traits<const ValueT, Layout>::Proxy;
+                using ConstProxy = typename ::XXX_NAMESPACE::internal::Traits<const ValueT, Layout>::Proxy;
                 using SizeArray = ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>;
                 using DataLayout = ::XXX_NAMESPACE::memory::DataLayout;
 
-            public:
+              public:
                 //!
                 //! \brief Constructor.
                 //!
-                //! \param ptr base pointer
+                //! \param pointer base pointer
                 //! \param n extent of the field
                 //! \param stab_index the stab_index
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                Accessor(Pointer& ptr, const SizeArray& n, const SizeT stab_index = 0) 
-                    : 
-                    ptr(ptr), 
-                    n(n), 
-                    stab_index(stab_index) 
-                {}
+                Accessor(Pointer& pointer, const SizeArray& n, const SizeT stab_index = 0) : pointer(pointer), n(n), stab_index(stab_index) 
+                {
+                    assert(pointer.IsValid());
+                }
 
                 //!
                 //! \brief Array subscript operator (AoS data layout).
@@ -164,12 +160,11 @@ namespace XXX_NAMESPACE
                 //! \return a reference to a variable of type `ValueT`
                 //!
                 template <DataLayout Enable = Layout>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto operator[] (const SizeT index)
-                    -> std::enable_if_t<Enable == DataLayout::AoS, ValueT&>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable == DataLayout::AoS, ValueT&>
                 {
-                    return std::get<0>(ptr.At(stab_index, index));
+                    assert(index < n[0]);
+
+                    return std::get<0>(pointer.At(stab_index, index));
                 }
 
                 //!
@@ -183,12 +178,11 @@ namespace XXX_NAMESPACE
                 //! \return a const reference to a variable of type `ValueT`
                 //!
                 template <DataLayout Enable = Layout>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto operator[] (const SizeT index) const
-                    -> std::enable_if_t<Enable == DataLayout::AoS, const ValueT&>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable == DataLayout::AoS, const ValueT&>
                 {
-                    return std::get<0>(ptr.At(stab_index, index));
+                    assert(index < n[0]);
+
+                    return std::get<0>(pointer.At(stab_index, index));
                 }
 
                 //!
@@ -201,12 +195,11 @@ namespace XXX_NAMESPACE
                 //! \return a proxy type
                 //!
                 template <DataLayout Enable = Layout>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto operator[] (const SizeT index)
-                    -> std::enable_if_t<Enable == DataLayout::SoAi, Proxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable == DataLayout::SoAi, Proxy>
                 {
-                    return {ptr.At(stab_index, index)};
+                    assert(index < n[0]);
+
+                    return {pointer.At(stab_index, index)};
                 }
 
                 //!
@@ -219,12 +212,11 @@ namespace XXX_NAMESPACE
                 //! \return a const proxy type
                 //!
                 template <DataLayout Enable = Layout>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto operator[] (const SizeT index) const
-                    -> std::enable_if_t<Enable == DataLayout::SoAi, ConstProxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable == DataLayout::SoAi, ConstProxy>
                 {
-                    return {ptr.At(stab_index, index)};
+                    assert(index < n[0]);
+
+                    return {pointer.At(stab_index, index)};
                 }
 
                 //!
@@ -237,12 +229,11 @@ namespace XXX_NAMESPACE
                 //! \return a proxy type
                 //!
                 template <DataLayout Enable = Layout>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto operator[] (const SizeT index)
-                    -> std::enable_if_t<Enable == DataLayout::SoA, Proxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable == DataLayout::SoA, Proxy>
                 {
-                    return {ptr.At(stab_index * n[0] + index)};
+                    assert(index < n[0]);
+
+                    return {pointer.At(stab_index * n[0] + index)};
                 }
 
                 //!
@@ -255,23 +246,22 @@ namespace XXX_NAMESPACE
                 //! \return a const proxy type
                 //!
                 template <DataLayout Enable = Layout>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto operator[] (const SizeT index) const
-                    -> std::enable_if_t<Enable == DataLayout::SoA, ConstProxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable == DataLayout::SoA, ConstProxy>
                 {
-                    return {ptr.At(stab_index * n[0] + index)};
+                    assert(index < n[0]);
+
+                    return {pointer.At(stab_index * n[0] + index)};
                 }
 
-            private:
-                Pointer& ptr;
+              private:
+                Pointer& pointer;
                 const SizeArray& n;
                 const SizeT stab_index;
             };
-        }
-        
+        } // namespace internal
+
         // Forward declaration.
-        template <typename T, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout = ::XXX_NAMESPACE::memory::DataLayout::AoS>
+        template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout = ::XXX_NAMESPACE::memory::DataLayout::AoS>
         class Field;
 
         namespace internal
@@ -299,111 +289,158 @@ namespace XXX_NAMESPACE
                 using BasePointer = typename Traits<T>::BasePointer;
                 using Allocator = typename BasePointer<ValueT>::Allocator;
                 using AllocationShape = typename Allocator::AllocationShape;
+                template <typename T, SizeT D>
+                using Accessor = internal::Accessor<T, D, Dimension, Layout>;
+                static constexpr bool UseProxy = (Layout != DataLayout::AoS && ::XXX_NAMESPACE::internal::ProvidesProxy<ValueT>::value);
+                using ReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, typename Traits<ValueT>::Proxy, ValueT&>, Accessor<ValueT, Dimension - 1>>;
+                using ConstReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, typename Traits<ConstValueT>::Proxy, const ValueT&>, Accessor<ConstValueT, Dimension - 1>>;
 
                 // Friend declarations.
                 friend class ::XXX_NAMESPACE::dataTypes::Field<ValueT, Dimension, Layout>;
 
-            public:
+              public:
                 // Template parameters.
                 using TParam_ValueT = ValueT;
                 static constexpr SizeT TParam_Dimension = Dimension;
                 static constexpr DataLayout TParam_Layout = Layout;
                 static constexpr target TParam_Target = Target;
 
-            private:
+              private:
+                //!
+                //! \brief A deleter type for shared pointer deallocation.
+                //!
                 struct Deleter
                 {
-                    auto operator()(BasePointer<ValueT>* pointer) const
-                        -> void
-                    {
+                    //!
+                    //! \brief Callable for shared pointer deallocation.
+                    //!
+                    //! \param pointer a pointer to either `Pointer` or `MultiPointer`
+                    //!
+                    auto operator()(BasePointer<ValueT>* pointer) const -> void
+                    { 
+                        assert(pointer != nullptr);
+
                         Allocator::template Deallocate<Target>(*pointer);
                     }
                 };
 
-                Container()
-                    :
-                    n{},
-                    allocation_shape{}
-                {}
+                //!
+                //! \brief Standard constructor (private).
+                //!
+                //! Create an empty `Container`.
+                //!
+                Container() = default;
 
+                //!
+                //! \brief Constructor (private).
+                //!
+                //! Create a `Container` from a `SizeArray`.
+                //!
+                //! \param n a `SizeArray` (e.g. extent of a `Field`)
+                //!
                 Container(const SizeArray& n)
-                    :
-                    n(n),
-                    allocation_shape(Allocator::template GetAllocationShape<Layout>(n)),
-                    data(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0), Deleter()),
-                    ptr(*data),
-                    const_ptr(*data)
-                {}
-
-                static constexpr bool UseProxy = (Layout != DataLayout::AoS && ::XXX_NAMESPACE::internal::ProvidesProxy<ValueT>::value);
-                using return_type = std::conditional_t<(Dimension == 1), std::conditional_t<UseProxy, typename Traits<ValueT>::Proxy, ValueT&>, internal::Accessor<ValueT, Dimension - 1, Dimension, Layout>>;
-                using const_return_type = std::conditional_t<(Dimension == 1), std::conditional_t<UseProxy, const typename Traits<const ValueT>::Proxy, const ValueT&>, internal::Accessor<ConstValueT, Dimension - 1, Dimension, Layout>>;
-
-            public:
-
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto operator[](const SizeT index)
-                    -> return_type
+                    : n(n), allocation_shape(Allocator::template GetAllocationShape<Layout>(n)),
+                      base_pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0), Deleter()), pointer(*base_pointer), const_pointer(*base_pointer)
                 {
-                    return internal::Accessor<ValueT, Dimension, Dimension, Layout>(ptr, n)[index];
                 }
 
+              public:
+                //!
+                //! \brief Array subscript operator.
+                //!
+                //! The type of the return value is inherited from the `Accessor`'s subscript operator (it is determined above).
+                //! Depending on the dimensionality of the `Container`, this function returns either a reference to a variable of
+                //! type `ValueT` or an `Accessor` of lower dimension.
+                //!
+                //! \param index an index value for the data access
+                //! \return a reference to a variable of type `ValueT` or an `Accessor` of lower dimension
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto operator[](const SizeT index) const
-                    -> const_return_type
-                {
-                    return internal::Accessor<ConstValueT, Dimension, Dimension, Layout>(const_ptr, n)[index];
-                }
+                inline auto operator[](const SizeT index) -> ReturnT { return internal::Accessor<ValueT, Dimension, Dimension, Layout>(pointer, n)[index]; }
 
+                //!
+                //! \brief Array subscript operator.
+                //!
+                //! The type of the return value is inherited from the `Accessor`'s subscript operator (it is determined above).
+                //! Depending on the dimensionality of the `Container`, this function returns either a const reference to a variable of
+                //! type `ValueT` or an `Accessor` of lower dimension.
+                //!
+                //! \param index an index value for the data access
+                //! \return a const reference to a variable of type `ValueT` or an `Accessor` of lower dimension
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto operator[](const SizeT index) const -> ConstReturnT { return internal::Accessor<ConstValueT, Dimension, Dimension, Layout>(const_pointer, n)[index]; }
+
+                //!
+                //! \brief Set the content of the container.
+                //!
+                //! This function uses a callable `func` for value assignment to the container elements.
+                //!
+                //! \tparam FuncT the type of the callable
+                //! \param func a callable
+                //!
                 template <typename FuncT>
-                auto Set(FuncT func)
+                auto Set(FuncT func) -> void
                 {
-                    if (data.get())
-                    {   
-                        for (size_t stab_index = 0; stab_index < allocation_shape.num_stabs; ++stab_index)
+                    static_assert(::XXX_NAMESPACE::variadic::IsInvocable<FuncT, SizeT>::value, "error: callable is not invocable. void (*) (SizeT) expected.");
+
+                    if (base_pointer.get())
+                    {
+                        for (SizeT stab_index = 0; stab_index < allocation_shape.num_stabs; ++stab_index)
                         {
-                            for (size_t i = 0; i < n[0]; ++i)
+                            for (SizeT i = 0; i < n[0]; ++i)
                             {
-                                std::get<0>(data.get()->At(stab_index, i)) = func();
+                                std::get<0>(base_pointer.get()->At(stab_index, i)) = func(stab_index * n[0] + i);
                             }
                         }
-                        
                     }
                 }
 
+                //!
+                //! \brief Get the size of the container.
+                //!
+                //! \return the size of the container
+                //!
                 HOST_VERSION
-                CUDA_DEVICE_VERSION    
-                const auto& Size() const
-                {
-                    return n;   
+                CUDA_DEVICE_VERSION
+                inline const auto& Size() const { return n; }
+
+                //!
+                //! \brief Test for this container being empty.
+                //!
+                //! \return `true` if the container is empty, otherwise `false`
+                //!
+                inline auto IsEmpty() const { return (base_pointer.get() == nullptr || n.ReduceMul() == 0); }
+
+              private:
+                //!
+                //! \brief Get the total size of the container in bytes.
+                //!
+                //! \return the total size of the container in bytes
+                //!
+                auto GetByteSize() const { return allocation_shape.GetByteSize(); }
+
+                //!
+                //! \brief Get the base pointer of this container.
+                //!
+                //! \return the base pointer of this container
+                //!
+                auto GetBasePointer() const
+                { 
+                    assert(base_pointer.get() != nullptr);
+
+                    return base_pointer.get()->GetBasePointer();
                 }
 
-                auto IsEmpty() const
-                {
-                    return (data.get() == nullptr);
-                }
-
-            private:
-                
-                auto GetByteSize() const
-                {
-                    return allocation_shape.GetByteSize();
-                }
-
-                auto GetBasePointer()
-                {
-                    return data.get()->GetBasePointer();
-                }
-                
                 SizeArray n;
                 AllocationShape allocation_shape;
-                std::shared_ptr<BasePointer<ValueT>> data;
-                BasePointer<ValueT> ptr;
-                BasePointer<ConstValueT> const_ptr;
+                std::shared_ptr<BasePointer<ValueT>> base_pointer;
+                BasePointer<ValueT> pointer;
+                BasePointer<ConstValueT> const_pointer;
             };
-        }
+        } // namespace internal
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
@@ -447,99 +484,163 @@ namespace XXX_NAMESPACE
         //! \tparam Layout any of SoA (struct of arrays) and AoS (array of structs)
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout>
+        template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout>
         class Field
         {
-            static_assert(!std::is_const<T>::value, "error: field with const elements is not allowed");
+            static_assert(!std::is_const<ValueT>::value, "error: field with const elements is not allowed.");
 
-        public:
-
-            using element_type = T;
-            static constexpr SizeT dimension = Dimension;
-            static constexpr ::XXX_NAMESPACE::memory::DataLayout layout = Layout;
-
-        private:
-
-            using const_element_type = typename ::XXX_NAMESPACE::internal::Traits<element_type, Layout>::ConstT;
+            using DataLayout = ::XXX_NAMESPACE::memory::DataLayout;
+            template <typename T>
+            using Traits = ::XXX_NAMESPACE::internal::Traits<T, Layout>;
+            using ConstValueT = typename Traits<ValueT>::ConstT;
+            using SizeArray = ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>;
             template <::XXX_NAMESPACE::target Target>
-            using Container = internal::Container<T, Dimension, Layout, Target>;
-            
-        public:
+            using Container = internal::Container<ValueT, Dimension, Layout, Target>;
+            template <typename T, SizeT D>
+            using Accessor = internal::Accessor<T, D, Dimension, Layout>;
+            static constexpr bool UseProxy = (Layout != DataLayout::AoS && ::XXX_NAMESPACE::internal::ProvidesProxy<ValueT>::value);
+            using ReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, typename Traits<ValueT>::Proxy, ValueT&>, Accessor<ValueT, Dimension - 1>>;
+            using ConstReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, typename Traits<ConstValueT>::Proxy, const ValueT&>, Accessor<ConstValueT, Dimension - 1>>;
 
+          public:
+            // Template parameters.
+            using TParam_ValueT = ValueT;
+            static constexpr SizeT TParam_Dimension = Dimension;
+            static constexpr DataLayout TParam_Layout = Layout;
+
+          public:
+            //!
+            //! \brief Standard constructor.
+            //!
+            //! Create an empty `Field`.
+            //!
             Field() = default;
-                
-            Field(const ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>& n, const bool initialize_to_zero = false)
-                :
-                n(n)
-            {
-                Resize(n, initialize_to_zero);
-            }
 
-            auto Resize(const ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>& new_n, const bool initialize_to_zero = false)
-                -> void
+            //!
+            //! \brief Constructor.
+            //!
+            //! Create a `Field` from a `SizeArray` and optionally zero all its elements.
+            //!
+            //! \param n the extent of the field
+            //! \param initialize_to_zero (optional) if `true`, zero all its elements
+            //!
+            Field(const SizeArray& n, const bool initialize_to_zero = false) : n(n) { Resize(n, initialize_to_zero); }
+
+            //!
+            //! \brief Resize the container.
+            //!
+            //! Resizing this field means to replace its `data` member by a new one with the requested size.
+            //! The container type internally uses a shared pointer to reference its memory.
+            //! Memory deallocation of this field thus is managed by the container and its shared pointer.
+            //!
+            //! \param n_new the new extent of the field
+            //! \param initialize_to_zero (optional) if `true`, zero all its elements
+            //!
+            auto Resize(const SizeArray& n_new, const bool initialize_to_zero = false) -> void
             {
-                if (n != new_n)
+                if (n != n_new)
                 {
-                    n = new_n;
+                    n = n_new;
                     data = Container<::XXX_NAMESPACE::target::Host>(n);
-                    
-                    if (initialize_to_zero)
-                    {
-                        data.Set([] () { return 0; });
-                    }
-
-                #if defined(__CUDACC__)
-                    device_data = Container<::XXX_NAMESPACE::target::GPU_CUDA>(n);
 
                     if (initialize_to_zero)
                     {
-                        CopyHostToDevice();
+                        data.Set([](SizeT index) { return 0; });
                     }
-                #endif
+
+#if defined(__CUDACC__)
+                    // Resize only of there is already a non-empty device container.
+                    if (!DeviceContainerIsEmpty())
+                    {
+                        device_data = Container<::XXX_NAMESPACE::target::GPU_CUDA>(n);
+
+                        if (initialize_to_zero)
+                        {
+                            CopyHostToDevice();
+                        }
+                    }
+#endif
                 }
             }
-            
+
+            //!
+            //! \brief Set the content of the field.
+            //!
+            //! This function uses a callable `func` for value assignment to the field elements.
+            //! It redirects this task to its `data` member.
+            //!
+            //! \tparam FuncT the type of the callable
+            //! \param func a callable
+            //!
             template <typename FuncT>
-            auto Set(FuncT func)
+            auto Set(FuncT func, const bool sync_with_device = true)
             {
                 data.Set(func);
-            }
-            
-            auto Swap(Field& b)
-                -> void
-            {
-                // TODO: implementation; if (owns_data) {..}
-            }
 
-            static constexpr bool UseProxy = (Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && ::XXX_NAMESPACE::internal::ProvidesProxy<T>::value);
-            using value_type = std::conditional_t<(Dimension == 1), std::conditional_t<UseProxy, typename ::XXX_NAMESPACE::internal::Traits<T, Layout>::Proxy, T&>, internal::Accessor<element_type, Dimension - 1, Dimension, Layout>>;
-            using const_value_type = std::conditional_t<(Dimension == 1), std::conditional_t<UseProxy, const typename ::XXX_NAMESPACE::internal::Traits<const T, Layout>::Proxy, const T&>, internal::Accessor<const_element_type, Dimension - 1, Dimension, Layout>>;
-
-            inline auto operator[](const SizeT index)
-                -> value_type
-            {
-                return data[index];
+#if defined(__CUDACC__)
+                // Set content only of there is a non-empty device container.
+                if (!DeviceContainerIsEmpty() && sync_with_device)
+                {
+                    CopyHostToDevice();
+                }
+#endif
             }
 
-            inline auto operator[](const SizeT index) const
-                -> const_value_type
+            //!
+            //! \brief Array subscript operator.
+            //!
+            //! The type of the return value is inherited from the `Accessor`'s subscript operator (it is determined above).
+            //! Depending on the dimensionality of the `Container`, this function returns either a reference to a variable of
+            //! type `ValueT` or an `Accessor` of lower dimension.
+            //!
+            //! \param index an index value for the data access
+            //! \return a reference to a variable of type `ValueT` or an `Accessor` of lower dimension
+            //!
+            inline auto operator[](const SizeT index) -> ReturnT { return data[index]; }
+
+            //!
+            //! \brief Array subscript operator.
+            //!
+            //! The type of the return value is inherited from the `Accessor`'s subscript operator (it is determined above).
+            //! Depending on the dimensionality of the `Container`, this function returns either a const reference to a variable of
+            //! type `ValueT` or an `Accessor` of lower dimension.
+            //!
+            //! \param index an index value for the data access
+            //! \return a const reference to a variable of type `ValueT` or an `Accessor` of lower dimension
+            //!
+            inline auto operator[](const SizeT index) const -> ConstReturnT { return data[index]; }
+
+            //!
+            //! \brief Get the size of the container.
+            //!
+            //! \return the size of the container
+            //!
+            inline auto Size() const -> const SizeArray& { return n; }
+
+#if defined(__CUDACC__)
+          private:
+            //!
+            //! \brief Test for device container has been set up.
+            //!
+            //! \return `true` if the device container has been set up, otherwise `false`
+            //!
+            auto DeviceContainerIsEmpty() const
             {
-                return data[index];
+                return device_data.IsEmpty();
             }
 
-            HOST_VERSION
-            CUDA_DEVICE_VERSION    
-            inline auto size() const
-                -> const ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>&
+          public:
+            //!
+            //! \brief Get access to the device data.
+            //!
+            //! If the device container has not been initialized properly yet, create it.
+            //!
+            //! \param sync_with_host (optional) if `true`, copy all data from the host to the device
+            //! \return a reference to the device container
+            //!
+            auto DeviceData(const bool sync_with_host = false) -> Container<::XXX_NAMESPACE::target::GPU_CUDA>&
             {
-                return n;   
-            }
-
-        #if defined(__CUDACC__)
-            auto GetDeviceAccess(const bool sync_with_host = false)
-                -> Container<::XXX_NAMESPACE::target::GPU_CUDA>&
-            {
-                if (device_data.IsEmpty())
+                if (DeviceContainerIsEmpty())
                 {
                     device_data = Container<::XXX_NAMESPACE::target::GPU_CUDA>(n);
                 }
@@ -552,32 +653,36 @@ namespace XXX_NAMESPACE
                 return device_data;
             }
 
-            auto CopyDeviceToHost()
-                -> void
+            //!
+            //! \brief Copy device data to the host.
+            //!
+            auto CopyDeviceToHost() -> void
             {
-                if (!device_data.IsEmpty())
+                if (!DeviceContainerIsEmpty())
                 {
                     cudaMemcpy((void*)data.GetBasePointer(), (const void*)device_data.GetBasePointer(), data.GetByteSize(), cudaMemcpyDeviceToHost);
                 }
             }
 
-            auto CopyHostToDevice()
-                -> void
+            //!
+            //! \brief Copy host data to the device.
+            //!
+            auto CopyHostToDevice() -> void
             {
-                if (!device_data.IsEmpty())
+                if (!DeviceContainerIsEmpty())
                 {
                     cudaMemcpy((void*)device_data.GetBasePointer(), (const void*)data.GetBasePointer(), data.GetByteSize(), cudaMemcpyHostToDevice);
                 }
             }
-        #endif
+#endif
 
-            ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension> n;
+            SizeArray n;
             Container<::XXX_NAMESPACE::target::Host> data;
-        #if defined(__CUDACC__)
+#if defined(__CUDACC__)
             Container<::XXX_NAMESPACE::target::GPU_CUDA> device_data;
-        #endif
+#endif
         };
-    }
-}
+    } // namespace dataTypes
+} // namespace XXX_NAMESPACE
 
 #endif

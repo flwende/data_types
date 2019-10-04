@@ -71,7 +71,7 @@ namespace VEC_NAMESPACE
         public:
 
             using type = vec_proxy<T, 1>;
-            using ConstT = vec_proxy<const T, 1>;
+            using ConstT = const vec_proxy<const T, 1>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
             using value_type = T;
@@ -181,7 +181,7 @@ namespace VEC_NAMESPACE
         public:
 
             using type = vec_proxy<T, 2>;
-            using ConstT = vec_proxy<const T, 2>;
+            using ConstT = const vec_proxy<const T, 2>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
             using value_type = T;
@@ -298,7 +298,7 @@ namespace VEC_NAMESPACE
         public:
 
             using type = vec_proxy<T, 3>;
-            using ConstT = vec_proxy<const T, 3>;
+            using ConstT = const vec_proxy<const T, 3>;
             using T_unqualified = typename std::remove_cv<T>::type;
             //! Remember the template type parameter T
             using value_type = T;
