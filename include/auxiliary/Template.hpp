@@ -6,6 +6,7 @@
 #if !defined(AUXILIARY_TEMPLATE_HPP)
 #define AUXILIARY_TEMPLATE_HPP
 
+#include <functional>
 #include <type_traits>
 
 #if !defined(XXX_NAMESPACE)
@@ -311,6 +312,11 @@ namespace XXX_NAMESPACE
                                                                                                                                                                                                                            \
         using Type = typename TypeGenImplementation<FW_SEQ_MAX_N - N, FW_SEQ_N(T)>::Type;                                                                                                                                \
     };
+        template <typename FuncT, typename ...T>
+        struct IsInvocable
+        {
+            static constexpr bool value = std::is_constructible<std::function<void(T...)>, std::reference_wrapper<std::remove_reference_t<FuncT>>>::value;
+        };
     } // namespace variadic
 
     namespace compileTime
@@ -429,7 +435,6 @@ namespace XXX_NAMESPACE
         {
             return y;
         }
-
     } // namespace compileTime
 } // namespace XXX_NAMESPACE
 
