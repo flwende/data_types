@@ -6,6 +6,7 @@
 #if !defined(COMMON_MATH_HPP)
 #define COMMON_MATH_HPP
 
+#include <cassert>
 #include <cmath>
 #include <type_traits>
 
@@ -71,7 +72,11 @@ namespace XXX_NAMESPACE
         {
             static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
 
-            return (x_1 * x_2) / GreatestCommonDivisor(x_1, x_2);
+            const auto gcd = GreatestCommonDivisor(x_1, x_2);
+
+            assert(gcd > static_cast<T>(0));
+
+            return (x_1 * x_2) / gcd;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +160,12 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            static auto sqrt(const T x) { return std::sqrt(x); }
+            static auto sqrt(const T x)
+            { 
+                assert(x >= static_cast<T>(0));
+
+                return std::sqrt(x);
+            }
 
             //!
             //! \brief Calculate the logarithm.
@@ -165,7 +175,12 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            static auto log(const T x) { return std::log(x); }
+            static auto log(const T x)
+            { 
+                assert(x > static_cast<T>(0));
+
+                return std::log(x);
+            }
 
             //!
             //! \brief Calculate the exponential.
@@ -189,11 +204,21 @@ namespace XXX_NAMESPACE
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            static auto sqrt(const float x) { return sqrtf(x); }
+            static auto sqrt(const float x)
+            { 
+                assert(x >= 0.0F);
+
+                return sqrtf(x);
+            }
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            static auto log(const float x) { return logf(x); }
+            static auto log(const float x)
+            {
+                assert(x > 0.0F);
+
+                return logf(x);
+            }
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
