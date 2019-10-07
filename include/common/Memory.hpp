@@ -61,7 +61,7 @@ namespace XXX_NAMESPACE
                     //!
                     //! Create an invalid shape.
                     //!
-                    AllocationShape() : n_0{}, num_stabs{}, alignment{} {}
+                    AllocationShape() = default;
 
                     //!
                     //! \brief Constructor.
@@ -275,7 +275,7 @@ namespace XXX_NAMESPACE
             //!
             //! Create an invalid Pointer.
             //!
-            Pointer() : n_0{}, raw_c_pointer{} {}
+            Pointer() = default;
 
             //!
             //! \brief Constructor.
@@ -632,7 +632,7 @@ namespace XXX_NAMESPACE
             //!
             //! Create an invalid MultiPointer.
             //!
-            MultiPointer() : n_0x{}, pointer{} {}
+            MultiPointer() = default;
 
             //!
             //! \brief Constructor.
