@@ -43,12 +43,34 @@ namespace XXX_NAMESPACE
             //! \brief Get the value of the N-th parameter and its type in the variadic list.
             //!
             //! \tparam N parameter index
+            //! \tparam T variadic parameter list
+            //!
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            template <SizeT N, typename ...T>
+            struct Parameter;
+
+            //!
+            //! \brief Special case for empty parameter list.
+            //!
+            template <>
+            struct Parameter<0>
+            {
+                using Type = void;
+
+                static constexpr auto Value() { return 0; }
+            };
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //!
+            //! \brief Get the value of the N-th parameter and its type in the variadic list.
+            //!
+            //! \tparam N parameter index
             //! \tparam Head type of the front most parameter (head)
             //! \tparam Tail variadic parameter list (tail)
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <SizeT N, typename Head, typename... Tail>
-            struct Parameter
+            struct Parameter<N, Head, Tail...>
             {
                 //! Type of the N-th parameter
                 using Type = typename Parameter<N - 1, Tail...>::Type;
@@ -97,6 +119,17 @@ namespace XXX_NAMESPACE
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename AggregateT, typename... T>
             struct Accumulate;
+
+            //!
+            //! \brief Special case for empty parameter list.
+            //!
+            template <typename AggregateT>
+            struct Accumulate<AggregateT>
+            {
+                static constexpr auto Add(AggregateT aggregate) { return aggregate; }
+
+                static constexpr auto Max(AggregateT aggregate) { return aggregate; }
+            };
 
             //!
             //! \brief Accumulate the variadic parameter/argument list.
@@ -237,9 +270,7 @@ namespace XXX_NAMESPACE
             //!
             static constexpr auto IsConst()
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
-                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_const<T>::value ? 1 : 0)...) == Size;
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_const<T>::value ? 1 : 0)...) > Size;
             }
 
             //!
@@ -249,8 +280,6 @@ namespace XXX_NAMESPACE
             //!
             static constexpr auto IsFundamental()
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
                 return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_fundamental<T>::value ? 1 : 0)...) == Size;
             }
 
@@ -261,9 +290,7 @@ namespace XXX_NAMESPACE
             //!
             static constexpr auto IsVoid()
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
-                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_void<T>::value ? 1 : 0)...) == Size;
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_void<T>::value ? 1 : 0)...) > 0;
             }
 
             //!
@@ -273,9 +300,7 @@ namespace XXX_NAMESPACE
             //!
             static constexpr auto IsVolatile()
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
-                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_volatile<T>::value ? 1 : 0)...) == Size;
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_volatile<T>::value ? 1 : 0)...) > 0;
             }
 
             //!
