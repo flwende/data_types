@@ -6,7 +6,7 @@
 #if !defined(DATA_TYPES_TUPLE_TUPLE_HPP)
 #define DATA_TYPES_TUPLE_TUPLE_HPP
 
-#if !defined(OLD)
+#if defined(OLD)
 
 #include <type_traits>
 
@@ -193,7 +193,7 @@ namespace XXX_NAMESPACE
     } // namespace math
 } // namespace XXX_NAMESPACE
 
-#else
+#elif defined(NEW)
 
 #include <type_traits>
 
@@ -816,6 +816,663 @@ namespace XXX_NAMESPACE
 
     namespace math
     {
+        template <typename ...T>
+        struct Func<::XXX_NAMESPACE::dataTypes::Tuple<T...>>
+        {
+            using Tuple = ::XXX_NAMESPACE::dataTypes::Tuple<T...>;
+            using ValueT = typename std::remove_cv<typename Tuple::ValueT>::type;
+
+            static constexpr ValueT One = Func<ValueT>::One;
+            static constexpr ValueT MinusOne = Func<ValueT>::MinusOne;
+
+            template <typename X>
+            static auto sqrt(X x) -> Tuple
+            {
+                return ::XXX_NAMESPACE::math::sqrt(x);
+            }
+
+            template <typename X>
+            static auto log(X x) -> Tuple
+            {
+                return ::XXX_NAMESPACE::math::log(x);
+            }
+
+            template <typename X>
+            static auto exp(X x) -> Tuple
+            {
+                return ::XXX_NAMESPACE::math::exp(x);
+            }
+        };
+    } // namespace math
+} // namespace XXX_NAMESPACE
+
+#else
+
+#include <type_traits>
+
+#if !defined(XXX_NAMESPACE)
+#define XXX_NAMESPACE fw
+#endif
+
+#include <common/Math.hpp>
+#include <auxiliary/Template.hpp>
+#include <data_types/integer_sequence/IntegerSequence.hpp>
+#include <platform/Target.hpp>
+
+namespace XXX_NAMESPACE
+{
+    namespace dataTypes
+    {
+        namespace internal
+        {
+            // Forward declaration.
+            template <typename...>
+            class TupleProxy;
+        
+            template <typename ...T>
+            class TupleReverseData {};
+
+            template <typename T, typename ...Tail>
+            class TupleReverseData<T, Tail...> : public TupleReverseData<Tail...>
+            {
+                using Base = TupleReverseData<Tail...>;
+
+            public:
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleReverseData() = default;
+
+                template <typename OtherT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleReverseData(const OtherT& value) : Base(value), value(value) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleReverseData(const T& value, const Tail&... tail) : Base(tail...), value(value) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr auto Get() -> T& { return value; }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr auto Get() const -> const T& { return value; }
+
+            protected:
+                T value;
+            };
+
+            template <typename T>
+            class TupleReverseData<T>
+            {
+            public:
+                constexpr TupleReverseData() = default;
+
+                template <typename OtherT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleReverseData(const OtherT& value) : value(value) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr auto Get() -> T& { return value; }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr auto Get() const -> const T& { return value; }
+
+            protected:
+                T value;
+            
+            };           
+           
+            namespace
+            {
+                template <typename IntegerSequenceT, typename ...T>
+                struct TupleDataHelper;
+
+                template <typename ...T, SizeT ...I>
+                struct TupleDataHelper<::XXX_NAMESPACE::dataTypes::IntegerSequence<SizeT, I...>, T...>
+                {
+                    static constexpr SizeT N = sizeof...(T);
+
+                    static_assert(N == sizeof...(I), "error: type parameter count does not match non-type parameter count");
+
+                    using Type = TupleReverseData<typename ::XXX_NAMESPACE::variadic::Pack<T...>::template Type<(N - 1) - I>...>;
+
+                    HOST_VERSION
+                    CUDA_DEVICE_VERSION
+                    static constexpr auto Make(const T&... values)
+                    {
+                        return Type(::XXX_NAMESPACE::variadic::Pack<T...>::template Value<(N - 1) - I>(values...)...);
+                    }
+                };
+            }
+
+            template <typename ...T>
+            class TupleData : public TupleDataHelper<::XXX_NAMESPACE::dataTypes::IntegerSequenceT<SizeT, sizeof...(T)>, T...>::Type
+            {
+            public:
+                using Base = typename TupleDataHelper<::XXX_NAMESPACE::dataTypes::IntegerSequenceT<SizeT, sizeof...(T)>, T...>::Type;
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleData() = default;
+
+                template <typename OtherT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleData(const OtherT& value) : Base(value) {}
+                
+                template <typename ...OtherT, typename EnableSize = std::enable_if_t<(sizeof...(OtherT) > 0)>>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleData(const OtherT&... values) : Base(TupleDataHelper<::XXX_NAMESPACE::dataTypes::IntegerSequenceT<SizeT, sizeof...(T)>, T...>::Make(values...)) {}
+            };
+        }
+
+        namespace
+        {
+            template <SizeT Index, typename ...T>
+            struct GetImplementation;
+
+            template <SizeT Index, typename Head, typename ...Tail>
+            struct GetImplementation<Index, Head, Tail...>
+            {
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<Head, Tail...>& tuple)
+                {
+                    return GetImplementation<Index - 1, Tail...>::Value(tuple);
+                }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<Head, Tail...>& tuple)
+                {
+                    return GetImplementation<Index - 1, Tail...>::Value(tuple);
+                }
+            };
+
+            template <typename Head, typename ...Tail>
+            struct GetImplementation<0, Head, Tail...>
+            {
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<Head, Tail...>& tuple)
+                {
+                    return tuple.Get();
+                }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<Head, Tail...>& tuple)
+                {
+                    return tuple.Get();
+                }
+            };
+        }
+
+        template <SizeT Index, typename ...T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        constexpr auto& Get(internal::TupleReverseData<T...>& tuple)
+        {
+            constexpr SizeT N = sizeof...(T);
+
+            static_assert(N > 0 && Index < N, "error: out of bounds data access.");
+
+            return GetImplementation<Index, T...>::Value(tuple);
+        }
+
+        template <SizeT Index, typename ...T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        constexpr const auto& Get(const internal::TupleReverseData<T...>& tuple)
+        {
+            constexpr SizeT N = sizeof...(T);
+
+            static_assert(N > 0 && Index < N, "error: out of bounds data access.");
+
+            return GetImplementation<Index, T...>::Value(tuple);
+        }
+
+        template <SizeT Index, typename ...T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        constexpr auto& Get(internal::TupleData<T...>& tuple)
+        {
+            constexpr SizeT N = sizeof...(T);
+
+            static_assert(N > 0 && Index < N, "error: out of bounds data access.");
+
+            return Get<(N - 1) - Index>(static_cast<typename internal::TupleData<T...>::Base&>(tuple));
+        }
+
+        template <SizeT Index, typename ...T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        constexpr const auto& Get(const internal::TupleData<T...>& tuple)
+        {
+            constexpr SizeT N = sizeof...(T);
+
+            static_assert(N > 0 && Index < N, "error: out of bounds data access.");
+
+            return Get<(N - 1) - Index>(static_cast<const typename internal::TupleData<T...>::Base&>(tuple));
+        }
+
+        namespace internal
+        {
+            template <typename ...T>
+            class TupleBase
+            {   
+                template <typename ...OtherT, SizeT ...I>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static constexpr auto Dereference(const TupleProxy<OtherT...>& proxy, ::XXX_NAMESPACE::dataTypes::IntegerSequence<SizeT, I...>)
+                    -> TupleData<T...>
+                {
+                    return {Get<I>(proxy.data)...};
+                }
+
+            public:
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase() = default;
+
+                template <typename ValueT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const ValueT& value) : data(value) {}
+        
+                template <typename ...OtherT, typename EnableSize = std::enable_if_t<(sizeof...(OtherT) > 0)>>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const OtherT&... values) : data(values...) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+
+                template <typename ...OtherT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const TupleProxy<OtherT...>& proxy) : data(Dereference(proxy, ::XXX_NAMESPACE::dataTypes::MakeIntegerSequence<SizeT, sizeof...(T)>())) {}
+                
+                TupleData<T...> data;
+            };
+
+            template <typename T_1>
+            class TupleBase<T_1>
+            {
+            public:
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase() = default;
+
+                template <typename ValueT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const ValueT& value) : data(value) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+
+                template <typename OtherT_1>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const TupleProxy<OtherT_1>& proxy) : x(proxy.x) {}
+                
+                union 
+                {
+                    struct { T_1 x; };
+                    TupleData<T_1> data;
+                };
+            };
+
+            template <typename T_1, typename T_2>
+            class TupleBase<T_1, T_2>
+            {
+            public:
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase() = default;
+
+                template <typename ValueT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const ValueT& value) : data(value) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const T_1& x, const T_2& y) : x(x), y(y) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+
+                template <typename OtherT_1, typename OtherT_2>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const TupleProxy<OtherT_1, OtherT_2>& proxy) : x(proxy.x), y(proxy.y) {}
+                
+                union
+                {
+                    struct { T_1 x; T_2 y; };
+                    TupleData<T_1, T_2> data;
+                };
+            };
+
+            template <typename T_1, typename T_2, typename T_3>
+            class TupleBase<T_1, T_2, T_3>
+            {
+            public:
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase() = default;
+
+                template <typename ValueT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const ValueT& value) : data(value) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const T_1& x, const T_2& y, const T_3& z) : x(x), y(y), z(z) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+                
+                template <typename OtherT_1, typename OtherT_2, typename OtherT_3>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const TupleProxy<OtherT_1, OtherT_2, OtherT_3>& proxy) : x(proxy.x), y(proxy.y), z(proxy.z) {}
+
+                union 
+                {
+                    struct { T_1 x; T_2 y; T_3 z; };
+                    TupleData<T_1, T_2, T_3> data;
+                };
+            };
+
+            template <typename T_1, typename T_2, typename T_3, typename T_4>
+            class TupleBase<T_1, T_2, T_3, T_4>
+            {
+            public:
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase() = default;
+
+                template <typename ValueT>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const ValueT& value) : data(value) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const T_1& x, const T_2& y, const T_3& z, const T_4& w) : x(x), y(y), z(z), w(w) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+
+                template <typename OtherT_1, typename OtherT_2, typename OtherT_3, typename OtherT_4>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const TupleProxy<OtherT_1, OtherT_2, OtherT_3, OtherT_4>& proxy) : x(proxy.x), y(proxy.y), z(proxy.z), w(proxy.w) {}
+                
+                union 
+                {
+                    struct { T_1 x; T_2 y; T_3 z; T_4 w; };
+                    TupleData<T_1, T_2, T_3, T_4> data;
+                };
+            };
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief A tuple type with 3 elements.
+        //!
+        //! The implementation comprises simple arithmetic functions.
+        //!
+        //! \tparam T_1 some type
+        //! \tparam T_2 some type
+        //! \tparam T_3 some type
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /*
+        template <typename T_1, typename T_2, typename T_3>
+        class Tuple
+        {
+            static_assert(std::is_fundamental<T_1>::value, "error: T_1 is not a fundamental data type");
+            static_assert(!std::is_void<T_1>::value, "error: T_1 is void -> not allowed");
+            static_assert(!std::is_volatile<T_1>::value, "error: T_1 is volatile -> not allowed");
+            static_assert(!std::is_const<T_1>::value, "error: T_1 is const -> not allowed");
+
+            static_assert(std::is_fundamental<T_2>::value, "error: T_2 is not a fundamental data type");
+            static_assert(!std::is_void<T_2>::value, "error: T_2 is void -> not allowed");
+            static_assert(!std::is_volatile<T_2>::value, "error: T_2 is volatile -> not allowed");
+            static_assert(!std::is_const<T_2>::value, "error: T_2 is const -> not allowed");
+
+            static_assert(std::is_fundamental<T_3>::value, "error: T_3 is not a fundamental data type");
+            static_assert(!std::is_void<T_3>::value, "error: T_3 is void -> not allowed");
+            static_assert(!std::is_volatile<T_3>::value, "error: T_3 is volatile -> not allowed");
+            static_assert(!std::is_const<T_3>::value, "error: T_3 is const -> not allowed");
+
+          public:
+            using Type = Tuple<T_1, T_2, T_3>;
+            using Proxy = internal::TupleProxy<T_1, T_2, T_3>;
+            using ValueT = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, typename ::XXX_NAMESPACE::dataTypes::Compare<T_2, T_3>::StrongerT>::StrongerT;
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            Tuple() = default;
+
+            template <typename X>
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const X& xyz) : x(xyz), y(xyz), z(xyz)
+            {
+            }
+            Tuple(const T_1& x, const T_2& y, const T_3& z) : x(x), y(y), z(z) {}
+
+            template <typename X_1, typename X_2, typename X_3>
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const Tuple<X_1, X_2, X_3>& t) : x(t.x), y(t.y), z(t.z)
+            {
+            }
+
+            template <typename X_1, typename X_2, typename X_3>
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const internal::TupleProxy<X_1, X_2, X_3>& tp) : x(tp.x), y(tp.y), z(tp.z)
+            {
+            }
+
+            inline auto operator-() const { return Tuple(-x, -y, -z); }
+
+#define MACRO(OP, IN_T)                                                                                                                                                                                                    \
+    template <typename X_1, typename X_2, typename X_3>                                                                                                                                                                    \
+    inline auto operator OP(const IN_T<X_1, X_2, X_3>& t)->Tuple&                                                                                                                                                          \
+    {                                                                                                                                                                                                                      \
+        x OP t.x;                                                                                                                                                                                                          \
+        y OP t.y;                                                                                                                                                                                                          \
+        z OP t.z;                                                                                                                                                                                                          \
+                                                                                                                                                                                                                           \
+        return *this;                                                                                                                                                                                                      \
+    }
+
+            MACRO(=, Tuple)
+            MACRO(+=, Tuple)
+            MACRO(-=, Tuple)
+            MACRO(*=, Tuple)
+            MACRO(/=, Tuple)
+            MACRO(=, internal::TupleProxy)
+            MACRO(+=, internal::TupleProxy)
+            MACRO(-=, internal::TupleProxy)
+            MACRO(*=, internal::TupleProxy)
+            MACRO(/=, internal::TupleProxy)
+#undef MACRO
+
+#define MACRO(OP)                                                                                                                                                                                                          \
+    template <typename X>                                                                                                                                                                                                  \
+    inline auto operator OP(const X xyz)->Tuple&                                                                                                                                                                           \
+    {                                                                                                                                                                                                                      \
+        x OP xyz;                                                                                                                                                                                                          \
+        y OP xyz;                                                                                                                                                                                                          \
+        z OP xyz;                                                                                                                                                                                                          \
+                                                                                                                                                                                                                           \
+        return *this;                                                                                                                                                                                                      \
+    }
+
+            MACRO(=)
+            MACRO(+=)
+            MACRO(-=)
+            MACRO(*=)
+            MACRO(/=)
+#undef MACRO
+
+            T_1 x;
+            T_2 y;
+            T_3 z;
+        };
+        */
+        
+        template <typename ...T>
+        class Tuple : public internal::TupleBase<T...>
+        {
+            using Base = internal::TupleBase<T...>;
+            
+            static_assert(::XXX_NAMESPACE::variadic::Pack<T...>::IsFundamental(), "error: fundamental parameter types assumed.");
+            static_assert(!::XXX_NAMESPACE::variadic::Pack<T...>::IsConst(), "error: non-const parameter types assumed.");
+            static_assert(!::XXX_NAMESPACE::variadic::Pack<T...>::IsVoid(), "error: non-void parameter types assumed.");
+            static_assert(!::XXX_NAMESPACE::variadic::Pack<T...>::IsVolatile(), "error: non-volatile parameter types assumed.");
+            
+          public:
+            using Type = Tuple<T...>;
+            using Proxy = internal::TupleProxy<T...>;
+            using ValueT = typename ::XXX_NAMESPACE::dataTypes::Compare<T...>::StrongerT;
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            Tuple() = default;
+
+            template <typename ...OtherT, typename EnableSize = std::enable_if_t<(sizeof...(OtherT) > 0)>>
+            HOST_VERSION 
+            CUDA_DEVICE_VERSION
+            Tuple(const OtherT&... values) : Base(values...) {}
+
+            template <typename ...OtherT>
+            HOST_VERSION 
+            CUDA_DEVICE_VERSION
+            Tuple(const Tuple<OtherT...>& other) : Base(other) {}
+            
+            template <typename ...OtherT>
+            HOST_VERSION 
+            CUDA_DEVICE_VERSION
+            Tuple(const internal::TupleProxy<OtherT...>& proxy) : Base(proxy) {}
+            
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator-() const
+            {
+                Tuple tuple;
+
+                ::XXX_NAMESPACE::compileTime::Loop<sizeof...(T)>::Execute([&tuple, this] (const auto I) { Get<I>(tuple.data) = -Get<I>(Base::data); });
+
+                return tuple;
+            }
+            
+#define MACRO(OP, IN_T) \
+    template <typename ...OtherT> \
+    HOST_VERSION \
+    CUDA_DEVICE_VERSION \
+    inline auto operator OP(const IN_T<OtherT...>& other) -> Tuple& \
+    { \
+        ::XXX_NAMESPACE::compileTime::Loop<sizeof...(T)>::Execute([&other, this] (const auto I) { Get<I>(Base::data) OP Get<I>(other.data); }); \
+    \
+        return *this; \
+    }
+
+            MACRO(=, Tuple)
+            MACRO(+=, Tuple)
+            MACRO(-=, Tuple)
+            MACRO(*=, Tuple)
+            MACRO(/=, Tuple)
+            MACRO(=, internal::TupleProxy)
+            MACRO(+=, internal::TupleProxy)
+            MACRO(-=, internal::TupleProxy)
+            MACRO(*=, internal::TupleProxy)
+            MACRO(/=, internal::TupleProxy)
+#undef MACRO
+
+#define MACRO(OP) \
+    template <typename OtherT> \
+    HOST_VERSION \
+    CUDA_DEVICE_VERSION \
+    inline auto operator OP(const OtherT& value) -> Tuple& \
+    { \
+        ::XXX_NAMESPACE::compileTime::Loop<sizeof...(T)>::Execute([&value, this] (const auto I) { Get<I>(Base::data) OP value; }); \
+    \
+        return *this; \
+    }
+
+            MACRO(=)
+            MACRO(+=)
+            MACRO(-=)
+            MACRO(*=)
+            MACRO(/=)
+#undef MACRO
+            
+        };
+        /*
+        void Test()
+        {
+            Tuple<int, float, double> x;//(23.343);//, 13.24f, -343.343);
+            //Tuple<> x;//(23.343);//, 13.24f, -343.343);
+            x = 1;
+
+            std::cout << Get<0>(x.data) << ", " << Get<1>(x.data) << ", " << Get<2>(x.data) << std::endl;
+            std::cout << x.x << ", " << x.y << ", " << x.z << std::endl;  
+        }
+        */
+
+        template <typename T_1, typename T_2, typename T_3>
+        std::ostream& operator<<(std::ostream& os, const Tuple<T_1, T_2, T_3>& v)
+        {
+            os << "(" << v.x << "," << v.y << "," << v.z << ")";
+            return os;
+        }
+    } // namespace dataTypes
+} // namespace XXX_NAMESPACE
+
+#include <common/Traits.hpp>
+#include <data_types/tuple/TupleMath.hpp>
+#include <data_types/tuple/TupleProxy.hpp>
+
+namespace XXX_NAMESPACE
+{
+    namespace internal
+    {
+        template <typename ...T>
+        struct ProvidesProxy<::XXX_NAMESPACE::dataTypes::Tuple<T...>>
+        {
+            static constexpr bool value = true;
+        };
+
+        template <typename ...T>
+        struct ProvidesProxy<const ::XXX_NAMESPACE::dataTypes::Tuple<T...>>
+        {
+            static constexpr bool value = true;
+        };
+    } // namespace internal
+
+    namespace math
+    {
+        template <typename TupleT>
+        struct Func;
+
+        template <>
+        struct Func<::XXX_NAMESPACE::dataTypes::Tuple<>> {};
+
         template <typename ...T>
         struct Func<::XXX_NAMESPACE::dataTypes::Tuple<T...>>
         {

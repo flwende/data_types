@@ -51,6 +51,11 @@ __global__ void foo(FieldT a)
 }
 #endif
 
+using namespace ::fw::math;
+
+template <typename T>
+class DEBUG;
+
 int main(int argc, char** argv)
 {
     // command line arguments
@@ -59,12 +64,26 @@ int main(int argc, char** argv)
     const std::size_t ny = (argc > 2 ? atoi(argv[++dim]) : NY_DEFAULT);
     const std::size_t nz = (argc > 3 ? atoi(argv[++dim]) : NZ_DEFAULT);
     const std::size_t print_elem = (argc > 4 ? atoi(argv[4]) : std::min(nx, 12UL));
+/*
+    ::fw::dataTypes::Tuple<float, int, double> t_1{32.324, 1023, -34.43};
+    //::fw::dataTypes::Tuple<float, int, double> t_1{32.324};
+    std::cout << t_1 << std::endl;
+    std::cout << -t_1 << std::endl;
+    std::cout << -t_1 * 2.0 << std::endl;
+
+    ::fw::dataTypes::internal::TupleBase<float, int, double> t{3.2f, 23, -2323.3453};
+    std::cout << t.x << ", " << t.y << ", " << t.z << std::endl;
+*/
+
+    element_type x(1,2,3);
+    //x = 1;
+    //x = {1, 2, 3};
 
     // initialization
     srand48(nx);
     const type value = 1.0 + static_cast<type>(drand48());
     std::cout << "initial value = " << value << std::endl;
-
+#if !defined(OLD)
     // benchmark
     double time = 0.0;
 
@@ -537,6 +556,7 @@ int main(int argc, char** argv)
     }
 
     std::cout << "elapsed time = " << (time / MEASUREMENT) * 1.0E3 << " ms" << std::endl;
+#endif
 
     return 0;
 }
