@@ -61,6 +61,15 @@ namespace XXX_NAMESPACE
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename ...T>
         struct Compare;
+        
+        template <>
+        struct Compare<>
+        {
+            using StrongerT = void;
+            using UnqualifiedStrongerT = void;
+            using WeakerT = void;
+            using UnqualifiedWeakerT = void;
+        };
 
         template <typename Head, typename ...Tail>
         struct Compare<Head, Tail...>
