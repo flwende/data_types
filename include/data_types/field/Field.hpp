@@ -261,7 +261,7 @@ namespace XXX_NAMESPACE
         } // namespace internal
 
         // Forward declaration.
-        template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout = ::XXX_NAMESPACE::memory::DataLayout::AoS>
+        template <typename, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
         class Field;
 
         namespace internal
@@ -484,7 +484,7 @@ namespace XXX_NAMESPACE
         //! \tparam Layout any of SoA (struct of arrays) and AoS (array of structs)
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout>
+        template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout = ::XXX_NAMESPACE::memory::DataLayout::AoS>
         class Field
         {
             static_assert(!std::is_const<ValueT>::value, "error: field with const elements is not allowed.");
