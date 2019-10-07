@@ -217,7 +217,7 @@ namespace XXX_NAMESPACE
             }
 
             //!
-            //! \brief Test for all parameters are convertible amongst eachother.
+            //! \brief Test for all parameters being convertible amongst eachother.
             //!
             //! \return `true` if all parameters are convertible amongst eachother, otherwise `false`
             //!
@@ -231,7 +231,7 @@ namespace XXX_NAMESPACE
             }
 
             //!
-            //! \brief Test for all parameters are constant qualified.
+            //! \brief Test for all parameters being constant qualified.
             //!
             //! \return `true` if all parameters are constant qualified, otherwise `false`
             //!
@@ -240,6 +240,42 @@ namespace XXX_NAMESPACE
                 static_assert(Size > 0, "error: empty parameter pack");
 
                 return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_const<T>::value ? 1 : 0)...) == Size;
+            }
+
+            //!
+            //! \brief Test for all parameters being fundamental.
+            //!
+            //! \return `true` if all parameters are fundamental, otherwise `false`
+            //!
+            static constexpr auto IsFundamental()
+            {
+                static_assert(Size > 0, "error: empty parameter pack");
+
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_fundamental<T>::value ? 1 : 0)...) == Size;
+            }
+
+            //!
+            //! \brief Test for all parameters being void types.
+            //!
+            //! \return `true` if all parameters are void types, otherwise `false`
+            //!
+            static constexpr auto IsVoid()
+            {
+                static_assert(Size > 0, "error: empty parameter pack");
+
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_void<T>::value ? 1 : 0)...) == Size;
+            }
+
+            //!
+            //! \brief Test for all parameters being volatile qualified.
+            //!
+            //! \return `true` if all parameters are volatile qualified, otherwise `false`
+            //!
+            static constexpr auto IsVolatile()
+            {
+                static_assert(Size > 0, "error: empty parameter pack");
+
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_volatile<T>::value ? 1 : 0)...) == Size;
             }
 
             //!
