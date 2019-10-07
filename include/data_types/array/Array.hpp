@@ -46,7 +46,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Array() : data{} {}
+            constexpr Array() = default;
 
             //!
             //! \brief Constructor.
