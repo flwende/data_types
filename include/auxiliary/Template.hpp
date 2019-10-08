@@ -60,7 +60,6 @@ namespace XXX_NAMESPACE
                 static constexpr auto Value() { return 0; }
             };
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief Get the value of the N-th parameter and its type in the variadic list.
             //!
@@ -68,7 +67,6 @@ namespace XXX_NAMESPACE
             //! \tparam Head type of the front most parameter (head)
             //! \tparam Tail variadic parameter list (tail)
             //!
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <SizeT N, typename Head, typename... Tail>
             struct Parameter<N, Head, Tail...>
             {
@@ -82,17 +80,18 @@ namespace XXX_NAMESPACE
                 //! \param tail remaining arguments
                 //! \return recursive list definition
                 //!
-                static constexpr auto Value(Head head, Tail... tail) { return Parameter<N - 1, Tail...>::Value(tail...); }
+                static constexpr auto Value(Head head, Tail... tail) -> typename Parameter<N - 1, Tail...>::Type
+                { 
+                    return Parameter<N - 1, Tail...>::Value(tail...);
+                }
             };
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief N = 0 specialization (recursion ancher definition).
             //!
             //! \tparam Head type of the N-th parameter
             //! \tparam Tail variadic parameter list (tail)
             //!
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename Head, typename... Tail>
             struct Parameter<0, Head, Tail...>
             {
@@ -106,7 +105,10 @@ namespace XXX_NAMESPACE
                 //! \param tail remaining arguments
                 //! \return the N-th argument
                 //!
-                static constexpr auto Value(Head head, Tail... tail) { return head; }
+                static constexpr auto Value(Head head, Tail... tail) -> Head
+                { 
+                    return head; 
+                }
             };
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -191,11 +193,13 @@ namespace XXX_NAMESPACE
             };
         } // namespace
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
         //! \brief A template parameter pack info data structure.
         //!
         //! \tparam T variadic parameter list
         //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename... T>
         struct Pack
         {
@@ -214,10 +218,8 @@ namespace XXX_NAMESPACE
             //! \return the N-th argument
             //!
             template <SizeT N>
-            static constexpr auto Value(T... values)
+            static constexpr auto Value(T... values) -> typename Parameter<N, T...>::Type
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
                 return Parameter<N, T...>::Value(values...);
             }
 
@@ -228,8 +230,6 @@ namespace XXX_NAMESPACE
             //!
             static constexpr auto IsSame()
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
                 using Head = typename Parameter<0, T...>::Type;
 
                 return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_same<Head, T>::value ? 1 : 0)...) == Size;
@@ -242,8 +242,6 @@ namespace XXX_NAMESPACE
             //!
             static constexpr auto SameSize()
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
                 using Head = typename Parameter<0, T...>::Type;
 
                 return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (sizeof(Head) == sizeof(T) ? 1 : 0)...) == Size;
@@ -256,8 +254,6 @@ namespace XXX_NAMESPACE
             //!
             static constexpr auto IsConvertible()
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
                 using Head = typename Parameter<0, T...>::Type;
 
                 return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_convertible<Head, T>::value ? 1 : 0)...) == Size;
@@ -310,8 +306,6 @@ namespace XXX_NAMESPACE
             //!
             static constexpr auto SizeOfLargestParameter()
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
                 return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Max(0, sizeof(T)...);
             }
 
@@ -322,8 +316,6 @@ namespace XXX_NAMESPACE
             //!
             static constexpr auto SizeOfPack()
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
                 return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, sizeof(T)...);
             }
 
@@ -334,8 +326,6 @@ namespace XXX_NAMESPACE
             //!
             static constexpr auto SizeOfPackExcludingLargestParameter()
             {
-                static_assert(Size > 0, "error: empty parameter pack");
-
                 constexpr SizeT size_of_largest_parameter = SizeOfLargestParameter();
 
                 return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (sizeof(T) == size_of_largest_parameter ? 0 : sizeof(T))...);
