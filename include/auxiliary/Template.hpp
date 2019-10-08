@@ -256,7 +256,15 @@ namespace XXX_NAMESPACE
             {
                 using Head = typename Parameter<0, T...>::Type;
 
-                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_convertible<Head, T>::value ? 1 : 0)...) == Size;
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_convertible<T, Head>::value ? 1 : 0)...) == Size;
+            }
+            
+            template <typename ...X>
+            static constexpr auto IsConvertible()
+            {
+                static_assert(sizeof...(X) == Size, "error: parameter lists have different size.");
+
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_convertible<T, X>::value ? 1 : 0)...) == Size;
             }
 
             //!
@@ -332,6 +340,20 @@ namespace XXX_NAMESPACE
             }
         };
 
+        /////////////////////////////////////////////////////////////////
+        //!
+        //! \brief Test for invocability of a callable.
+        //!
+        //! \tparam FuncT the type of a callable
+        //! \tparam T variadic parameter list
+        //!
+        /////////////////////////////////////////////////////////////////
+        template <typename FuncT, typename ...T>
+        struct IsInvocable
+        {
+            static constexpr bool value = std::is_constructible<std::function<void(T...)>, std::reference_wrapper<std::remove_reference_t<FuncT>>>::value;
+        };
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
         //! \brief Generate a type with up to 'FW_SEQ_MAX_N' template parameters
@@ -364,11 +386,6 @@ namespace XXX_NAMESPACE
                                                                                                                                                                                                                            \
         using Type = typename TypeGenImplementation<FW_SEQ_MAX_N - N, FW_SEQ_N(T)>::Type;                                                                                                                                \
     };
-        template <typename FuncT, typename ...T>
-        struct IsInvocable
-        {
-            static constexpr bool value = std::is_constructible<std::function<void(T...)>, std::reference_wrapper<std::remove_reference_t<FuncT>>>::value;
-        };
     } // namespace variadic
 
     namespace compileTime
@@ -478,26 +495,53 @@ namespace XXX_NAMESPACE
         };
 
         /////////////////////////////////////////////////////////////////
-        //
-        // A compile-time if-else.
-        //
+        //!
+        //! \brief A compile-time if-else.
+        //!
+        //! Mutli-versioning according to the value of the `Predicate` and
+        //! invocability of the argument(s).
+        //!
+        //! \tparam Predicate a predicate that is either `true` or `false`
+        //! \tparam T_1 type of `if` branch callable or argument
+        //! \tparam T_2 type of `else` branch callable or argument
+        //! \param x `if` branch callable or argument
+        //! \param y `else` branch callable or argument
+        //!
         /////////////////////////////////////////////////////////////////
-        template <bool C_Predicate, typename T_1, typename T_2>
+        template <bool Predicate, typename T_1, typename T_2>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        auto IfElse(const T_1& x, const T_2& y)
-            -> std::enable_if_t<C_Predicate, T_1&>
+        constexpr auto IfElse(T_1 x, T_2 y)
+            -> std::enable_if_t<Predicate && !::XXX_NAMESPACE::variadic::IsInvocable<T_1>::value, T_1>
         {
             return x;
         }
 
-        template <bool C_Predicate, typename T_1, typename T_2>
+        template <bool Predicate, typename T_1, typename T_2>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        auto IfElse(const T_1& x, const T_2& y)
-            -> std::enable_if_t<C_Predicate, T_2&>
+        constexpr auto IfElse(T_1 x, T_2 y)
+            -> std::enable_if_t<Predicate && ::XXX_NAMESPACE::variadic::IsInvocable<T_1>::value, decltype(x())>
+        {
+            return x();
+        }
+
+        template <bool Predicate, typename T_1, typename T_2>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        constexpr auto IfElse(T_1 x, T_2 y)
+            -> std::enable_if_t<!Predicate && !::XXX_NAMESPACE::variadic::IsInvocable<T_2>::value, T_2>
         {
             return y;
+        }
+
+        template <bool Predicate, typename T_1, typename T_2>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        constexpr auto IfElse(T_1 x, T_2 y)
+            -> std::enable_if_t<!Predicate && ::XXX_NAMESPACE::variadic::IsInvocable<T_2>::value, decltype(y())>
+        {
+            return y();
         }
     } // namespace compileTime
 } // namespace XXX_NAMESPACE
