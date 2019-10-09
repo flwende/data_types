@@ -112,7 +112,6 @@ namespace XXX_NAMESPACE
                 const SizeT stab_index;
             };
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief Accessor type for array subscript operator chaining [][]..[] (recursion anchor).
             //!
@@ -123,7 +122,6 @@ namespace XXX_NAMESPACE
             //! \tparam Dimension the dimension of the field
             //! \tparam Layout any of AoS, SoAi, SoA
             //!
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout>
             class Accessor<ValueT, 1, Dimension, Layout>
             {
@@ -266,6 +264,7 @@ namespace XXX_NAMESPACE
 
         namespace internal
         {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief A container type.
             //!
@@ -277,6 +276,7 @@ namespace XXX_NAMESPACE
             //! \tparam Layout any of AoS, SoAi, SoA
             //! \tparam Target the target platform
             //!
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout, target Target>
             class Container
             {
