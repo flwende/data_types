@@ -24,14 +24,14 @@ namespace XXX_NAMESPACE
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         namespace internal
         {
-            template <typename ...ValueT>
-            class TupleReverseData;
+            template <typename... ValueT>
+            class ReverseRecord;
 
-            template <typename ...ValueT>
-            class TupleData;
-        }
+            template <typename... ValueT>
+            class Record;
+        } // namespace internal
 
-        template <typename ...ValueT>
+        template <typename... ValueT>
         class Tuple;
 
         namespace internal
@@ -40,16 +40,16 @@ namespace XXX_NAMESPACE
             {
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //!
-                //! \brief Definition of a getter function to access the members of a `TupleReverseData` type.
+                //! \brief Definition of a getter function to access the members of a `ReverseRecord` type.
                 //!
                 //! Access to the members happens through type casting to the base class of the
-                //! `TupleReverseData` type recursively.
-                //! 
+                //! `ReverseRecord` type recursively.
+                //!
                 //! \tparam Index the index of the member
                 //! \tparam ValueT a variadic parameter list
                 //!
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-                template <SizeT Index, typename ...ValueT>
+                template <SizeT Index, typename... ValueT>
                 struct GetImplementation;
 
                 //!
@@ -57,9 +57,9 @@ namespace XXX_NAMESPACE
                 //!
                 //! \tparam Index the index of the data element
                 //! \tparam ValueT the type of the front most (current) member
-                //! \tparam Tail a variadic parameter list corresponding to the parameters of the base class of the current `TupleReverseData` type
+                //! \tparam Tail a variadic parameter list corresponding to the parameters of the base class of the current `ReverseRecord` type
                 //!
-                template <SizeT Index, typename ValueT, typename ...Tail>
+                template <SizeT Index, typename ValueT, typename... Tail>
                 struct GetImplementation<Index, ValueT, Tail...>
                 {
                     static_assert(Index > 0 && (Index < (1 + sizeof...(Tail))), "error: out of bounds.");
@@ -67,81 +67,67 @@ namespace XXX_NAMESPACE
                     //!
                     //! \brief Get the value of the requested member (according to `Index`).
                     //!
-                    //! \param tuple a reference to the considered `TupleReverseData` type
+                    //! \param tuple a reference to the considered `ReverseRecord` type
                     //! \return a reference to the requested member
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static inline constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<ValueT, Tail...>& tuple)
-                    {
-                        return GetImplementation<Index - 1, Tail...>::Value(tuple);
-                    }
+                    static inline constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& tuple) { return GetImplementation<Index - 1, Tail...>::Value(tuple); }
 
                     //!
                     //! \brief Get the value of the requested member (according to `Index`).
                     //!
-                    //! \param tuple a const reference to the considered `TupleReverseData` type
+                    //! \param tuple a const reference to the considered `ReverseRecord` type
                     //! \return a const reference to the requested member
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static inline constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<ValueT, Tail...>& tuple)
-                    {
-                        return GetImplementation<Index - 1, Tail...>::Value(tuple);
-                    }
+                    static inline constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& tuple) { return GetImplementation<Index - 1, Tail...>::Value(tuple); }
                 };
 
                 //!
                 //! \brief Definition of a getter function (recursion anchor).
                 //!
                 //! \tparam ValueT the type of the front most (requested) member
-                //! \tparam Tail a variadic parameter list corresponding to the parameters of the base class of the current `TupleReverseData` type
+                //! \tparam Tail a variadic parameter list corresponding to the parameters of the base class of the current `ReverseRecord` type
                 //!
-                template <typename ValueT, typename ...Tail>
+                template <typename ValueT, typename... Tail>
                 struct GetImplementation<0, ValueT, Tail...>
                 {
                     //!
                     //! \brief Get the value of the requested member (according to `Index`).
                     //!
-                    //! \param tuple a reference to the considered `TupleReverseData` type
+                    //! \param tuple a reference to the considered `ReverseRecord` type
                     //! \return a reference to the requested member
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static inline constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<ValueT, Tail...>& tuple)
-                    {
-                        return tuple.Get();
-                    }
+                    static inline constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& tuple) { return tuple.Get(); }
 
                     //!
                     //! \brief Get the value of the requested member (according to `Index`).
                     //!
-                    //! \param tuple a reference to the considered `TupleReverseData` type
+                    //! \param tuple a reference to the considered `ReverseRecord` type
                     //! \return a reference to the requested member
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static inline constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<ValueT, Tail...>& tuple)
-                    {
-                        return tuple.Get();
-                    }
+                    static inline constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& tuple) { return tuple.Get(); }
                 };
-            }
+            } // namespace
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
-            //! \brief A Getter function to access the members of a `TupleReverseData` type.
-            //! 
+            //! \brief A Getter function to access the members of a `ReverseRecord` type.
+            //!
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
-            //! \param tuple a reference to the considered `TupleReverseData` type
+            //! \param tuple a reference to the considered `ReverseRecord` type
             //! \return a reference to the requested member
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <SizeT Index, typename ...ValueT>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr inline auto& Get(internal::TupleReverseData<ValueT...>& tuple)
+            template <SizeT Index, typename... ValueT>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline auto& Get(internal::ReverseRecord<ValueT...>& tuple)
             {
                 constexpr SizeT N = sizeof...(ValueT);
 
@@ -152,18 +138,16 @@ namespace XXX_NAMESPACE
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
-            //! \brief A Getter function to access the members of a `TupleReverseData` type.
-            //! 
+            //! \brief A Getter function to access the members of a `ReverseRecord` type.
+            //!
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
-            //! \param tuple a const reference to the considered `TupleReverseData` type
+            //! \param tuple a const reference to the considered `ReverseRecord` type
             //! \return a const reference to the requested member
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <SizeT Index, typename ...ValueT>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr inline const auto& Get(const internal::TupleReverseData<ValueT...>& tuple)
+            template <SizeT Index, typename... ValueT>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline const auto& Get(const internal::ReverseRecord<ValueT...>& tuple)
             {
                 constexpr SizeT N = sizeof...(ValueT);
 
@@ -174,60 +158,56 @@ namespace XXX_NAMESPACE
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
-            //! \brief A Getter function to access the members of a `TupleData` type.
-            //! 
+            //! \brief A Getter function to access the members of a `Record` type.
+            //!
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
-            //! \param tuple a reference to the considered `TupleData` type
+            //! \param tuple a reference to the considered `Record` type
             //! \return a reference to the requested member
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <SizeT Index, typename ...ValueT>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr inline auto& Get(internal::TupleData<ValueT...>& tuple)
+            template <SizeT Index, typename... ValueT>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline auto& Get(internal::Record<ValueT...>& tuple)
             {
                 constexpr SizeT N = sizeof...(ValueT);
 
                 static_assert(N > 0 && Index < N, "error: out of bounds.");
 
-                return Get<(N - 1) - Index>(static_cast<typename internal::TupleData<ValueT...>::Base&>(tuple));
+                return Get<(N - 1) - Index>(static_cast<typename internal::Record<ValueT...>::Base&>(tuple));
             }
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
-            //! \brief A Getter function to access the members of a `TupleData` type.
-            //! 
+            //! \brief A Getter function to access the members of a `Record` type.
+            //!
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
-            //! \param tuple a const reference to the considered `TupleData` type
+            //! \param tuple a const reference to the considered `Record` type
             //! \return a const reference to the requested member
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <SizeT Index, typename ...ValueT>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr inline const auto& Get(const internal::TupleData<ValueT...>& tuple)
+            template <SizeT Index, typename... ValueT>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline const auto& Get(const internal::Record<ValueT...>& tuple)
             {
                 constexpr SizeT N = sizeof...(ValueT);
 
                 static_assert(N > 0 && Index < N, "error: out of bounds.");
 
-                return Get<(N - 1) - Index>(static_cast<const typename internal::TupleData<ValueT...>::Base&>(tuple));
+                return Get<(N - 1) - Index>(static_cast<const typename internal::Record<ValueT...>::Base&>(tuple));
             }
-        }
+        } // namespace internal
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
         //! \brief A Getter function to access the members of a `Tuple` type.
-        //! 
+        //!
         //! \tparam Index the index of the member
         //! \tparam ValueT a variadic parameter list
         //! \param tuple a reference to the considered `Tuple` type
         //! \return a reference to the requested member
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <SizeT Index, typename ...ValueT>
+        template <SizeT Index, typename... ValueT>
         static inline constexpr auto& Get(Tuple<ValueT...>& tuple)
         {
             return internal::Get<Index>(tuple.data);
@@ -236,19 +216,19 @@ namespace XXX_NAMESPACE
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
         //! \brief A Getter function to access the members of a `Tuple` type.
-        //! 
+        //!
         //! \tparam Index the index of the member
         //! \tparam ValueT a variadic parameter list
         //! \param tuple a reference to the considered `Tuple` type
         //! \return a reference to the requested member
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <SizeT Index, typename ...ValueT>
+        template <SizeT Index, typename... ValueT>
         static inline constexpr const auto& Get(const Tuple<ValueT...>& tuple)
         {
             return internal::Get<Index>(tuple.data);
         }
-    }
-}
+    } // namespace dataTypes
+} // namespace XXX_NAMESPACE
 
 #endif
