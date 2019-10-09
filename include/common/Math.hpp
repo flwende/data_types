@@ -35,7 +35,7 @@ namespace XXX_NAMESPACE
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        constexpr auto GreatestCommonDivisor(T x_1, T x_2)
+        constexpr inline auto GreatestCommonDivisor(T x_1, T x_2)
         {
             static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
 
@@ -68,7 +68,7 @@ namespace XXX_NAMESPACE
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        constexpr auto LeastCommonMultiple(T x_1, T x_2)
+        constexpr inline auto LeastCommonMultiple(T x_1, T x_2)
         {
             static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
 
@@ -92,7 +92,7 @@ namespace XXX_NAMESPACE
         template <SizeT N, typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        constexpr auto IsPowerOf(T x)
+        constexpr inline auto IsPowerOf(T x)
         {
             static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
             static_assert(N > 0, "error: N must be at least 1");
@@ -127,7 +127,7 @@ namespace XXX_NAMESPACE
         template <SizeT N>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        constexpr auto PrefixSum(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& x)
+        constexpr inline auto PrefixSum(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& x)
         {
             ::XXX_NAMESPACE::dataTypes::SizeArray<N> y{0};
 
@@ -139,91 +139,112 @@ namespace XXX_NAMESPACE
             return y;
         }
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //!
-        //! \brief Definition of some math functions and constants for different FP types
-        //!
-        //! \tparam T a floating point type
-        //!
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T>
-        struct Func
+        namespace internal
         {
-            static constexpr T One = static_cast<T>(1.0);
-            static constexpr T MinusOne = static_cast<T>(-1.0);
-
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
-            //! \brief Calculate the square root.
+            //! \brief Definition of some math functions and constants for different FP types
             //!
-            //! \param x argument
-            //! \return the square root of `x`
+            //! \tparam T a floating point type
             //!
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            static auto sqrt(const T x)
-            { 
-                assert(x >= static_cast<T>(0));
-
-                return std::sqrt(x);
-            }
-
-            //!
-            //! \brief Calculate the logarithm.
-            //!
-            //! \param x argument
-            //! \return the logarithm of `x`
-            //!
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            static auto log(const T x)
-            { 
-                assert(x > static_cast<T>(0));
-
-                return std::log(x);
-            }
-
-            //!
-            //! \brief Calculate the exponential.
-            //!
-            //! \param x argument
-            //! \return the exponential of `x`
-            //!
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            static auto exp(const T x) { return std::exp(x); }
-        };
-
-        //!
-        //! \brief Specialization for `T=float`.
-        //!
-        template <>
-        struct Func<float>
-        {
-            static constexpr float One = 1.0F;
-            static constexpr float MinusOne = -1.0F;
-
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            static auto sqrt(const float x)
-            { 
-                assert(x >= 0.0F);
-
-                return sqrtf(x);
-            }
-
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            static auto log(const float x)
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            template <typename T>
+            struct Func
             {
-                assert(x > 0.0F);
+                static constexpr T One = static_cast<T>(1.0);
+                static constexpr T MinusOne = static_cast<T>(-1.0);
 
-                return logf(x);
-            }
+                //!
+                //! \brief Calculate the square root.
+                //!
+                //! \param x argument
+                //! \return the square root of `x`
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto sqrt(const T x)
+                { 
+                    assert(x >= static_cast<T>(0));
 
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            static auto exp(const float x) { return expf(x); }
-        };
+                    return std::sqrt(x);
+                }
+
+                //!
+                //! \brief Calculate the logarithm.
+                //!
+                //! \param x argument
+                //! \return the logarithm of `x`
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto log(const T x)
+                { 
+                    assert(x > static_cast<T>(0));
+
+                    return std::log(x);
+                }
+
+                //!
+                //! \brief Calculate the exponential.
+                //!
+                //! \param x argument
+                //! \return the exponential of `x`
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto exp(const T x) { return std::exp(x); }
+            };
+
+            //!
+            //! \brief Specialization for `T=float`.
+            //!
+            template <>
+            struct Func<float>
+            {
+                static constexpr float One = 1.0F;
+                static constexpr float MinusOne = -1.0F;
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto sqrt(const float x)
+                { 
+                    assert(x >= 0.0F);
+
+                    return sqrtf(x);
+                }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto log(const float x)
+                {
+                    assert(x > 0.0F);
+
+                    return logf(x);
+                }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto exp(const float x) { return expf(x); }
+            };
+        }
+
+        template <typename T>
+        static inline auto Sqrt(const T& value)
+        {
+            return internal::Func<T>::sqrt(value);
+        }
+
+        template <typename T>
+        static inline auto Log(const T& value)
+        {
+            return internal::Func<T>::log(value);
+        }
+
+        template <typename T>
+        static inline auto Exp(const T& value)
+        {
+            return internal::Func<T>::exp(value);
+        }
     } // namespace math
 } // namespace XXX_NAMESPACE
 

@@ -96,21 +96,21 @@ namespace XXX_NAMESPACE
         template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
         inline vec<T, 1> OP (IN_T<T, 1>& v)                                                                                                     \
         {                                                                                                                                       \
-            return vec<T, 1>(::XXX_NAMESPACE::math::Func<T>:: OP (v.x));                                                                               \
+            return vec<T, 1>(::XXX_NAMESPACE::math::internal::Func<T>:: OP (v.x));                                                                               \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
         inline vec<T, 2> OP (IN_T<T, 2>& v)                                                                                                     \
         {                                                                                                                                       \
-            return vec<T, 2>(::XXX_NAMESPACE::math::Func<T>:: OP (v.x), ::XXX_NAMESPACE::math::Func<T>:: OP (v.y));                                           \
+            return vec<T, 2>(::XXX_NAMESPACE::math::internal::Func<T>:: OP (v.x), ::XXX_NAMESPACE::math::internal::Func<T>:: OP (v.y));                                           \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
         inline vec<X, 3> OP (IN_T<T, 3>& v)                                                                                                     \
         {                                                                                                                                       \
-            return vec<X, 3>(::XXX_NAMESPACE::math::Func<X>:: OP (v.x),                                                                                \
-                            ::XXX_NAMESPACE::math::Func<X>:: OP (v.y),                                                                                \
-                            ::XXX_NAMESPACE::math::Func<X>:: OP (v.z));                                                                               \
+            return vec<X, 3>(::XXX_NAMESPACE::math::internal::Func<X>:: OP (v.x),                                                                                \
+                            ::XXX_NAMESPACE::math::internal::Func<X>:: OP (v.y),                                                                                \
+                            ::XXX_NAMESPACE::math::internal::Func<X>:: OP (v.z));                                                                               \
         }                                                                                                                                       \
 
     #define MACRO_QUALIFIED(OP, IN_T)                                                                                                           \

@@ -278,7 +278,7 @@ namespace VEC_NAMESPACE
             //! \return Euclidean norm
             inline T length() const
             {
-                return ::XXX_NAMESPACE::math::Func<T>::sqrt(x * x + y * y);
+                return ::XXX_NAMESPACE::math::internal::Func<T>::sqrt(x * x + y * y);
             }
         };
 
@@ -402,7 +402,7 @@ namespace VEC_NAMESPACE
             //! \return Euclidean norm
             inline T length() const
             {
-                return ::XXX_NAMESPACE::math::Func<T>::sqrt(x * x + y * y + z * z);
+                return ::XXX_NAMESPACE::math::internal::Func<T>::sqrt(x * x + y * y + z * z);
             }
         };
 

@@ -24,7 +24,7 @@ using namespace fw;
             #pragma omp simd        
             for (SizeT i = 0; i < n[0]; ++i)
             {
-                y[i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[i], ::fw::math::Func<element_type>::exp(x_2[i])));
+                y[i] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[i], ::fw::math::internal::Func<element_type>::exp(x_2[i])));
             }
 
             return (omp_get_wtime() - time);
@@ -44,7 +44,7 @@ using namespace fw;
                 #pragma omp simd
                 for (SizeT i = 0; i < n[0]; ++i)
                 {
-                    y[j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[j][i], ::fw::math::Func<element_type>::exp(x_2[j][i])));
+                    y[j][i] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[j][i], ::fw::math::internal::Func<element_type>::exp(x_2[j][i])));
                 }
             }
 
@@ -67,7 +67,7 @@ using namespace fw;
                     #pragma omp simd
                     for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        y[k][j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[k][j][i], ::fw::math::Func<element_type>::exp(x_2[k][j][i])));
+                        y[k][j][i] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[k][j][i], ::fw::math::internal::Func<element_type>::exp(x_2[k][j][i])));
                     }
                 }
             }
@@ -92,7 +92,7 @@ using namespace fw;
                     for (SizeT i = 0; i < n[0]; ++i)
                     {
                         const SizeT index = (k * n[1] + j) * n[0] + i;
-                        y[index] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[index], ::fw::math::Func<element_type>::exp(x_2[index])));
+                        y[index] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[index], ::fw::math::internal::Func<element_type>::exp(x_2[index])));
                     }
                 }
             }
@@ -115,7 +115,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::exp(x[i].y);
                 #else
-                x[i] = ::fw::math::Func<element_type>::exp(x[i]);
+                x[i] = ::fw::math::internal::Func<element_type>::exp(x[i]);
                 #endif
             }
 
@@ -139,7 +139,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::exp(x[j][i].y);
                     #else
-                    x[j][i] = ::fw::math::Func<element_type>::exp(x[j][i]);
+                    x[j][i] = ::fw::math::internal::Func<element_type>::exp(x[j][i]);
                     #endif
                 }
             }
@@ -166,7 +166,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::exp(x[k][j][i].y);
                         #else
-                        x[k][j][i] = ::fw::math::Func<element_type>::exp(x[k][j][i]);
+                        x[k][j][i] = ::fw::math::internal::Func<element_type>::exp(x[k][j][i]);
                         #endif
                     }
                 }
@@ -195,7 +195,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::exp(x[index].y);
                         #else
-                        x[index] = ::fw::math::Func<element_type>::exp(x[index]);
+                        x[index] = ::fw::math::internal::Func<element_type>::exp(x[index]);
                         #endif
                     }
                 }
@@ -219,7 +219,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::log(x[i].y);
                 #else
-                x[i] = ::fw::math::Func<element_type>::log(x[i]);
+                x[i] = ::fw::math::internal::Func<element_type>::log(x[i]);
                 #endif
             }
 
@@ -243,7 +243,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::log(x[j][i].y);
                     #else
-                    x[j][i] = ::fw::math::Func<element_type>::log(x[j][i]);
+                    x[j][i] = ::fw::math::internal::Func<element_type>::log(x[j][i]);
                     #endif
                 }
             }
@@ -270,7 +270,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::log(x[k][j][i].y);
                         #else
-                        x[k][j][i] = ::fw::math::Func<element_type>::log(x[k][j][i]);
+                        x[k][j][i] = ::fw::math::internal::Func<element_type>::log(x[k][j][i]);
                         #endif
                     }
                 }
@@ -299,7 +299,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::log(x[index].y);
                         #else
-                        x[index] = ::fw::math::Func<element_type>::log(x[index]);
+                        x[index] = ::fw::math::internal::Func<element_type>::log(x[index]);
                         #endif
                     }
                 }
@@ -323,7 +323,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::exp(x[i].y);
                 #else
-                y[i] = ::fw::math::Func<element_type>::exp(x[i]);
+                y[i] = ::fw::math::internal::Func<element_type>::exp(x[i]);
                 #endif
             }
 
@@ -347,7 +347,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::exp(x[j][i].y);
                     #else
-                    y[j][i] = ::fw::math::Func<element_type>::exp(x[j][i]);
+                    y[j][i] = ::fw::math::internal::Func<element_type>::exp(x[j][i]);
                     #endif
                 }
             }
@@ -374,7 +374,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::exp(x[k][j][i].y);
                         #else
-                        y[k][j][i] = ::fw::math::Func<element_type>::exp(x[k][j][i]);
+                        y[k][j][i] = ::fw::math::internal::Func<element_type>::exp(x[k][j][i]);
                         #endif
                     }
                 }
@@ -403,7 +403,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::exp(x[index].y);
                         #else
-                        y[index] = ::fw::math::Func<element_type>::exp(x[index]);
+                        y[index] = ::fw::math::internal::Func<element_type>::exp(x[index]);
                         #endif
                     }
                 }
@@ -427,7 +427,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::log(x[i].y);
                 #else
-                y[i] = ::fw::math::Func<element_type>::log(x[i]);
+                y[i] = ::fw::math::internal::Func<element_type>::log(x[i]);
                 #endif
             }
 
@@ -451,7 +451,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::log(x[j][i].y);
                     #else
-                    y[j][i] = ::fw::math::Func<element_type>::log(x[j][i]);
+                    y[j][i] = ::fw::math::internal::Func<element_type>::log(x[j][i]);
                     #endif
                 }
             }
@@ -478,7 +478,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::log(x[k][j][i].y);
                         #else
-                        y[k][j][i] = ::fw::math::Func<element_type>::log(x[k][j][i]);
+                        y[k][j][i] = ::fw::math::internal::Func<element_type>::log(x[k][j][i]);
                         #endif
                     }
                 }
@@ -507,7 +507,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::log(x[index].y);
                         #else
-                        y[index] = ::fw::math::Func<element_type>::log(x[index]);
+                        y[index] = ::fw::math::internal::Func<element_type>::log(x[index]);
                         #endif
                     }
                 }
@@ -530,7 +530,7 @@ using namespace fw;
             #pragma omp simd        
             for (SizeT i = 0; i < n[0]; ++i)
             {
-                y[i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[i], ::fw::math::Func<element_type>::exp(x_2[i])));
+                y[i] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[i], ::fw::math::internal::Func<element_type>::exp(x_2[i])));
             }
 
             return (omp_get_wtime() - time);
@@ -550,7 +550,7 @@ using namespace fw;
                 #pragma omp simd
                 for (SizeT i = 0; i < n[0]; ++i)
                 {
-                    y[j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[j][i], ::fw::math::Func<element_type>::exp(x_2[j][i])));
+                    y[j][i] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[j][i], ::fw::math::internal::Func<element_type>::exp(x_2[j][i])));
                 }
             }
 
@@ -573,7 +573,7 @@ using namespace fw;
                     #pragma omp simd
                     for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        y[k][j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[k][j][i], ::fw::math::Func<element_type>::exp(x_2[k][j][i])));
+                        y[k][j][i] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[k][j][i], ::fw::math::internal::Func<element_type>::exp(x_2[k][j][i])));
                     }
                 }
             }
@@ -598,7 +598,7 @@ using namespace fw;
                     for (SizeT i = 0; i < n[0]; ++i)
                     {
                         const SizeT index = (k * n[1] + j) * n[0] + i;
-                        y[index] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[index], ::fw::math::Func<element_type>::exp(x_2[index])));
+                        y[index] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[index], ::fw::math::internal::Func<element_type>::exp(x_2[index])));
                     }
                 }
             }
@@ -621,7 +621,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::exp(x[i].y);
                 #else
-                x[i] = ::fw::math::Func<element_type>::exp(x[i]);
+                x[i] = ::fw::math::internal::Func<element_type>::exp(x[i]);
                 #endif
             }
 
@@ -645,7 +645,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::exp(x[j][i].y);
                     #else
-                    x[j][i] = ::fw::math::Func<element_type>::exp(x[j][i]);
+                    x[j][i] = ::fw::math::internal::Func<element_type>::exp(x[j][i]);
                     #endif
                 }
             }
@@ -672,7 +672,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::exp(x[k][j][i].y);
                         #else
-                        x[k][j][i] = ::fw::math::Func<element_type>::exp(x[k][j][i]);
+                        x[k][j][i] = ::fw::math::internal::Func<element_type>::exp(x[k][j][i]);
                         #endif
                     }
                 }
@@ -701,7 +701,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::exp(x[index].y);
                         #else
-                        x[index] = ::fw::math::Func<element_type>::exp(x[index]);
+                        x[index] = ::fw::math::internal::Func<element_type>::exp(x[index]);
                         #endif
                     }
                 }
@@ -725,7 +725,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::log(x[i].y);
                 #else
-                x[i] = ::fw::math::Func<element_type>::log(x[i]);
+                x[i] = ::fw::math::internal::Func<element_type>::log(x[i]);
                 #endif
             }
 
@@ -749,7 +749,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::log(x[j][i].y);
                     #else
-                    x[j][i] = ::fw::math::Func<element_type>::log(x[j][i]);
+                    x[j][i] = ::fw::math::internal::Func<element_type>::log(x[j][i]);
                     #endif
                 }
             }
@@ -776,7 +776,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::log(x[k][j][i].y);
                         #else
-                        x[k][j][i] = ::fw::math::Func<element_type>::log(x[k][j][i]);
+                        x[k][j][i] = ::fw::math::internal::Func<element_type>::log(x[k][j][i]);
                         #endif
                     }
                 }
@@ -805,7 +805,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::log(x[index].y);
                         #else
-                        x[index] = ::fw::math::Func<element_type>::log(x[index]);
+                        x[index] = ::fw::math::internal::Func<element_type>::log(x[index]);
                         #endif
                     }
                 }
@@ -829,7 +829,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::exp(x[i].y);
                 #else
-                y[i] = ::fw::math::Func<element_type>::exp(x[i]);
+                y[i] = ::fw::math::internal::Func<element_type>::exp(x[i]);
                 #endif
             }
 
@@ -853,7 +853,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::exp(x[j][i].y);
                     #else
-                    y[j][i] = ::fw::math::Func<element_type>::exp(x[j][i]);
+                    y[j][i] = ::fw::math::internal::Func<element_type>::exp(x[j][i]);
                     #endif
                 }
             }
@@ -880,7 +880,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::exp(x[k][j][i].y);
                         #else
-                        y[k][j][i] = ::fw::math::Func<element_type>::exp(x[k][j][i]);
+                        y[k][j][i] = ::fw::math::internal::Func<element_type>::exp(x[k][j][i]);
                         #endif
                     }
                 }
@@ -909,7 +909,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::exp(x[index].y);
                         #else
-                        y[index] = ::fw::math::Func<element_type>::exp(x[index]);
+                        y[index] = ::fw::math::internal::Func<element_type>::exp(x[index]);
                         #endif
                     }
                 }
@@ -933,7 +933,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::log(x[i].y);
                 #else
-                y[i] = ::fw::math::Func<element_type>::log(x[i]);
+                y[i] = ::fw::math::internal::Func<element_type>::log(x[i]);
                 #endif
             }
 
@@ -957,7 +957,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::log(x[j][i].y);
                     #else
-                    y[j][i] = ::fw::math::Func<element_type>::log(x[j][i]);
+                    y[j][i] = ::fw::math::internal::Func<element_type>::log(x[j][i]);
                     #endif
                 }
             }
@@ -984,7 +984,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::log(x[k][j][i].y);
                         #else
-                        y[k][j][i] = ::fw::math::Func<element_type>::log(x[k][j][i]);
+                        y[k][j][i] = ::fw::math::internal::Func<element_type>::log(x[k][j][i]);
                         #endif
                     }
                 }
@@ -1013,7 +1013,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::log(x[index].y);
                         #else
-                        y[index] = ::fw::math::Func<element_type>::log(x[index]);
+                        y[index] = ::fw::math::internal::Func<element_type>::log(x[index]);
                         #endif
                     }
                 }
@@ -1036,7 +1036,7 @@ using namespace fw;
             #pragma omp simd        
             for (SizeT i = 0; i < n[0]; ++i)
             {
-                y[i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[i], ::fw::math::Func<element_type>::exp(x_2[i])));
+                y[i] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[i], ::fw::math::internal::Func<element_type>::exp(x_2[i])));
             }
 
             return (omp_get_wtime() - time);
@@ -1056,7 +1056,7 @@ using namespace fw;
                 #pragma omp simd
                 for (SizeT i = 0; i < n[0]; ++i)
                 {
-                    y[j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[j][i], ::fw::math::Func<element_type>::exp(x_2[j][i])));
+                    y[j][i] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[j][i], ::fw::math::internal::Func<element_type>::exp(x_2[j][i])));
                 }
             }
 
@@ -1079,7 +1079,7 @@ using namespace fw;
                     #pragma omp simd
                     for (SizeT i = 0; i < n[0]; ++i)
                     {
-                        y[k][j][i] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[k][j][i], ::fw::math::Func<element_type>::exp(x_2[k][j][i])));
+                        y[k][j][i] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[k][j][i], ::fw::math::internal::Func<element_type>::exp(x_2[k][j][i])));
                     }
                 }
             }
@@ -1104,7 +1104,7 @@ using namespace fw;
                     for (SizeT i = 0; i < n[0]; ++i)
                     {
                         const SizeT index = (k * n[1] + j) * n[0] + i;
-                        y[index] = 0.5 + ::fw::math::Func<element_type>::log(1.0 + fw::cross(x_1[index], ::fw::math::Func<element_type>::exp(x_2[index])));
+                        y[index] = 0.5 + ::fw::math::internal::Func<element_type>::log(1.0 + fw::cross(x_1[index], ::fw::math::internal::Func<element_type>::exp(x_2[index])));
                     }
                 }
             }
@@ -1127,7 +1127,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::exp(x[i].y);
                 #else
-                x[i] = ::fw::math::Func<element_type>::exp(x[i]);
+                x[i] = ::fw::math::internal::Func<element_type>::exp(x[i]);
                 #endif
             }
 
@@ -1151,7 +1151,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::exp(x[j][i].y);
                     #else
-                    x[j][i] = ::fw::math::Func<element_type>::exp(x[j][i]);
+                    x[j][i] = ::fw::math::internal::Func<element_type>::exp(x[j][i]);
                     #endif
                 }
             }
@@ -1178,7 +1178,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::exp(x[k][j][i].y);
                         #else
-                        x[k][j][i] = ::fw::math::Func<element_type>::exp(x[k][j][i]);
+                        x[k][j][i] = ::fw::math::internal::Func<element_type>::exp(x[k][j][i]);
                         #endif
                     }
                 }
@@ -1207,7 +1207,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::exp(x[index].y);
                         #else
-                        x[index] = ::fw::math::Func<element_type>::exp(x[index]);
+                        x[index] = ::fw::math::internal::Func<element_type>::exp(x[index]);
                         #endif
                     }
                 }
@@ -1231,7 +1231,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 x[i].y = std::log(x[i].y);
                 #else
-                x[i] = ::fw::math::Func<element_type>::log(x[i]);
+                x[i] = ::fw::math::internal::Func<element_type>::log(x[i]);
                 #endif
             }
 
@@ -1255,7 +1255,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     x[j][i].y = std::log(x[j][i].y);
                     #else
-                    x[j][i] = ::fw::math::Func<element_type>::log(x[j][i]);
+                    x[j][i] = ::fw::math::internal::Func<element_type>::log(x[j][i]);
                     #endif
                 }
             }
@@ -1282,7 +1282,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[k][j][i].y = std::log(x[k][j][i].y);
                         #else
-                        x[k][j][i] = ::fw::math::Func<element_type>::log(x[k][j][i]);
+                        x[k][j][i] = ::fw::math::internal::Func<element_type>::log(x[k][j][i]);
                         #endif
                     }
                 }
@@ -1311,7 +1311,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         x[index].y = std::log(x[index].y);
                         #else
-                        x[index] = ::fw::math::Func<element_type>::log(x[index]);
+                        x[index] = ::fw::math::internal::Func<element_type>::log(x[index]);
                         #endif
                     }
                 }
@@ -1335,7 +1335,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::exp(x[i].y);
                 #else
-                y[i] = ::fw::math::Func<element_type>::exp(x[i]);
+                y[i] = ::fw::math::internal::Func<element_type>::exp(x[i]);
                 #endif
             }
 
@@ -1359,7 +1359,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::exp(x[j][i].y);
                     #else
-                    y[j][i] = ::fw::math::Func<element_type>::exp(x[j][i]);
+                    y[j][i] = ::fw::math::internal::Func<element_type>::exp(x[j][i]);
                     #endif
                 }
             }
@@ -1386,7 +1386,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::exp(x[k][j][i].y);
                         #else
-                        y[k][j][i] = ::fw::math::Func<element_type>::exp(x[k][j][i]);
+                        y[k][j][i] = ::fw::math::internal::Func<element_type>::exp(x[k][j][i]);
                         #endif
                     }
                 }
@@ -1415,7 +1415,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::exp(x[index].y);
                         #else
-                        y[index] = ::fw::math::Func<element_type>::exp(x[index]);
+                        y[index] = ::fw::math::internal::Func<element_type>::exp(x[index]);
                         #endif
                     }
                 }
@@ -1439,7 +1439,7 @@ using namespace fw;
                 #if defined(ELEMENT_ACCESS)
                 y[i].y = std::log(x[i].y);
                 #else
-                y[i] = ::fw::math::Func<element_type>::log(x[i]);
+                y[i] = ::fw::math::internal::Func<element_type>::log(x[i]);
                 #endif
             }
 
@@ -1463,7 +1463,7 @@ using namespace fw;
                     #if defined(ELEMENT_ACCESS)
                     y[j][i].y = std::log(x[j][i].y);
                     #else
-                    y[j][i] = ::fw::math::Func<element_type>::log(x[j][i]);
+                    y[j][i] = ::fw::math::internal::Func<element_type>::log(x[j][i]);
                     #endif
                 }
             }
@@ -1490,7 +1490,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[k][j][i].y = std::log(x[k][j][i].y);
                         #else
-                        y[k][j][i] = ::fw::math::Func<element_type>::log(x[k][j][i]);
+                        y[k][j][i] = ::fw::math::internal::Func<element_type>::log(x[k][j][i]);
                         #endif
                     }
                 }
@@ -1519,7 +1519,7 @@ using namespace fw;
                         #if defined(ELEMENT_ACCESS)
                         y[index].y = std::log(x[index].y);
                         #else
-                        y[index] = ::fw::math::Func<element_type>::log(x[index]);
+                        y[index] = ::fw::math::internal::Func<element_type>::log(x[index]);
                         #endif
                     }
                 }

@@ -6,243 +6,231 @@
 #if !defined(DATA_TYPES_TUPLE_TUPLE_MATH_HPP)
 #define DATA_TYPES_TUPLE_TUPLE_MATH_HPP
 
+#include <type_traits>
+
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
 
 #include <common/Math.hpp>
 #include <data_types/DataTypes.hpp>
+#include <data_types/tuple/Tuple.hpp>
 
 namespace XXX_NAMESPACE
 {
     namespace math
     {
-    #define MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                               \
-        template <typename T_1, typename T_2, typename T_3, typename T_4, typename T_5, typename T_6,                                           \
-                typename X_1 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
-                typename X_2 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_2, T_5>::UnqualifiedStrongerT,                                \
-                typename X_3 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_3, T_6>::UnqualifiedStrongerT>                                \
-        inline ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> operator OP (IN_T_1<T_1, T_2, T_3>& x_1, IN_T_2<T_4, T_5, T_6>& x_2)                                        \
-        {                                                                                                                                       \
-            ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \
-            y OP ## = x_2;                                                                                                                      \
-            return y;                                                                                                                           \
-        }                                                                                                                                       \
-
-    #define MACRO_QUALIFIED(OP, IN_T_1, IN_T_2)                                                                                                 \
-        MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                                   \
-        MACRO_UNQUALIFIED(OP, const IN_T_1, IN_T_2)                                                                                             \
-        MACRO_UNQUALIFIED(OP, IN_T_1, const IN_T_2)                                                                                             \
-        MACRO_UNQUALIFIED(OP, const IN_T_1, const IN_T_2)                                                                                       \
-
-    #define MACRO(OP, IN_T_1, IN_T_2)                                                                                                           \
-        MACRO_QUALIFIED(OP, IN_T_1, IN_T_1)                                                                                                     \
-        MACRO_QUALIFIED(OP, IN_T_2, IN_T_2)                                                                                                     \
-        MACRO_QUALIFIED(OP, IN_T_1, IN_T_2)                                                                                                     \
-        MACRO_QUALIFIED(OP, IN_T_2, IN_T_1)                                                                                                     \
-
-        MACRO(+, ::XXX_NAMESPACE::dataTypes::Tuple, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-        MACRO(-, ::XXX_NAMESPACE::dataTypes::Tuple, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-        MACRO(*, ::XXX_NAMESPACE::dataTypes::Tuple, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-        MACRO(/, ::XXX_NAMESPACE::dataTypes::Tuple, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-
-    #undef MACRO
-    #undef MACRO_QUALIFIED
-    #undef MACRO_UNQUALIFIED
-
-    #define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
-        template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
-                typename X_2 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::UnqualifiedStrongerT,                                \
-                typename X_3 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::UnqualifiedStrongerT>                                \
-        inline ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> operator OP (IN_T<T_1, T_2, T_3>& x_1, const T_4 x_2)                                                       \
-        {                                                                                                                                       \
-            ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \
-            y OP ## = x_2;                                                                                                                      \
-            return y;                                                                                                                           \
-        }                                                                                                                                       \
-                                                                                                                                                \
-        template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT,                                \
-                typename X_2 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_3>::UnqualifiedStrongerT,                                \
-                typename X_3 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT>                                \
-        inline ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> operator OP (const T_1 x_1, IN_T<T_2, T_3, T_4>& x_2)                                                       \
-        {                                                                                                                                       \
-            ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> y(x_1);                                                                                                        \
-            y OP ## = x_2;                                                                                                                      \
-            return y;                                                                                                                           \
-        }                                                                                                                                       \
-
-    #define MACRO_QUALIFIED(OP, IN_T)                                                                                                           \
-        MACRO_UNQUALIFIED(OP, IN_T)                                                                                                             \
-        MACRO_UNQUALIFIED(OP, const IN_T)                                                                                                       \
-
-    #define MACRO(OP, IN_T)                                                                                                                     \
-        MACRO_QUALIFIED(OP, IN_T)                                                                                                               \
-
-        MACRO(+, ::XXX_NAMESPACE::dataTypes::Tuple)
-        MACRO(-, ::XXX_NAMESPACE::dataTypes::Tuple)
-        MACRO(*, ::XXX_NAMESPACE::dataTypes::Tuple)
-        MACRO(/, ::XXX_NAMESPACE::dataTypes::Tuple)
-
-        MACRO(+, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-        MACRO(-, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-        MACRO(*, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-        MACRO(/, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-
-    #undef MACRO
-    #undef MACRO_QUALIFIED
-    #undef MACRO_UNQUALIFIED
-
-    #define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
-        template <typename T_1, typename T_2, typename T_3,                                                                                     \
-                typename X_1 = typename std::remove_cv<T_1>::type,                                                                            \
-                typename X_2 = typename std::remove_cv<T_2>::type,                                                                            \
-                typename X_3 = typename std::remove_cv<T_3>::type>                                                                            \
-        inline ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> OP (IN_T<T_1, T_2, T_3>& t)                                                                                 \
-        {                                                                                                                                       \
-            return ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3>(::XXX_NAMESPACE::math::Func<T_1>:: OP (t.x),                                                                   \
-                                        ::XXX_NAMESPACE::math::Func<T_2>:: OP (t.y),                                                                   \
-                                        ::XXX_NAMESPACE::math::Func<T_3>:: OP (t.z));                                                                  \
-        }                                                                                                                                       \
-
-    #define MACRO_QUALIFIED(OP, IN_T)                                                                                                           \
-        MACRO_UNQUALIFIED(OP, IN_T)                                                                                                             \
-        MACRO_UNQUALIFIED(OP, const IN_T)                                                                                                       \
-
-    #define MACRO(OP, IN_T)                                                                                                                     \
-        MACRO_QUALIFIED(OP, IN_T)                                                                                                               \
-
-        MACRO(sqrt, ::XXX_NAMESPACE::dataTypes::Tuple)
-        MACRO(log, ::XXX_NAMESPACE::dataTypes::Tuple)
-        MACRO(exp, ::XXX_NAMESPACE::dataTypes::Tuple)
-
-        MACRO(sqrt, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-        MACRO(log, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-        MACRO(exp, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-
-    #undef MACRO
-    #undef MACRO_QUALIFIED
-    #undef MACRO_UNQUALIFIED
-
-    #define MACRO_UNQUALIFIED(IN_T_1, IN_T_2)                                                                                                   \
-        template <typename T_1, typename T_2, typename T_3, typename T_4, typename T_5, typename T_6,                                           \
-                typename X_1 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
-                typename X_2 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_2, T_5>::UnqualifiedStrongerT,                                \
-                typename X_3 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_3, T_6>::UnqualifiedStrongerT>                                \
-        inline ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> cross_product(IN_T_1<T_1, T_2, T_3>& x_1, IN_T_2<T_4, T_5, T_6>& x_2)                                       \
-        {                                                                                                                                       \
-            return ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3>(x_1.y * x_2.z - x_1.z * x_2.y, x_1.z * x_2.x - x_1.x * x_2.z, x_1.x * x_2.y - x_1.y * x_2.x);           \
-        }                                                                                                                                       \
-                                                                                                                                                \
-        template <typename T_1, typename T_2, typename T_3, typename T_4, typename T_5, typename T_6,                                           \
-                typename X_1 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
-                typename X_2 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_2, T_5>::UnqualifiedStrongerT,                                \
-                typename X_3 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_3, T_6>::UnqualifiedStrongerT>                                \
-        inline ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> cross(IN_T_1<T_1, T_2, T_3>& x_1, IN_T_2<T_4, T_5, T_6>& x_2)                                               \
-        {                                                                                                                                       \
-            return cross_product(x_1, x_2);                                                                                                     \
-        }                                                                                                                                       \
-
-    #define MACRO_QUALIFIED(IN_T_1, IN_T_2)                                                                                                     \
-        MACRO_UNQUALIFIED(IN_T_1, IN_T_2)                                                                                                       \
-        MACRO_UNQUALIFIED(const IN_T_1, IN_T_2)                                                                                                 \
-        MACRO_UNQUALIFIED(IN_T_1, const IN_T_2)                                                                                                 \
-        MACRO_UNQUALIFIED(const IN_T_1, const IN_T_2)                                                                                           \
-
-    #define MACRO(IN_T_1, IN_T_2)                                                                                                               \
-        MACRO_QUALIFIED(IN_T_1, IN_T_1)                                                                                                         \
-        MACRO_QUALIFIED(IN_T_2, IN_T_2)                                                                                                         \
-        MACRO_QUALIFIED(IN_T_1, IN_T_2)                                                                                                         \
-        MACRO_QUALIFIED(IN_T_2, IN_T_1)                                                                                                         \
-
-        MACRO(::XXX_NAMESPACE::dataTypes::Tuple, ::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-
-    #undef MACRO
-    #undef MACRO_QUALIFIED
-    #undef MACRO_UNQUALIFIED
-
-    #define MACRO_UNQUALIFIED(IN_T)                                                                                                             \
-        template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
-                typename X_2 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::UnqualifiedStrongerT,                                \
-                typename X_3 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::UnqualifiedStrongerT>                                \
-        inline ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> cross_product(IN_T<T_1, T_2, T_3>& x_1, const T_4 x_2)                                                      \
-        {                                                                                                                                       \
-            return ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3>(x_1.y - x_1.z, x_1.z - x_1.x, x_1.x - x_1.y) * x_2;                                                     \
-        }                                                                                                                                       \
-                                                                                                                                                \
-        template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
-                typename X_2 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::UnqualifiedStrongerT,                                \
-                typename X_3 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::UnqualifiedStrongerT>                                \
-        inline ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> cross_product(const T_1 x_1, IN_T<T_2, T_2, T_3>& x_2)                                                      \
-        {                                                                                                                                       \
-            return x_1 * ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3>(x_2.z - x_2.y, x_2.x - x_2.z, x_2.y - x_2.x);                                                     \
-        }                                                                                                                                       \
-                                                                                                                                                \
-        template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
-                typename X_2 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::UnqualifiedStrongerT,                                \
-                typename X_3 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::UnqualifiedStrongerT>                                \
-        inline ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> cross(IN_T<T_1, T_2, T_3>& x_1, const T_4 x_2)                                                              \
-        {                                                                                                                                       \
-            return cross_product(x_1, x_2);                                                                                                     \
-        }                                                                                                                                       \
-                                                                                                                                                \
-        template <typename T_1, typename T_2, typename T_3, typename T_4,                                                                       \
-                typename X_1 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_1, T_4>::UnqualifiedStrongerT,                                \
-                typename X_2 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_2, T_4>::UnqualifiedStrongerT,                                \
-                typename X_3 = typename ::XXX_NAMESPACE::dataTypes::Compare<T_3, T_4>::UnqualifiedStrongerT>                                \
-        inline ::XXX_NAMESPACE::dataTypes::Tuple<X_1, X_2, X_3> cross(const T_1 x_1, IN_T<T_2, T_2, T_3>& x_2)                                                              \
-        {                                                                                                                                       \
-            return cross_product(x_1, x_2);                                                                                                     \
-        }                                                                                                                                       \
-
-    #define MACRO_QUALIFIED(IN_T)                                                                                                               \
-        MACRO_UNQUALIFIED(IN_T)                                                                                                                 \
-        MACRO_UNQUALIFIED(const IN_T)                                                                                                           \
-        
-    #define MACRO(IN_T)                                                                                                                         \
-        MACRO_QUALIFIED(IN_T)                                                                                                                   \
-        
-        MACRO(::XXX_NAMESPACE::dataTypes::Tuple)
-        MACRO(::XXX_NAMESPACE::dataTypes::internal::TupleProxy)
-
-    #undef MACRO
-    #undef MACRO_QUALIFIED
-    #undef MACRO_UNQUALIFIED
-
-        template <typename TupleT>
-        struct Func;
-
-        template <>
-        struct Func<::XXX_NAMESPACE::dataTypes::Tuple<>> {};
-
-        template <typename ...ValueT>
-        struct Func<::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>>
-        {
-            using Tuple = ::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>;
-            
-            template <typename X>
-            static auto sqrt(X x) -> Tuple
-            {
-                return ::XXX_NAMESPACE::math::sqrt(x);
-            }
-
-            template <typename X>
-            static auto log(X x) -> Tuple
-            {
-                return ::XXX_NAMESPACE::math::log(x);
-            }
-
-            template <typename X>
-            static auto exp(X x) -> Tuple
-            {
-                return ::XXX_NAMESPACE::math::exp(x);
-            }
-        };
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Arithmetic on `Tuple` and `TupleProxy` types.
+        //
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define MACRO_(OP, IN_T_1, IN_T_2)                                                                                                                                                                                         \
+    template <typename... T_1, typename... T_2>                                                                                                                                                                            \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const ::XXX_NAMESPACE::dataTypes::IN_T_1<T_1...>& x_1, const ::XXX_NAMESPACE::dataTypes::IN_T_2<T_2...>& x_2)                                                 \
+    {                                                                                                                                                                                                                      \
+        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
+                                                                                                                                                                                                                           \
+        constexpr SizeT N_1 = sizeof...(T_1);                                                                                                                                                                              \
+        constexpr SizeT N_2 = sizeof...(T_2);                                                                                                                                                                              \
+                                                                                                                                                                                                                           \
+        static_assert(N_1 == N_2, "error: parameter lists have different size.");                                                                                                                                          \
+                                                                                                                                                                                                                           \
+        Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y(x_1);                                                                                                                                                 \
+                                                                                                                                                                                                                           \
+        ::XXX_NAMESPACE::compileTime::Loop<N_1>::Execute([&y, &x_2](const auto I) { Get<I>(y) OP## = Get<I>(x_2); });                                                                                                      \
+                                                                                                                                                                                                                           \
+        return y;                                                                                                                                                                                                          \
     }
-}
+
+#define MACRO(OP, IN_T_1, IN_T_2)                                                                                                                                                                                          \
+    MACRO_(OP, IN_T_1, IN_T_1)                                                                                                                                                                                             \
+    MACRO_(OP, IN_T_2, IN_T_2)                                                                                                                                                                                             \
+    MACRO_(OP, IN_T_1, IN_T_2)                                                                                                                                                                                             \
+    MACRO_(OP, IN_T_2, IN_T_1)
+
+        MACRO(+, Tuple, internal::TupleProxy)
+        MACRO(-, Tuple, internal::TupleProxy)
+        MACRO(*, Tuple, internal::TupleProxy)
+        MACRO(/, Tuple, internal::TupleProxy)
+
+#undef MACRO
+#undef MACRO_
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Arithmetic on `Tuple` / `TupleProxy` types and scalars.
+        //
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define MACRO(OP, IN_T)                                                                                                                                                                                                    \
+    template <typename T_2, typename... T_1, typename EnableType = std::enable_if_t<std::is_fundamental<T_2>::value>>                                                                                                      \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const ::XXX_NAMESPACE::dataTypes::IN_T<T_1...>& x_1, const T_2 x_2)                                                                                           \
+    {                                                                                                                                                                                                                      \
+        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
+                                                                                                                                                                                                                           \
+        constexpr SizeT N = sizeof...(T_1);                                                                                                                                                                                \
+                                                                                                                                                                                                                           \
+        Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y(x_1);                                                                                                                                                 \
+                                                                                                                                                                                                                           \
+        ::XXX_NAMESPACE::compileTime::Loop<N>::Execute([&y, x_2](const auto I) { Get<I>(y) OP## = x_2; });                                                                                                                 \
+                                                                                                                                                                                                                           \
+        return y;                                                                                                                                                                                                          \
+    }                                                                                                                                                                                                                      \
+                                                                                                                                                                                                                           \
+    template <typename T_1, typename... T_2, typename EnableType = std::enable_if_t<std::is_fundamental<T_1>::value>>                                                                                                      \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const T_1 x_1, const ::XXX_NAMESPACE::dataTypes::IN_T<T_2...>& x_2)                                                                                           \
+    {                                                                                                                                                                                                                      \
+        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
+                                                                                                                                                                                                                           \
+        constexpr SizeT N = sizeof...(T_2);                                                                                                                                                                                \
+                                                                                                                                                                                                                           \
+        Tuple<typename Compare<T_2, T_1>::UnqualifiedStrongerT...> y(x_1);                                                                                                                                                 \
+                                                                                                                                                                                                                           \
+        ::XXX_NAMESPACE::compileTime::Loop<N>::Execute([&y, &x_2](const auto I) { Get<I>(y) OP## = Get<I>(x_2); });                                                                                                        \
+                                                                                                                                                                                                                           \
+        return y;                                                                                                                                                                                                          \
+    }
+
+        MACRO(+, Tuple)
+        MACRO(-, Tuple)
+        MACRO(*, Tuple)
+        MACRO(/, Tuple)
+
+        MACRO(+, internal::TupleProxy)
+        MACRO(-, internal::TupleProxy)
+        MACRO(*, internal::TupleProxy)
+        MACRO(/, internal::TupleProxy)
+
+#undef MACRO
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Cross produce on `Tuple` and `TupleProxy` types.
+        //
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define MACRO_(IN_T_1, IN_T_2)                                                                                                                                                                                             \
+    template <typename... T_1, typename... T_2>                                                                                                                                                                            \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto CrossProduct(const ::XXX_NAMESPACE::dataTypes::IN_T_1<T_1...>& x_1, const ::XXX_NAMESPACE::dataTypes::IN_T_2<T_2...>& x_2)                                                \
+    {                                                                                                                                                                                                                      \
+        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
+                                                                                                                                                                                                                           \
+        constexpr SizeT N_1 = sizeof...(T_1);                                                                                                                                                                              \
+        constexpr SizeT N_2 = sizeof...(T_2);                                                                                                                                                                              \
+                                                                                                                                                                                                                           \
+        static_assert(N_1 == 3, "error: implementation for 3 components only.");                                                                                                                                           \
+        static_assert(N_1 == N_2, "error: parameter lists have different size.");                                                                                                                                          \
+                                                                                                                                                                                                                           \
+        Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y;                                                                                                                                                      \
+                                                                                                                                                                                                                           \
+        Get<0>(y) = Get<1>(x_1) * Get<2>(x_2) - Get<2>(x_1) * Get<1>(x_2);                                                                                                                                                 \
+        Get<1>(y) = Get<2>(x_1) * Get<0>(x_2) - Get<0>(x_1) * Get<2>(x_2);                                                                                                                                                 \
+        Get<2>(y) = Get<0>(x_1) * Get<1>(x_2) - Get<1>(x_1) * Get<0>(x_2);                                                                                                                                                 \
+                                                                                                                                                                                                                           \
+        return y;                                                                                                                                                                                                          \
+    }
+
+#define MACRO(IN_T_1, IN_T_2)                                                                                                                                                                                              \
+    MACRO_(IN_T_1, IN_T_1)                                                                                                                                                                                                 \
+    MACRO_(IN_T_2, IN_T_2)                                                                                                                                                                                                 \
+    MACRO_(IN_T_1, IN_T_2)                                                                                                                                                                                                 \
+    MACRO_(IN_T_2, IN_T_1)
+
+        MACRO(Tuple, internal::TupleProxy)
+
+#undef MACRO
+#undef MACRO_
+
+        template <typename TupleT_1, typename TupleT_2>
+        HOST_VERSION CUDA_DEVICE_VERSION inline auto Cross(const TupleT_1& x_1, const TupleT_2& x_2)
+        {
+            return CrossProduct(x_1, x_2);
+        }
+
+        namespace internal
+        {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //
+            // Sqrt, Log, Exp functions `Tuple` and `TupleProxy` types.
+            //
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define MACRO(OP, IN_T)                                                                                                                                                                                                    \
+    template <typename... T>                                                                                                                                                                                               \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto OP(const ::XXX_NAMESPACE::dataTypes::IN_T<T...>& x)                                                                                                                       \
+    {                                                                                                                                                                                                                      \
+        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
+                                                                                                                                                                                                                           \
+        constexpr SizeT N = sizeof...(T);                                                                                                                                                                                  \
+                                                                                                                                                                                                                           \
+        Tuple<std::decay_t<T>...> y;                                                                                                                                                                                       \
+                                                                                                                                                                                                                           \
+        ::XXX_NAMESPACE::compileTime::Loop<N>::Execute([&y, &x](const auto I) {                                                                                                                                            \
+            using ElementT = std::decay_t<decltype(Get<I>(y))>;                                                                                                                                                            \
+                                                                                                                                                                                                                           \
+            Get<I>(y) = ::XXX_NAMESPACE::math::internal::Func<ElementT>::OP(Get<I>(x));                                                                                                                                    \
+        });                                                                                                                                                                                                                \
+                                                                                                                                                                                                                           \
+        return y;                                                                                                                                                                                                          \
+    }
+
+            MACRO(sqrt, Tuple)
+            MACRO(log, Tuple)
+            MACRO(exp, Tuple)
+
+            MACRO(sqrt, internal::TupleProxy)
+            MACRO(log, internal::TupleProxy)
+            MACRO(exp, internal::TupleProxy)
+
+#undef MACRO
+
+            //!
+            //! \brief Specialization of the `Func` data structure for the `Tuple` type.
+            //!
+            template <typename... ValueT>
+            struct Func<::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>>
+            {
+                using Tuple = ::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>;
+                using ElementT = typename ::XXX_NAMESPACE::dataTypes::Compare<ValueT...>::UnqualifiedStrongerT;
+
+                static constexpr ElementT One = static_cast<ElementT>(1);
+                static constexpr ElementT MinusOne = static_cast<ElementT>(-1);
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto sqrt(const Tuple& tuple) { return ::XXX_NAMESPACE::math::internal::sqrt(tuple); }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto log(const Tuple& tuple) { return ::XXX_NAMESPACE::math::internal::log(tuple); }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto exp(const Tuple& tuple) { return ::XXX_NAMESPACE::math::internal::exp(tuple); }
+
+                template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto sqrt(T value) -> Tuple
+                {
+                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::sqrt(value)};
+                }
+
+                template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto log(T value) -> Tuple
+                {
+                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::log(value)};
+                }
+
+                template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto exp(T value) -> Tuple
+                {
+                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::exp(value)};
+                }
+            };
+
+            template <>
+            struct Func<::XXX_NAMESPACE::dataTypes::Tuple<>>
+            {
+            };
+        } // namespace internal
+    } // namespace math
+} // namespace XXX_NAMESPACE
 
 #endif
