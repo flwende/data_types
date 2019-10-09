@@ -249,9 +249,13 @@ namespace XXX_NAMESPACE
 
                 // Needed for access to `Base` type.
                 template <SizeT Index, typename ...T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
                 friend constexpr auto& Get(TupleData<T...>&);
 
                 template <SizeT Index, typename ...T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
                 friend constexpr const auto& Get(const TupleData<T...>&);
 
             public:    
@@ -303,21 +307,38 @@ namespace XXX_NAMESPACE
                 
                 // Needed for access to `Base` type.
                 template <SizeT Index, typename ...T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
                 friend constexpr auto& Get(TupleData<T...>&);
 
                 template <SizeT Index, typename ...T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
                 friend constexpr const auto& Get(const TupleData<T...>&);
 
             public:
+                //!
+                //! \brief Standard constructor.
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleData() : Base() {}
             
+                //!
+                //! \brief Constructor.
+                //!
+                //! Assign some `value` to the member.
+                //!
+                //! \param value the value to be assigned to the member
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleData(ValueT value) : Base(value) {}
             };
 
+            //!
+            //! \brief Definition of a tuple type with no members.
+            //!
             template <>
             class TupleData<>
             {
@@ -326,10 +347,20 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr TupleData() {}
             };
-        }
-
-        namespace internal
-        {
+        
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //!
+            //! \brief A tuple type with non-reverse order of the members (base class).
+            //!
+            //! The order of the members in memory is NOT reversed: 
+            //! `TupleData<int, float> {..}` is equivalent to `class {int member_1; float member_2;..}`.
+            //! This tuple type inherits from a `TupleReverseData` type with inverted template parameter list.
+            //!
+            //! Note: This definition has at least two parameters in the list.
+            //!
+            //! \tparam ValueT a parameter list defining the member types
+            //!
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename ...ValueT>
             class TupleBase
             {   
