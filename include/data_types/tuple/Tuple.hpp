@@ -346,7 +346,7 @@ namespace XXX_NAMESPACE
         {
             using Base = internal::TupleBase<ValueT...>;
 
-            static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
+            static_assert(::XXX_NAMESPACE::variadic::Pack<std::decay_t<ValueT>...>::IsFundamental(), "error: fundamental parameter types assumed.");
             static_assert(!::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsConst(), "error: non-const parameter types assumed.");
             static_assert(!::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsVoid(), "error: non-void parameter types assumed.");
             static_assert(!::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsVolatile(), "error: non-volatile parameter types assumed.");
