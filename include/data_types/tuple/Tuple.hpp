@@ -6,15 +6,14 @@
 #if !defined(DATA_TYPES_TUPLE_TUPLE_HPP)
 #define DATA_TYPES_TUPLE_TUPLE_HPP
 
-#include <type_traits>
-
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
 #endif
 
-#include <common/Math.hpp>
 #include <auxiliary/Template.hpp>
+#include <common/Math.hpp>
 #include <data_types/integer_sequence/IntegerSequence.hpp>
+#include <data_types/tuple/Get.hpp>
 #include <platform/Target.hpp>
 
 namespace XXX_NAMESPACE
@@ -46,7 +45,10 @@ namespace XXX_NAMESPACE
                 template <typename T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleReverseData(T value) : Base(value), value(value) {}
+                constexpr TupleReverseData(T value) : Base(value), value(value)
+                {
+                    static_assert(::XXX_NAMESPACE::variadic::Pack<T, ValueT>::IsConvertible(), "error: types are not convertible.");
+                }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
@@ -108,15 +110,15 @@ namespace XXX_NAMESPACE
                 {
                     static constexpr SizeT N = sizeof...(ValueT);
 
-                    static_assert(N == sizeof...(I), "error: type parameter count does not match non-type parameter count");
+                    static_assert(N == sizeof...(I), "error: type parameter count does not match non-type parameter count.");
 
                     using Type = TupleReverseData<typename ::XXX_NAMESPACE::variadic::Pack<ValueT...>::template Type<(N - 1) - I>...>;
 
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static constexpr auto Make(ValueT... values)
+                    static constexpr auto Make(ValueT... values) -> Type
                     {
-                        return Type(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template Value<(N - 1) - I>(values...)...);
+                        return {::XXX_NAMESPACE::variadic::Pack<ValueT...>::template Value<(N - 1) - I>(values...)...};
                     }
                 };
             }
@@ -134,7 +136,10 @@ namespace XXX_NAMESPACE
                 template <typename T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleData(T value) : Base(value) {}
+                constexpr TupleData(T value) : Base(value)
+                {
+                    static_assert(::XXX_NAMESPACE::variadic::Pack<T, ValueT...>::IsConvertible(), "error: types are not convertible.");
+                }
                 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
@@ -164,102 +169,8 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr TupleData() {}
             };
-
         }
 
-        namespace internal
-        {
-            namespace
-            {
-                template <SizeT Index, typename ...ValueT>
-                struct GetImplementation;
-
-                template <SizeT Index, typename ValueT, typename ...Tail>
-                struct GetImplementation<Index, ValueT, Tail...>
-                {
-                    HOST_VERSION
-                    CUDA_DEVICE_VERSION
-                    static constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<ValueT, Tail...>& tuple)
-                    {
-                        return GetImplementation<Index - 1, Tail...>::Value(tuple);
-                    }
-
-                    HOST_VERSION
-                    CUDA_DEVICE_VERSION
-                    static constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<ValueT, Tail...>& tuple)
-                    {
-                        return GetImplementation<Index - 1, Tail...>::Value(tuple);
-                    }
-                };
-
-                template <typename ValueT, typename ...Tail>
-                struct GetImplementation<0, ValueT, Tail...>
-                {
-                    HOST_VERSION
-                    CUDA_DEVICE_VERSION
-                    static constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<ValueT, Tail...>& tuple)
-                    {
-                        return tuple.Get();
-                    }
-
-                    HOST_VERSION
-                    CUDA_DEVICE_VERSION
-                    static constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::TupleReverseData<ValueT, Tail...>& tuple)
-                    {
-                        return tuple.Get();
-                    }
-                };
-            }
-
-            template <SizeT Index, typename ...ValueT>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr auto& Get(internal::TupleReverseData<ValueT...>& tuple)
-            {
-                constexpr SizeT N = sizeof...(ValueT);
-
-                static_assert(N > 0 && Index < N, "error: out of bounds data access.");
-
-                return GetImplementation<Index, ValueT...>::Value(tuple);
-            }
-
-            template <SizeT Index, typename ...ValueT>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr const auto& Get(const internal::TupleReverseData<ValueT...>& tuple)
-            {
-                constexpr SizeT N = sizeof...(ValueT);
-
-                static_assert(N > 0 && Index < N, "error: out of bounds data access.");
-
-                return GetImplementation<Index, ValueT...>::Value(tuple);
-            }
-
-            template <SizeT Index, typename ...ValueT>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr auto& Get(internal::TupleData<ValueT...>& tuple)
-            {
-                constexpr SizeT N = sizeof...(ValueT);
-
-                static_assert(N > 0 && Index < N, "error: out of bounds data access.");
-
-                return Get<(N - 1) - Index>(static_cast<typename internal::TupleData<ValueT...>::Base&>(tuple));
-            }
-
-            template <SizeT Index, typename ...ValueT>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr const auto& Get(const internal::TupleData<ValueT...>& tuple)
-            {
-                constexpr SizeT N = sizeof...(ValueT);
-
-                static_assert(N > 0 && Index < N, "error: out of bounds data access.");
-
-                return Get<(N - 1) - Index>(static_cast<const typename internal::TupleData<ValueT...>::Base&>(tuple));
-            }
-        }
-        
         namespace internal
         {
             template <typename ...ValueT>
@@ -282,7 +193,10 @@ namespace XXX_NAMESPACE
                 template <typename T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(T value) : data(value) {}
+                constexpr TupleBase(T value) : data(value) 
+                {
+                    static_assert(::XXX_NAMESPACE::variadic::Pack<T, ValueT...>::IsConvertible(), "error: types are not convertible.");
+                }
         
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
@@ -295,7 +209,11 @@ namespace XXX_NAMESPACE
                 template <typename ...T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleProxy<T...>& proxy) : data(Dereference(proxy, ::XXX_NAMESPACE::dataTypes::MakeIntegerSequence<SizeT, sizeof...(ValueT)>())) {}
+                constexpr TupleBase(const TupleProxy<T...>& proxy) : data(Dereference(proxy, ::XXX_NAMESPACE::dataTypes::MakeIntegerSequence<SizeT, sizeof...(ValueT)>()))
+                {
+                    static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");
+                    static_assert(::XXX_NAMESPACE::variadic::Pack<T...>::template IsConvertible<ValueT...>(), "error: types are not convertible.");
+                }
                 
                 TupleData<ValueT...> data;
             };
@@ -548,19 +466,7 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             constexpr Tuple() {};   
         };
-
-        template <SizeT Index, typename ...ValueT>
-        static constexpr auto& Get(Tuple<ValueT...>& tuple)
-        {
-            return internal::Get<Index>(tuple.data);
-        }
-
-        template <SizeT Index, typename ...ValueT>
-        static constexpr const auto& Get(const Tuple<ValueT...>& tuple)
-        {
-            return internal::Get<Index>(tuple.data);
-        }
-        
+     
         template <typename ...ValueT>
         std::ostream& operator<<(std::ostream& os, const Tuple<ValueT...>& tuple)
         {
@@ -595,39 +501,6 @@ namespace XXX_NAMESPACE
             static constexpr bool value = true;
         };
     } // namespace internal
-
-    namespace math
-    {
-        template <typename TupleT>
-        struct Func;
-
-        template <>
-        struct Func<::XXX_NAMESPACE::dataTypes::Tuple<>> {};
-
-        template <typename ...ValueT>
-        struct Func<::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>>
-        {
-            using Tuple = ::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>;
-            
-            template <typename X>
-            static auto sqrt(X x) -> Tuple
-            {
-                return ::XXX_NAMESPACE::math::sqrt(x);
-            }
-
-            template <typename X>
-            static auto log(X x) -> Tuple
-            {
-                return ::XXX_NAMESPACE::math::log(x);
-            }
-
-            template <typename X>
-            static auto exp(X x) -> Tuple
-            {
-                return ::XXX_NAMESPACE::math::exp(x);
-            }
-        };
-    } // namespace math
 } // namespace XXX_NAMESPACE
 
 #endif
