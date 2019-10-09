@@ -37,6 +37,7 @@ namespace XXX_NAMESPACE
     {
         namespace
         {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief Allocator base class.
             //!
@@ -44,6 +45,7 @@ namespace XXX_NAMESPACE
             //!
             //! \tparam T the type of the memory allocation
             //!
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename T>
             class AllocatorBase
             {
