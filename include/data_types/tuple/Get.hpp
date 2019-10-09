@@ -24,11 +24,14 @@ namespace XXX_NAMESPACE
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         namespace internal
         {
-            template <typename... ValueT>
+            template <typename...>
             class ReverseRecord;
 
-            template <typename... ValueT>
+            template <typename...>
             class Record;
+
+            template <typename...>
+            class TupleProxy;
         } // namespace internal
 
         template <typename... ValueT>
@@ -219,14 +222,46 @@ namespace XXX_NAMESPACE
         //!
         //! \tparam Index the index of the member
         //! \tparam ValueT a variadic parameter list
-        //! \param tuple a reference to the considered `Tuple` type
-        //! \return a reference to the requested member
+        //! \param tuple a const reference to the considered `Tuple` type
+        //! \return a const reference to the requested member
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <SizeT Index, typename... ValueT>
         static inline constexpr const auto& Get(const Tuple<ValueT...>& tuple)
         {
             return internal::Get<Index>(tuple.data);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief A Getter function to access the members of a `TupleProxy` type.
+        //!
+        //! \tparam Index the index of the member
+        //! \tparam ValueT a variadic parameter list
+        //! \param proxy a reference to the considered `TupleProxy` type
+        //! \return a reference to the requested member
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <SizeT Index, typename... ValueT>
+        static inline constexpr auto& Get(internal::TupleProxy<ValueT...>& proxy)
+        {
+            return internal::Get<Index>(proxy.data);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief A Getter function to access the members of a `TupleProxy` type.
+        //!
+        //! \tparam Index the index of the member
+        //! \tparam ValueT a variadic parameter list
+        //! \param proxy a const reference to the considered `TupleProxy` type
+        //! \return a const reference to the requested member
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <SizeT Index, typename... ValueT>
+        static inline constexpr const auto& Get(const internal::TupleProxy<ValueT...>& proxy)
+        {
+            return internal::Get<Index>(proxy.data);
         }
     } // namespace dataTypes
 } // namespace XXX_NAMESPACE
