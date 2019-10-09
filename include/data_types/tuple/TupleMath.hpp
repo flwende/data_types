@@ -212,6 +212,36 @@ namespace XXX_NAMESPACE
     #undef MACRO
     #undef MACRO_QUALIFIED
     #undef MACRO_UNQUALIFIED
+
+        template <typename TupleT>
+        struct Func;
+
+        template <>
+        struct Func<::XXX_NAMESPACE::dataTypes::Tuple<>> {};
+
+        template <typename ...ValueT>
+        struct Func<::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>>
+        {
+            using Tuple = ::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>;
+            
+            template <typename X>
+            static auto sqrt(X x) -> Tuple
+            {
+                return ::XXX_NAMESPACE::math::sqrt(x);
+            }
+
+            template <typename X>
+            static auto log(X x) -> Tuple
+            {
+                return ::XXX_NAMESPACE::math::log(x);
+            }
+
+            template <typename X>
+            static auto exp(X x) -> Tuple
+            {
+                return ::XXX_NAMESPACE::math::exp(x);
+            }
+        };
     }
 }
 
