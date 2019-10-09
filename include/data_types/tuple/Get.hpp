@@ -40,7 +40,7 @@ namespace XXX_NAMESPACE
             {
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //!
-                //! \brief A Getter function to access the members of the `TupleReverseData` type.
+                //! \brief Definition of a getter function to access the members of a `TupleReverseData` type.
                 //!
                 //! Access to the members happens through type casting to the base class of the
                 //! `TupleReverseData` type recursively.
@@ -53,7 +53,7 @@ namespace XXX_NAMESPACE
                 struct GetImplementation;
 
                 //!
-                //! \brief Getter function implementation (recursive).
+                //! \brief Definition of a getter function (recursive).
                 //!
                 //! \tparam Index the index of the data element
                 //! \tparam ValueT the type of the front most (current) member
@@ -92,7 +92,7 @@ namespace XXX_NAMESPACE
                 };
 
                 //!
-                //! \brief Getter function implementation (recursion anchor).
+                //! \brief Definition of a getter function (recursion anchor).
                 //!
                 //! \tparam ValueT the type of the front most (requested) member
                 //! \tparam Tail a variadic parameter list corresponding to the parameters of the base class of the current `TupleReverseData` type
@@ -130,7 +130,7 @@ namespace XXX_NAMESPACE
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
-            //! \brief A Getter function to access the members of the `TupleReverseData` type.
+            //! \brief A Getter function to access the members of a `TupleReverseData` type.
             //! 
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
@@ -152,7 +152,7 @@ namespace XXX_NAMESPACE
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
-            //! \brief A Getter function to access the members of the `TupleReverseData` type.
+            //! \brief A Getter function to access the members of a `TupleReverseData` type.
             //! 
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
@@ -174,7 +174,7 @@ namespace XXX_NAMESPACE
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
-            //! \brief A Getter function to access the members of the `TupleData` type.
+            //! \brief A Getter function to access the members of a `TupleData` type.
             //! 
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
@@ -196,7 +196,7 @@ namespace XXX_NAMESPACE
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
-            //! \brief A Getter function to access the members of the `TupleData` type.
+            //! \brief A Getter function to access the members of a `TupleData` type.
             //! 
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
@@ -219,7 +219,7 @@ namespace XXX_NAMESPACE
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
-        //! \brief A Getter function to access the members of the `Tuple` type.
+        //! \brief A Getter function to access the members of a `Tuple` type.
         //! 
         //! \tparam Index the index of the member
         //! \tparam ValueT a variadic parameter list
@@ -235,7 +235,7 @@ namespace XXX_NAMESPACE
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
-        //! \brief A Getter function to access the members of the `Tuple` type.
+        //! \brief A Getter function to access the members of a `Tuple` type.
         //! 
         //! \tparam Index the index of the member
         //! \tparam ValueT a variadic parameter list

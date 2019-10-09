@@ -134,7 +134,7 @@ namespace XXX_NAMESPACE
             };
 
             //!
-            //! \brief Accumulate the variadic parameter/argument list.
+            //! \brief Accumulate the variadic parameter/argument list (recursive).
             //!
             //! \tparam AggregateT type of the aggregate
             //! \tparam Head type of the front most parameter (head)
@@ -398,7 +398,7 @@ namespace XXX_NAMESPACE
         namespace
         {
             //!
-            //! \brief Recursive definition of the loop.
+            //! \brief Definition of the loop (recursive).
             //!
             //! \tparam I value of the iteration variable
             //! \tparam C_Begin start value of the iteration variable
@@ -426,7 +426,7 @@ namespace XXX_NAMESPACE
             };
 
             //!
-            //! \brief Recursive definition of the loop (recursion anchor).
+            //! \brief Definition of the loop (recursion anchor).
             //!
             //! This is the first iteration of the loop.
             //!

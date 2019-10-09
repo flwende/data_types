@@ -37,12 +37,29 @@ namespace XXX_NAMESPACE
 
         namespace
         {
+            //!
+            //! \brief Definition of the integer sequence type (recursive).
+            //!
+            //! The recusion level (the integer) is decreased and prepended to the existing integer sequence.
+            //!
+            //! \tparam IntegerT the type of the integer
+            //! \tparam N the recursion level
+            //! \tparam I a variadic list of integers
+            //!
             template <typename IntegerT, std::size_t N, IntegerT... I>
             struct IntegerSequenceImplementation
             {
                 using Type = typename IntegerSequenceImplementation<IntegerT, N - 1, N - 1, I...>::Type;
             };
 
+            //!
+            //! \brief Definition of the integer sequence type (recursion anchor).
+            //!
+            //! The existing integer sequence is used to define the `IntegerSequence` type.
+            //!
+            //! \tparam IntegerT the type of the integer
+            //! \tparam I a variadic list of integers
+            //!
             template <typename IntegerT, IntegerT... I>
             struct IntegerSequenceImplementation<IntegerT, 0, I...>
             {
