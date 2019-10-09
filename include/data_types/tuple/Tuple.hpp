@@ -20,7 +20,11 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //
         // Forward declarations.
+        //
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
         namespace internal
         {
             template <typename...>
@@ -29,68 +33,147 @@ namespace XXX_NAMESPACE
 
         namespace internal
         {
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //!
+            //! \brief A tuple type with reverse order of the members.
+            //!
+            //! The order of the members in memory is reversed: 
+            //! `TupleReverseData<int, float> {..}` is equivalent to `class {float member_1; int member_2;..}`.
+            //!
+            //! \tparam ValueT a parameter list defining the member types
+            //!
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename ...ValueT>
             class TupleReverseData;
 
+            //!
+            //! \brief Definition of a tuple type with reverse order of the members (recursive).
+            //!
+            //! The recursion level follows from the the number of parameters removed from the original parameter list.
+            //! Each level of recursion takes the front most (current) parameter from the list and inherits from
+            //! a `TupleReverseData` data using the remaining parameter list.
+            //! Accessing the different members of the tuple type can happen through (implicit)
+            //! type casting to the base class. recursively.
+            //!
+            //! Note: This definition has at least two parameters in the list.
+            //!
+            //! \tparam ValueT the type of the current member
+            //! \tparam Tail the remaining parameter list
+            //!
             template <typename ValueT, typename ...Tail>
             class TupleReverseData<ValueT, Tail...> : public TupleReverseData<Tail...>
             {
                 using Base = TupleReverseData<Tail...>;
 
             public:
+                //!
+                //! \brief Standard constructor.
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleReverseData() : value{} {};
 
-                template <typename T>
+                //!
+                //! \brief Constructor.
+                //!
+                //! Assign some `value` to the current member.
+                //! All members are assigned the same value.
+                //!
+                //! \param value the value to be assigned to all members
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleReverseData(T value) : Base(value), value(value)
-                {
-                    static_assert(::XXX_NAMESPACE::variadic::Pack<T, ValueT>::IsConvertible(), "error: types are not convertible.");
-                }
+                constexpr TupleReverseData(ValueT value) : Base(value), value(value) {}
 
+                //!
+                //! \brief Constructor.
+                //!
+                //! Assign some `value` to the current member.
+                //!
+                //! \param value the value to be assigned to the current member
+                //! \param tail these values are forwarded to the base class
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleReverseData(ValueT value, Tail... tail) : Base(tail...), value(value) {}
 
+                //!
+                //! \brief Get the value of the current member.
+                //!
+                //! \return a reference to the current member
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr auto Get() -> ValueT& { return value; }
+                inline constexpr auto& Get() { return value; }
 
+                //!
+                //! \brief Get the value of the current member.
+                //!
+                //! \return a const reference to the current member
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr auto Get() const -> const ValueT& { return value; }
+                inline constexpr const auto& Get() const { return value; }
 
             protected:
                 ValueT value;
             };
 
+            //!
+            //! \brief Definition of a tuple type with reverse order of the members (recursion anchor).
+            //!
+            //! Note: This definition has a single parameter in the list.
+            //!
+            //! \tparam ValueT the type of the current member
+            //!
             template <typename ValueT>
             class TupleReverseData<ValueT>
             {
             public:
+                //!
+                //! \brief Standard constructor.
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleReverseData() : value{} {};
 
+                //!
+                //! \brief Constructor.
+                //!
+                //! Assign some `value` to the current member.
+                //!
+                //! \param value the value to be assigned to the current member
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleReverseData(ValueT value) : value(value) {}
 
+                //!
+                //! \brief Get the value of the current member.
+                //!
+                //! \return a reference to the current member
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr auto Get() -> ValueT& { return value; }
+                inline constexpr auto Get() -> ValueT& { return value; }
 
+                //!
+                //! \brief Get the value of the current member.
+                //!
+                //! \return a const reference to the current member
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr auto Get() const -> const ValueT& { return value; }
+                inline constexpr auto Get() const -> const ValueT& { return value; }
 
             protected:
                 ValueT value;
             
             };
 
+            //!
+            //! \brief Definition of a tuple type with no members.
+            //!
             template <>
             class TupleReverseData<> 
             {
@@ -102,11 +185,25 @@ namespace XXX_NAMESPACE
            
             namespace
             {
-                template <typename IntegerSequenceT, typename ...ValueT>
+                //!
+                //! \brief A Helper type for the construction of a tuple type with non-reverse order of the members.
+                //!
+                //! The definition uses an index sequence for the parameter and argument inversion.
+                //!
+                //! \tparam IndexSequenceT an sequence of indices from 0 to the number of template parameters in the variadic list
+                //! \tparam ValueT a variadic list of type parameters
+                //! 
+                template <typename IndexSequenceT, typename ...ValueT>
                 struct TupleDataHelper;
 
+                //!
+                //! \brief Definition of the helper type for the construction of a tuple type with non-reverse order of the members.
+                //!
+                //! \tparam ValueT a variadic list of type parameters
+                //! \tparam I a list of indices used for the parameter and argument inversion
+                //! 
                 template <typename ...ValueT, SizeT ...I>
-                struct TupleDataHelper<::XXX_NAMESPACE::dataTypes::IntegerSequence<SizeT, I...>, ValueT...>
+                struct TupleDataHelper<::XXX_NAMESPACE::dataTypes::IndexSequence<I...>, ValueT...>
                 {
                     static constexpr SizeT N = sizeof...(ValueT);
 
@@ -114,25 +211,64 @@ namespace XXX_NAMESPACE
 
                     using Type = TupleReverseData<typename ::XXX_NAMESPACE::variadic::Pack<ValueT...>::template Type<(N - 1) - I>...>;
 
+                    //!
+                    //! \brief Argument inversion.
+                    //!
+                    //! This function inverts the order of the arguments and forwards them to a `TupleReverseData` type with
+                    //! inverted template parameter list.
+                    //!
+                    //! \param values arguments to be forwarded to a `TupleReverseData` type with inverted template parameter list
+                    //! \return a `TupleReverseData` type with inverted template parameter list
+                    //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static constexpr auto Make(ValueT... values) -> Type
+                    static inline constexpr auto Make(ValueT... values) -> Type
                     {
                         return {::XXX_NAMESPACE::variadic::Pack<ValueT...>::template Value<(N - 1) - I>(values...)...};
                     }
                 };
             }
 
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //!
+            //! \brief A tuple type with non-reverse order of the members.
+            //!
+            //! The order of the members in memory is NOT reversed: 
+            //! `TupleData<int, float> {..}` is equivalent to `class {int member_1; float member_2;..}`.
+            //! This tuple type inherits from a `TupleReverseData` type with inverted template parameter list.
+            //!
+            //! Note: This definition has at least two parameters in the list.
+            //!
+            //! \tparam ValueT a parameter list defining the member types
+            //!
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename ...ValueT>
-            class TupleData : public TupleDataHelper<::XXX_NAMESPACE::dataTypes::IntegerSequenceT<SizeT, sizeof...(ValueT)>, ValueT...>::Type
+            class TupleData : public TupleDataHelper<::XXX_NAMESPACE::dataTypes::IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Type
             {
-            public:
-                using Base = typename TupleDataHelper<::XXX_NAMESPACE::dataTypes::IntegerSequenceT<SizeT, sizeof...(ValueT)>, ValueT...>::Type;
-                
+                using Base = typename TupleDataHelper<::XXX_NAMESPACE::dataTypes::IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Type;
+
+                // Needed for access to `Base` type.
+                template <SizeT Index, typename ...T>
+                friend constexpr auto& Get(TupleData<T...>&);
+
+                template <SizeT Index, typename ...T>
+                friend constexpr const auto& Get(const TupleData<T...>&);
+
+            public:    
+                //!
+                //! \brief Standard constructor.
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleData() : Base() {}
                 
+                //!
+                //! \brief Constructor.
+                //!
+                //! Assign the same `value` to all members.
+                //!
+                //! \param value the value to be assigned to all members
+                //!
                 template <typename T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
@@ -141,17 +277,38 @@ namespace XXX_NAMESPACE
                     static_assert(::XXX_NAMESPACE::variadic::Pack<T, ValueT...>::IsConvertible(), "error: types are not convertible.");
                 }
                 
+                //!
+                //! \brief Constructor.
+                //!
+                //! Assign some `values` to the members.
+                //!
+                //! \param values the values to be assigned to the members
+                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleData(ValueT... values) : Base(TupleDataHelper<::XXX_NAMESPACE::dataTypes::IntegerSequenceT<SizeT, sizeof...(ValueT)>, ValueT...>::Make(values...)) {}
+                constexpr TupleData(ValueT... values) : Base(TupleDataHelper<::XXX_NAMESPACE::dataTypes::IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Make(values...)) {}
             };
 
+            //!
+            //! \brief Definition of a tuple type with non-reverse order of the members.
+            //!
+            //! Note: This definition has a single parameter in the list.
+            //!
+            //! \tparam ValueT the type of the member
+            //!
             template <typename ValueT>
             class TupleData<ValueT> : public TupleReverseData<ValueT>
             {
-            public:
                 using Base = TupleReverseData<ValueT>;
+                
+                // Needed for access to `Base` type.
+                template <SizeT Index, typename ...T>
+                friend constexpr auto& Get(TupleData<T...>&);
 
+                template <SizeT Index, typename ...T>
+                friend constexpr const auto& Get(const TupleData<T...>&);
+
+            public:
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleData() : Base() {}
@@ -179,7 +336,7 @@ namespace XXX_NAMESPACE
                 template <typename Proxy, SizeT ...I>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static constexpr auto Dereference(const Proxy& proxy, ::XXX_NAMESPACE::dataTypes::IntegerSequence<SizeT, I...>)
+                static inline constexpr auto Dereference(const Proxy& proxy, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>)
                     -> TupleData<ValueT...>
                 {
                     return {internal::Get<I>(proxy.data)...};
@@ -209,7 +366,7 @@ namespace XXX_NAMESPACE
                 template <typename ...T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleProxy<T...>& proxy) : data(Dereference(proxy, ::XXX_NAMESPACE::dataTypes::MakeIntegerSequence<SizeT, sizeof...(ValueT)>()))
+                constexpr TupleBase(const TupleProxy<T...>& proxy) : data(Dereference(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(ValueT)>()))
                 {
                     static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");
                     static_assert(::XXX_NAMESPACE::variadic::Pack<T...>::template IsConvertible<ValueT...>(), "error: types are not convertible.");
