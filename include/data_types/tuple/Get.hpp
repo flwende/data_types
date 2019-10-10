@@ -231,4 +231,24 @@ namespace XXX_NAMESPACE
     } // namespace dataTypes
 } // namespace XXX_NAMESPACE
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Overload of `std::get` for compatibility.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+namespace std
+{
+    template <std::size_t Index, typename ...ValueT>
+    static inline constexpr auto& get(::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>& tuple)
+    {
+        return ::XXX_NAMESPACE::dataTypes::Get<Index>(tuple);
+    }
+
+    template <std::size_t Index, typename ...ValueT>
+    static inline constexpr const auto& get(const ::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>& tuple)
+    {
+        return ::XXX_NAMESPACE::dataTypes::Get<Index>(tuple);
+    }
+}
+
 #endif
