@@ -110,7 +110,7 @@ namespace XXX_NAMESPACE
                     static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");
                     static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T...>(), "error: types are not convertible.");
 
-                    ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { internal::Get<I>(this->data) = internal::Get<I>(tuple.data); });
+                    ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) = Get<I>(tuple); });
 
                     return *this;
                 }
@@ -132,7 +132,7 @@ namespace XXX_NAMESPACE
                 {
                     static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
 
-                    ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([value, this](const auto I) { internal::Get<I>(this->data) = value; });
+                    ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([value, this](const auto I) { Get<I>(*this) = value; });
 
                     return *this;
                 }
