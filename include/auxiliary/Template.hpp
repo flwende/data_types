@@ -250,21 +250,29 @@ namespace XXX_NAMESPACE
             //!
             //! \brief Test for all parameters being convertible amongst eachother.
             //!
+            //! \tparam X a type-parameter list to be considered for conversion
             //! \return `true` if all parameters are convertible amongst eachother, otherwise `false`
             //!
-            static constexpr auto IsConvertible()
+            template <typename ...X>
+            static constexpr auto IsConvertibleTo() -> std::enable_if_t<(sizeof...(X) == 1), bool>
             {
-                using Head = typename Parameter<0, T...>::Type;
+                using Head = typename Parameter<0, X...>::Type;
 
                 return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_convertible<T, Head>::value ? 1 : 0)...) == Size;
             }
-            
+
             template <typename ...X>
-            static constexpr auto IsConvertible()
+            static constexpr auto IsConvertibleTo() -> std::enable_if_t<(sizeof...(X) > 1), bool>
             {
                 static_assert(sizeof...(X) == Size, "error: parameter lists have different size.");
 
                 return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_convertible<T, X>::value ? 1 : 0)...) == Size;
+            }
+
+            template <typename ...X>
+            static constexpr auto IsConvertibleFrom()
+            {
+                return IsConvertibleTo<X...>();
             }
 
             //!
