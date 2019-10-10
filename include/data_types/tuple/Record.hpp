@@ -73,7 +73,7 @@ namespace XXX_NAMESPACE
                 template <typename T>
                 HOST_VERSION CUDA_DEVICE_VERSION constexpr ReverseRecord(T value) : Base(value), value(value)
                 {
-                    static_assert(::XXX_NAMESPACE::variadic::Pack<T, ValueT>::IsConvertible(), "error: types are not convertible.");
+                    static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
                 }
 
                 //!
@@ -260,7 +260,7 @@ namespace XXX_NAMESPACE
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
                 HOST_VERSION CUDA_DEVICE_VERSION constexpr Record(T value) : Base(value)
                 {
-                    static_assert(::XXX_NAMESPACE::variadic::Pack<T, ValueT...>::IsConvertible(), "error: types are not convertible.");
+                    static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
                 }
 
                 //!
