@@ -97,10 +97,15 @@ namespace XXX_NAMESPACE
                 //! \brief Assignment operator.
                 //!
                 //! The assignment operators defined in the base class (if there are any) are non-virtual.
-                //! We thus need to added a version that returns a reference to this `TupleProxy` type.
+                //! We thus need to add a version that returns a reference to this `TupleProxy` type.
                 //! 
                 //! Note: the base class assignment operators can handle `TupleProxy` types as arguments due to inheritence.
-                //! Note: we use the base class type as argument type as it covers bothe the `Tuple` and the `TupleProxy` case.
+                //! Note: we use the base class type as argument type as it covers both the `Tuple` and the `TupleProxy` case.
+                //!
+                //! \tparam T a variadic list of type parameters
+                //! \param tuple a `Tuple` (or `TupleProxy`) instance
+                //! \return a reference to this `TupleProxy` instance 
+                //!
                 template <typename ...T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
@@ -114,6 +119,18 @@ namespace XXX_NAMESPACE
                     return *this;
                 }
 
+                //!
+                //! \brief Assignment operator.
+                //!
+                //! The assignment operators defined in the base class (if there are any) are non-virtual.
+                //! We thus need to add a version that returns a reference to this `TupleProxy` type.
+                //! 
+                //! Note: the base class assignment operators can handle `TupleProxy` types as arguments due to inheritence.
+                //!
+                //! \tparam T the type of the value to be assigned
+                //! \param value the value to be assigned
+                //! \return a reference to this `TupleProxy` instance 
+                //!
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
