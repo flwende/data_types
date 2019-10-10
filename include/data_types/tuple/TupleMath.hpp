@@ -22,12 +22,12 @@ namespace XXX_NAMESPACE
     {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //
-        // Arithmetic on `Tuple` and `TupleProxy` types.
+        // Arithmetic on `Tuple` types.
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define MACRO_(OP, IN_T_1, IN_T_2)                                                                                                                                                                                         \
+#define MACRO(OP)                                                                                                                                                                                                          \
     template <typename... T_1, typename... T_2>                                                                                                                                                                            \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const ::XXX_NAMESPACE::dataTypes::IN_T_1<T_1...>& x_1, const ::XXX_NAMESPACE::dataTypes::IN_T_2<T_2...>& x_2)                                                 \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const ::XXX_NAMESPACE::dataTypes::Tuple<T_1...>& x_1, const ::XXX_NAMESPACE::dataTypes::Tuple<T_2...>& x_2)                                                   \
     {                                                                                                                                                                                                                      \
         using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
                                                                                                                                                                                                                            \
@@ -43,28 +43,21 @@ namespace XXX_NAMESPACE
         return y;                                                                                                                                                                                                          \
     }
 
-#define MACRO(OP, IN_T_1, IN_T_2)                                                                                                                                                                                          \
-    MACRO_(OP, IN_T_1, IN_T_1)                                                                                                                                                                                             \
-    MACRO_(OP, IN_T_2, IN_T_2)                                                                                                                                                                                             \
-    MACRO_(OP, IN_T_1, IN_T_2)                                                                                                                                                                                             \
-    MACRO_(OP, IN_T_2, IN_T_1)
-
-        MACRO(+, Tuple, internal::TupleProxy)
-        MACRO(-, Tuple, internal::TupleProxy)
-        MACRO(*, Tuple, internal::TupleProxy)
-        MACRO(/, Tuple, internal::TupleProxy)
+        MACRO(+)
+        MACRO(-)
+        MACRO(*)
+        MACRO(/)
 
 #undef MACRO
-#undef MACRO_
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //
-        // Arithmetic on `Tuple` / `TupleProxy` types and scalars.
+        // Arithmetic on `Tuple` types and scalars.
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define MACRO(OP, IN_T)                                                                                                                                                                                                    \
+#define MACRO(OP)                                                                                                                                                                                                          \
     template <typename T_2, typename... T_1, typename EnableType = std::enable_if_t<std::is_fundamental<T_2>::value>>                                                                                                      \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const ::XXX_NAMESPACE::dataTypes::IN_T<T_1...>& x_1, const T_2 x_2)                                                                                           \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const ::XXX_NAMESPACE::dataTypes::Tuple<T_1...>& x_1, const T_2 x_2)                                                                                          \
     {                                                                                                                                                                                                                      \
         using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
                                                                                                                                                                                                                            \
@@ -78,7 +71,7 @@ namespace XXX_NAMESPACE
     }                                                                                                                                                                                                                      \
                                                                                                                                                                                                                            \
     template <typename T_1, typename... T_2, typename EnableType = std::enable_if_t<std::is_fundamental<T_1>::value>>                                                                                                      \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const T_1 x_1, const ::XXX_NAMESPACE::dataTypes::IN_T<T_2...>& x_2)                                                                                           \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const T_1 x_1, const ::XXX_NAMESPACE::dataTypes::Tuple<T_2...>& x_2)                                                                                          \
     {                                                                                                                                                                                                                      \
         using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
                                                                                                                                                                                                                            \
@@ -91,54 +84,37 @@ namespace XXX_NAMESPACE
         return y;                                                                                                                                                                                                          \
     }
 
-        MACRO(+, Tuple)
-        MACRO(-, Tuple)
-        MACRO(*, Tuple)
-        MACRO(/, Tuple)
-
-        MACRO(+, internal::TupleProxy)
-        MACRO(-, internal::TupleProxy)
-        MACRO(*, internal::TupleProxy)
-        MACRO(/, internal::TupleProxy)
+        MACRO(+)
+        MACRO(-)
+        MACRO(*)
+        MACRO(/)
 
 #undef MACRO
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //
-        // Cross produce on `Tuple` and `TupleProxy` types.
+        // Cross produce on `Tuple` types.
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define MACRO_(IN_T_1, IN_T_2)                                                                                                                                                                                             \
-    template <typename... T_1, typename... T_2>                                                                                                                                                                            \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto CrossProduct(const ::XXX_NAMESPACE::dataTypes::IN_T_1<T_1...>& x_1, const ::XXX_NAMESPACE::dataTypes::IN_T_2<T_2...>& x_2)                                                \
-    {                                                                                                                                                                                                                      \
-        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
-                                                                                                                                                                                                                           \
-        constexpr SizeT N_1 = sizeof...(T_1);                                                                                                                                                                              \
-        constexpr SizeT N_2 = sizeof...(T_2);                                                                                                                                                                              \
-                                                                                                                                                                                                                           \
-        static_assert(N_1 == 3, "error: implementation for 3 components only.");                                                                                                                                           \
-        static_assert(N_1 == N_2, "error: parameter lists have different size.");                                                                                                                                          \
-                                                                                                                                                                                                                           \
-        Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y;                                                                                                                                                      \
-                                                                                                                                                                                                                           \
-        Get<0>(y) = Get<1>(x_1) * Get<2>(x_2) - Get<2>(x_1) * Get<1>(x_2);                                                                                                                                                 \
-        Get<1>(y) = Get<2>(x_1) * Get<0>(x_2) - Get<0>(x_1) * Get<2>(x_2);                                                                                                                                                 \
-        Get<2>(y) = Get<0>(x_1) * Get<1>(x_2) - Get<1>(x_1) * Get<0>(x_2);                                                                                                                                                 \
-                                                                                                                                                                                                                           \
-        return y;                                                                                                                                                                                                          \
-    }
+        template <typename... T_1, typename... T_2>
+        HOST_VERSION CUDA_DEVICE_VERSION inline auto CrossProduct(const ::XXX_NAMESPACE::dataTypes::Tuple<T_1...>& x_1, const ::XXX_NAMESPACE::dataTypes::Tuple<T_2...>& x_2)
+        {
+            using namespace ::XXX_NAMESPACE::dataTypes;
 
-#define MACRO(IN_T_1, IN_T_2)                                                                                                                                                                                              \
-    MACRO_(IN_T_1, IN_T_1)                                                                                                                                                                                                 \
-    MACRO_(IN_T_2, IN_T_2)                                                                                                                                                                                                 \
-    MACRO_(IN_T_1, IN_T_2)                                                                                                                                                                                                 \
-    MACRO_(IN_T_2, IN_T_1)
+            constexpr SizeT N_1 = sizeof...(T_1);
+            constexpr SizeT N_2 = sizeof...(T_2);
 
-        MACRO(Tuple, internal::TupleProxy)
+            static_assert(N_1 == 3, "error: implementation for 3 components only.");
+            static_assert(N_1 == N_2, "error: parameter lists have different size.");
+                                                                                                                                                                                                                            
+            Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y;
 
-#undef MACRO
-#undef MACRO_
+            Get<0>(y) = Get<1>(x_1) * Get<2>(x_2) - Get<2>(x_1) * Get<1>(x_2);
+            Get<1>(y) = Get<2>(x_1) * Get<0>(x_2) - Get<0>(x_1) * Get<2>(x_2);
+            Get<2>(y) = Get<0>(x_1) * Get<1>(x_2) - Get<1>(x_1) * Get<0>(x_2);
+
+            return y;
+        }
 
         template <typename TupleT_1, typename TupleT_2>
         HOST_VERSION CUDA_DEVICE_VERSION inline auto Cross(const TupleT_1& x_1, const TupleT_2& x_2)
@@ -150,12 +126,12 @@ namespace XXX_NAMESPACE
         {
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //
-            // Sqrt, Log, Exp functions `Tuple` and `TupleProxy` types.
+            // Sqrt, Log, Exp functions `Tuple` types.
             //
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define MACRO(OP, IN_T)                                                                                                                                                                                                    \
+#define MACRO(OP)                                                                                                                                                                                                          \
     template <typename... T>                                                                                                                                                                                               \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto OP(const ::XXX_NAMESPACE::dataTypes::IN_T<T...>& x)                                                                                                                       \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto OP(const ::XXX_NAMESPACE::dataTypes::Tuple<T...>& x)                                                                                                                      \
     {                                                                                                                                                                                                                      \
         using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
                                                                                                                                                                                                                            \
@@ -172,13 +148,9 @@ namespace XXX_NAMESPACE
         return y;                                                                                                                                                                                                          \
     }
 
-            MACRO(sqrt, Tuple)
-            MACRO(log, Tuple)
-            MACRO(exp, Tuple)
-
-            MACRO(sqrt, internal::TupleProxy)
-            MACRO(log, internal::TupleProxy)
-            MACRO(exp, internal::TupleProxy)
+            MACRO(sqrt)
+            MACRO(log)
+            MACRO(exp)
 
 #undef MACRO
 
