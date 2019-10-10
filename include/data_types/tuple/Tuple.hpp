@@ -24,14 +24,6 @@ namespace XXX_NAMESPACE
         namespace internal
         {
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //
-            // Forward declarations.
-            //
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <typename...>
-            class TupleProxy;
-
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief A tuple type with non-reverse order of the members (base class).
             //!
@@ -257,7 +249,7 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
-                
+
               public:
                 union {
                     struct
@@ -280,6 +272,17 @@ namespace XXX_NAMESPACE
                 constexpr TupleBase() {}
             };
         } // namespace internal
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Forward declarations.
+        //
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        namespace internal
+        {
+            template <typename...>
+            class TupleProxy;
+        }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
