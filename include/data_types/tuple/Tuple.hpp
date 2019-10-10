@@ -46,21 +46,6 @@ namespace XXX_NAMESPACE
             template <typename... ValueT>
             class TupleBase
             {
-                //!
-                //! \brief Extract the values of the members from a proxy type.
-                //!
-                //! \tparam Proxy the type of the proxy
-                //! \tparam I an index list used to access the members of the proxy type
-                //! \param proxy a proxy
-                //! \param unnamed used for template parameter deduction
-                //! \return a `Record` holding the values of the members
-                //!
-                template <typename Proxy, SizeT... I>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline constexpr auto Dereference(const Proxy& proxy, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) -> Record<ValueT...>
-                {
-                    return {internal::Get<I>(proxy.data)...};
-                }
-
               protected:
                 //!
                 //! \brief Standard constructor.
@@ -80,7 +65,7 @@ namespace XXX_NAMESPACE
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
                 HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(T value) : data(value)
                 {
-                    static_assert(::XXX_NAMESPACE::variadic::Pack<T, ValueT...>::IsConvertible(), "error: types are not convertible.");
+                    static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
                 }
 
                 //!
@@ -102,22 +87,6 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
-
-                //!
-                //! \brief Constructor.
-                //!
-                //! Construct a `TupleBase` instance from a `TupleProxy` with a different parameter list.
-                //! The number of template type parameters must be convertibe to this type's type parameters.
-                //!
-                //! \tparam T a variadic list of type parameters that are convertibe to this type's type parameters
-                //! \param proxy a `TupleProxy` instance
-                //!
-                template <typename... T>
-                HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(const TupleProxy<T...>& proxy) : data(Dereference(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(ValueT)>()))
-                {
-                    static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");
-                    static_assert(::XXX_NAMESPACE::variadic::Pack<T...>::template IsConvertible<ValueT...>(), "error: types are not convertible.");
-                }
 
               public:
                 Record<ValueT...> data;
@@ -346,11 +315,6 @@ namespace XXX_NAMESPACE
         {
             using Base = internal::TupleBase<ValueT...>;
 
-            static_assert(::XXX_NAMESPACE::variadic::Pack<std::decay_t<ValueT>...>::IsFundamental(), "error: fundamental parameter types assumed.");
-            static_assert(!::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsConst(), "error: non-const parameter types assumed.");
-            static_assert(!::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsVoid(), "error: non-void parameter types assumed.");
-            static_assert(!::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsVolatile(), "error: non-volatile parameter types assumed.");
-
           public:
             using Type = Tuple<ValueT...>;
             using Proxy = internal::TupleProxy<ValueT...>;
@@ -439,7 +403,7 @@ namespace XXX_NAMESPACE
     HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const IN_T<T...>& tuple)->Tuple&                                                                                                                              \
     {                                                                                                                                                                                                                      \
         static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");                                                                                                                   \
-        static_assert(::XXX_NAMESPACE::variadic::Pack<T...>::template IsConvertible<ValueT...>(), "error: types are not convertible.");                                                                                    \
+        static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T...>(), "error: types are not convertible.");                                                                                \
                                                                                                                                                                                                                            \
         ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { internal::Get<I>(Base::data) OP internal::Get<I>(tuple.data); });                                                    \
                                                                                                                                                                                                                            \
@@ -451,11 +415,6 @@ namespace XXX_NAMESPACE
             MACRO(-=, Tuple)
             MACRO(*=, Tuple)
             MACRO(/=, Tuple)
-            MACRO(=, internal::TupleProxy)
-            MACRO(+=, internal::TupleProxy)
-            MACRO(-=, internal::TupleProxy)
-            MACRO(*=, internal::TupleProxy)
-            MACRO(/=, internal::TupleProxy)
 #undef MACRO
 
             //!
