@@ -303,7 +303,7 @@ namespace XXX_NAMESPACE
             template <typename... OtherT>
             Pointer(const Pointer<OtherT...>& other) : n_0(other.n_0), raw_c_pointer(reinterpret_cast<ValueT*>(other.raw_c_pointer))
             {
-                static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT, OtherT...>::IsConvertible(), "error: types are not convertible");
+                static_assert(::XXX_NAMESPACE::variadic::Pack<OtherT...>::template IsConvertibleTo<ValueT>(), "error: types are not convertible");
                 assert(other.IsValid());
             }
 
@@ -660,7 +660,7 @@ namespace XXX_NAMESPACE
             template <typename... OtherT>
             MultiPointer(const MultiPointer<OtherT...>& other) : n_0x(other.n_0x), pointer(other.pointer)
             {
-                static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT, OtherT...>::IsConvertible(), "error: types are not convertible");
+                static_assert(::XXX_NAMESPACE::variadic::Pack<OtherT...>::template IsConvertibleTo<ValueT>(), "error: types are not convertible");
             }
 
             //!
