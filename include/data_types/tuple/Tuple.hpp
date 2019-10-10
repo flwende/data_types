@@ -127,11 +127,6 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
-                template <typename T_1, typename T_2, typename T_3, typename T_4>
-                HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(const TupleProxy<T_1, T_2, T_3, T_4>& proxy) : data(proxy.x, proxy.y, proxy.z, proxy.w)
-                {
-                }
-
               public:
                 union {
                     struct
@@ -179,11 +174,6 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
-                template <typename T_1, typename T_2, typename T_3>
-                HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(const TupleProxy<T_1, T_2, T_3>& proxy) : data(proxy.x, proxy.y, proxy.z)
-                {
-                }
-
               public:
                 union {
                     struct
@@ -229,11 +219,6 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
-                template <typename T_1, typename T_2>
-                HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(const TupleProxy<T_1, T_2>& proxy) : data(proxy.x, proxy.y)
-                {
-                }
-
               public:
                 union {
                     struct
@@ -272,12 +257,7 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
-
-                template <typename T>
-                HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(const TupleProxy<T>& proxy) : data(proxy.x)
-                {
-                }
-
+                
               public:
                 union {
                     struct
@@ -359,6 +339,13 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             constexpr Tuple(const Tuple& tuple) : Base(tuple) {}
 
+          private:
+            template <typename... T, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const internal::TupleProxy<T...>& proxy, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(proxy)...)
+            {
+            }
+
+          public:
             //!
             //! \brief Constructor.
             //!
@@ -369,7 +356,7 @@ namespace XXX_NAMESPACE
             //! \param proxy a `TupleProxy` instance
             //!
             template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const internal::TupleProxy<T...>& proxy) : Base(proxy)
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const internal::TupleProxy<T...>& proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
             {
             }
 
@@ -386,7 +373,7 @@ namespace XXX_NAMESPACE
             {
                 Tuple tuple;
 
-                ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { internal::Get<I>(tuple.data) = -internal::Get<I>(Base::data); });
+                ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(tuple) = -Get<I>(*this); });
 
                 return tuple;
             }
@@ -405,7 +392,7 @@ namespace XXX_NAMESPACE
         static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");                                                                                                                   \
         static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T...>(), "error: types are not convertible.");                                                                                \
                                                                                                                                                                                                                            \
-        ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { internal::Get<I>(Base::data) OP internal::Get<I>(tuple.data); });                                                    \
+        ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) OP Get<I>(tuple); });                                                                                  \
                                                                                                                                                                                                                            \
         return *this;                                                                                                                                                                                                      \
     }
@@ -428,7 +415,7 @@ namespace XXX_NAMESPACE
     template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>                                                                                                                           \
     HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(T value)->Tuple&                                                                                                                                              \
     {                                                                                                                                                                                                                      \
-        ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&value, this](const auto I) { internal::Get<I>(Base::data) OP value; });                                                                           \
+        ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&value, this](const auto I) { Get<I>(*this) OP value; });                                                                                          \
                                                                                                                                                                                                                            \
         return *this;                                                                                                                                                                                                      \
     }
