@@ -56,6 +56,9 @@ namespace XXX_NAMESPACE
                 static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
                 static_assert(!::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsVoid(), "error: non-void parameter types assumed.");
 
+                template <SizeT N>
+                using CompileTimeLoop = ::XXX_NAMESPACE::compileTime::Loop<N>;
+
                 // Friend declarations.
                 template <typename, SizeT, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
                 friend class ::XXX_NAMESPACE::dataTypes::internal::Accessor;
@@ -110,7 +113,7 @@ namespace XXX_NAMESPACE
                     static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");
                     static_assert(::XXX_NAMESPACE::variadic::Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
 
-                    ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) = Get<I>(tuple); });
+                    CompileTimeLoop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) = Get<I>(tuple); });
 
                     return *this;
                 }
@@ -132,7 +135,7 @@ namespace XXX_NAMESPACE
                 {
                     static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
 
-                    ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([value, this](const auto I) { Get<I>(*this) = value; });
+                    CompileTimeLoop<sizeof...(ValueT)>::Execute([value, this](const auto I) { Get<I>(*this) = value; });
 
                     return *this;
                 }

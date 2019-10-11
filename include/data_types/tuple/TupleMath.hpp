@@ -93,7 +93,7 @@ namespace XXX_NAMESPACE
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //
-        // Cross produce on `Tuple` types.
+        // Cross product on `Tuple` types.
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename... T_1, typename... T_2>
@@ -120,6 +120,34 @@ namespace XXX_NAMESPACE
         HOST_VERSION CUDA_DEVICE_VERSION inline auto Cross(const TupleT_1& x_1, const TupleT_2& x_2)
         {
             return CrossProduct(x_1, x_2);
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Dot produc on `Tuple` types.
+        //
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <typename... T_1, typename... T_2>
+        HOST_VERSION CUDA_DEVICE_VERSION inline auto DotProduct(const ::XXX_NAMESPACE::dataTypes::Tuple<T_1...>& x_1, const ::XXX_NAMESPACE::dataTypes::Tuple<T_2...>& x_2)
+        {
+            using namespace ::XXX_NAMESPACE::dataTypes;
+
+            constexpr SizeT N_1 = sizeof...(T_1);
+            constexpr SizeT N_2 = sizeof...(T_2);
+
+            static_assert(N_1 == N_2, "error: parameter lists have different size.");
+                                                                                                                                                                                                                            
+            typename Compare<T_1..., T_2...>::UnqualifiedStrongerT y{};
+
+            ::XXX_NAMESPACE::compileTime::Loop<N_1>::Execute([&y, &x_1, &x_2] (const auto I) { y += Get<I>(x_1) * Get<I>(x_2); });
+            
+            return y;
+        }
+
+        template <typename TupleT_1, typename TupleT_2>
+        HOST_VERSION CUDA_DEVICE_VERSION inline auto Dot(const TupleT_1& x_1, const TupleT_2& x_2)
+        {
+            return DotProduct(x_1, x_2);
         }
 
         namespace internal
