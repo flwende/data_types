@@ -351,7 +351,7 @@ namespace XXX_NAMESPACE
             //!
             //! \brief Constructor.
             //!
-            //! \tparam T a variadic list of type parameters that are convertibe to this type's type parameters
+            //! \tparam T the decay types of the proxy members (must be convertibe to this type's type parameters)
             //! \tparam I a list of indices used for the parameter access
             //! \param proxy a `TupleProxy` instance
             //! \param unnamed used for template parameter deduction
@@ -366,9 +366,9 @@ namespace XXX_NAMESPACE
             //! \brief Constructor.
             //!
             //! Construct a `Tuple` instance from a `TupleProxy` with a different parameter list.
-            //! The number of template type parameters must be convertibe to this type's type parameters.
+            //! The template type parameters must be convertibe to this type's type parameters.
             //!
-            //! \tparam T a variadic list of type parameters that are convertibe to this type's type parameters
+            //! \tparam T the decay types of the proxy members (must be convertibe to this type's type parameters)
             //! \param proxy a `TupleProxy` instance
             //!
             template <typename... T, bool IsReference = Pack<ValueT...>::IsReference(), typename Enable = std::enable_if_t<!IsReference>>
@@ -393,7 +393,7 @@ namespace XXX_NAMESPACE
             //! Instead the programmer must make an explicit copy of the `TupleProxy` type to `Tuple`, which would happen anyway when calling `foo`,
             //! or use a static cast to `Tuple<int, float>`
             //!
-            //! \tparam T a variadic list of type parameters that are convertibe to this type's type parameters
+            //! \tparam T the decay types of the proxy members (must be convertibe to this type's type parameters)
             //! \param proxy a `TupleProxy` instance
             //!
             template <typename... T, bool IsReference = Pack<ValueT...>::IsReference(), typename Enable = std::enable_if_t<IsReference>>
@@ -432,7 +432,7 @@ namespace XXX_NAMESPACE
     HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const IN_T<T...>& tuple)->Tuple&                                                                                                                              \
     {                                                                                                                                                                                                                      \
         static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");                                                                                                                   \
-        static_assert(Pack<ValueT...>::template IsConvertibleFrom<T...>(), "error: types are not convertible.");                                                                                                           \
+        static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");                                                                                                             \
                                                                                                                                                                                                                            \
         CompileTimeLoop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) OP Get<I>(tuple); });                                                                                                     \
                                                                                                                                                                                                                            \
@@ -471,7 +471,7 @@ namespace XXX_NAMESPACE
         };
 
         //!
-        //! \brief Definition of a tuple type with no members (implementation).
+        //! \brief Definition of a `Tuple` type with no members (implementation).
         //!
         template <>
         class Tuple<>

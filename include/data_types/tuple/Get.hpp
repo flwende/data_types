@@ -30,7 +30,10 @@ namespace XXX_NAMESPACE
             template <typename...>
             class Record;
         } // namespace internal
-
+/*
+        template <typename ValueT, SizeT D>
+        class Vec;
+*/
         template <typename... ValueT>
         class Tuple;
 
@@ -196,7 +199,39 @@ namespace XXX_NAMESPACE
                 return Get<(N - 1) - Index>(static_cast<const typename internal::Record<ValueT...>::Base&>(tuple));
             }
         } // namespace internal
+/*
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief A Getter function to access the members of a `Vec` type.
+        //!
+        //! \tparam Index the index of the member
+        //! \tparam ValueT a variadic parameter list
+        //! \param tuple a reference to the considered `Vec` type
+        //! \return a reference to the requested member
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <SizeT Index, typename ValueT, SizeT D>
+        static inline constexpr auto& Get(Vec<ValueT, D>& vec)
+        {
+            return internal::Get<Index>(vec.data);
+        }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief A Getter function to access the members of a `Vec` type.
+        //!
+        //! \tparam Index the index of the member
+        //! \tparam ValueT a variadic parameter list
+        //! \param tuple a const reference to the considered `Vec` type
+        //! \return a const reference to the requested member
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <SizeT Index, typename ValueT, SizeT D>
+        static inline constexpr const auto& Get(const Vec<ValueT, D>& vec)
+        {
+            return internal::Get<Index>(vec.data);
+        }
+*/
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
         //! \brief A Getter function to access the members of a `Tuple` type.
@@ -227,7 +262,7 @@ namespace XXX_NAMESPACE
         static inline constexpr const auto& Get(const Tuple<ValueT...>& tuple)
         {
             return internal::Get<Index>(tuple.data);
-        }        
+        }
     } // namespace dataTypes
 } // namespace XXX_NAMESPACE
 
@@ -238,6 +273,19 @@ namespace XXX_NAMESPACE
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace std
 {
+    /*
+    template <std::size_t Index, typename ValueT, ::XXX_NAMESPACE::SizeT D>
+    static inline constexpr auto& get(::XXX_NAMESPACE::dataTypes::Vec<ValueT, D>& vec)
+    {
+        return ::XXX_NAMESPACE::dataTypes::Get<Index>(vec);
+    }
+
+    template <std::size_t Index, typename ValueT, ::XXX_NAMESPACE::SizeT D>
+    static inline constexpr const auto& get(const ::XXX_NAMESPACE::dataTypes::Vec<ValueT, D>& vec)
+    {
+        return ::XXX_NAMESPACE::dataTypes::Get<Index>(vec);
+    }
+*/
     template <std::size_t Index, typename ...ValueT>
     static inline constexpr auto& get(::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>& tuple)
     {

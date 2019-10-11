@@ -15,11 +15,23 @@
 #endif
 
 #include <auxiliary/CPPStandard.hpp>
+#include <auxiliary/Template.hpp>
 #include <data_types/DataTypes.hpp>
 #include <platform/Target.hpp>
 
 namespace XXX_NAMESPACE
 {
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Forward declarations.
+    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    namespace variadic
+    {
+        template <typename...>
+        struct Pack;
+    }
+
     namespace dataTypes
     {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,12 +82,14 @@ namespace XXX_NAMESPACE
             //!
             //! If the argument count is less than N, all elements above N are zeroed.
             //!
-            //! \tparam Args parameter pack
+            //! \tparam T parameter pack
             //! \param args variadic argument list
             //!
-            template <typename... Args>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Array(const Args... args) : data{static_cast<ValueT>(std::move(args))...}
+            template <typename... T>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Array(const T... args) : data{static_cast<ValueT>(std::move(args))...}
             {
+                static_assert(sizeof...(T) <= Size, "error: parameter list does not match the size of this array.");
+                static_assert(::XXX_NAMESPACE::variadic::Pack<T...>::template IsConvertibleTo<ValueT>(), "error: types are not convertible.");
             }
 
             //!
@@ -163,6 +177,38 @@ namespace XXX_NAMESPACE
                 assert(index < N);
 
                 return data[index];
+            }
+
+            //!
+            //! \brief Array access.
+            //!
+            //! \tparam Index element index
+            //! \return reference to the element
+            //!
+            template <SizeT Index>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto At() -> ValueT&
+            {
+                static_assert(Index < N, "error: out of bounds data access");
+
+                return data[Index];
+            }
+
+            //!
+            //! \brief Array access.
+            //!
+            //! \tparam Index element index
+            //! \return const reference to the element
+            //!
+            template <SizeT Index>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto At() const -> const ValueT&
+            {
+                static_assert(Index < N, "error: out of bounds data access");
+
+                return data[Index];
             }
 
             //!

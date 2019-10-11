@@ -7,6 +7,7 @@
 #define COMMON_DATA_TYPES_HPP
 
 #include <cstdint>
+#include <tuple>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -88,6 +89,34 @@ namespace XXX_NAMESPACE
             using WeakerT = typename CompareImplementation<T_1, T_2>::WeakerT;
             using UnqualifiedWeakerT = std::decay_t<WeakerT>;
         };
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //!
+        //! \brief Build type with homogeneous template parameter list.
+        //!
+        //! \tparam T the actual templated type 
+        //! \tparam ParamT the type of the parameters
+        //! \tparam N the number of parameters 
+        //! \tparam List the current parameter list
+        //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        namespace
+        {
+            template <template <typename...> class T, typename ParamT, SizeT N, typename ...List>
+            struct BuilderImplementation
+            {
+                using Type = typename BuilderImplementation<T, ParamT, N - 1, ParamT, List...>::Type;
+            };
+
+            template <template <typename...> class T, typename ParamT, typename ...List>
+            struct BuilderImplementation<T, ParamT, 0, List...>
+            {
+                using Type = T<List...>;
+            };
+        }
+
+        template <template <typename...> class T, typename ParamT, SizeT N>
+        using Builder = typename BuilderImplementation<T, ParamT, N>::Type;
     }
 }
 

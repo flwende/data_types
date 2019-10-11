@@ -321,6 +321,37 @@ namespace XXX_NAMESPACE
     #undef MACRO
     #undef MACRO_QUALIFIED
     #undef MACRO_UNQUALIFIED
+
+        namespace internal
+        {
+            template <typename T, SizeT D>
+            struct Func<::XXX_NAMESPACE::dataTypes::Vec<T, D>>
+            {
+                using type = ::XXX_NAMESPACE::dataTypes::Vec<T, D>;
+                using value_type = typename std::remove_cv<typename type::Type>::type;
+
+                static constexpr value_type One = Func<value_type>::One;
+                static constexpr value_type MinusOne = Func<value_type>::MinusOne;
+
+                template <typename X>
+                static type sqrt(X x)
+                {
+                    return ::XXX_NAMESPACE::math::sqrt(x);
+                }
+
+                template <typename X>
+                static type log(X x)
+                {
+                    return ::XXX_NAMESPACE::math::log(x);
+                }
+
+                template <typename X>
+                static type exp(X x)
+                {
+                    return ::XXX_NAMESPACE::math::exp(x);
+                }
+            };
+        }
     }
 }
 

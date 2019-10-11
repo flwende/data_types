@@ -449,8 +449,8 @@ int main(int argc, char** argv)
         {
             in_1.CopyDeviceToHost();
 
-            //const float* ptr = reinterpret_cast<const float*>(&in_1[0][0][0].x);
-            const std::int8_t* ptr = reinterpret_cast<const std::int8_t*>(&in_1[0][0][0].x);
+            const float* ptr = reinterpret_cast<const float*>(&in_1[0][0][0].x);
+            //const std::int8_t* ptr = reinterpret_cast<const std::int8_t*>(&in_1[0][0][0].x);
 
             for (std::size_t z = 0; z < nz; ++z)
             {
@@ -458,8 +458,8 @@ int main(int argc, char** argv)
                 {
                     for (std::size_t x = 0; x < nx; ++x)
                     {
-                        //std::cout << ptr[(z * ny + y) * nx + x] << " ";
-                        std::cout << static_cast<std::int32_t>(ptr[(z * ny + y) * nx + x]) << " ";
+                        std::cout << ptr[(z * ny + y) * nx + x] << " ";
+                        //std::cout << static_cast<std::int32_t>(ptr[(z * ny + y) * nx + x]) << " ";
                     }
                     std::cout << std::endl;
                 }

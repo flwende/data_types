@@ -73,7 +73,7 @@ namespace XXX_NAMESPACE
                 template <typename T>
                 HOST_VERSION CUDA_DEVICE_VERSION constexpr ReverseRecord(T value) : Base(value), value(value)
                 {
-                    static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
+                    static_assert(std::is_convertible<T, ValueT>::value, "error: types are not convertible.");
                 }
 
                 //!
