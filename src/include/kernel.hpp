@@ -20,13 +20,13 @@ using type = float;
 using type_x = type;
 using type_y = type;
 using type_z = type;
-using element_type = ::fw::dataTypes::vec<type, 3>;
+using element_type = ::fw::dataTypes::Vec<type, 3>;
 
 /*
 using type_x = std::uint32_t;
 using type_y = std::uint32_t;
 using type_z = std::uint32_t;
-using element_type = ::fw::dataTypes::vec<std::uint32_t, 3>;
+using element_type = ::fw::dataTypes::Vec<std::uint32_t, 3>;
 */
 /*
 using type_x = std::uint32_t;

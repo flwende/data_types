@@ -42,7 +42,7 @@ namespace XXX_NAMESPACE
     namespace dataTypes
     {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //! \brief A proxy data type for vec<T, D>
+        //! \brief A proxy data type for Vec<T, D>
         //!
         //! This data type is returned by accessor<T, D, Layout>::operator[] if D = 1 and SoA data layout.
         //! It holds references to component(s) x [,y [and z]], so that data access via,
@@ -57,7 +57,7 @@ namespace XXX_NAMESPACE
             //!
             //! \tparam T data type
             template <typename T>
-            class vec_proxy<T, 1>
+            class VecProxy<T, 1>
             {
                 static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
                 static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
@@ -68,8 +68,8 @@ namespace XXX_NAMESPACE
 
             public:
 
-                using type = vec_proxy<T, 1>;
-                using ConstT = const vec_proxy<const T, 1>;
+                using type = VecProxy<T, 1>;
+                using ConstT = const VecProxy<const T, 1>;
                 using T_unqualified = typename std::remove_cv<T>::type;
                 //! Remember the template type parameter T
                 using value_type = T;
@@ -77,8 +77,8 @@ namespace XXX_NAMESPACE
                 static constexpr SizeT d = 1;
                 using BasePointer = ::XXX_NAMESPACE::memory::PointerN<T, 1>;
                 using original_type = typename std::conditional<std::is_const<T>::value, 
-                    const vec<typename std::remove_cv<T>::type, 1>,
-                    vec<typename std::remove_cv<T>::type, 1>>::type;
+                    const Vec<typename std::remove_cv<T>::type, 1>,
+                    Vec<typename std::remove_cv<T>::type, 1>>::type;
 
                 T& x;
 
@@ -86,61 +86,61 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                vec_proxy(std::tuple<T&> v)
+                VecProxy(std::tuple<T&> v)
                     :
                     x(std::get<0>(v)) {}    
 
             public:
 
-                inline ::XXX_NAMESPACE::dataTypes::vec<T_unqualified, 1>  operator-() const
+                inline ::XXX_NAMESPACE::dataTypes::Vec<T_unqualified, 1>  operator-() const
                 {
-                    return ::XXX_NAMESPACE::dataTypes::vec<T_unqualified, 1>(-x);
+                    return ::XXX_NAMESPACE::dataTypes::Vec<T_unqualified, 1>(-x);
                 }
 
             #define MACRO(OP, IN_T)                                                 \
-                inline vec_proxy& operator OP (IN_T<T, 1>& v)        \
+                inline VecProxy& operator OP (IN_T<T, 1>& v)        \
                 {                                                                   \
                     x OP v.x;                                                       \
                     return *this;                                                   \
                 }                                                                   \
                                                                                     \
-                inline vec_proxy& operator OP (const IN_T<T, 1>& v)  \
-                {                                                                   \
-                    x OP v.x;                                                       \
-                    return *this;                                                   \
-                }                                                                   \
-                                                                                    \
-                template <typename X>                                               \
-                inline vec_proxy& operator OP (IN_T<X, 1>& v)        \
+                inline VecProxy& operator OP (const IN_T<T, 1>& v)  \
                 {                                                                   \
                     x OP v.x;                                                       \
                     return *this;                                                   \
                 }                                                                   \
                                                                                     \
                 template <typename X>                                               \
-                inline vec_proxy& operator OP (const IN_T<X, 1>& v)  \
+                inline VecProxy& operator OP (IN_T<X, 1>& v)        \
+                {                                                                   \
+                    x OP v.x;                                                       \
+                    return *this;                                                   \
+                }                                                                   \
+                                                                                    \
+                template <typename X>                                               \
+                inline VecProxy& operator OP (const IN_T<X, 1>& v)  \
                 {                                                                   \
                     x OP v.x;                                                       \
                     return *this;                                                   \
                 }                                                                   \
 
-                MACRO(=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(+=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(-=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(*=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(/=, ::XXX_NAMESPACE::dataTypes::vec)
+                MACRO(=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(+=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(-=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(*=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(/=, ::XXX_NAMESPACE::dataTypes::Vec)
 
-                MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+                MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
             #undef MACRO
 
             #define MACRO(OP)                                                       \
                 template <typename X>                                               \
-                inline vec_proxy& operator OP (const X x)                           \
+                inline VecProxy& operator OP (const X x)                           \
                 {                                                                   \
                     x OP x;                                                         \
                     return *this;                                                   \
@@ -167,7 +167,7 @@ namespace XXX_NAMESPACE
             //!
             //! \tparam T data type
             template <typename T>
-            class vec_proxy<T, 2>
+            class VecProxy<T, 2>
             {
                 static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
                 static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
@@ -178,8 +178,8 @@ namespace XXX_NAMESPACE
 
             public:
 
-                using type = vec_proxy<T, 2>;
-                using ConstT = const vec_proxy<const T, 2>;
+                using type = VecProxy<T, 2>;
+                using ConstT = const VecProxy<const T, 2>;
                 using T_unqualified = typename std::remove_cv<T>::type;
                 //! Remember the template type parameter T
                 using value_type = T;
@@ -187,8 +187,8 @@ namespace XXX_NAMESPACE
                 static constexpr SizeT d = 2;
                 using BasePointer = ::XXX_NAMESPACE::memory::PointerN<T, 2>;
                 using original_type = typename std::conditional<std::is_const<T>::value, 
-                    const vec<typename std::remove_cv<T>::type, 2>,
-                    vec<typename std::remove_cv<T>::type, 2>>::type;
+                    const Vec<typename std::remove_cv<T>::type, 2>,
+                    Vec<typename std::remove_cv<T>::type, 2>>::type;
 
                 T& x;
                 T& y;
@@ -197,35 +197,27 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                vec_proxy(std::tuple<T&, T&> v)
+                VecProxy(std::tuple<T&, T&> v)
                     :
                     x(std::get<0>(v)),
                     y(std::get<1>(v)) {}
 
             public:
 
-                inline ::XXX_NAMESPACE::dataTypes::vec<T_unqualified, 2>  operator-() const
+                inline ::XXX_NAMESPACE::dataTypes::Vec<T_unqualified, 2>  operator-() const
                 {
-                    return ::XXX_NAMESPACE::dataTypes::vec<T_unqualified, 2>(-x, -y);
+                    return ::XXX_NAMESPACE::dataTypes::Vec<T_unqualified, 2>(-x, -y);
                 }
 
             #define MACRO(OP, IN_T)                                                 \
-                inline vec_proxy& operator OP (IN_T<T, 2>& v)        \
+                inline VecProxy& operator OP (IN_T<T, 2>& v)        \
                 {                                                                   \
                     x OP v.x;                                                       \
                     y OP v.y;                                                       \
                     return *this;                                                   \
                 }                                                                   \
                                                                                     \
-                inline vec_proxy& operator OP (const IN_T<T, 2>& v)  \
-                {                                                                   \
-                    x OP v.x;                                                       \
-                    y OP v.y;                                                       \
-                    return *this;                                                   \
-                }                                                                   \
-                                                                                    \
-                template <typename X>                                               \
-                inline vec_proxy& operator OP (IN_T<X, 2>& v)        \
+                inline VecProxy& operator OP (const IN_T<T, 2>& v)  \
                 {                                                                   \
                     x OP v.x;                                                       \
                     y OP v.y;                                                       \
@@ -233,30 +225,38 @@ namespace XXX_NAMESPACE
                 }                                                                   \
                                                                                     \
                 template <typename X>                                               \
-                inline vec_proxy& operator OP (const IN_T<X, 2>& v)  \
+                inline VecProxy& operator OP (IN_T<X, 2>& v)        \
+                {                                                                   \
+                    x OP v.x;                                                       \
+                    y OP v.y;                                                       \
+                    return *this;                                                   \
+                }                                                                   \
+                                                                                    \
+                template <typename X>                                               \
+                inline VecProxy& operator OP (const IN_T<X, 2>& v)  \
                 {                                                                   \
                     x OP v.x;                                                       \
                     y OP v.y;                                                       \
                     return *this;                                                   \
                 }                                                                   \
 
-                MACRO(=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(+=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(-=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(*=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(/=, ::XXX_NAMESPACE::dataTypes::vec)
+                MACRO(=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(+=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(-=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(*=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(/=, ::XXX_NAMESPACE::dataTypes::Vec)
 
-                MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+                MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
             #undef MACRO
 
             #define MACRO(OP)                                                       \
                 template <typename X>                                               \
-                inline vec_proxy& operator OP (const X xy)                          \
+                inline VecProxy& operator OP (const X xy)                          \
                 {                                                                   \
                     x OP xy;                                                        \
                     y OP xy;                                                        \
@@ -284,7 +284,7 @@ namespace XXX_NAMESPACE
             //!
             //! \tparam T data type
             template <typename T>
-            class vec_proxy<T, 3>
+            class VecProxy<T, 3>
             {
                 static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
                 static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
@@ -295,8 +295,8 @@ namespace XXX_NAMESPACE
 
             public:
 
-                using type = vec_proxy<T, 3>;
-                using ConstT = const vec_proxy<const T, 3>;
+                using type = VecProxy<T, 3>;
+                using ConstT = const VecProxy<const T, 3>;
                 using T_unqualified = typename std::remove_cv<T>::type;
                 //! Remember the template type parameter T
                 using value_type = T;
@@ -304,8 +304,8 @@ namespace XXX_NAMESPACE
                 static constexpr SizeT d = 3;
                 using BasePointer = ::XXX_NAMESPACE::memory::PointerN<T, 3>;
                 using original_type = typename std::conditional<std::is_const<T>::value, 
-                    const vec<typename std::remove_cv<T>::type, 3>,
-                    vec<typename std::remove_cv<T>::type, 3>>::type;
+                    const Vec<typename std::remove_cv<T>::type, 3>,
+                    Vec<typename std::remove_cv<T>::type, 3>>::type;
 
                 T& x;
                 T& y;
@@ -315,7 +315,7 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                vec_proxy(std::tuple<T&, T&, T&> v)
+                VecProxy(std::tuple<T&, T&, T&> v)
                     :
                     x(std::get<0>(v)),
                     y(std::get<1>(v)),
@@ -323,13 +323,13 @@ namespace XXX_NAMESPACE
 
             public:
 
-                inline ::XXX_NAMESPACE::dataTypes::vec<T_unqualified, 3>  operator-() const
+                inline ::XXX_NAMESPACE::dataTypes::Vec<T_unqualified, 3>  operator-() const
                 {
-                    return ::XXX_NAMESPACE::dataTypes::vec<T_unqualified, 3>(-x, -y, -z);
+                    return ::XXX_NAMESPACE::dataTypes::Vec<T_unqualified, 3>(-x, -y, -z);
                 }
                 
             #define MACRO(OP, IN_T)                                                 \
-                inline vec_proxy& operator OP (IN_T<T, 3>& v)        \
+                inline VecProxy& operator OP (IN_T<T, 3>& v)        \
                 {                                                                   \
                     x OP v.x;                                                       \
                     y OP v.y;                                                       \
@@ -337,16 +337,7 @@ namespace XXX_NAMESPACE
                     return *this;                                                   \
                 }                                                                   \
                                                                                     \
-                inline vec_proxy& operator OP (const IN_T<T, 3>& v)  \
-                {                                                                   \
-                    x OP v.x;                                                       \
-                    y OP v.y;                                                       \
-                    z OP v.z;                                                       \
-                    return *this;                                                   \
-                }                                                                   \
-                                                                                    \
-                template <typename X>                                               \
-                inline vec_proxy& operator OP (IN_T<X, 3>& v)        \
+                inline VecProxy& operator OP (const IN_T<T, 3>& v)  \
                 {                                                                   \
                     x OP v.x;                                                       \
                     y OP v.y;                                                       \
@@ -355,7 +346,16 @@ namespace XXX_NAMESPACE
                 }                                                                   \
                                                                                     \
                 template <typename X>                                               \
-                inline vec_proxy& operator OP (const IN_T<X, 3>& v)  \
+                inline VecProxy& operator OP (IN_T<X, 3>& v)        \
+                {                                                                   \
+                    x OP v.x;                                                       \
+                    y OP v.y;                                                       \
+                    z OP v.z;                                                       \
+                    return *this;                                                   \
+                }                                                                   \
+                                                                                    \
+                template <typename X>                                               \
+                inline VecProxy& operator OP (const IN_T<X, 3>& v)  \
                 {                                                                   \
                     x OP v.x;                                                       \
                     y OP v.y;                                                       \
@@ -363,23 +363,23 @@ namespace XXX_NAMESPACE
                     return *this;                                                   \
                 }                                                                   \
 
-                MACRO(=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(+=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(-=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(*=, ::XXX_NAMESPACE::dataTypes::vec)
-                MACRO(/=, ::XXX_NAMESPACE::dataTypes::vec)
+                MACRO(=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(+=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(-=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(*=, ::XXX_NAMESPACE::dataTypes::Vec)
+                MACRO(/=, ::XXX_NAMESPACE::dataTypes::Vec)
 
-                MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-                MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+                MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+                MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
             #undef MACRO
 
             #define MACRO(OP)                                                       \
                 template <typename X>                                               \
-                inline vec_proxy& operator OP (const X xyz)                         \
+                inline VecProxy& operator OP (const X xyz)                         \
                 {                                                                   \
                     x OP xyz;                                                       \
                     y OP xyz;                                                       \
@@ -405,21 +405,21 @@ namespace XXX_NAMESPACE
             };
 
             template <typename T>
-            std::ostream& operator<<(std::ostream& os, const vec_proxy<T, 1>& vp)
+            std::ostream& operator<<(std::ostream& os, const VecProxy<T, 1>& vp)
             {
                 os << "(" << vp.x << ")";
                 return os;
             }
 
             template <typename T>
-            std::ostream& operator<<(std::ostream& os, const vec_proxy<T, 2>& vp)
+            std::ostream& operator<<(std::ostream& os, const VecProxy<T, 2>& vp)
             {
                 os << "(" << vp.x << "," << vp.y << ")";
                 return os;
             }
 
             template <typename T>
-            std::ostream& operator<<(std::ostream& os, const vec_proxy<T, 3>& vp)
+            std::ostream& operator<<(std::ostream& os, const VecProxy<T, 3>& vp)
             {
                 os << "(" << vp.x << "," << vp.y << "," << vp.z << ")";
                 return os;

@@ -20,9 +20,9 @@ namespace XXX_NAMESPACE
     #define MACRO_UNQUALIFIED(OP, IN_T_1, IN_T_2)                                                                                               \
         template <typename T_1, typename T_2, SizeT D,                                                                                    \
                 typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT>                                  \
-        inline ::XXX_NAMESPACE::dataTypes::vec<X, D> operator OP (IN_T_1<T_1, D>& x_1, IN_T_2<T_2, D>& x_2)                                                                 \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<X, D> operator OP (IN_T_1<T_1, D>& x_1, IN_T_2<T_2, D>& x_2)                                                                 \
         {                                                                                                                                       \
-            ::XXX_NAMESPACE::dataTypes::vec<X, D> y(x_1);                                                                                                                   \
+            ::XXX_NAMESPACE::dataTypes::Vec<X, D> y(x_1);                                                                                                                   \
             y OP ## = x_2;                                                                                                                      \
             return y;                                                                                                                           \
         }                                                                                                                                       \
@@ -39,10 +39,10 @@ namespace XXX_NAMESPACE
         MACRO_QUALIFIED(OP, IN_T_1, IN_T_2)                                                                                                     \
         MACRO_QUALIFIED(OP, IN_T_2, IN_T_1)                                                                                                     \
 
-        MACRO(+, ::XXX_NAMESPACE::dataTypes::vec, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-        MACRO(-, ::XXX_NAMESPACE::dataTypes::vec, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-        MACRO(*, ::XXX_NAMESPACE::dataTypes::vec, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-        MACRO(/, ::XXX_NAMESPACE::dataTypes::vec, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+        MACRO(+, ::XXX_NAMESPACE::dataTypes::Vec, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+        MACRO(-, ::XXX_NAMESPACE::dataTypes::Vec, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+        MACRO(*, ::XXX_NAMESPACE::dataTypes::Vec, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+        MACRO(/, ::XXX_NAMESPACE::dataTypes::Vec, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
     #undef MACRO
     #undef MACRO_QUALIFIED
@@ -51,18 +51,18 @@ namespace XXX_NAMESPACE
     #define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
         template <typename T_1, typename T_2, SizeT D,                                                                                    \
                 typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT>                                  \
-        inline ::XXX_NAMESPACE::dataTypes::vec<X, D> operator OP (IN_T<T_1, D>& x_1, const T_2 x_2)                                                                         \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<X, D> operator OP (IN_T<T_1, D>& x_1, const T_2 x_2)                                                                         \
         {                                                                                                                                       \
-            ::XXX_NAMESPACE::dataTypes::vec<X, D> y(x_1);                                                                                                                   \
+            ::XXX_NAMESPACE::dataTypes::Vec<X, D> y(x_1);                                                                                                                   \
             y OP ## = x_2;                                                                                                                      \
             return y;                                                                                                                           \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2, SizeT D,                                                                                    \
                 typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT>                                  \
-        inline ::XXX_NAMESPACE::dataTypes::vec<X, D> operator OP (const T_1 x_1, IN_T<T_2, D>& x_2)                                                                         \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<X, D> operator OP (const T_1 x_1, IN_T<T_2, D>& x_2)                                                                         \
         {                                                                                                                                       \
-            ::XXX_NAMESPACE::dataTypes::vec<X, D> y(x_1);                                                                                                                   \
+            ::XXX_NAMESPACE::dataTypes::Vec<X, D> y(x_1);                                                                                                                   \
             y OP ## = x_2;                                                                                                                      \
             return y;                                                                                                                           \
         }                                                                                                                                       \
@@ -74,15 +74,15 @@ namespace XXX_NAMESPACE
     #define MACRO(OP, IN_T)                                                                                                                     \
         MACRO_QUALIFIED(OP, IN_T)                                                                                                               \
 
-        MACRO(+, ::XXX_NAMESPACE::dataTypes::vec)
-        MACRO(-, ::XXX_NAMESPACE::dataTypes::vec)
-        MACRO(*, ::XXX_NAMESPACE::dataTypes::vec)
-        MACRO(/, ::XXX_NAMESPACE::dataTypes::vec)
+        MACRO(+, ::XXX_NAMESPACE::dataTypes::Vec)
+        MACRO(-, ::XXX_NAMESPACE::dataTypes::Vec)
+        MACRO(*, ::XXX_NAMESPACE::dataTypes::Vec)
+        MACRO(/, ::XXX_NAMESPACE::dataTypes::Vec)
 
-        MACRO(+, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-        MACRO(-, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-        MACRO(*, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-        MACRO(/, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+        MACRO(+, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+        MACRO(-, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+        MACRO(*, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+        MACRO(/, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
     #undef MACRO
     #undef MACRO_QUALIFIED
@@ -90,21 +90,21 @@ namespace XXX_NAMESPACE
 
     #define MACRO_UNQUALIFIED(OP, IN_T)                                                                                                         \
         template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
-        inline ::XXX_NAMESPACE::dataTypes::vec<T, 1> OP (IN_T<T, 1>& v)                                                                                                     \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<T, 1> OP (IN_T<T, 1>& v)                                                                                                     \
         {                                                                                                                                       \
-            return ::XXX_NAMESPACE::dataTypes::vec<T, 1>(::XXX_NAMESPACE::math::internal::Func<T>:: OP (v.x));                                                                               \
+            return ::XXX_NAMESPACE::dataTypes::Vec<T, 1>(::XXX_NAMESPACE::math::internal::Func<T>:: OP (v.x));                                                                               \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
-        inline ::XXX_NAMESPACE::dataTypes::vec<T, 2> OP (IN_T<T, 2>& v)                                                                                                     \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<T, 2> OP (IN_T<T, 2>& v)                                                                                                     \
         {                                                                                                                                       \
-            return ::XXX_NAMESPACE::dataTypes::vec<T, 2>(::XXX_NAMESPACE::math::internal::Func<T>:: OP (v.x), ::XXX_NAMESPACE::math::internal::Func<T>:: OP (v.y));                                           \
+            return ::XXX_NAMESPACE::dataTypes::Vec<T, 2>(::XXX_NAMESPACE::math::internal::Func<T>:: OP (v.x), ::XXX_NAMESPACE::math::internal::Func<T>:: OP (v.y));                                           \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T, typename X = typename std::remove_cv<T>::type>                                                                    \
-        inline ::XXX_NAMESPACE::dataTypes::vec<X, 3> OP (IN_T<T, 3>& v)                                                                                                     \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<X, 3> OP (IN_T<T, 3>& v)                                                                                                     \
         {                                                                                                                                       \
-            return ::XXX_NAMESPACE::dataTypes::vec<X, 3>(::XXX_NAMESPACE::math::internal::Func<X>:: OP (v.x),                                                                                \
+            return ::XXX_NAMESPACE::dataTypes::Vec<X, 3>(::XXX_NAMESPACE::math::internal::Func<X>:: OP (v.x),                                                                                \
                             ::XXX_NAMESPACE::math::internal::Func<X>:: OP (v.y),                                                                                \
                             ::XXX_NAMESPACE::math::internal::Func<X>:: OP (v.z));                                                                               \
         }                                                                                                                                       \
@@ -116,13 +116,13 @@ namespace XXX_NAMESPACE
     #define MACRO(OP, IN_T)                                                                                                                     \
         MACRO_QUALIFIED(OP, IN_T)                                                                                                               \
 
-        MACRO(sqrt, ::XXX_NAMESPACE::dataTypes::vec)
-        MACRO(log, ::XXX_NAMESPACE::dataTypes::vec)
-        MACRO(exp, ::XXX_NAMESPACE::dataTypes::vec)
+        MACRO(sqrt, ::XXX_NAMESPACE::dataTypes::Vec)
+        MACRO(log, ::XXX_NAMESPACE::dataTypes::Vec)
+        MACRO(exp, ::XXX_NAMESPACE::dataTypes::Vec)
 
-        MACRO(sqrt, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-        MACRO(log, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-        MACRO(exp, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+        MACRO(sqrt, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+        MACRO(log, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+        MACRO(exp, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
     #undef MACRO
     #undef MACRO_QUALIFIED
@@ -169,7 +169,7 @@ namespace XXX_NAMESPACE
         MACRO_QUALIFIED(IN_T_1, IN_T_2)                                                                                                         \
         MACRO_QUALIFIED(IN_T_2, IN_T_1)                                                                                                         \
 
-        MACRO(::XXX_NAMESPACE::dataTypes::vec, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+        MACRO(::XXX_NAMESPACE::dataTypes::Vec, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
     #undef MACRO
     #undef MACRO_QUALIFIED
@@ -239,8 +239,8 @@ namespace XXX_NAMESPACE
     #define MACRO(IN_T)                                                                                                                         \
         MACRO_QUALIFIED(IN_T)                                                                                                                   \
         
-        MACRO(::XXX_NAMESPACE::dataTypes::vec)
-        MACRO(::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+        MACRO(::XXX_NAMESPACE::dataTypes::Vec)
+        MACRO(::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
     #undef MACRO
     #undef MACRO_QUALIFIED
@@ -249,14 +249,14 @@ namespace XXX_NAMESPACE
     #define MACRO_UNQUALIFIED(IN_T_1, IN_T_2)                                                                                                   \
         template <typename T_1, typename T_2,                                                                                                   \
                 typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT>                                  \
-        inline ::XXX_NAMESPACE::dataTypes::vec<X, 3> cross_product(IN_T_1<T_1, 3>& x_1, IN_T_2<T_2, 3>& x_2)                                                                \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<X, 3> cross_product(IN_T_1<T_1, 3>& x_1, IN_T_2<T_2, 3>& x_2)                                                                \
         {                                                                                                                                       \
-            return ::XXX_NAMESPACE::dataTypes::vec<X, 3>(x_1.y * x_2.z - x_1.z * x_2.y, x_1.z * x_2.x - x_1.x * x_2.z, x_1.x * x_2.y - x_1.y * x_2.x);                      \
+            return ::XXX_NAMESPACE::dataTypes::Vec<X, 3>(x_1.y * x_2.z - x_1.z * x_2.y, x_1.z * x_2.x - x_1.x * x_2.z, x_1.x * x_2.y - x_1.y * x_2.x);                      \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
                 typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT>                                  \
-        inline ::XXX_NAMESPACE::dataTypes::vec<X, 3> cross(IN_T_1<T_1, 3>& x_1, IN_T_2<T_2, 3>& x_2)                                                                        \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<X, 3> cross(IN_T_1<T_1, 3>& x_1, IN_T_2<T_2, 3>& x_2)                                                                        \
         {                                                                                                                                       \
             return cross_product(x_1, x_2);                                                                                                     \
         }                                                                                                                                       \
@@ -273,7 +273,7 @@ namespace XXX_NAMESPACE
         MACRO_QUALIFIED(IN_T_1, IN_T_2)                                                                                                         \
         MACRO_QUALIFIED(IN_T_2, IN_T_1)                                                                                                         \
 
-        MACRO(::XXX_NAMESPACE::dataTypes::vec, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+        MACRO(::XXX_NAMESPACE::dataTypes::Vec, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
     #undef MACRO
     #undef MACRO_QUALIFIED
@@ -282,28 +282,28 @@ namespace XXX_NAMESPACE
     #define MACRO_UNQUALIFIED(IN_T)                                                                                                             \
         template <typename T_1, typename T_2,                                                                                                   \
                 typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT>                                  \
-        inline ::XXX_NAMESPACE::dataTypes::vec<X, 3> cross_product(IN_T<T_1, 3>& x_1, const T_2 x_2)                                                                        \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<X, 3> cross_product(IN_T<T_1, 3>& x_1, const T_2 x_2)                                                                        \
         {                                                                                                                                       \
-            return ::XXX_NAMESPACE::dataTypes::vec<X, 3>(x_1.y - x_1.z, x_1.z - x_1.x, x_1.x - x_1.y) * x_2;                                                                \
+            return ::XXX_NAMESPACE::dataTypes::Vec<X, 3>(x_1.y - x_1.z, x_1.z - x_1.x, x_1.x - x_1.y) * x_2;                                                                \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
                 typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT>                                  \
-        inline ::XXX_NAMESPACE::dataTypes::vec<X, 3> cross_product(const T_1 x_1, IN_T<T_2, 3>& x_2)                                                                        \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<X, 3> cross_product(const T_1 x_1, IN_T<T_2, 3>& x_2)                                                                        \
         {                                                                                                                                       \
-            return x_1 * ::XXX_NAMESPACE::dataTypes::vec<X, 3>(x_2.z - x_2.y, x_2.x - x_2.z, x_2.y - x_2.x);                                                                \
+            return x_1 * ::XXX_NAMESPACE::dataTypes::Vec<X, 3>(x_2.z - x_2.y, x_2.x - x_2.z, x_2.y - x_2.x);                                                                \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
                 typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT>                                  \
-        inline ::XXX_NAMESPACE::dataTypes::vec<X, 3> cross(IN_T<T_1, 3>& x_1, const T_2 x_2)                                                                                \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<X, 3> cross(IN_T<T_1, 3>& x_1, const T_2 x_2)                                                                                \
         {                                                                                                                                       \
             return cross_product(x_1, x_2);                                                                                                     \
         }                                                                                                                                       \
                                                                                                                                                 \
         template <typename T_1, typename T_2,                                                                                                   \
                 typename X = typename XXX_NAMESPACE::dataTypes::Compare<T_1, T_2>::UnqualifiedStrongerT>                                  \
-        inline ::XXX_NAMESPACE::dataTypes::vec<X, 3> cross(const T_1 x_1, IN_T<T_2, 3>& x_2)                                                                                \
+        inline ::XXX_NAMESPACE::dataTypes::Vec<X, 3> cross(const T_1 x_1, IN_T<T_2, 3>& x_2)                                                                                \
         {                                                                                                                                       \
             return cross_product(x_1, x_2);                                                                                                     \
         }                                                                                                                                       \
@@ -315,8 +315,8 @@ namespace XXX_NAMESPACE
     #define MACRO(IN_T)                                                                                                                         \
         MACRO_QUALIFIED(IN_T)                                                                                                                   \
         
-        MACRO(::XXX_NAMESPACE::dataTypes::vec)
-        MACRO(::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+        MACRO(::XXX_NAMESPACE::dataTypes::Vec)
+        MACRO(::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
     #undef MACRO
     #undef MACRO_QUALIFIED

@@ -22,7 +22,7 @@ namespace XXX_NAMESPACE
         namespace internal
         {
             template <typename T, SizeT D>
-            class vec_proxy;
+            class VecProxy;
         }
     }
 
@@ -35,13 +35,13 @@ namespace XXX_NAMESPACE
         //! \tparam D dimension
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename T, SizeT D>
-        class vec;
+        class Vec;
 
         //! \brief D = 1 specialization with component x
         //!
         //! \tparam T data type
         template <typename T>
-        class vec<T, 1>
+        class Vec<T, 1>
         {
             static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
@@ -50,8 +50,8 @@ namespace XXX_NAMESPACE
 
         public:
 
-            using type = vec<T, 1>;
-            using Proxy = typename ::XXX_NAMESPACE::dataTypes::internal::vec_proxy<T, 1>;
+            using type = Vec<T, 1>;
+            using Proxy = typename ::XXX_NAMESPACE::dataTypes::internal::VecProxy<T, 1>;
             //! Remember the template type parameter T
             using value_type = T;
             //! Remember the template parameter D (=1)
@@ -62,55 +62,55 @@ namespace XXX_NAMESPACE
             //! Constructors
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const T x = 0)
+            Vec(const T x = 0)
                 :
                 x(x) {}
 
             template <typename X>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const vec<X, 1>& v)
+            Vec(const Vec<X, 1>& v)
                 :
                 x(v.x) {}
 
             template <typename X>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const ::XXX_NAMESPACE::dataTypes::internal::vec_proxy<X, 1>& vp)
+            Vec(const ::XXX_NAMESPACE::dataTypes::internal::VecProxy<X, 1>& vp)
                 :
                 x(vp.x) {}
             
             //! Some operators
-            inline vec operator-() const
+            inline Vec operator-() const
             {
-                return vec(-x);
+                return Vec(-x);
             }
 
         #define MACRO(OP, IN_T)                             \
             template <typename X>                           \
-            inline vec& operator OP (const IN_T<X, 1>& v)   \
+            inline Vec& operator OP (const IN_T<X, 1>& v)   \
             {                                               \
                 x OP v.x;                                   \
                 return *this;                               \
             }                                               \
             
-            MACRO(=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(+=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(-=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(*=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(/=, ::XXX_NAMESPACE::dataTypes::vec)
+            MACRO(=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(+=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(-=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(*=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(/=, ::XXX_NAMESPACE::dataTypes::Vec)
 
-            MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+            MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
         #undef MACRO
 
         #define MACRO(OP)                                   \
             template <typename X>                           \
-            inline vec& operator OP (const X x)             \
+            inline Vec& operator OP (const X x)             \
             {                                               \
                 x OP x;                                     \
                 return *this;                               \
@@ -137,7 +137,7 @@ namespace XXX_NAMESPACE
         //!
         //! \tparam T data type
         template <typename T>
-        class vec<T, 2>
+        class Vec<T, 2>
         {
             static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
@@ -146,8 +146,8 @@ namespace XXX_NAMESPACE
 
         public:
 
-            using type = vec<T, 2>;
-            using Proxy = typename ::XXX_NAMESPACE::dataTypes::internal::vec_proxy<T, 2>;
+            using type = Vec<T, 2>;
+            using Proxy = typename ::XXX_NAMESPACE::dataTypes::internal::VecProxy<T, 2>;
             //! Remember the template type parameter T
             using value_type = T;
             //! Remember the template parameter D (=2)
@@ -159,14 +159,14 @@ namespace XXX_NAMESPACE
             //! Constructors
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const T xy = 0) 
+            Vec(const T xy = 0) 
                 :
                 x(xy),
                 y(xy) {}
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const T x, const T y)
+            Vec(const T x, const T y)
                 :
                 x(x),
                 y(y) {}
@@ -174,7 +174,7 @@ namespace XXX_NAMESPACE
             template <typename X>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const vec<X, 2>& v)
+            Vec(const Vec<X, 2>& v)
                 :
                 x(v.x),
                 y(v.y) {}
@@ -182,43 +182,43 @@ namespace XXX_NAMESPACE
             template <typename X>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const ::XXX_NAMESPACE::dataTypes::internal::vec_proxy<X, 2>& vp)
+            Vec(const ::XXX_NAMESPACE::dataTypes::internal::VecProxy<X, 2>& vp)
                 :
                 x(vp.x),
                 y(vp.y) {}
             
             //! Some operators
-            inline vec operator-() const
+            inline Vec operator-() const
             {
-                return vec(-x, -y);
+                return Vec(-x, -y);
             }
 
         #define MACRO(OP, IN_T)                             \
             template <typename X>                           \
-            inline vec& operator OP (const IN_T<X, 2>& v)   \
+            inline Vec& operator OP (const IN_T<X, 2>& v)   \
             {                                               \
                 x OP v.x;                                   \
                 y OP v.y;                                   \
                 return *this;                               \
             }                                               \
 
-            MACRO(=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(+=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(-=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(*=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(/=, ::XXX_NAMESPACE::dataTypes::vec)
+            MACRO(=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(+=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(-=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(*=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(/=, ::XXX_NAMESPACE::dataTypes::Vec)
 
-            MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+            MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
         #undef MACRO
 
         #define MACRO(OP)                                   \
             template <typename X>                           \
-            inline vec& operator OP (const X xy)            \
+            inline Vec& operator OP (const X xy)            \
             {                                               \
                 x OP xy;                                    \
                 y OP xy;                                    \
@@ -246,7 +246,7 @@ namespace XXX_NAMESPACE
         //!
         //! \tparam T data type
         template <typename T>
-        class vec<T, 3>
+        class Vec<T, 3>
         {
             static_assert(std::is_fundamental<T>::value, "error: T is not a fundamental data type");
             static_assert(!std::is_void<T>::value, "error: T is void -> not allowed");
@@ -255,8 +255,8 @@ namespace XXX_NAMESPACE
 
         public:
 
-            using type = vec<T, 3>;
-            using Proxy = typename ::XXX_NAMESPACE::dataTypes::internal::vec_proxy<T, 3>;
+            using type = Vec<T, 3>;
+            using Proxy = typename ::XXX_NAMESPACE::dataTypes::internal::VecProxy<T, 3>;
             //! Remember the template type parameter T
             using value_type = T;
             //! Remember the template parameter D (=3)
@@ -269,7 +269,7 @@ namespace XXX_NAMESPACE
             //! Constructors
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const T xyz = 0)
+            Vec(const T xyz = 0)
                 :
                 x(xyz),
                 y(xyz),
@@ -277,7 +277,7 @@ namespace XXX_NAMESPACE
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const T x, const T y, const T z)
+            Vec(const T x, const T y, const T z)
                 :
                 x(x),
                 y(y),
@@ -286,7 +286,7 @@ namespace XXX_NAMESPACE
             template <typename X>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const vec<X, 3>& v)
+            Vec(const Vec<X, 3>& v)
                 :
                 x(v.x),
                 y(v.y),
@@ -295,21 +295,21 @@ namespace XXX_NAMESPACE
             template <typename X>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            vec(const ::XXX_NAMESPACE::dataTypes::internal::vec_proxy<X, 3>& vp)
+            Vec(const ::XXX_NAMESPACE::dataTypes::internal::VecProxy<X, 3>& vp)
                 :
                 x(vp.x),
                 y(vp.y),
                 z(vp.z) {}
         
             //! Some operators
-            inline vec operator-() const
+            inline Vec operator-() const
             {
-                return vec(-x, -y, -z);
+                return Vec(-x, -y, -z);
             }
 
         #define MACRO(OP, IN_T)                             \
             template <typename X>                           \
-            inline vec& operator OP (const IN_T<X, 3>& v)   \
+            inline Vec& operator OP (const IN_T<X, 3>& v)   \
             {                                               \
                 x OP v.x;                                   \
                 y OP v.y;                                   \
@@ -317,23 +317,23 @@ namespace XXX_NAMESPACE
                 return *this;                               \
             }                                               \
             
-            MACRO(=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(+=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(-=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(*=, ::XXX_NAMESPACE::dataTypes::vec)
-            MACRO(/=, ::XXX_NAMESPACE::dataTypes::vec)
+            MACRO(=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(+=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(-=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(*=, ::XXX_NAMESPACE::dataTypes::Vec)
+            MACRO(/=, ::XXX_NAMESPACE::dataTypes::Vec)
 
-            MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
-            MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::vec_proxy)
+            MACRO(=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(+=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(-=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(*=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
+            MACRO(/=, ::XXX_NAMESPACE::dataTypes::internal::VecProxy)
 
         #undef MACRO
 
         #define MACRO(OP)                                   \
             template <typename X>                           \
-            inline vec& operator OP (const X xyz)           \
+            inline Vec& operator OP (const X xyz)           \
             {                                               \
                 x OP xyz;                                   \
                 y OP xyz;                                   \
@@ -359,21 +359,21 @@ namespace XXX_NAMESPACE
         };
 
         template <typename T>
-        std::ostream& operator<<(std::ostream& os, const vec<T, 1>& v)
+        std::ostream& operator<<(std::ostream& os, const Vec<T, 1>& v)
         {
             os << "(" << v.x << ")";
             return os;
         }
 
         template <typename T>
-        std::ostream& operator<<(std::ostream& os, const vec<T, 2>& v)
+        std::ostream& operator<<(std::ostream& os, const Vec<T, 2>& v)
         {
             os << "(" << v.x << "," << v.y << ")";
             return os;
         }
 
         template <typename T>
-        std::ostream& operator<<(std::ostream& os, const vec<T, 3>& v)
+        std::ostream& operator<<(std::ostream& os, const Vec<T, 3>& v)
         {
             os << "(" << v.x << "," << v.y << "," << v.z << ")";
             return os;
@@ -391,13 +391,13 @@ namespace XXX_NAMESPACE
     namespace internal
     {
         template <typename T, SizeT D>
-        struct ProvidesProxy<::XXX_NAMESPACE::dataTypes::vec<T, D>>
+        struct ProvidesProxy<::XXX_NAMESPACE::dataTypes::Vec<T, D>>
         {
             static constexpr bool value = true;
         };
 
         template <typename T, SizeT D>
-        struct ProvidesProxy<const ::XXX_NAMESPACE::dataTypes::vec<T, D>>
+        struct ProvidesProxy<const ::XXX_NAMESPACE::dataTypes::Vec<T, D>>
         {
             static constexpr bool value = true;
         };
@@ -408,9 +408,9 @@ namespace XXX_NAMESPACE
         namespace internal
         {
             template <typename T, SizeT D>
-            struct Func<::XXX_NAMESPACE::dataTypes::vec<T, D>>
+            struct Func<::XXX_NAMESPACE::dataTypes::Vec<T, D>>
             {
-                using type = ::XXX_NAMESPACE::dataTypes::vec<T, D>;
+                using type = ::XXX_NAMESPACE::dataTypes::Vec<T, D>;
                 using value_type = typename std::remove_cv<typename type::value_type>::type;
 
                 static constexpr value_type One = Func<value_type>::One;

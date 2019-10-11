@@ -19,7 +19,7 @@ using real_type = fw::real_type;
 using type_x = real_type;
 using type_y = real_type;
 using type_z = real_type;
-using element_type = fw::dataTypes::vec<real_type, 3>;
+using element_type = fw::dataTypes::Vec<real_type, 3>;
 
 /*
 using type_x = std::uint32_t;
