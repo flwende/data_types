@@ -8,7 +8,7 @@
 
 #include <cstdint>
 #include <field/field.hpp>
-#include <vec/vec.hpp>
+#include <data_types/vec/Vec.hpp>
 #include <tuple/tuple.hpp>
 #include <common/data_types.hpp>
 
@@ -19,13 +19,13 @@ using real_type = fw::real_type;
 using type_x = real_type;
 using type_y = real_type;
 using type_z = real_type;
-using element_type = fw::vec<real_type, 3>;
+using element_type = fw::dataTypes::vec<real_type, 3>;
 
 /*
 using type_x = std::uint32_t;
 using type_y = std::uint32_t;
 using type_z = std::uint32_t;
-using element_type = fw::vec<std::uint32_t, 3>;
+using element_type = fw::dataTypes::<std::uint32_t, 3>;
 */
 /*
 using type_x = std::uint32_t;
