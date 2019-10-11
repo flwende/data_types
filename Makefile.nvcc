@@ -3,7 +3,8 @@ LD = nvcc
 
 INC = -I./include -I./src/include
 CXXFLAGS = -O3 -std=c++14 -march=native -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC)
-#CXXFLAGS += -DNDEBUG
+#CXXFLAGS = -v -O3 -std=c++14 -mavx2 -mfma -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC)
+CXXFLAGS += -DNDEBUG
 
 #OPTIONS += -DCHECK_RESULTS
 #OPTIONS += -DAOS_LAYOUT
