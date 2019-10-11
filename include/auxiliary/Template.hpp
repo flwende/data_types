@@ -316,6 +316,16 @@ namespace XXX_NAMESPACE
             }
 
             //!
+            //! \brief Test for all parameters being volatile qualified.
+            //!
+            //! \return `true` if all parameters are volatile qualified, otherwise `false`
+            //!
+            static constexpr auto IsReference()
+            {
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_reference<T>::value ? 1 : 0)...) == Size;
+            }
+
+            //!
             //! \brief Get the size of the parameter with the largest type.
             //!
             //! \return the size of the parameter with the largest type
