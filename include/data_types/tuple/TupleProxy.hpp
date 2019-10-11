@@ -138,7 +138,7 @@ namespace XXX_NAMESPACE
                 }
             };
         } // namespace internal
-    }     // namespace dataTypes
+    }  // namespace dataTypes
 } // namespace XXX_NAMESPACE
 
 #endif
