@@ -298,6 +298,11 @@ namespace XXX_NAMESPACE
         {
             using Base = internal::TupleBase<ValueT...>;
 
+            template <typename ...T>
+            using Pack = ::XXX_NAMESPACE::variadic::Pack<T...>;
+            template <SizeT N>
+            using CompileTimeLoop = ::XXX_NAMESPACE::compileTime::Loop<N>;
+
           public:
             using Type = Tuple<ValueT...>;
             using Proxy = internal::TupleProxy<ValueT...>;
@@ -343,6 +348,14 @@ namespace XXX_NAMESPACE
             constexpr Tuple(const Tuple& tuple) : Base(tuple) {}
 
           private:
+            //!
+            //! \brief Constructor.
+            //!
+            //! \tparam T a variadic list of type parameters that are convertibe to this type's type parameters
+            //! \tparam I a list of indices used for the parameter access
+            //! \param proxy a `TupleProxy` instance
+            //! \param unnamed used for template parameter deduction
+            //!
             template <typename... T, SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION Tuple(const internal::TupleProxy<T...>& proxy, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(proxy)...)
             {
@@ -352,15 +365,41 @@ namespace XXX_NAMESPACE
             //!
             //! \brief Constructor.
             //!
-            //! Construct a `TupleBase` instance from a `TupleProxy` with a different parameter list.
+            //! Construct a `Tuple` instance from a `TupleProxy` with a different parameter list.
             //! The number of template type parameters must be convertibe to this type's type parameters.
             //!
             //! \tparam T a variadic list of type parameters that are convertibe to this type's type parameters
             //! \param proxy a `TupleProxy` instance
             //!
-            template <typename... T>
+            template <typename... T, bool IsReference = Pack<ValueT...>::IsReference(), typename Enable = std::enable_if_t<!IsReference>>
             HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const internal::TupleProxy<T...>& proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
             {
+            }
+
+            //!
+            //! \brief Constructor (Invalid object construction).
+            //!
+            //! This constructor is enabled in case of a base class conversion of a `TupleProxy` where in the calling context a non-reference
+            //! instance of the base class is needed, e.g.
+            //! ```
+            //! template <typename ...T>
+            //! void foo(Tuple<T...> tuple) {..}
+            //! ..
+            //! TupleProxy<int, float> proxy = ..;
+            //! foo(proxy); // ERROR
+            //! ```
+            //! In this case the `TupleProxy` is converted to its base class `Tuple<int&, float&>`, and references to the members are given to the `foo`.
+            //! This is errorneous behavior. 
+            //! Instead the programmer must make an explicit copy of the `TupleProxy` type to `Tuple`, which would happen anyway when calling `foo`,
+            //! or use a static cast to `Tuple<int, float>`
+            //!
+            //! \tparam T a variadic list of type parameters that are convertibe to this type's type parameters
+            //! \param proxy a `TupleProxy` instance
+            //!
+            template <typename... T, bool IsReference = Pack<ValueT...>::IsReference(), typename Enable = std::enable_if_t<IsReference>>
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(internal::TupleProxy<T...> proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
+            {
+                static_assert(!IsReference, "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
             }
 
             //!
@@ -376,7 +415,7 @@ namespace XXX_NAMESPACE
             {
                 Tuple tuple;
 
-                ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(tuple) = -Get<I>(*this); });
+                CompileTimeLoop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(tuple) = -Get<I>(*this); });
 
                 return tuple;
             }
@@ -393,9 +432,9 @@ namespace XXX_NAMESPACE
     HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const IN_T<T...>& tuple)->Tuple&                                                                                                                              \
     {                                                                                                                                                                                                                      \
         static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");                                                                                                                   \
-        static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T...>(), "error: types are not convertible.");                                                                                \
+        static_assert(Pack<ValueT...>::template IsConvertibleFrom<T...>(), "error: types are not convertible.");                                                                                                           \
                                                                                                                                                                                                                            \
-        ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) OP Get<I>(tuple); });                                                                                  \
+        CompileTimeLoop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) OP Get<I>(tuple); });                                                                                                     \
                                                                                                                                                                                                                            \
         return *this;                                                                                                                                                                                                      \
     }
@@ -418,7 +457,7 @@ namespace XXX_NAMESPACE
     template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>                                                                                                                           \
     HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(T value)->Tuple&                                                                                                                                              \
     {                                                                                                                                                                                                                      \
-        ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&value, this](const auto I) { Get<I>(*this) OP value; });                                                                                          \
+        CompileTimeLoop<sizeof...(ValueT)>::Execute([&value, this](const auto I) { Get<I>(*this) OP value; });                                                                                                             \
                                                                                                                                                                                                                            \
         return *this;                                                                                                                                                                                                      \
     }
