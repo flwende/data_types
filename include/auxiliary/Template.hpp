@@ -21,6 +21,8 @@ namespace XXX_NAMESPACE
 {
     namespace variadic
     {
+        using SizeT = ::XXX_NAMESPACE::dataTypes::SizeT;
+
         namespace
         {
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -374,6 +376,8 @@ namespace XXX_NAMESPACE
 
     namespace compileTime
     {
+        using SizeT = ::XXX_NAMESPACE::dataTypes::SizeT;
+
         /////////////////////////////////////////////////////////////////
         //
         // A compile-time loop.

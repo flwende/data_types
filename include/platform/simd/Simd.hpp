@@ -49,6 +49,8 @@ namespace SIMD_NAMESPACE
 {
     namespace simd
     {
+        using SizeT = ::XXX_NAMESPACE::dataTypes::SizeT;
+
         //! Memory alignment
         static constexpr SizeT alignment = SIMD_ALIGNMENT;
 

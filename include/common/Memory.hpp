@@ -35,6 +35,8 @@ namespace XXX_NAMESPACE
 
     namespace memory
     {
+        using SizeT = ::XXX_NAMESPACE::dataTypes::SizeT;
+
         namespace
         {
             ////////////////////////////////////////////////////////////////////////////////////////////////////////

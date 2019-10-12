@@ -15,11 +15,11 @@
 
 namespace XXX_NAMESPACE
 {
-    using SizeT = std::size_t;
-    using RealT = float;
-
     namespace dataTypes
     {
+        using SizeT = std::size_t;
+        using RealT = float;
+
         namespace
         {
             template <typename T_1, typename T_2, typename Enabled = void>

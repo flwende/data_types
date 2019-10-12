@@ -22,6 +22,8 @@ namespace XXX_NAMESPACE
 {
     namespace math
     {
+        using SizeT = ::XXX_NAMESPACE::dataTypes::SizeT;
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
         //! \brief Greatest common divisor (gcd).
