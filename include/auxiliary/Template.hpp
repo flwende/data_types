@@ -14,7 +14,6 @@
 #endif
 
 #include <auxiliary/CPPStandard.hpp>
-#include <auxiliary/Macro.hpp>
 #include <data_types/DataTypes.hpp>
 #include <platform/Target.hpp>
 
@@ -371,39 +370,6 @@ namespace XXX_NAMESPACE
         {
             static constexpr bool value = std::is_constructible<std::function<void(T...)>, std::reference_wrapper<std::remove_reference_t<FuncT>>>::value;
         };
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //!
-        //! \brief Generate a type with up to 'FW_SEQ_MAX_N' template parameters
-        //!
-        //! Remove from a parameter pack (Head..., Tail...) 'M = |Head...| = (FW_SEQ_MAX_N - N) >= 0'
-        //! parameters recursively, and take the remaining parameter list (Tail...) of length 'N' to
-        //! define the type TYPE_NAME<Tail...>.
-        //!
-        //! \param TYPE_NAME name of the type to be generated
-        //!
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define MACRO_TYPE_GEN(TYPE_NAME)                                                                                                                                                                                          \
-    template <SizeT N, typename Head, typename... Tail>                                                                                                                                                               \
-    struct TypeGenImplementation                                                                                                                                                                                           \
-    {                                                                                                                                                                                                                      \
-        using Type = typename TypeGenImplementation<N - 1, Tail...>::Type;                                                                                                                                               \
-    };                                                                                                                                                                                                                     \
-                                                                                                                                                                                                                           \
-    template <typename Head, typename... Tail>                                                                                                                                                                             \
-    struct TypeGenImplementation<0, Head, Tail...>                                                                                                                                                                         \
-    {                                                                                                                                                                                                                      \
-        using Type = TYPE_NAME<Head, Tail...>;                                                                                                                                                                             \
-    };                                                                                                                                                                                                                     \
-                                                                                                                                                                                                                           \
-    template <typename T, SizeT N>                                                                                                                                                                                    \
-    struct TypeGen                                                                                                                                                                                                         \
-    {                                                                                                                                                                                                                      \
-        static_assert(N > 0, "error: no template parameters specified");                                                                                                                                                 \
-        static_assert(N <= FW_SEQ_MAX_N, "error: not implemented");                                                                                                                                                      \
-                                                                                                                                                                                                                           \
-        using Type = typename TypeGenImplementation<FW_SEQ_MAX_N - N, FW_SEQ_N(T)>::Type;                                                                                                                                \
-    };
     } // namespace variadic
 
     namespace compileTime

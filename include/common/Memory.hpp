@@ -468,24 +468,15 @@ namespace XXX_NAMESPACE
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //
-        // NumParameters-dimensional homogeneous structured type (HST).
-        //
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        namespace
-        {
-            // Defines 'template <T, NumParameters> struct TypeGen {..};'.
-            MACRO_TYPE_GEN(::XXX_NAMESPACE::memory::Pointer);
-        } // namespace
-
         //!
         //! \brief A homogeneous structured type witn `N` members.
         //!
         //! \tparam T the type of the members
         //! \tparam N the number of members
         //!
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename T, SizeT N>
-        using PointerN = typename TypeGen<T, N>::Type;
+        using PointerN = ::XXX_NAMESPACE::dataTypes::Builder<::XXX_NAMESPACE::memory::Pointer, T, N>;
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
