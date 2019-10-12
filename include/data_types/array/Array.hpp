@@ -371,8 +371,9 @@ namespace XXX_NAMESPACE
             template <typename FuncT>
             HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto Reduce(const FuncT func, const ValueT& initial_value, const SizeT begin = 0, const SizeT end = N) const
             {
-                assert(begin < N);
+                assert(begin <= N);
                 assert(end <= N);
+                assert(begin <= end);
 
                 ValueT aggregate = initial_value;
 
@@ -395,8 +396,9 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             inline constexpr ValueT ReduceMul(const SizeT begin = 0, const SizeT end = N) const
             {
-                assert(begin < N);
+                assert(begin <= N);
                 assert(end <= N);
+                assert(begin <= end);
 
 #if (__cplusplus > 201402L)
                 return Reduce([](const ValueT product, const ValueT element) { return (product * element); }, 1, begin, end);
