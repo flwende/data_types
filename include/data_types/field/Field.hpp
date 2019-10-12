@@ -524,7 +524,7 @@ namespace XXX_NAMESPACE
             //! \param n the extent of the field
             //! \param initialize_to_zero (optional) if `true`, zero all its elements
             //!
-            Field(const SizeArray& n, const bool initialize_to_zero = false) : n(n) { Resize(n, initialize_to_zero); }
+            Field(const SizeArray& n, const bool initialize_to_zero = false) : n{} { Resize(n, initialize_to_zero); }
 
             //!
             //! \brief Resize the container.
@@ -541,6 +541,7 @@ namespace XXX_NAMESPACE
                 if (n != n_new)
                 {
                     n = n_new;
+
                     data = Container<::XXX_NAMESPACE::target::Host>(n);
 
                     if (initialize_to_zero)
@@ -561,6 +562,8 @@ namespace XXX_NAMESPACE
                     }
 #endif
                 }
+
+                assert(data.pointer.IsValid());
             }
 
             //!
