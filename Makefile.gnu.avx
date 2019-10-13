@@ -20,10 +20,13 @@ CXXFLAGS += -DAOS_LAYOUT
 
 target: bin/benchmark.x
 
-bin/benchmark.x: obj/benchmark.o
+bin/benchmark.x: obj/benchmark.o obj/benchmark_implementation.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
 obj/benchmark.o: src/benchmark.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/benchmark_implementation.o: src/benchmark_implementation.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 #obj/kernel.o: src/kernel.cpp
