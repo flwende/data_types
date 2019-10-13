@@ -277,13 +277,23 @@ namespace XXX_NAMESPACE
             }
 
             //!
-            //! \brief Test for all parameters being constant qualified.
+            //! \brief Test for any parameter being constant qualified.
             //!
-            //! \return `true` if all parameters are constant qualified, otherwise `false`
+            //! \return `true` if any parameter is constant qualified, otherwise `false`
             //!
             static constexpr auto IsConst()
             {
-                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_const<T>::value ? 1 : 0)...) > Size;
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_const<T>::value ? 1 : 0)...) > 0;
+            }
+
+            //!
+            //! \brief Test for all parameters being unsigned.
+            //!
+            //! \return `true` if all parameters are unsigned, otherwise `false`
+            //!
+            static constexpr auto IsUnsigned()
+            {
+                return Accumulate<SizeT, std::conditional_t<sizeof(T) == 0, T, SizeT>...>::Add(0, (std::is_unsigned<T>::value ? 1 : 0)...) == Size;
             }
 
             //!
