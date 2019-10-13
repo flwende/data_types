@@ -28,7 +28,7 @@ namespace XXX_NAMESPACE
         namespace internal
         {
             // Forward declarations.
-            template <typename, SizeT, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::target>
+            template <typename, SizeT, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::platform::Identifier>
             class Container;
         }
     }
@@ -105,8 +105,8 @@ namespace XXX_NAMESPACE
                 //! \param allocation_shape the allocation shape used for the memory allocation
                 //! \return a pointer to memory according to the allocation shape
                 //!
-                template <::XXX_NAMESPACE::target Target, typename AllocationShapeT>
-                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<Target == ::XXX_NAMESPACE::target::Host, T*>::type
+                template <::XXX_NAMESPACE::platform::Identifier Target, typename AllocationShapeT>
+                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<Target == ::XXX_NAMESPACE::platform::Identifier::Host, T*>::type
                 {
                     return reinterpret_cast<T*>(_mm_malloc(allocation_shape.GetByteSize(), allocation_shape.alignment));
                 }
@@ -118,8 +118,8 @@ namespace XXX_NAMESPACE
                 //! \tparam PointerT the type of the pointer
                 //! \param pointer a pointer variable
                 //!
-                template <::XXX_NAMESPACE::target Target, typename PointerT>
-                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<Target == ::XXX_NAMESPACE::target::Host, void>::type
+                template <::XXX_NAMESPACE::platform::Identifier Target, typename PointerT>
+                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<Target == ::XXX_NAMESPACE::platform::Identifier::Host, void>::type
                 {
                     assert(pointer.IsValid());
 
@@ -138,8 +138,8 @@ namespace XXX_NAMESPACE
                 //! \param allocation_shape the allocation shape used for the memory allocation
                 //! \return a pointer to memory according to the allocation shape
                 //!
-                template <::XXX_NAMESPACE::target Target, typename AllocationShapeT>
-                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<Target == ::XXX_NAMESPACE::target::GPU_CUDA, T*>::type
+                template <::XXX_NAMESPACE::platform::Identifier Target, typename AllocationShapeT>
+                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<Target == ::XXX_NAMESPACE::platform::Identifier::GPU_CUDA, T*>::type
                 {
                     T* d_ptr = nullptr;
 
@@ -155,8 +155,8 @@ namespace XXX_NAMESPACE
                 //! \tparam PointerT the type of the pointer
                 //! \param pointer a pointer variable
                 //!
-                template <::XXX_NAMESPACE::target Target, typename PointerT>
-                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<Target == ::XXX_NAMESPACE::target::GPU_CUDA, void>::type
+                template <::XXX_NAMESPACE::platform::Identifier Target, typename PointerT>
+                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<Target == ::XXX_NAMESPACE::platform::Identifier::GPU_CUDA, void>::type
                 {
                     assert(pointer.IsValid());
 
@@ -205,7 +205,7 @@ namespace XXX_NAMESPACE
             // Friend declarations.
             template <typename...>
             friend class Pointer;
-            template <typename, SizeT, DataLayout, ::XXX_NAMESPACE::target>
+            template <typename, SizeT, DataLayout, ::XXX_NAMESPACE::platform::Identifier>
             friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
             friend class AllocatorBase<ValueT>;
 
@@ -522,7 +522,7 @@ namespace XXX_NAMESPACE
             // Friend declarations.
             template <typename... X>
             friend class MultiPointer;
-            template <typename, SizeT, DataLayout, ::XXX_NAMESPACE::target>
+            template <typename, SizeT, DataLayout, ::XXX_NAMESPACE::platform::Identifier>
             friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
             friend class AllocatorBase<ValueT>;
 

@@ -7,60 +7,88 @@
 #define KERNEL_HPP
 
 #include <cstdint>
-#include <field/field.hpp>
+
+#include <data_types/DataTypes.hpp>
+#include <data_types/field/Field.hpp>
 #include <data_types/vec/Vec.hpp>
-#include <tuple/tuple.hpp>
-#include <common/data_types.hpp>
+#include <data_types/tuple/Tuple.hpp>
+#include <platform/Target.hpp>
 
 // Data types and layouts.
-using size_type = fw::size_type;
-using real_type = fw::real_type;
+using SizeT = ::fw::dataTypes::SizeT;
+using RealT = ::fw::dataTypes::RealT;
 
-using type_x = real_type;
-using type_y = real_type;
-using type_z = real_type;
-using element_type = fw::dataTypes::Vec<real_type, 3>;
+using TypeX = RealT;
+using TypeY = RealT;
+using TypeZ = RealT;
+using ElementT = ::fw::dataTypes::Vec<RealT, 3>;
 
 /*
-using type_x = std::uint32_t;
-using type_y = std::uint32_t;
-using type_z = std::uint32_t;
-using element_type = fw::dataTypes::<std::uint32_t, 3>;
+using TypeX = std::uint32_t;
+using TypeY = std::uint32_t;
+using TypeZ = std::uint32_t;
+using ElementT = ::fw::dataTypes::Vec<std::uint32_t, 3>;
 */
 /*
-using type_x = std::uint32_t;
-using type_y = std::uint32_t;
-using type_z = std::uint32_t;
-using element_type = fw::tuple<type_x, type_y, type_z>;
+using TypeX = std::uint32_t;
+using TypeY = std::uint32_t;
+using TypeZ = std::uint32_t;
+using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
 */
 /*
-using type_x = std::uint16_t;
-using type_y = double;
-using type_z = std::uint32_t;
-using element_type = fw::tuple<type_x, type_y, type_z>;
+using TypeX = std::uint16_t;
+using TypeY = std::uint8_t;
+using TypeZ = std::uint32_t;
+using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
 */
 /*
-using type_x = std::uint16_t;
-using type_y = std::int8_t;
-using type_z = std::uint32_t;
-using element_type = fw::tuple<type_x, type_y, type_z>;
+using TypeX = std::uint16_t;
+using TypeY = double;
+using TypeZ = std::uint32_t;
+using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
 */
 
-using const_element_type = const element_type;
+using ConstElementT = const ElementT;
 
 #if defined(AOS_LAYOUT)
-constexpr fw::data_layout DataLayout = fw::data_layout::AoS;
+constexpr ::fw::memory::DataLayout Layout = ::fw::memory::DataLayout::AoS;
 #elif defined(SOA_LAYOUT)
-constexpr fw::data_layout DataLayout = fw::data_layout::SoA;
+constexpr ::fw::memory::DataLayout Layout = ::fw::memory::DataLayout::SoA;
 #elif defined(SOAI_LAYOUT)
-constexpr fw::data_layout DataLayout = fw::data_layout::SoAi;
+constexpr ::fw::memory::DataLayout Layout = ::fw::memory::DataLayout::SoAi;
 #endif
 
-template <typename T, size_type C_Dimension>
-using field_type = fw::field<T, C_Dimension, DataLayout>;
+template <typename ValueT, SizeT Dimension>
+using Field = ::fw::dataTypes::Field<ValueT, Dimension, Layout>;
 
-template <size_type C_Dimension>
-using array_type = fw::sarray<size_type, C_Dimension>;
+template <SizeT N>
+using SizeArray = ::fw::dataTypes::SizeArray<N>;
+
+#if defined(__CUDACC__)
+template <typename ValueT, SizeT Dimension>
+using DeviceField = ::fw::dataTypes::internal::Container<ValueT, Dimension, Layout, ::fw::platform::Identifier::GPU_CUDA>;
+
+template <SizeT Dimension>
+auto GetGridSize(const SizeArray<Dimension>& size, const dim3& block);
+
+template <>
+auto GetGridSize<1>(const SizeArray<1>& size, const dim3& block)
+{
+    return dim3((size[0] + block.x - 1) / block.x, 1, 1);
+}
+
+template <>
+auto GetGridSize<2>(const SizeArray<2>& size, const dim3& block)
+{
+    return dim3((size[0] + block.x - 1) / block.x, (size[1] + block.y - 1) / block.y, 1);
+}
+
+template <>
+auto GetGridSize<3>(const SizeArray<3>& size, const dim3& block)
+{
+    return dim3((size[0] + block.x - 1) / block.x, (size[1] + block.y - 1) / block.y, (size[2] + block.z - 1) / block.z);
+}
+#endif
 /*
 // prototypes
 template <typename T>
@@ -68,54 +96,54 @@ struct kernel
 {
 #if defined(AOS_LAYOUT)
     #if defined(VECTOR_PRODUCT)
-        template <size_type D, size_type DD = D>
-        static double cross(const fw::field<T, DD, fw::data_layout::AoS>& x_1, const fw::field<T, DD, fw::data_layout::AoS>& x_2, fw::field<T, DD, fw::data_layout::AoS>& y, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double cross(const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::AoS>& x_1, const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::AoS>& x_2, ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::AoS>& y, const SizeArray<D>& n);
     #else
-        template <size_type D, size_type DD = D>
-        static double exp(fw::field<T, DD, fw::data_layout::AoS>& x, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double exp(::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::AoS>& x, const SizeArray<D>& n);
 
-        template <size_type D, size_type DD = D>
-        static double log(fw::field<T, DD, fw::data_layout::AoS>& x, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double log(::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::AoS>& x, const SizeArray<D>& n);
 
-        template <size_type D, size_type DD = D>
-        static double exp(const fw::field<T, DD, fw::data_layout::AoS>& x, fw::field<T, DD, fw::data_layout::AoS>& y, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double exp(const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::AoS>& x, ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::AoS>& y, const SizeArray<D>& n);
 
-        template <size_type D, size_type DD = D>
-        static double log(const fw::field<T, DD, fw::data_layout::AoS>& x, fw::field<T, DD, fw::data_layout::AoS>& y, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double log(const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::AoS>& x, ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::AoS>& y, const SizeArray<D>& n);
     #endif
 #elif defined(SOA_LAYOUT)
     #if defined(VECTOR_PRODUCT)
-        template <size_type D, size_type DD = D>
-        static double cross(const fw::field<T, DD, fw::data_layout::SoA>& x_1, const fw::field<T, DD, fw::data_layout::SoA>& x_2, fw::field<T, DD, fw::data_layout::SoA>& y, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double cross(const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoA>& x_1, const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoA>& x_2, ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoA>& y, const SizeArray<D>& n);
     #else
-        template <size_type D, size_type DD = D>
-        static double exp(fw::field<T, DD, fw::data_layout::SoA>& x, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double exp(::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoA>& x, const SizeArray<D>& n);
 
-        template <size_type D, size_type DD = D>
-        static double log(fw::field<T, DD, fw::data_layout::SoA>& x, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double log(::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoA>& x, const SizeArray<D>& n);
 
-        template <size_type D, size_type DD = D>
-        static double exp(const fw::field<T, DD, fw::data_layout::SoA>& x, fw::field<T, DD, fw::data_layout::SoA>& y, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double exp(const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoA>& x, ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoA>& y, const SizeArray<D>& n);
 
-        template <size_type D, size_type DD = D>
-        static double log(const fw::field<T, DD, fw::data_layout::SoA>& x, fw::field<T, DD, fw::data_layout::SoA>& y, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double log(const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoA>& x, ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoA>& y, const SizeArray<D>& n);
     #endif
 #elif defined(SOAI_LAYOUT)
     #if defined(VECTOR_PRODUCT)
-        template <size_type D, size_type DD = D>
-        static double cross(const fw::field<T, DD, fw::data_layout::SoAi>& x_1, const fw::field<T, DD, fw::data_layout::SoAi>& x_2, fw::field<T, DD, fw::data_layout::SoAi>& y, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double cross(const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoAi>& x_1, const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoAi>& x_2, ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoAi>& y, const SizeArray<D>& n);
     #else
-        template <size_type D, size_type DD = D>
-        static double exp(fw::field<T, DD, fw::data_layout::SoAi>& x, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double exp(::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoAi>& x, const SizeArray<D>& n);
 
-        template <size_type D, size_type DD = D>
-        static double log(fw::field<T, DD, fw::data_layout::SoAi>& x, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double log(::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoAi>& x, const SizeArray<D>& n);
 
-        template <size_type D, size_type DD = D>
-        static double exp(const fw::field<T, DD, fw::data_layout::SoAi>& x, fw::field<T, DD, fw::data_layout::SoAi>& y, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double exp(const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoAi>& x, ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoAi>& y, const SizeArray<D>& n);
 
-        template <size_type D, size_type DD = D>
-        static double log(const fw::field<T, DD, fw::data_layout::SoAi>& x, fw::field<T, DD, fw::data_layout::SoAi>& y, const array_type<D>& n);
+        template <SizeT D, SizeT DD = D>
+        static double log(const ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoAi>& x, ::fw::dataTypes::Field<T, DD, ::fw::memory::DataLayout::SoAi>& y, const SizeArray<D>& n);
     #endif    
 #endif
 };

@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <type_traits>
+#include <vector>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -277,10 +278,11 @@ namespace XXX_NAMESPACE
             //! \tparam Target the target platform
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout, target Target>
+            template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout, ::XXX_NAMESPACE::platform::Identifier Target>
             class Container
             {
                 using DataLayout = ::XXX_NAMESPACE::memory::DataLayout;
+                using PlatformId = ::XXX_NAMESPACE::platform::Identifier;
                 template <typename T>
                 using Traits = ::XXX_NAMESPACE::internal::Traits<T, Layout>;
                 using ConstValueT = typename Traits<ValueT>::ConstT;
@@ -303,7 +305,7 @@ namespace XXX_NAMESPACE
                 using TParam_ValueT = ValueT;
                 static constexpr SizeT TParam_Dimension = Dimension;
                 static constexpr DataLayout TParam_Layout = Layout;
-                static constexpr target TParam_Target = Target;
+                static constexpr PlatformId TParam_Target = Target;
 
               private:
                 //!
@@ -386,16 +388,37 @@ namespace XXX_NAMESPACE
                 {
                     static_assert(::XXX_NAMESPACE::variadic::IsInvocable<FuncT, SizeT>::value, "error: callable is not invocable. void (*) (SizeT) expected.");
 
-                    if (base_pointer.get())
+                    for (SizeT stab_index = 0; stab_index < allocation_shape.num_stabs; ++stab_index)
                     {
-                        for (SizeT stab_index = 0; stab_index < allocation_shape.num_stabs; ++stab_index)
+                        for (SizeT i = 0; i < n[0]; ++i)
                         {
-                            for (SizeT i = 0; i < n[0]; ++i)
-                            {
-                                std::get<0>(base_pointer.get()->At(stab_index, i)) = func(stab_index * n[0] + i);
-                            }
+                            std::get<0>(pointer.At(stab_index, i)) = func(stab_index * n[0] + i);
                         }
                     }
+                }
+
+                //!
+                //! \brief Copy all data into a (vector) container.
+                //!
+                //! All data is serialized: the output data layout is AoS.
+                //!
+                //! \return a (vector) container holding all the data
+                //!
+                auto Get() const
+                {
+                    std::vector<ValueT> data;
+                    
+                    data.reserve(n.ReduceMul());
+
+                    for (SizeT stab_index = 0; stab_index < allocation_shape.num_stabs; ++stab_index)
+                    {
+                        for (SizeT i = 0; i < n[0]; ++i)
+                        {
+                            data.push_back(std::get<0>(const_pointer.At(stab_index, i)));
+                        }
+                    }
+                    
+                    return data;
                 }
 
                 //!
@@ -429,9 +452,7 @@ namespace XXX_NAMESPACE
                 //!
                 auto GetBasePointer() const
                 { 
-                    assert(base_pointer.get() != nullptr);
-
-                    return base_pointer.get()->GetBasePointer();
+                    return const_pointer.GetBasePointer();
                 }
 
                 SizeArray n;
@@ -494,7 +515,7 @@ namespace XXX_NAMESPACE
             using Traits = ::XXX_NAMESPACE::internal::Traits<T, Layout>;
             using ConstValueT = typename Traits<ValueT>::ConstT;
             using SizeArray = ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>;
-            template <::XXX_NAMESPACE::target Target>
+            template <::XXX_NAMESPACE::platform::Identifier Target>
             using Container = internal::Container<ValueT, Dimension, Layout, Target>;
             template <typename T, SizeT D>
             using Accessor = internal::Accessor<T, D, Dimension, Layout>;
@@ -542,7 +563,7 @@ namespace XXX_NAMESPACE
                 {
                     n = n_new;
 
-                    data = Container<::XXX_NAMESPACE::target::Host>(n);
+                    data = Container<::XXX_NAMESPACE::platform::Identifier::Host>(n);
 
                     if (initialize_to_zero)
                     {
@@ -553,17 +574,10 @@ namespace XXX_NAMESPACE
                     // Resize only of there is already a non-empty device container.
                     if (!DeviceContainerIsEmpty())
                     {
-                        device_data = Container<::XXX_NAMESPACE::target::GPU_CUDA>(n);
-
-                        if (initialize_to_zero)
-                        {
-                            CopyHostToDevice();
-                        }
+                        DeviceResize(initialize_to_zero);
                     }
 #endif
                 }
-
-                assert(data.pointer.IsValid());
             }
 
             //!
@@ -581,12 +595,39 @@ namespace XXX_NAMESPACE
                 data.Set(func);
 
 #if defined(__CUDACC__)
-                // Set content only of there is a non-empty device container.
-                if (!DeviceContainerIsEmpty() && sync_with_device)
+                // Copy data to device only if there is already a device container.
+                if (sync_with_device && !DeviceContainerIsEmpty())
                 {
                     CopyHostToDevice();
                 }
 #endif
+            }
+
+            template <typename T = ValueT>
+            void Get(std::vector<T>& buffer, const bool sync_with_device = false) const
+            {
+                static_assert(std::is_convertible<ValueT, T>::value, "error: types are not convertible.");
+
+#if defined(__CUDACC__)
+                if (sync_with_device)
+                {
+                    CopyDeviceToHost();
+                }
+#endif
+
+                buffer = data.Get();
+            }
+
+            auto Get(const bool sync_with_device = false) const
+            {
+#if defined(__CUDACC__)
+                if (sync_with_device)
+                {
+                    CopyDeviceToHost();
+                }
+#endif
+
+                return data.Get();
             }
 
             //!
@@ -632,6 +673,22 @@ namespace XXX_NAMESPACE
                 return device_data.IsEmpty();
             }
 
+            //!
+            //! \brief Resize the device container.
+            //!
+            //! \param sync_with_host (optional) if `true`, copy all data from the host to the device
+            //!
+            auto DeviceResize(const bool sync_with_host = false) -> void
+            {
+                // Resize only of there is already a non-empty device container.
+                device_data = Container<::XXX_NAMESPACE::platform::Identifier::GPU_CUDA>(n);
+
+                if (sync_with_host)
+                {
+                    CopyHostToDevice();
+                }
+            }
+
           public:
             //!
             //! \brief Get access to the device data.
@@ -641,16 +698,11 @@ namespace XXX_NAMESPACE
             //! \param sync_with_host (optional) if `true`, copy all data from the host to the device
             //! \return a reference to the device container
             //!
-            auto DeviceData(const bool sync_with_host = false) -> Container<::XXX_NAMESPACE::target::GPU_CUDA>&
+            auto DeviceData(const bool sync_with_host = false) -> Container<::XXX_NAMESPACE::platform::Identifier::GPU_CUDA>&
             {
                 if (DeviceContainerIsEmpty())
                 {
-                    device_data = Container<::XXX_NAMESPACE::target::GPU_CUDA>(n);
-                }
-
-                if (sync_with_host)
-                {
-                    CopyHostToDevice();
+                    DeviceResize(sync_with_host);
                 }
 
                 return device_data;
@@ -659,10 +711,15 @@ namespace XXX_NAMESPACE
             //!
             //! \brief Copy device data to the host.
             //!
-            auto CopyDeviceToHost() -> void
+            auto CopyDeviceToHost() const -> void
             {
+                assert(!DeviceContainerIsEmpty());
+
                 if (!DeviceContainerIsEmpty())
                 {
+                    assert(data.GetBasePointer() != nullptr);
+                    assert(device_data.GetBasePointer() != nullptr);
+
                     cudaMemcpy((void*)data.GetBasePointer(), (const void*)device_data.GetBasePointer(), data.GetByteSize(), cudaMemcpyDeviceToHost);
                 }
             }
@@ -672,17 +729,23 @@ namespace XXX_NAMESPACE
             //!
             auto CopyHostToDevice() -> void
             {
-                if (!DeviceContainerIsEmpty())
+                // Create device container if not already there.
+                if (DeviceContainerIsEmpty())
                 {
-                    cudaMemcpy((void*)device_data.GetBasePointer(), (const void*)data.GetBasePointer(), data.GetByteSize(), cudaMemcpyHostToDevice);
+                    DeviceResize();
                 }
+
+                assert(data.GetBasePointer() != nullptr);
+                assert(device_data.GetBasePointer() != nullptr);
+
+                cudaMemcpy((void*)device_data.GetBasePointer(), (const void*)data.GetBasePointer(), data.GetByteSize(), cudaMemcpyHostToDevice);
             }
 #endif
 
             SizeArray n;
-            Container<::XXX_NAMESPACE::target::Host> data;
+            Container<::XXX_NAMESPACE::platform::Identifier::Host> data;
 #if defined(__CUDACC__)
-            Container<::XXX_NAMESPACE::target::GPU_CUDA> device_data;
+            Container<::XXX_NAMESPACE::platform::Identifier::GPU_CUDA> device_data;
 #endif
         };
     } // namespace dataTypes

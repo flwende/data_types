@@ -24,11 +24,14 @@
 
 namespace XXX_NAMESPACE
 {
-    #if defined(__CUDACC__)
-    enum class target {Host, GPU_CUDA};
-    #else
-    enum class target {Host};
-    #endif
+    namespace platform
+    {
+#if defined(__CUDACC__)
+        enum class Identifier {Host, GPU_CUDA};
+#else
+        enum class Identifier {Host};
+#endif
+    }
 }
 
 #endif
