@@ -20,65 +20,47 @@ constexpr std::size_t MEASUREMENT = 20;
 
 template <typename ValueT, SizeT Dimension>
 __global__
-auto foo(DeviceField<ValueT, Dimension> a) -> std::enable_if_t<(Dimension == 1), void>
+auto foo(DeviceField<ValueT, Dimension> a, DeviceField<ValueT, Dimension> b, DeviceField<ValueT, Dimension> c) -> std::enable_if_t<(Dimension == 1), void>
 {
+    using namespace ::fw::math;
+
     const SizeT thread_id_x = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (thread_id_x < a.Size()[0])
     {
-        a[thread_id_x] *= -1;
+        c[thread_id_x] = a[thread_id_x] * b[thread_id_x];
     }
 }
 
 template <typename ValueT, SizeT Dimension>
 __global__
-auto foo(DeviceField<ValueT, Dimension> a) -> std::enable_if_t<(Dimension == 2), void>
+auto foo(DeviceField<ValueT, Dimension> a, DeviceField<ValueT, Dimension> b, DeviceField<ValueT, Dimension> c) -> std::enable_if_t<(Dimension == 2), void>
 {
+    using namespace ::fw::math;
+
     const SizeT thread_id_x = blockIdx.x * blockDim.x + threadIdx.x;
     const SizeT thread_id_y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (thread_id_x < a.Size()[0] && thread_id_y < a.Size()[1])
     {
-        a[thread_id_y][thread_id_x] *= -1;
+        c[thread_id_y][thread_id_x] = a[thread_id_y][thread_id_x] * b[thread_id_y][thread_id_x];
     }
 }
 
 template <typename ValueT, SizeT Dimension>
 __global__
-auto foo(DeviceField<ValueT, Dimension> a) -> std::enable_if_t<(Dimension == 3), void>
+auto foo(DeviceField<ValueT, Dimension> a, DeviceField<ValueT, Dimension> b, DeviceField<ValueT, Dimension> c) -> std::enable_if_t<(Dimension == 3), void>
 {
-    
+    using namespace ::fw::math;
+
     const SizeT thread_id_x = blockIdx.x * blockDim.x + threadIdx.x;
     const SizeT thread_id_y = blockIdx.y * blockDim.y + threadIdx.y;
     const SizeT thread_id_z = blockIdx.z * blockDim.z + threadIdx.z;
 
     if (thread_id_x < a.Size()[0] && thread_id_y < a.Size()[1] && thread_id_z < a.Size()[2])
     {
-        //a[thread_id_z][thread_id_y][thread_id_x].x *= -1;
-        a[thread_id_z][thread_id_y][thread_id_x].y *= -2;
-        //a[thread_id_z][thread_id_y][thread_id_x].z *= -3;
+        c[thread_id_z][thread_id_y][thread_id_x].x = a[thread_id_z][thread_id_y][thread_id_x].y * b[thread_id_z][thread_id_y][thread_id_x].z;  
     } 
-    /*
-    const SizeT x = blockIdx.x * blockDim.x + threadIdx.x;
-    const SizeT y = blockIdx.y * blockDim.y + threadIdx.y;
-    const SizeT z = blockIdx.z * blockDim.z + threadIdx.z;
-    
-    const SizeT nx = a.Size()[0];
-    const SizeT ny = a.Size()[1];
-    const SizeT nz = a.Size()[2];
-    
-    if (x < nx && y < ny && z < nz)
-    {
-
-        const SizeT index = (z * ny + y) * nx + x;
-
-#if defined(ELEMENT_ACCESS)
-        a[z][y][x].x = 2.0 * index;
-#else
-        a[z][y][x] *= -static_cast<RealT>(1.0);
-#endif   
-    }
-    */
 }
 
 #endif
@@ -86,13 +68,19 @@ auto foo(DeviceField<ValueT, Dimension> a) -> std::enable_if_t<(Dimension == 3),
 template <SizeT Dimension>
 int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 {
-    Field<ElementT, Dimension> field(size);
+    Field<ElementT, Dimension> field_1(size);
+    Field<ElementT, Dimension> field_2(size);
+    Field<ElementT, Dimension> field_3(size, true);
 
     // Field initialization.
     srand48(1);
-    //field.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
-    field.Set([] (const auto I) { return I; });
-    field.CopyHostToDevice();
+    field_1.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
+    field_2.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
+
+    // Create device buffer and copy in the host data.
+    field_1.CopyHostToDevice();
+    field_2.CopyHostToDevice();
+    field_3.CopyHostToDevice();
 
 #if defined(__CUDACC__)
     const dim3 block{128, 1, 1};
@@ -107,14 +95,14 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     for (SizeT i = 0; i < WARMUP; ++i)
     {
-        foo<<<grid, block>>>(field.DeviceData());
+        foo<<<grid, block>>>(field_1.DeviceData(), field_2.DeviceData(), field_3.DeviceData());
     }
 
     cudaEventRecord(start, 0);
 
     for (SizeT i = 0; i < MEASUREMENT; ++i)
     {
-        foo<<<grid, block>>>(field.DeviceData());
+        foo<<<grid, block>>>(field_1.DeviceData(), field_2.DeviceData(), field_3.DeviceData());
     }
 
     cudaDeviceSynchronize();
@@ -129,7 +117,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     std::cout << "elapsed time: " << elapsed_time << "ms" << std::endl;
 #endif
 
-    auto data = field.Get(true);
+    auto data = field_3.Get(true);
     /*
     if (argc > (Dimension + 1))
     {
