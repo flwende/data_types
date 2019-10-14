@@ -20,6 +20,8 @@ namespace XXX_NAMESPACE
 {
     namespace math
     {
+        using namespace ::XXX_NAMESPACE::dataTypes;
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //
         // Arithmetic on `Tuple` types.
