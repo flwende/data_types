@@ -43,6 +43,12 @@ using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
 */
 /*
 using TypeX = std::uint16_t;
+using TypeY = std::uint16_t;
+using TypeZ = std::uint16_t;
+using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
+*/
+/*
+using TypeX = std::uint16_t;
 using TypeY = double;
 using TypeZ = std::uint32_t;
 using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
