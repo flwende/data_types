@@ -47,7 +47,6 @@ using TypeY = double;
 using TypeZ = std::uint32_t;
 using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
 */
-
 using ConstElementT = const ElementT;
 
 #if defined(AOS_LAYOUT)
