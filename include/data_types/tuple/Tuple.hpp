@@ -346,7 +346,12 @@ namespace XXX_NAMESPACE
             HOST_VERSION
             CUDA_DEVICE_VERSION
             constexpr Tuple(const Tuple& tuple) : Base(tuple) {}
-
+	    
+            template <typename ...T>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Tuple(const Tuple<T...>& tuple) : Tuple(tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>()) {}
+	    
           private:
             //!
             //! \brief Constructor.
@@ -356,8 +361,14 @@ namespace XXX_NAMESPACE
             //! \param proxy a `TupleProxy` instance
             //! \param unnamed used for template parameter deduction
             //!
+            /*
             template <typename... T, SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION Tuple(const internal::TupleProxy<T...>& proxy, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(proxy)...)
+            {
+            }
+*/
+            template <typename... T, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const Tuple<T...>& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
             {
             }
 
@@ -371,11 +382,12 @@ namespace XXX_NAMESPACE
             //! \tparam T the decay types of the proxy members (must be convertibe to this type's type parameters)
             //! \param proxy a `TupleProxy` instance
             //!
+            /*
             template <typename... T, bool IsReference = Pack<ValueT...>::IsReference(), typename Enable = std::enable_if_t<!IsReference>>
             HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const internal::TupleProxy<T...>& proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
             {
             }
-
+*/
             //!
             //! \brief Constructor (Invalid object construction).
             //!
