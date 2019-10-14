@@ -482,12 +482,34 @@ namespace XXX_NAMESPACE
             constexpr Tuple(){};
         };
 
-        template <typename... ValueT>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //
+        // Write a `Tuple` to an output stream.
+        // We do not use the compile-time loop here as it causes warnings regarding __host__ call from __device__ function.
+        // 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        template <typename ValueT>
+        auto TupleToStream(std::ostream& os, const ValueT& value) -> int
+        {
+            os << value << " ";
+
+            return 0;
+        }
+
+        template <typename TupleT, SizeT ...I>
+        std::ostream& TupleToStream(std::ostream& os, const TupleT& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>)
+        {
+            int dummy[] = {TupleToStream(os, Get<I>(tuple))...};
+
+            return os;
+        }
+
+        template <typename... ValueT> 
         std::ostream& operator<<(std::ostream& os, const Tuple<ValueT...>& tuple)
         {
             os << "( ";
 
-            ::XXX_NAMESPACE::compileTime::Loop<sizeof...(ValueT)>::Execute([&tuple, &os](const auto I) { os << Get<I>(tuple) << " "; });
+            TupleToStream(os, tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(ValueT)>());
 
             os << ")";
 
