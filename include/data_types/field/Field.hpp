@@ -294,8 +294,10 @@ namespace XXX_NAMESPACE
                 template <typename T, SizeT D>
                 using Accessor = internal::Accessor<T, D, Dimension, Layout>;
                 static constexpr bool UseProxy = (Layout != DataLayout::AoS && ::XXX_NAMESPACE::internal::ProvidesProxy<ValueT>::value);
-                using ReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, typename Traits<ValueT>::Proxy, ValueT&>, Accessor<ValueT, Dimension - 1>>;
-                using ConstReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, typename Traits<ConstValueT>::Proxy, const ValueT&>, Accessor<ConstValueT, Dimension - 1>>;
+                using Proxy = typename Traits<ValueT>::Proxy;
+                using ConstProxy = typename Traits<ConstValueT>::Proxy;
+                using ReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, Proxy, ValueT&>, Accessor<ValueT, Dimension - 1>>;
+                using ConstReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, ConstProxy, const ValueT&>, Accessor<ConstValueT, Dimension - 1>>;
 
                 // Friend declarations.
                 friend class ::XXX_NAMESPACE::dataTypes::Field<ValueT, Dimension, Layout>;
@@ -359,7 +361,7 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto operator[](const SizeT index) -> ReturnT { return internal::Accessor<ValueT, Dimension, Dimension, Layout>(pointer, n)[index]; }
+                inline auto operator[](const SizeT index) -> ReturnT { return Accessor<ValueT, Dimension>(pointer, n)[index]; }
 
                 //!
                 //! \brief Array subscript operator.
@@ -373,13 +375,14 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto operator[](const SizeT index) const -> ConstReturnT { return internal::Accessor<ConstValueT, Dimension, Dimension, Layout>(const_pointer, n)[index]; }
+                inline auto operator[](const SizeT index) const -> ConstReturnT { return Accessor<ConstValueT, Dimension>(const_pointer, n)[index]; }
 
                 //!
                 //! \brief Set the content of the container.
                 //!
                 //! This function uses a callable `func` for value assignment to the container elements.
-                //!
+                //! This function uses a two dimensional `Accessor` to iterator over the stabs and within each stab.
+                //! 
                 //! \tparam FuncT the type of the callable
                 //! \param func a callable
                 //!
@@ -388,11 +391,28 @@ namespace XXX_NAMESPACE
                 {
                     static_assert(::XXX_NAMESPACE::variadic::IsInvocable<FuncT, SizeT>::value, "error: callable is not invocable. void (*) (SizeT) expected.");
 
-                    for (SizeT stab_index = 0; stab_index < allocation_shape.num_stabs; ++stab_index)
+                    if (Dimension == 1)
                     {
+                        internal::Accessor<ValueT, 1, Dimension, Layout> accessor(pointer, n);
+
                         for (SizeT i = 0; i < n[0]; ++i)
                         {
-                            std::get<0>(pointer.At(stab_index, i)) = func(stab_index * n[0] + i);
+                            accessor[i] = func(i);
+                        }
+                    } 
+                    else
+                    {
+                        for (SizeT k = 0; k < n.ReduceMul(2); ++k)
+                        {
+                            internal::Accessor<ValueT, 2, Dimension, Layout> accessor(pointer, n, k * n[1]);
+
+                            for (SizeT stab_index = 0; stab_index < n[1]; ++stab_index)
+                            {
+                                for (SizeT i = 0; i < n[0]; ++i)
+                                {
+                                    accessor[stab_index][i] = func((k * n[1] + stab_index) * n[0] + i);
+                                }
+                            }
                         }
                     }
                 }
@@ -401,23 +421,40 @@ namespace XXX_NAMESPACE
                 //! \brief Copy all data into a (vector) container.
                 //!
                 //! All data is serialized: the output data layout is AoS.
-                //!
+                //! This function uses a two dimensional (const) `Accessor` to iterator over the stabs and within each stab.
+                //! 
                 //! \return a (vector) container holding all the data
                 //!
                 auto Get() const
                 {
                     std::vector<ValueT> data;
-                    
                     data.reserve(n.ReduceMul());
-
-                    for (SizeT stab_index = 0; stab_index < allocation_shape.num_stabs; ++stab_index)
+                    
+                    if (Dimension == 1)
                     {
+                        internal::Accessor<ConstValueT, 1, Dimension, Layout> accessor(const_pointer, n);
+
                         for (SizeT i = 0; i < n[0]; ++i)
                         {
-                            data.push_back(std::get<0>(const_pointer.At(stab_index, i)));
+                            data.push_back(accessor[i]);
+                        }
+                    } 
+                    else
+                    {
+                        for (SizeT k = 0; k < n.ReduceMul(2); ++k)
+                        {
+                            internal::Accessor<ConstValueT, 2, Dimension, Layout> accessor(const_pointer, n, k * n[1]);
+
+                            for (SizeT stab_index = 0; stab_index < n[1]; ++stab_index)
+                            {
+                                for (SizeT i = 0; i < n[0]; ++i)
+                                {
+                                    data.push_back(accessor[stab_index][i]);
+                                }
+                            }
                         }
                     }
-                    
+
                     return data;
                 }
 
@@ -508,6 +545,7 @@ namespace XXX_NAMESPACE
         template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout = ::XXX_NAMESPACE::memory::DataLayout::AoS>
         class Field
         {
+            static_assert(Dimension > 0, "error: a field without zero-dimension is not valid.");
             static_assert(!std::is_const<ValueT>::value, "error: field with const elements is not allowed.");
 
             using DataLayout = ::XXX_NAMESPACE::memory::DataLayout;
@@ -592,15 +630,16 @@ namespace XXX_NAMESPACE
             template <typename FuncT>
             auto Set(FuncT func, const bool sync_with_device = true)
             {
+                
                 data.Set(func);
-
+                
 #if defined(__CUDACC__)
                 // Copy data to device only if there is already a device container.
                 if (sync_with_device && !DeviceContainerIsEmpty())
                 {
                     CopyHostToDevice();
                 }
-#endif
+#endif                
             }
 
             template <typename T = ValueT>
