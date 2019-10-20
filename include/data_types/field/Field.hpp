@@ -349,6 +349,18 @@ namespace XXX_NAMESPACE
                 }
 
               public:
+                /*
+                CUDA_DEVICE_VERSION
+                Container(const Container& container)
+                    :
+                    n(container.n),
+                    allocation_shape(container.allocation_shape),
+                    base_pointer{},
+                    pointer(container.pointer),
+                    const_pointer(container.const_pointer)
+                {}
+                */
+
                 //!
                 //! \brief Array subscript operator.
                 //!
@@ -466,6 +478,21 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 inline const auto& Size() const { return n; }
+
+                //!
+                //! \brief Get the size of the container for a specific dimension.
+                //!
+                //! \param dimension the requested dimension
+                //! \return the size of the container for the requested dimension
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto Size(const SizeT dimension) const
+                { 
+                    assert(dimension < Dimension);
+
+                    return n[dimension];
+                }
 
                 //!
                 //! \brief Test for this container being empty.
@@ -699,6 +726,19 @@ namespace XXX_NAMESPACE
             //! \return the size of the container
             //!
             inline auto Size() const -> const SizeArray& { return n; }
+
+            //!
+            //! \brief Get the size of the container for a specific dimension.
+            //!
+            //! \param dimension the requested dimension
+            //! \return the size of the container for the requested dimension
+            //!
+            inline auto Size(const SizeT dimension) const
+            { 
+                assert(dimension < Dimension);
+
+                return n[dimension];
+            }
 
 #if defined(__CUDACC__)
           private:
