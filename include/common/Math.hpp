@@ -231,18 +231,24 @@ namespace XXX_NAMESPACE
         }
 
         template <typename T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         static inline auto Sqrt(const T& value)
         {
             return internal::Func<T>::sqrt(value);
         }
 
         template <typename T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         static inline auto Log(const T& value)
         {
             return internal::Func<T>::log(value);
         }
 
         template <typename T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
         static inline auto Exp(const T& value)
         {
             return internal::Func<T>::exp(value);
