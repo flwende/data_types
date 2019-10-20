@@ -142,6 +142,20 @@ namespace XXX_NAMESPACE
             };
         } // namespace internal
     }  // namespace dataTypes
+
+    namespace math
+    {
+        namespace internal
+        {
+            //!
+            //! \brief Specialization of the `Func` data structure for the `TupleProxy` type.
+            //!
+            template <typename... ValueT>
+            struct Func<::XXX_NAMESPACE::dataTypes::internal::TupleProxy<ValueT...>> : public Func<::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>>
+            {
+            };
+        }
+    }
 } // namespace XXX_NAMESPACE
 
 #endif
