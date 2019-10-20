@@ -303,6 +303,20 @@ namespace XXX_NAMESPACE
             template <SizeT N>
             using CompileTimeLoop = ::XXX_NAMESPACE::compileTime::Loop<N>;
 
+            //!
+            //! \brief Constructor.
+            //!
+            //! \tparam T the decay types of the tuple members (must be convertibe to this type's type parameters)
+            //! \tparam I a list of indices used for the parameter access
+            //! \param proxy a `Tuple` instance
+            //! \param unnamed used for template parameter deduction
+            //!      
+            template <typename... T, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const Tuple<T...>& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
+            {
+                //static_assert(Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
+            }
+
           public:
             using Type = Tuple<ValueT...>;
             using Proxy = internal::TupleProxy<ValueT...>;
@@ -313,7 +327,7 @@ namespace XXX_NAMESPACE
             HOST_VERSION
             CUDA_DEVICE_VERSION
             constexpr Tuple() = default;
-
+            
             //!
             //! \brief Constructor.
             //!
@@ -337,61 +351,22 @@ namespace XXX_NAMESPACE
             HOST_VERSION
             CUDA_DEVICE_VERSION
             constexpr Tuple(ValueT... values) : Base(values...) {}
-
+            
             //!
-            //! \brief Copy constructor.
+            //! \brief Copy / conversion constructor.
             //!
+            //! \tparam T a variadic list of type parameters
             //! \param tuple another `Tuple` instance
             //!
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr Tuple(const Tuple& tuple) : Base(tuple) {}
-	    
             template <typename ...T>
             HOST_VERSION
             CUDA_DEVICE_VERSION
             constexpr Tuple(const Tuple<T...>& tuple) : Tuple(tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>()) {}
-	    
-          private:
-            //!
-            //! \brief Constructor.
-            //!
-            //! \tparam T the decay types of the proxy members (must be convertibe to this type's type parameters)
-            //! \tparam I a list of indices used for the parameter access
-            //! \param proxy a `TupleProxy` instance
-            //! \param unnamed used for template parameter deduction
-            //!
-            /*
-            template <typename... T, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const internal::TupleProxy<T...>& proxy, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(proxy)...)
-            {
-            }
-*/
-            template <typename... T, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const Tuple<T...>& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
-            {
-            }
-
-          public:
-            //!
-            //! \brief Constructor.
-            //!
-            //! Construct a `Tuple` instance from a `TupleProxy` with a different parameter list.
-            //! The template type parameters must be convertibe to this type's type parameters.
-            //!
-            //! \tparam T the decay types of the proxy members (must be convertibe to this type's type parameters)
-            //! \param proxy a `TupleProxy` instance
-            //!
-            /*
-            template <typename... T, bool IsReference = Pack<ValueT...>::IsReference(), typename Enable = std::enable_if_t<!IsReference>>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const internal::TupleProxy<T...>& proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
-            {
-            }
-*/
+        
             //!
             //! \brief Constructor (Invalid object construction).
             //!
-            //! This constructor is enabled in case of a base class conversion of a `TupleProxy` where in the calling context a non-reference
+            //! This constructor handles the case of a base class conversion of a `TupleProxy` where in the calling context a non-reference
             //! instance of the base class is needed, e.g.
             //! ```
             //! template <typename ...T>
@@ -408,10 +383,10 @@ namespace XXX_NAMESPACE
             //! \tparam T the decay types of the proxy members (must be convertibe to this type's type parameters)
             //! \param proxy a `TupleProxy` instance
             //!
-            template <typename... T, bool IsReference = Pack<ValueT...>::IsReference(), typename Enable = std::enable_if_t<IsReference>>
+            template <typename... T>
             HOST_VERSION CUDA_DEVICE_VERSION Tuple(internal::TupleProxy<T...> proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
             {
-                static_assert(!IsReference, "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
+                static_assert(!Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
             }
 
             //!
