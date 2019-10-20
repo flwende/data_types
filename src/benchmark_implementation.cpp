@@ -3,6 +3,7 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
+#include <omp.h>
 #include <benchmark.hpp>
 
 constexpr double SPREAD = 1.0;
@@ -17,52 +18,111 @@ constexpr std::size_t MEASUREMENT = 20;
 #endif
 
 #if defined(__CUDACC__)
-
-template <typename ValueT, SizeT Dimension>
-__global__
-auto foo(DeviceField<ValueT, Dimension> a, DeviceField<ValueT, Dimension> b, DeviceField<ValueT, Dimension> c) -> std::enable_if_t<(Dimension == 1), void>
+template <typename FuncT, typename Container>
+CUDA_KERNEL
+auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> std::enable_if_t<(Container::TParam_Dimension == 1), void>
 {
     using namespace ::fw::math;
 
-    const SizeT thread_id_x = blockIdx.x * blockDim.x + threadIdx.x;
+    const SizeT x = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (thread_id_x < a.Size()[0])
+    if (x < a.Size(0))
     {
-        c[thread_id_x] = a[thread_id_x] * b[thread_id_x];
+        c[x] = func(a[x]) * func(b[x]);
     }
 }
 
-template <typename ValueT, SizeT Dimension>
-__global__
-auto foo(DeviceField<ValueT, Dimension> a, DeviceField<ValueT, Dimension> b, DeviceField<ValueT, Dimension> c) -> std::enable_if_t<(Dimension == 2), void>
+template <typename FuncT, typename Container>
+CUDA_KERNEL
+auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> std::enable_if_t<(Container::TParam_Dimension == 2), void>
 {
     using namespace ::fw::math;
 
-    const SizeT thread_id_x = blockIdx.x * blockDim.x + threadIdx.x;
-    const SizeT thread_id_y = blockIdx.y * blockDim.y + threadIdx.y;
+    const SizeT x = blockIdx.x * blockDim.x + threadIdx.x;
+    const SizeT y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (thread_id_x < a.Size()[0] && thread_id_y < a.Size()[1])
+    if (x < a.Size(0) && y < a.Size(1))
     {
-        c[thread_id_y][thread_id_x] = a[thread_id_y][thread_id_x] * b[thread_id_y][thread_id_x];
+        c[y][x] = func(a[y][x]) * func(b[y][x]);
     }
 }
 
-template <typename ValueT, SizeT Dimension>
-__global__
-auto foo(DeviceField<ValueT, Dimension> a, DeviceField<ValueT, Dimension> b, DeviceField<ValueT, Dimension> c) -> std::enable_if_t<(Dimension == 3), void>
+template <typename FuncT, typename Container>
+CUDA_KERNEL
+auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
 {
     using namespace ::fw::math;
 
-    const SizeT thread_id_x = blockIdx.x * blockDim.x + threadIdx.x;
-    const SizeT thread_id_y = blockIdx.y * blockDim.y + threadIdx.y;
-    const SizeT thread_id_z = blockIdx.z * blockDim.z + threadIdx.z;
+    const SizeT x = blockIdx.x * blockDim.x + threadIdx.x;
+    const SizeT y = blockIdx.y * blockDim.y + threadIdx.y;
+    const SizeT z = blockIdx.z * blockDim.z + threadIdx.z;
 
-    if (thread_id_x < a.Size()[0] && thread_id_y < a.Size()[1] && thread_id_z < a.Size()[2])
+    if (x < a.Size(0) && y < a.Size(1) && z < a.Size(2))
     {
-        c[thread_id_z][thread_id_y][thread_id_x].x = a[thread_id_z][thread_id_y][thread_id_x].y * b[thread_id_z][thread_id_y][thread_id_x].z;  
+        c[z][y][x] = func(a[z][y][x]) * func(b[z][y][x]);
     } 
 }
 
+template <typename FuncT, typename Field>
+auto Kernel(FuncT func, Field& a, Field& b, Field& c) -> void
+{
+    const dim3 block{128, 1, 1};
+    const dim3 grid = GetGridSize(a.Size(), block);
+
+    KernelImplementation<<<grid, block>>>(func, a.DeviceData(), b.DeviceData(), c.DeviceData());
+}
+
+#else
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 1), void>
+{
+    using namespace ::fw::math;
+
+    #pragma omp simd
+    for (SizeT x = 0; x < a.Size(0); ++x)
+    {
+        c[x] = func(a[x], b[x]);
+    }
+}
+
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 2), void>
+{
+    using namespace ::fw::math;
+
+    for (SizeT y = 0; y < a.Size(1); ++y)
+    {
+        #pragma omp simd
+        for (SizeT x = 0; x < a.Size(0); ++x)
+        {
+            c[y][x] = func(a[y][x], b[y][x]);
+        }
+    }
+}
+
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
+{
+    using namespace ::fw::math;
+
+    for (SizeT z = 0; z < a.Size(2); ++z)
+    {
+        for (SizeT y = 0; y < a.Size(1); ++y)
+        {
+            #pragma omp simd
+            for (SizeT x = 0; x < a.Size(0); ++x)
+            {
+                c[z][y][x] = func(a[z][y][x], b[z][y][x]);
+            }
+        }
+    } 
+}
+
+template <typename FuncT, typename Field>
+auto Kernel(FuncT func, Field& a, Field& b, Field& c) -> void
+{
+    KernelImplementation(func, a, b, c);
+}
 #endif
 
 template <SizeT Dimension>
@@ -77,78 +137,37 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     field_1.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
     field_2.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
 
+#if defined(__CUDACC__)
     // Create device buffer and copy in the host data.
     field_1.CopyHostToDevice();
     field_2.CopyHostToDevice();
     field_3.CopyHostToDevice();
-
-#if defined(__CUDACC__)
-    const dim3 block{128, 1, 1};
-    const dim3 grid = GetGridSize(size, block);
-
-    std::cout << "block: " << block.x << ", " << block.y << ", " << block.z << std::endl;
-    std::cout << "grid: " << grid.x << ", " << grid.y << ", " << grid.z << std::endl;
-
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
+#endif
 
     for (SizeT i = 0; i < WARMUP; ++i)
     {
-        foo<<<grid, block>>>(field_1.DeviceData(), field_2.DeviceData(), field_3.DeviceData());
+        Kernel([] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Exp(a + b); }, field_1, field_2, field_3);
+        Kernel([] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Log(a) - b; }, field_2, field_1, field_3);
     }
 
-    cudaEventRecord(start, 0);
+    double start_time = omp_get_wtime();
 
     for (SizeT i = 0; i < MEASUREMENT; ++i)
     {
-        foo<<<grid, block>>>(field_1.DeviceData(), field_2.DeviceData(), field_3.DeviceData());
+        Kernel([] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Exp(a + b); }, field_1, field_2, field_3);
+        Kernel([] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Log(a) - b; }, field_2, field_1, field_3);
     }
 
-    cudaDeviceSynchronize();
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
+    double stop_time = omp_get_wtime();
 
+#if defined(__CUDACC__)
     cudaError_t error = cudaGetLastError();
     std::cout << cudaGetErrorString(error) << std::endl;
-
-    float elapsed_time;
-    cudaEventElapsedTime(&elapsed_time, start, stop);
-    std::cout << "elapsed time: " << elapsed_time << "ms" << std::endl;
 #endif
 
+    std::cout << "elapsed time: " << (stop_time - start_time) * 1.0E3 << " ms" << std::endl;
+
     auto data = field_3.Get(true);
-    /*
-    if (argc > (Dimension + 1))
-    {
-        if (Dimension == 3)
-        {
-            for (SizeT k = 0; k < size[2]; ++k)
-                for (SizeT j = 0; j < size[1]; ++j)
-                {
-                    for (SizeT i = 0; i < size[0]; ++i)
-                        std::cout << data[(k * size[1] + j) * size[0] + i] << " ";
-                    std::cout << std::endl;
-                }
-        } 
-        else if (Dimension == 2)
-        {
-            for (SizeT j = 0; j < size[1]; ++j)
-            {
-                for (SizeT i = 0; i < size[0]; ++i)
-                    std::cout << data[j * size[0] + i] << " ";
-                std::cout << std::endl;
-            }
-        }
-        else if (Dimension == 1)
-        {
-            for (SizeT i = 0; i < size[0]; ++i)
-                std::cout << data[i] << " ";
-            std::cout << std::endl;
-            
-        }
-    }
-    */
     
     return 0;
 }
