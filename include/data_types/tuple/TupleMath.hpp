@@ -20,8 +20,6 @@ namespace XXX_NAMESPACE
 {
     namespace math
     {
-        using namespace ::XXX_NAMESPACE::dataTypes;
-
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //
         // Arithmetic on `Tuple` types.
@@ -38,9 +36,9 @@ namespace XXX_NAMESPACE
                                                                                                                                                                                                                            \
         static_assert(N_1 == N_2, "error: parameter lists have different size.");                                                                                                                                          \
                                                                                                                                                                                                                            \
-        Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y(x_1);                                                                                                                                                 \
+        Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y{x_1};                                                                                                                                                 \
                                                                                                                                                                                                                            \
-        ::XXX_NAMESPACE::compileTime::Loop<N_1>::Execute([&y, &x_2](const auto I) { Get<I>(y) OP## = Get<I>(x_2); });                                                                                                      \
+        y OP## = x_2;                                                                                                                                                                                                      \
                                                                                                                                                                                                                            \
         return y;                                                                                                                                                                                                          \
     }
@@ -65,9 +63,9 @@ namespace XXX_NAMESPACE
                                                                                                                                                                                                                            \
         constexpr SizeT N = sizeof...(T_1);                                                                                                                                                                                \
                                                                                                                                                                                                                            \
-        Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y(x_1);                                                                                                                                                 \
+        Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y{x_1};                                                                                                                                                 \
                                                                                                                                                                                                                            \
-        ::XXX_NAMESPACE::compileTime::Loop<N>::Execute([&y, x_2](const auto I) { Get<I>(y) OP## = x_2; });                                                                                                                 \
+        y OP## = x_2;                                                                                                                                                                                                      \
                                                                                                                                                                                                                            \
         return y;                                                                                                                                                                                                          \
     }                                                                                                                                                                                                                      \
@@ -81,7 +79,7 @@ namespace XXX_NAMESPACE
                                                                                                                                                                                                                            \
         Tuple<typename Compare<T_2, T_1>::UnqualifiedStrongerT...> y(x_1);                                                                                                                                                 \
                                                                                                                                                                                                                            \
-        ::XXX_NAMESPACE::compileTime::Loop<N>::Execute([&y, &x_2](const auto I) { Get<I>(y) OP## = Get<I>(x_2); });                                                                                                        \
+        y OP## = x_2;                                                                                                                                                                                                      \
                                                                                                                                                                                                                            \
         return y;                                                                                                                                                                                                          \
     }
@@ -141,7 +139,11 @@ namespace XXX_NAMESPACE
                                                                                                                                                                                                                             
             typename Compare<T_1..., T_2...>::UnqualifiedStrongerT y{};
 
-            ::XXX_NAMESPACE::compileTime::Loop<N_1>::Execute([&y, &x_1, &x_2] (const auto I) { y += Get<I>(x_1) * Get<I>(x_2); });
+            ::XXX_NAMESPACE::compileTime::Loop<N_1>::Execute([&y, &x_1, &x_2] (const auto I) {
+                using namespace ::XXX_NAMESPACE::dataTypes;
+
+                y += Get<I>(x_1) * Get<I>(x_2);
+            });
             
             return y;
         }
@@ -170,6 +172,8 @@ namespace XXX_NAMESPACE
         Tuple<std::decay_t<T>...> y;                                                                                                                                                                                       \
                                                                                                                                                                                                                            \
         ::XXX_NAMESPACE::compileTime::Loop<N>::Execute([&y, &x](const auto I) {                                                                                                                                            \
+            using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                    \
+                                                                                                                                                                                                                           \
             using ElementT = std::decay_t<decltype(Get<I>(y))>;                                                                                                                                                            \
                                                                                                                                                                                                                            \
             Get<I>(y) = ::XXX_NAMESPACE::math::internal::Func<ElementT>::OP(Get<I>(x));                                                                                                                                    \
