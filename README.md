@@ -1,19 +1,22 @@
 # Data Types
 This repository contains a collection of data types.
 
-# SArray
+# Array
 A static array definition.
 
 # Vec
-A Simple D-dimensional vector with components `x`, `y` and `z`.
+<!--A Simple D-dimensional vector with components `x`, `y` and `z`.-->
 
-# Buffer
+# Tuple
+<!--A Simple D-dimensional vector with components `x`, `y` and `z`.-->
+
+# Field
 A multi-dimensional container with contiguous (dynamically allocated) memory and support for AoS (Array of Structs) and SoA (Struct of Arrays) data layouts.
 Internally, the innermost dimension is padded according to the desired (or the default) data alignment.
-In case of the Buffer holds Vec data elements, elementwise access through proxy-objects is possible, that is, you can write
+In case of the Field is holding Vec or Tuple data elements, elementwise access through proxy-objects is possible, that is, you can write
 
 ```
-buffer<vec<float, 3>, 2,...> data({nx, ny});
+Field<vec<float, 3>, 2,...> data({nx, ny});
 for (std::size_t j = 0; j < ny; ++j)
 {
   for (std::size_t i = 0; i < ny; ++i)
