@@ -478,7 +478,9 @@ namespace XXX_NAMESPACE
         template <typename ValueT>
         auto TupleToStream(std::ostream& os, const ValueT& value) -> int
         {
-            os << value << " ";
+            using Type = std::conditional_t<sizeof(ValueT) == 1, std::int32_t, ValueT>;
+
+            os << static_cast<Type>(value) << " ";
 
             return 0;
         }
