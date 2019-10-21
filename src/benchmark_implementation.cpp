@@ -5,6 +5,7 @@
 
 #include <omp.h>
 #include <benchmark.hpp>
+#include <vector>
 
 constexpr double SPREAD = 1.0;
 constexpr double OFFSET = 3.0;
@@ -28,7 +29,7 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> 
 
     if (x < a.Size(0))
     {
-        c[x] = func(a[x]) * func(b[x]);
+        c[x] = func(a[x], b[x]);
     }
 }
 
@@ -43,7 +44,7 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> 
 
     if (x < a.Size(0) && y < a.Size(1))
     {
-        c[y][x] = func(a[y][x]) * func(b[y][x]);
+        c[y][x] = func(a[y][x], b[y][x]);
     }
 }
 
@@ -59,7 +60,7 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> 
 
     if (x < a.Size(0) && y < a.Size(1) && z < a.Size(2))
     {
-        c[z][y][x] = func(a[z][y][x]) * func(b[z][y][x]);
+        c[z][y][x] = func(a[z][y][x], b[z][y][x]);
     } 
 }
 
@@ -137,6 +138,14 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     field_1.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
     field_2.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
 
+#if defined(CHECK_RESULTS)
+    std::vector<ElementT> field_1_copy = field_1.Get();
+    std::vector<ElementT> field_2_copy = field_2.Get();
+#endif
+
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Exp(a + b); };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Log(a) - b; };
+
 #if defined(__CUDACC__)
     // Create device buffer and copy in the host data.
     field_1.CopyHostToDevice();
@@ -146,17 +155,25 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     for (SizeT i = 0; i < WARMUP; ++i)
     {
-        Kernel([] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Exp(a + b); }, field_1, field_2, field_3);
-        Kernel([] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Log(a) - b; }, field_2, field_1, field_3);
+        Kernel(kernel_1, field_1, field_2, field_3);
+        Kernel(kernel_2, field_3, field_2, field_1);
     }
+
+#if defined(__CUDACC__)
+    cudaDeviceSynchronize();
+#endif
 
     double start_time = omp_get_wtime();
 
     for (SizeT i = 0; i < MEASUREMENT; ++i)
     {
-        Kernel([] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Exp(a + b); }, field_1, field_2, field_3);
-        Kernel([] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Log(a) - b; }, field_2, field_1, field_3);
+        Kernel(kernel_1, field_1, field_2, field_3);
+        Kernel(kernel_2, field_3, field_2, field_1);
     }
+
+#if defined(__CUDACC__)
+    cudaDeviceSynchronize();
+#endif
 
     double stop_time = omp_get_wtime();
 
@@ -167,7 +184,35 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     std::cout << "elapsed time: " << (stop_time - start_time) * 1.0E3 << " ms" << std::endl;
 
-    auto data = field_3.Get(true);
+#if defined(CHECK_RESULTS)
+    {
+        using namespace ::fw::math;
+
+        const SizeT n = size.ReduceMul();
+        std::vector<ElementT> reference(n);
+        std::vector<ElementT> field_3_copy = field_3.Get(true);
+    
+        ElementT deviation;
+
+        for (SizeT i = 0; i < n; ++i)
+        {
+            reference[i] = Exp(field_1_copy[i] + field_2_copy[i]);
+            ElementT rel_error = (reference[i] - field_3_copy[i]) / reference[i];
+            deviation = Max(deviation, Abs(rel_error));
+        }
+
+        std::vector<ElementT> field_1_copy = field_1.Get(true);
+
+        for (SizeT i = 0; i < n; ++i)
+        {
+            reference[i] = Log(field_3_copy[i]) - field_2_copy[i];
+            ElementT rel_error = (reference[i] - field_1_copy[i]) / reference[i];
+            deviation = Max(deviation, Abs(rel_error));
+        }
+
+        std::cout << "deviation: " << deviation << std::endl;
+    }
+#endif
     
     return 0;
 }
