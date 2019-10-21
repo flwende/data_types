@@ -87,32 +87,32 @@ namespace XXX_NAMESPACE
         //!
         //! \tparam N the base
         //! \tparam T the argument type (must be an unsigned integer)
-        //! \param x argument
-        //! \return `true` if `x` is power of `N`, otherwise `false`
+        //! \param x_1 argument
+        //! \return `true` if `x_1` is power of `N`, otherwise `false`
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <SizeT N, typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        constexpr inline auto IsPowerOf(T x)
+        constexpr inline auto IsPowerOf(T x_1)
         {
             static_assert(std::is_integral<T>::value && std::is_unsigned<T>::value, "error: only unsigned integers allowed");
             static_assert(N > 0, "error: N must be at least 1");
 
-            if (x == 1 || x == N)
+            if (x_1 == 1 || x_1 == N)
                 return true;
 
-            if (x <= 0 || x < N || N == 1)
+            if (x_1 <= 0 || x_1 < N || N == 1)
                 return false;
 
             while (true)
             {
-                if (x == 0 || x % N)
+                if (x_1 == 0 || x_1 % N)
                     return false;
 
-                x /= N;
+                x_1 /= N;
 
-                if (x == 1)
+                if (x_1 == 1)
                     return true;
             }
         }
@@ -122,20 +122,20 @@ namespace XXX_NAMESPACE
         //! \brief Prefix sum calculation.
         //!
         //! \tparam N the array extent
-        //! \param x argument
+        //! \param x_1 argument
         //! \return an array holding the prefix sums
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <SizeT N>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        constexpr inline auto PrefixSum(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& x)
+        constexpr inline auto PrefixSum(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& x_1)
         {
             ::XXX_NAMESPACE::dataTypes::SizeArray<N> y{0};
 
             for (SizeT i = 1; i < N; ++i)
             {
-                y[i] = y[i - 1] + x[i - 1];
+                y[i] = y[i - 1] + x_1[i - 1];
             }
 
             return y;
@@ -159,74 +159,74 @@ namespace XXX_NAMESPACE
                 //!
                 //! \brief Calculate the square root.
                 //!
-                //! \param x argument
-                //! \return the square root of `x`
+                //! \param x_1 argument
+                //! \return the square root of `x_1`
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto sqrt(const T x)
+                static inline auto Sqrt(const T x_1)
                 { 
-                    assert(x >= static_cast<T>(0));
+                    assert(x_1 >= static_cast<T>(0));
 
-                    return std::sqrt(x);
+                    return std::sqrt(x_1);
                 }
 
                 //!
                 //! \brief Calculate the logarithm.
                 //!
-                //! \param x argument
-                //! \return the logarithm of `x`
+                //! \param x_1 argument
+                //! \return the logarithm of `x_1`
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto log(const T x)
+                static inline auto Log(const T x_1)
                 { 
-                    assert(x > static_cast<T>(0));
+                    assert(x_1 > static_cast<T>(0));
 
-                    return std::log(x);
+                    return std::log(x_1);
                 }
 
                 //!
                 //! \brief Calculate the exponential.
                 //!
-                //! \param x argument
-                //! \return the exponential of `x`
+                //! \param x_1 argument
+                //! \return the exponential of `x_1`
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto exp(const T x) { return std::exp(x); }
+                static inline auto Exp(const T x_1) { return std::exp(x_1); }
 
                 //!
                 //! \brief Calculate the maximum.
                 //!
-                //! \param x argument
-                //! \param y argument
-                //! \return the maximum of `x` and `y`
+                //! \param x_1 argument
+                //! \param x_2 argument
+                //! \return the maximum of `x_1` and `x_2`
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto max(const T x, const T y) { return std::max(x, y); }
+                static inline auto Max(const T x_1, const T x_2) { return std::max(x_1, x_2); }
 
                 //!
                 //! \brief Calculate the minimum.
                 //!
-                //! \param x argument
-                //! \param y argument
-                //! \return the minimum of `x` and `y`
+                //! \param x_1 argument
+                //! \param x_2 argument
+                //! \return the minimum of `x_1` and `x_2`
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto min(const T x, const T y) { return std::min(x, y); }
+                static inline auto Min(const T x_1, const T x_2) { return std::min(x_1, x_2); }
 
                 //!
                 //! \brief Calculate the absolute value.
                 //!
-                //! \param x argument
-                //! \return the absolute value of `x`
+                //! \param x_1 argument
+                //! \return the absolute value of `x_1`
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto abs(const T x) { return std::abs(x); }
+                static inline auto Abs(const T x_1) { return std::abs(x_1); }
             };
 
             //!
@@ -240,86 +240,86 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto sqrt(const float x)
+                static inline auto Sqrt(const float x_1)
                 { 
-                    assert(x >= 0.0F);
+                    assert(x_1 >= 0.0F);
 
-                    return sqrtf(x);
+                    return sqrtf(x_1);
                 }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto log(const float x)
+                static inline auto Log(const float x_1)
                 {
-                    assert(x > 0.0F);
+                    assert(x_1 > 0.0F);
 
-                    return logf(x);
+                    return logf(x_1);
                 }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto exp(const float x) { return expf(x); }
+                static inline auto Exp(const float x_1) { return expf(x_1); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto max(const float x, const float y) { return std::max(x, y); }
+                static inline auto Max(const float x_1, const float x_2) { return fmax(x_1, x_2); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto min(const float x, const float y) { return std::min(x, y); }
+                static inline auto Min(const float x_1, const float x_2) { return fmin(x_1, x_2); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto abs(const float x) { return std::abs(x); }
+                static inline auto Abs(const float x_1) { return fabs(x_1); }
             };
         }
 
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        static inline auto Sqrt(const T& x)
+        static inline auto Sqrt(const T& x_1)
         {
-            return internal::Func<T>::sqrt(x);
+            return internal::Func<T>::Sqrt(x_1);
         }
 
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        static inline auto Log(const T& x)
+        static inline auto Log(const T& x_1)
         {
-            return internal::Func<T>::log(x);
+            return internal::Func<T>::Log(x_1);
         }
 
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        static inline auto Exp(const T& x)
+        static inline auto Exp(const T& x_1)
         {
-            return internal::Func<T>::exp(x);
+            return internal::Func<T>::Exp(x_1);
         }
 
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        static inline auto Max(const T& x, const T& y)
+        static inline auto Max(const T& x_1, const T& x_2)
         {
-            return internal::Func<T>::max(x, y);
+            return internal::Func<T>::Max(x_1, x_2);
         }
 
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        static inline auto Min(const T& x, const T& y)
+        static inline auto Min(const T& x_1, const T& x_2)
         {
-            return internal::Func<T>::min(x, y);
+            return internal::Func<T>::Min(x_1, x_2);
         }
 
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        static inline auto Abs(const T& x)
+        static inline auto Abs(const T& x_1)
         {
-            return internal::Func<T>::abs(x);
+            return internal::Func<T>::Abs(x_1);
         }
     } // namespace math
 } // namespace XXX_NAMESPACE

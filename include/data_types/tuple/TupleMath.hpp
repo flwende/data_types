@@ -182,10 +182,10 @@ namespace XXX_NAMESPACE
         return y;                                                                                                                                                                                                          \
     }
 
-            MACRO(sqrt)
-            MACRO(log)
-            MACRO(exp)
-            MACRO(abs)
+            MACRO(Sqrt)
+            MACRO(Log)
+            MACRO(Exp)
+            MACRO(Abs)
 
 #undef MACRO
 
@@ -215,8 +215,8 @@ namespace XXX_NAMESPACE
         return y;                                                                                                                                                                                                          \
     }
 
-            MACRO(max)
-            MACRO(min)
+            MACRO(Max)
+            MACRO(Min)
 
 #undef MACRO
 
@@ -234,62 +234,62 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto sqrt(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::sqrt(x_1); }
+                static inline auto Sqrt(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::Sqrt(x_1); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto log(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::log(x_1); }
+                static inline auto Log(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::Log(x_1); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto exp(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::exp(x_1); }
+                static inline auto Exp(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::Exp(x_1); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto max(const Tuple& x_1, const Tuple& x_2) { return ::XXX_NAMESPACE::math::internal::max(x_1, x_2); }
+                static inline auto Max(const Tuple& x_1, const Tuple& x_2) { return ::XXX_NAMESPACE::math::internal::Max(x_1, x_2); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto min(const Tuple& x_1, const Tuple& x_2) { return ::XXX_NAMESPACE::math::internal::min(x_1, x_2); }
+                static inline auto Min(const Tuple& x_1, const Tuple& x_2) { return ::XXX_NAMESPACE::math::internal::Min(x_1, x_2); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto abs(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::abs(x_1); }
+                static inline auto Abs(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::Abs(x_1); }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto sqrt(T x_1) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Sqrt(T x_1) -> Tuple
                 {
-                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::sqrt(x_1)};
+                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Sqrt(x_1)};
                 }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto log(T x_1) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Log(T x_1) -> Tuple
                 {
-                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::log(x_1)};
+                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Log(x_1)};
                 }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto exp(T x_1) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Exp(T x_1) -> Tuple
                 {
-                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::exp(x_1)};
+                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Exp(x_1)};
                 }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto max(T x_1, T x_2) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Max(T x_1, T x_2) -> Tuple
                 {
-                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::max(x_1, x_2)};
+                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Max(x_1, x_2)};
                 }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto min(T x_1, T x_2) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Min(T x_1, T x_2) -> Tuple
                 {
-                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::min(x_1, x_2)};
+                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Min(x_1, x_2)};
                 }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto abs(T x_1) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Abs(T x_1) -> Tuple
                 {
-                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::abs(x_1)};
+                    return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Abs(x_1)};
                 }
             };
 
