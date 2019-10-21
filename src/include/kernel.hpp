@@ -55,8 +55,8 @@ using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
 */
 
 using TypeX = float;
-using TypeY = double;
-using TypeZ = float;
+using TypeY = std::int16_t;
+using TypeZ = std::int32_t;
 using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
 
 using ConstElementT = const ElementT;
