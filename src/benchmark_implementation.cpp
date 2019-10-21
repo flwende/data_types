@@ -72,7 +72,6 @@ auto Kernel(FuncT func, Field& a, Field& b, Field& c) -> void
 
     KernelImplementation<<<grid, block>>>(func, a.DeviceData(), b.DeviceData(), c.DeviceData());
 }
-
 #else
 template <typename FuncT, typename Container>
 auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 1), void>
