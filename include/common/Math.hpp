@@ -195,6 +195,38 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 static inline auto exp(const T x) { return std::exp(x); }
+
+                //!
+                //! \brief Calculate the maximum.
+                //!
+                //! \param x argument
+                //! \param y argument
+                //! \return the maximum of `x` and `y`
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto max(const T x, const T y) { return std::max(x, y); }
+
+                //!
+                //! \brief Calculate the minimum.
+                //!
+                //! \param x argument
+                //! \param y argument
+                //! \return the minimum of `x` and `y`
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto min(const T x, const T y) { return std::min(x, y); }
+
+                //!
+                //! \brief Calculate the absolute value.
+                //!
+                //! \param x argument
+                //! \return the absolute value of `x`
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto abs(const T x) { return std::abs(x); }
             };
 
             //!
@@ -227,31 +259,67 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 static inline auto exp(const float x) { return expf(x); }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto max(const float x, const float y) { return std::max(x, y); }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto min(const float x, const float y) { return std::min(x, y); }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline auto abs(const float x) { return std::abs(x); }
             };
         }
 
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        static inline auto Sqrt(const T& value)
+        static inline auto Sqrt(const T& x)
         {
-            return internal::Func<T>::sqrt(value);
+            return internal::Func<T>::sqrt(x);
         }
 
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        static inline auto Log(const T& value)
+        static inline auto Log(const T& x)
         {
-            return internal::Func<T>::log(value);
+            return internal::Func<T>::log(x);
         }
 
         template <typename T>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        static inline auto Exp(const T& value)
+        static inline auto Exp(const T& x)
         {
-            return internal::Func<T>::exp(value);
+            return internal::Func<T>::exp(x);
+        }
+
+        template <typename T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        static inline auto Max(const T& x, const T& y)
+        {
+            return internal::Func<T>::max(x, y);
+        }
+
+        template <typename T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        static inline auto Min(const T& x, const T& y)
+        {
+            return internal::Func<T>::min(x, y);
+        }
+
+        template <typename T>
+        HOST_VERSION
+        CUDA_DEVICE_VERSION
+        static inline auto Abs(const T& x)
+        {
+            return internal::Func<T>::abs(x);
         }
     } // namespace math
 } // namespace XXX_NAMESPACE
