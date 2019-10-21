@@ -7,8 +7,8 @@
 #include <benchmark.hpp>
 #include <vector>
 
-constexpr double SPREAD = 1.0;
-constexpr double OFFSET = 3.0;
+constexpr double SPREAD = 0.5;
+constexpr double OFFSET = 2.0;
 
 #if defined(CHECK_RESULTS)
 constexpr std::size_t WARMUP = 0;
@@ -29,7 +29,7 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> 
 
     if (x < a.Size(0))
     {
-        c[x] = func(a[x], b[x]);
+        func(a[x], b[x], c[x]);
     }
 }
 
@@ -44,7 +44,7 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> 
 
     if (x < a.Size(0) && y < a.Size(1))
     {
-        c[y][x] = func(a[y][x], b[y][x]);
+        func(a[y][x], b[y][x], c[y][x]);
     }
 }
 
@@ -60,7 +60,7 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> 
 
     if (x < a.Size(0) && y < a.Size(1) && z < a.Size(2))
     {
-        c[z][y][x] = func(a[z][y][x], b[z][y][x]);
+        func(a[z][y][x], b[z][y][x], c[z][y][x]);
     } 
 }
 
@@ -82,7 +82,7 @@ auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) 
     #pragma omp simd
     for (SizeT x = 0; x < a.Size(0); ++x)
     {
-        c[x] = func(a[x], b[x]);
+        func(a[x], b[x], c[x]);
     }
 }
 
@@ -96,7 +96,7 @@ auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) 
         #pragma omp simd
         for (SizeT x = 0; x < a.Size(0); ++x)
         {
-            c[y][x] = func(a[y][x], b[y][x]);
+            func(a[y][x], b[y][x], c[y][x]);
         }
     }
 }
@@ -113,7 +113,7 @@ auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) 
             #pragma omp simd
             for (SizeT x = 0; x < a.Size(0); ++x)
             {
-                c[z][y][x] = func(a[z][y][x], b[z][y][x]);
+                func(a[z][y][x], b[z][y][x], c[z][y][x]);
             }
         }
     } 
@@ -143,8 +143,13 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     std::vector<ElementT> field_2_copy = field_2.Get();
 #endif
 
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Exp(a + b); };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b) { using namespace ::fw::math; return Log(a) - b; };
+#if defined(ELEMENT_ACCESS)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z = Exp(a.x + b.y); };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.x = Log(a.z) - b.y; };
+#else
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Exp(a + b); };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Log(a) - b; };
+#endif
 
 #if defined(__CUDACC__)
     // Create device buffer and copy in the host data.
@@ -196,17 +201,29 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
         for (SizeT i = 0; i < n; ++i)
         {
+#if defined(ELEMENT_ACCESS)
+            reference[i].z = Exp(field_1_copy[i].x + field_2_copy[i].y);
+#else
             reference[i] = Exp(field_1_copy[i] + field_2_copy[i]);
-            ElementT rel_error = (reference[i] - field_3_copy[i]) / reference[i];
+#endif
+            ElementT rel_error = (reference[i] - field_3_copy[i]) / Max(ElementT(1.0E-9), reference[i]);
             deviation = Max(deviation, Abs(rel_error));
+
+#if defined(ELEMENT_ACCESS)
+            reference[i] = field_1_copy[i];
+#endif
         }
 
         std::vector<ElementT> field_1_copy = field_1.Get(true);
 
         for (SizeT i = 0; i < n; ++i)
         {
+#if defined(ELEMENT_ACCESS)
+            reference[i].x = Log(field_3_copy[i].z) - field_2_copy[i].y;
+#else
             reference[i] = Log(field_3_copy[i]) - field_2_copy[i];
-            ElementT rel_error = (reference[i] - field_1_copy[i]) / reference[i];
+#endif
+            ElementT rel_error = (reference[i] - field_1_copy[i]) / Max(ElementT(1.0E-9), reference[i]);
             deviation = Max(deviation, Abs(rel_error));
         }
 
