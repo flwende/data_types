@@ -6,12 +6,8 @@
 #if !defined(BENCHMARK_HPP)
 #define BENCHMARK_HPP
 
-template <typename T>
-class DEBUG;
-
 #include <auxiliary/Template.hpp>
-
-#include <kernels.hpp>
+#include <kernel.hpp>
 
 template <SizeT Dimension>
 int benchmark(int argc, char** argv, const SizeArray<Dimension>& size);
