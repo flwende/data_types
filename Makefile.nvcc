@@ -2,23 +2,21 @@ CXX = nvcc
 LD = nvcc
 
 INC = -I./include -I./src/include
-CXXFLAGS = -O3 -march=native -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC)
-CXX_DEBUG += -DNDEBUG
-CXXFLAGS += $(CXX_DEBUG)
+DEBUG += -DNDEBUG
+CXXFLAGS = -O3 -march=native -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC) $(DEBUG)
 
 #OPTIONS += -DCHECK_RESULTS
 #OPTIONS += -DAOS_LAYOUT
 #OPTIONS += -DSOA_LAYOUT
 OPTIONS += -DSOAI_LAYOUT
 OPTIONS += -DELEMENT_ACCESS
-#OPTIONS += -DINPLACE
-#OPTIONS += -DVECTOR_PRODUCT
 
-NVCCFLAGS = -O3 -std=c++14 -arch=sm_61 $(CXX_DEBUG)
+NVCCFLAGS = -O3 -std=c++14 -arch=sm_61
 NVCCFLAGS += --resource-usage
 #NVCCFLAGS += --maxrregcount=16
 NVCCFLAGS += --expt-relaxed-constexpr --expt-extended-lambda
 NVCCFLAGS += -Xcompiler="-std=c++14 $(CXXFLAGS)" $(OPTIONS)
+NVCCFLAGS += $(DEBUG)
 
 LDFLAGS = -O3 -lgomp
 

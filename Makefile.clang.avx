@@ -1,33 +1,37 @@
 CXX = clang++
 LD = clang++
 
-INTELROOT = $(HOME)/opt/intel/compilers_and_libraries_2019/linux
-CUDAROOT = $(HOME)/opt/nvidia/cuda
 INC = -I./include -I./src/include
-#CXXFLAGS = -O3 -std=c++17 -stdlib=libc++ -mavx2 -fopenmp=libiomp5 -fveclib=SVML -ftree-vectorize -ffast-math -Rpass=loop-vectorize $(INC)
-CXXFLAGS = -O3 -std=c++17 -mavx2 -fopenmp=libiomp5 -fveclib=SVML -ftree-vectorize -ffast-math -Rpass=loop-vectorize $(INC)
+DEBUG = -DNDEBUG
+CXXFLAGS = -O3 -std=c++17 -mavx -fopenmp=libiomp5 -fveclib=SVML -ftree-vectorize -ffast-math -Rpass=loop-vectorize $(INC) $(DEBUG)
 LDFLAGS = -O3 -fopenmp -L$(INTELROOT)/lib/intel64 -lsvml -lintlc
-
-CXXFLAGS += -stdlib=libc++ --cuda-gpu-arch=sm_20 -I$(CUDAROOT)/include -nocudalib --cuda-path=$(CUDAROOT)
-#CXXFLAGS += --cuda-gpu-arch=sm_61 -I$(CUDAROOT)/include -nocudalib -D_GNU_SOURCE
-LDFLAGS += -nocudalib -L$(CUDAROOT)/lib64 -ldl -lrt -pthread
 
 #CXXFLAGS += -DCHECK_RESULTS
 #CXXFLAGS += -DAOS_LAYOUT
 #CXXFLAGS += -DSOA_LAYOUT
 CXXFLAGS += -DSOAI_LAYOUT
-#CXXFLAGS += -DELEMENT_ACCESS
-#CXXFLAGS += -DINPLACE
-#CXXFLAGS += -DVECTOR_PRODUCT
+CXXFLAGS += -DELEMENT_ACCESS
 
 target: bin/benchmark.x
 
-bin/benchmark.x: obj/benchmark.o
+original: bin/benchmark_original.x
+
+all: target original
+
+bin/benchmark.x: obj/benchmark.o obj/benchmark_implementation.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
-obj/benchmark.o: src/benchmark.cu
+bin/benchmark_original.x: obj/benchmark.o obj/benchmark_implementation_original.o
+	$(LD) $(LDFLAGS) -o $@ $^
+
+obj/benchmark.o: src/benchmark.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/benchmark_implementation.o: src/benchmark_implementation.cpp
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/benchmark_implementation_original.o: src/benchmark_implementation_original.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 clean:
 	rm -f *~ obj/*.o bin/benchmark.x
-

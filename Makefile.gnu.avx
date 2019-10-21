@@ -1,11 +1,11 @@
 CXX = g++
 LD = g++
 
-INTELROOT = $(MKLROOT)/../compiler
 INC = -I./include -I./src/include
-CXXFLAGS = -O3 -std=c++17 -mavx -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC)
+DEBUG = -DNDEBUG
+CXXFLAGS = -O3 -std=c++17 -mavx -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC) $(DEBUG)
 LDFLAGS = -O3 -fopenmp
-CXXFLAGS += -DNDEBUG
+
 
 #GLIBCROOT = $(HOME)/opt/gnu-8.2.0/glibc-2.27
 #CXXFLAGS += -I$(GLIBCROOT)/include
@@ -16,8 +16,6 @@ CXXFLAGS += -DNDEBUG
 #CXXFLAGS += -DSOA_LAYOUT
 CXXFLAGS += -DSOAI_LAYOUT
 CXXFLAGS += -DELEMENT_ACCESS
-#CXXFLAGS += -DINPLACE
-#CXXFLAGS += -DVECTOR_PRODUCT
 
 target: bin/benchmark.x
 
