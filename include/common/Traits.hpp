@@ -61,9 +61,10 @@ namespace XXX_NAMESPACE
         {
             using ConstT = const T;
             using Proxy = T;
-            using BasePointer = typename ::XXX_NAMESPACE::memory::Pointer<0, T>;
+            using BasePointer = typename ::XXX_NAMESPACE::memory::Pointer<1, T>;
         };
 
+        // Helper struct.
         namespace
         {
             template <typename Proxy, ::XXX_NAMESPACE::memory::DataLayout Layout>
@@ -79,7 +80,7 @@ namespace XXX_NAMESPACE
 
                 using Type = std::conditional_t<IsHomogeneous, 
                     std::conditional_t<Layout == ::XXX_NAMESPACE::memory::DataLayout::AoSoA, ::XXX_NAMESPACE::memory::Pointer<32, T...>, ::XXX_NAMESPACE::memory::Pointer<1, T...>>, 
-                    ::XXX_NAMESPACE::memory::MultiPointer<T...>>;
+                    std::conditional_t<Layout == ::XXX_NAMESPACE::memory::DataLayout::AoSoA, ::XXX_NAMESPACE::memory::MultiPointer<32, T...>, ::XXX_NAMESPACE::memory::MultiPointer<1, T...>>>;
             };
         }
 

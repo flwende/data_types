@@ -188,6 +188,7 @@ namespace XXX_NAMESPACE
         //!
         //! THE POINTER MANAGED BY THIS CLASS IS EXTERNAL!
         //!
+        //! \tparam N0 the extent of the innermost array: relevant for AoSoA data layout only
         //! \tparam T parameter pack (one parameter for each data member; all of the same size)
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,8 +197,7 @@ namespace XXX_NAMESPACE
         {
             // Template parameters.
             static_assert(N0 > 0, "error: N0 must be larger than 0.");
-            static constexpr SizeT TParam_N0 = N0;
-
+            
             // Number of parameters (members of the HST).
             static constexpr SizeT NumParameters = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
             static_assert(NumParameters > 0, "error: empty parameter pack");
@@ -208,6 +208,9 @@ namespace XXX_NAMESPACE
             // Check if all types are the same (same size is sufficient).
             static constexpr bool IsHomogeneous = ::XXX_NAMESPACE::variadic::Pack<T...>::SameSize();
             static_assert(IsHomogeneous, "error: use the inhomogeneous MultiPointer instead");
+
+            // Extent of the innermost array: relevant for the AoSoA data layout only.
+            static constexpr SizeT InnerArraySize = N0;
 
             // Friend declarations.
             template <SizeT, typename...>
@@ -225,6 +228,7 @@ namespace XXX_NAMESPACE
             //! This function sets up a tuple of references pointing to the members of an HST for
             //! field index 'stab_index * n_0 + index'.
             //!
+            //! \tparam N used for multiversioning: `N0=1` vs. `N0!=1` (the latter case handles the AoSoA data layout)
             //! \tparam I parameter pack used for indexed array access
             //! \param stab_index the stab index
             //! \param index the intra-stab index
@@ -243,8 +247,9 @@ namespace XXX_NAMESPACE
             HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, std::tuple<T&...>>
             {
                 assert(IsValid());
+                assert(n_0 == InnerArraySize);
 
-                return {reinterpret_cast<T&>(raw_c_pointer[(stab_index * NumParameters + I) * N0 + index])...};
+                return {reinterpret_cast<T&>(raw_c_pointer[(stab_index * NumParameters + I) * InnerArraySize + index])...};
             }
 
             //!
@@ -253,6 +258,7 @@ namespace XXX_NAMESPACE
             //! This function sets up a tuple of references pointing to the members of an HST for
             //! field index 'stab_index * n_0 + index'.
             //!
+            //! \tparam N used for multiversioning: `N0=1` vs. `N0!=1` (the latter case handles the AoSoA data layout)
             //! \tparam I parameter pack used for indexed array access
             //! \param stab_index the stab index
             //! \param index the intra-stab index
@@ -271,8 +277,9 @@ namespace XXX_NAMESPACE
             HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N != 1, std::tuple<const T&...>>
             {
                 assert(IsValid());
+                assert(n_0 == InnerArraySize);
 
-                return {reinterpret_cast<const T&>(raw_c_pointer[(stab_index * NumParameters + I) * N0 + index])...};
+                return {reinterpret_cast<const T&>(raw_c_pointer[(stab_index * NumParameters + I) * InnerArraySize + index])...};
             }
 
             //!
@@ -468,6 +475,26 @@ namespace XXX_NAMESPACE
                 }
 
                 //!
+                //! \brief Get the allocation shape for given SizeArray (AoSoA data layout).
+                //!
+                //! Allocation shape:
+                //!     1st component: InnerArraySize
+                //!     2nd component: product of all other extents, the number of sub-stabs, and the number of members of the HST (the number of stabs).
+                //!
+                //! \tparam Layout the data layout
+                //! \tparam N the dimension of the SizeArray
+                //! \param n a SizeArray
+                //! \param alignment the alignment to be used for the padding of the innermost extent of `n`
+                //! \return an allocation shape
+                //!
+                template <DataLayout Layout, SizeT N>
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
+                    -> std::enable_if_t<Layout == DataLayout::AoSoA, AllocationShape>
+                {
+                    return {InnerArraySize, NumParameters * ((n[0] + InnerArraySize - 1) / InnerArraySize) * n.ReduceMul(1), alignment};
+                }
+
+                //!
                 //! \brief Get the allocation shape for given SizeArray (not SoA data layout).
                 //!
                 //! Allocation shape:
@@ -482,9 +509,9 @@ namespace XXX_NAMESPACE
                 //!
                 template <DataLayout Layout, SizeT N>
                 static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
-                    -> std::enable_if_t<Layout != DataLayout::SoA, AllocationShape>
+                    -> std::enable_if_t<!(Layout == DataLayout::SoA || Layout == DataLayout::AoSoA), AllocationShape>
                 {
-                    return {Padding(((n[0] + N0 - 1) / N0) * N0, alignment), NumParameters * n.ReduceMul(1), alignment};
+                    return {Padding(n[0], alignment), NumParameters * n.ReduceMul(1), alignment};
                 }
             };
 
@@ -508,12 +535,16 @@ namespace XXX_NAMESPACE
         //!
         //! THE POINTER MANAGED BY THIS CLASS IS EXTERNAL!
         //!
+        //! \tparam N0 the extent of the innermost array: relevant for AoSoA data layout only
         //! \tparam T parameter pack (one parameter for each data member)
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename... T>
+        template <SizeT N0, typename... T>
         class MultiPointer
         {
+            // Template parameters.
+            static_assert(N0 > 0, "error: N0 must be larger than 0.");
+            
             // Number of parameters (members of the HST).
             static constexpr SizeT NumParameters = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
             static_assert(NumParameters > 0, "error: empty parameter pack");
@@ -534,11 +565,25 @@ namespace XXX_NAMESPACE
             // The member type sizes in relative to the size of the largest paramter type.
             static constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<NumParameters> SizeScalingFactor{(SizeOfLargestParameter / sizeof(T))...};
 
+            // (Exclusive) prefix sums over the byte-sizes of the member types of the IST.
+            static constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<NumParameters> Offset = ::XXX_NAMESPACE::math::PrefixSum(::XXX_NAMESPACE::dataTypes::SizeArray<NumParameters>{sizeof(T)...});
+
+            static constexpr SizeT One = static_cast<SizeT>(1);
+            // Determine the total byte-size of all data members that have a size different from (smaller than) the largest parameter type.
+            static constexpr SizeT SizeRest = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfPackExcludingLargestParameter();
+            // Determine the number of ISTs that is needed so that their overall size is an integral multiple of each data member type.
+            static constexpr SizeT RecordPaddingFactor = std::max(One, ::XXX_NAMESPACE::math::LeastCommonMultiple(SizeOfLargestParameter, SizeRest) / std::max(One, SizeRest));
+
+            // Extent of the innermost array: relevant for the AoSoA data layout only.
+            static constexpr SizeT InnerArraySize = ::XXX_NAMESPACE::math::LeastCommonMultiple(N0, RecordPaddingFactor);
+
             // Friend declarations.
-            template <typename... X>
+            template <SizeT, typename... X>
             friend class MultiPointer;
             template <typename, SizeT, DataLayout, ::XXX_NAMESPACE::platform::Identifier>
             friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
+            template <typename, SizeT, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
+            friend class ::XXX_NAMESPACE::dataTypes::internal::Accessor;
             friend class AllocatorBase<ValueT>;
 
             //!
@@ -547,45 +592,27 @@ namespace XXX_NAMESPACE
             //! (Base) pointers are separated from the pointer by the value of `n_0` and the byte-size of type of the memory they are pointing to.
             //! The latter is stored in `Offset[]` as exclusive prefix sums over the member types of the IST.
             //!
+            //! \tparam N used for multiversioning: `N0=1` vs. `N0!=1` (the latter case handles the AoSoA data layout)
             //! \tparam I parameter pack used for indexed array access
             //! \param raw_c_pointer the base pointer
             //! \param n_0 distance between successive pointers
             //! \param unnamed used for template paramter deduction
             //! \return a tuple of (base) pointers (one pointer for each member of the IST)
             //!
-            template <SizeT... I>
-            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::tuple<T*...>
+            template <SizeT N = N0, SizeT... I>
+            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, std::tuple<T*...>>
             {
                 assert(raw_c_pointer != nullptr);
-
-                // (Exclusive) prefix sums over the byte-sizes of the member types of the IST.
-                constexpr ::XXX_NAMESPACE::dataTypes::SizeArray<NumParameters> Offset = ::XXX_NAMESPACE::math::PrefixSum(::XXX_NAMESPACE::dataTypes::SizeArray<NumParameters>{sizeof(T)...});
 
                 return {reinterpret_cast<T*>(&raw_c_pointer[Offset[I] * n_0])...};
             }
 
-            //!
-            //! \brief Create a tuple of member references from the (base) pointers.
-            //!
-            //! This function sets up a tuple of references pointing to the members of an IST for field index 'stab_index * n + index'.
-            //! The value of `n` is calculated from the stab size of all members `n_0 * RecordSize` in terms of the member-type sizes.
-            //! The actual calculation is: n = n_0 * RecordSize / sizeof(T)...
-            //!                              = ((n_0 * RecordSize) / SizeOfLargestParameter) * (SizeOfLargestParameter / sizeof(T))...
-            //!                              = n_0x * SizeScalingFactor[I]...
-            //!
-            //!
-            //! \tparam I parameter pack used for indexed array access
-            //! \param stab_index the stab index
-            //! \param index the intra-stab index
-            //! \param unnamed used for template paramter deduction
-            //! \return a tuple of references (one reference for each member of the HST)
-            //!
-            template <SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::tuple<T&...>
+            template <SizeT N = N0, SizeT... I>
+            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, std::tuple<T*...>>
             {
-                assert(IsValid());
+                assert(raw_c_pointer != nullptr);
 
-                return {std::get<I>(pointer)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
+                return {reinterpret_cast<T*>(&raw_c_pointer[Offset[I] * InnerArraySize])...};
             }
 
             //!
@@ -597,19 +624,59 @@ namespace XXX_NAMESPACE
             //!                              = ((n_0 * RecordSize) / SizeOfLargestParameter) * (SizeOfLargestParameter / sizeof(T))...
             //!                              = n_0x * SizeScalingFactor[I]...
             //!
-            //!
+            //! \tparam N used for multiversioning: `N0=1` vs. `N0!=1` (the latter case handles the AoSoA data layout)
             //! \tparam I parameter pack used for indexed array access
             //! \param stab_index the stab index
             //! \param index the intra-stab index
             //! \param unnamed used for template paramter deduction
             //! \return a tuple of references (one reference for each member of the HST)
             //!
-            template <SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::tuple<const T&...>
+            template <SizeT N = N0, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, std::tuple<T&...>>
             {
                 assert(IsValid());
 
                 return {std::get<I>(pointer)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
+            }
+
+            template <SizeT N = N0, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, std::tuple<T&...>>
+            {
+                assert(IsValid());
+
+                return {std::get<I>(pointer)[stab_index * (((InnerArraySize * RecordSize) / SizeOfLargestParameter) * SizeScalingFactor[I]) + index]...};
+            }
+
+            //!
+            //! \brief Create a tuple of member references from the (base) pointers.
+            //!
+            //! This function sets up a tuple of references pointing to the members of an IST for field index 'stab_index * n + index'.
+            //! The value of `n` is calculated from the stab size of all members `n_0 * RecordSize` in terms of the member-type sizes.
+            //! The actual calculation is: n = n_0 * RecordSize / sizeof(T)...
+            //!                              = ((n_0 * RecordSize) / SizeOfLargestParameter) * (SizeOfLargestParameter / sizeof(T))...
+            //!                              = n_0x * SizeScalingFactor[I]...
+            //!
+            //! \tparam N used for multiversioning: `N0=1` vs. `N0!=1` (the latter case handles the AoSoA data layout)
+            //! \tparam I parameter pack used for indexed array access
+            //! \param stab_index the stab index
+            //! \param index the intra-stab index
+            //! \param unnamed used for template paramter deduction
+            //! \return a tuple of references (one reference for each member of the HST)
+            //!
+            template <SizeT N = N0, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N == 1, std::tuple<const T&...>>
+            {
+                assert(IsValid());
+
+                return {std::get<I>(pointer)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
+            }
+
+            template <SizeT N = N0, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N != 1, std::tuple<const T&...>>
+            {
+                assert(IsValid());
+
+                return {std::get<I>(pointer)[stab_index * (((InnerArraySize * RecordSize) / SizeOfLargestParameter) * SizeScalingFactor[I]) + index]...};
             }
 
             //!
@@ -666,7 +733,7 @@ namespace XXX_NAMESPACE
             //! \param other another MultiPointer
             //!
             template <typename... OtherT>
-            MultiPointer(const MultiPointer<OtherT...>& other) : n_0x(other.n_0x), pointer(other.pointer)
+            MultiPointer(const MultiPointer<N0, OtherT...>& other) : n_0x(other.n_0x), pointer(other.pointer)
             {
                 static_assert(::XXX_NAMESPACE::variadic::Pack<OtherT...>::template IsConvertibleTo<ValueT>(), "error: types are not convertible");
             }
@@ -779,11 +846,6 @@ namespace XXX_NAMESPACE
                 {
                     assert(alignment > 0 && ::XXX_NAMESPACE::math::IsPowerOf<2>(alignment));
 
-                    constexpr SizeT One = static_cast<SizeT>(1);
-                    // Determine the total byte-size of all data members that have a size different from (smaller than) the largest parameter type.
-                    constexpr SizeT SizeRest = ::XXX_NAMESPACE::variadic::Pack<T...>::SizeOfPackExcludingLargestParameter();
-                    // Determine the number of ISTs that is needed so that their overall size is an integral multiple of each data member type.
-                    constexpr SizeT RecordPaddingFactor = std::max(One, ::XXX_NAMESPACE::math::LeastCommonMultiple(SizeOfLargestParameter, SizeRest) / std::max(One, SizeRest));
                     const SizeT parameter_padding_factor = ::XXX_NAMESPACE::math::LeastCommonMultiple(alignment, SizeOfLargestParameter) / SizeOfLargestParameter;
                     const SizeT n_unit = ::XXX_NAMESPACE::math::LeastCommonMultiple(RecordPaddingFactor, parameter_padding_factor);
 
@@ -793,26 +855,6 @@ namespace XXX_NAMESPACE
               public:
                 using AllocationShape = typename Base::template AllocationShape<RecordSize>;
                 
-                //!
-                //! \brief Get the allocation shape for given SizeArray (not SoA data layout).
-                //!
-                //! Allocation shape:
-                //!     1st component: innermost extent of the SizeArray padded according to the alignment.
-                //!     2nd component: product of all other extents (the number of stabs).
-                //!
-                //! \tparam Layout the data layout
-                //! \tparam N the dimension of the SizeArray
-                //! \param n a SizeArray
-                //! \param alignment the alignment (bytes) to be used for the padding of the innermost extent of `n`
-                //! \return an allocation shape
-                //!
-                template <DataLayout Layout, SizeT N>
-                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
-                    -> std::enable_if_t<Layout != DataLayout::SoA, AllocationShape>
-                {
-                    return {Padding(n[0], alignment), n.ReduceMul(1), alignment};
-                }
-
                 //!
                 //! \brief Get the allocation shape for given SizeArray (SoA data layout).
                 //!
@@ -831,6 +873,46 @@ namespace XXX_NAMESPACE
                     -> std::enable_if_t<Layout == DataLayout::SoA, AllocationShape>
                 {
                     return {Padding(n.ReduceMul(), alignment), 1, alignment};
+                }
+
+                //!
+                //! \brief Get the allocation shape for given SizeArray (SoA data layout).
+                //!
+                //! Allocation shape:
+                //!     1st component: total number of elements in SizeArray padded according to the alignment.
+                //!     2nd component: 1
+                //!
+                //! \tparam Layout the data layout
+                //! \tparam N the dimension of the SizeArray
+                //! \param n a SizeArray
+                //! \param alignment the alignment to be used for the padding of the innermost extent of `n`
+                //! \return an allocation shape
+                //!
+                template <DataLayout Layout, SizeT N>
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
+                    -> std::enable_if_t<Layout == DataLayout::AoSoA, AllocationShape>
+                {
+                    return {InnerArraySize, ((n[0] + InnerArraySize - 1) / InnerArraySize) * n.ReduceMul(1), alignment};
+                }
+
+                //!
+                //! \brief Get the allocation shape for given SizeArray (not SoA data layout).
+                //!
+                //! Allocation shape:
+                //!     1st component: innermost extent of the SizeArray padded according to the alignment.
+                //!     2nd component: product of all other extents (the number of stabs).
+                //!
+                //! \tparam Layout the data layout
+                //! \tparam N the dimension of the SizeArray
+                //! \param n a SizeArray
+                //! \param alignment the alignment (bytes) to be used for the padding of the innermost extent of `n`
+                //! \return an allocation shape
+                //!
+                template <DataLayout Layout, SizeT N>
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
+                    -> std::enable_if_t<!(Layout == DataLayout::SoA || Layout == DataLayout::AoSoA), AllocationShape>
+                {
+                    return {Padding(n[0], alignment), n.ReduceMul(1), alignment};
                 }
             };
 

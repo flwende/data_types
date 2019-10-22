@@ -266,7 +266,7 @@ namespace XXX_NAMESPACE
                 {
                     assert(index < n[0]);
                     
-                    constexpr SizeT N0 = BasePointer::TParam_N0;
+                    constexpr SizeT N0 = BasePointer::InnerArraySize;
                     
                     return {pointer.At(stab_index * ((n[0] + N0 - 1) / N0) + (index / N0), index % N0)};
                 }
@@ -285,7 +285,7 @@ namespace XXX_NAMESPACE
                 {
                     assert(index < n[0]);
 
-                    constexpr SizeT N0 = BasePointer::TParam_N0;
+                    constexpr SizeT N0 = BasePointer::InnerArraySize;
 
                     return {pointer.At(stab_index * ((n[0] + N0 - 1) / N0) + (index / N0), index % N0)};
                 }
@@ -684,6 +684,11 @@ namespace XXX_NAMESPACE
                 }
             }
 
+            const auto* GetBasePointer() const
+            {
+                return data.GetBasePointer();
+            }
+
             //!
             //! \brief Set the content of the field.
             //!
@@ -859,7 +864,7 @@ namespace XXX_NAMESPACE
                 cudaMemcpy((void*)device_data.GetBasePointer(), (const void*)data.GetBasePointer(), data.GetByteSize(), cudaMemcpyHostToDevice);
             }
 #endif
-
+          private:
             SizeArray n;
             Container<::XXX_NAMESPACE::platform::Identifier::Host> data;
 #if defined(__CUDACC__)
