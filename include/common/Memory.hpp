@@ -30,6 +30,9 @@ namespace XXX_NAMESPACE
             // Forward declarations.
             template <typename, SizeT, ::XXX_NAMESPACE::memory::DataLayout, ::XXX_NAMESPACE::platform::Identifier>
             class Container;
+
+            template <typename, SizeT, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
+            class Accessor;
         }
     }
 
@@ -188,9 +191,13 @@ namespace XXX_NAMESPACE
         //! \tparam T parameter pack (one parameter for each data member; all of the same size)
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename... T>
+        template <SizeT N0, typename... T>
         class Pointer
         {
+            // Template parameters.
+            static_assert(N0 > 0, "error: N0 must be larger than 0.");
+            static constexpr SizeT TParam_N0 = N0;
+
             // Number of parameters (members of the HST).
             static constexpr SizeT NumParameters = ::XXX_NAMESPACE::variadic::Pack<T...>::Size;
             static_assert(NumParameters > 0, "error: empty parameter pack");
@@ -203,12 +210,15 @@ namespace XXX_NAMESPACE
             static_assert(IsHomogeneous, "error: use the inhomogeneous MultiPointer instead");
 
             // Friend declarations.
-            template <typename...>
+            template <SizeT, typename...>
             friend class Pointer;
             template <typename, SizeT, DataLayout, ::XXX_NAMESPACE::platform::Identifier>
             friend class ::XXX_NAMESPACE::dataTypes::internal::Container;
+            template <typename, SizeT, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
+            friend class ::XXX_NAMESPACE::dataTypes::internal::Accessor;
             friend class AllocatorBase<ValueT>;
 
+          protected:
             //!
             //! \brief Create a tuple of member references from the base pointer.
             //!
@@ -221,12 +231,20 @@ namespace XXX_NAMESPACE
             //! \param unnamed used for template paramter deduction
             //! \return a tuple of references (one reference for each member of the HST)
             //!
-            template <SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::tuple<T&...>
+            template <SizeT N = N0, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, std::tuple<T&...>>
             {
                 assert(IsValid());
 
                 return {reinterpret_cast<T&>(raw_c_pointer[(stab_index * NumParameters + I) * n_0 + index])...};
+            }
+
+            template <SizeT N = N0, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, std::tuple<T&...>>
+            {
+                assert(IsValid());
+
+                return {reinterpret_cast<T&>(raw_c_pointer[(stab_index * NumParameters + I) * N0 + index])...};
             }
 
             //!
@@ -241,12 +259,20 @@ namespace XXX_NAMESPACE
             //! \param unnamed used for template paramter deduction
             //! \return a tuple of references (one reference for each member of the HST)
             //!
-            template <SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::tuple<const T&...>
+            template <SizeT N = N0, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N == 1, std::tuple<const T&...>>
             {
                 assert(IsValid());
 
                 return {reinterpret_cast<const T&>(raw_c_pointer[(stab_index * NumParameters + I) * n_0 + index])...};
+            }
+
+            template <SizeT N = N0, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N != 1, std::tuple<const T&...>>
+            {
+                assert(IsValid());
+
+                return {reinterpret_cast<const T&>(raw_c_pointer[(stab_index * NumParameters + I) * N0 + index])...};
             }
 
             //!
@@ -303,7 +329,7 @@ namespace XXX_NAMESPACE
             //! \param other another Pointer
             //!
             template <typename... OtherT>
-            Pointer(const Pointer<OtherT...>& other) : n_0(other.n_0), raw_c_pointer(reinterpret_cast<ValueT*>(other.raw_c_pointer))
+            Pointer(const Pointer<N0, OtherT...>& other) : n_0(other.n_0), raw_c_pointer(reinterpret_cast<ValueT*>(other.raw_c_pointer))
             {
                 static_assert(::XXX_NAMESPACE::variadic::Pack<OtherT...>::template IsConvertibleTo<ValueT>(), "error: types are not convertible");
                 assert(other.IsValid());
@@ -422,26 +448,6 @@ namespace XXX_NAMESPACE
                 using AllocationShape = typename Base::template AllocationShape<sizeof(ValueT)>;
 
                 //!
-                //! \brief Get the allocation shape for given SizeArray (not SoA data layout).
-                //!
-                //! Allocation shape:
-                //!     1st component: innermost extent of the SizeArray padded according to the alignment.
-                //!     2nd component: product of all other extents and the number of members of the HST (the number of stabs).
-                //!
-                //! \tparam Layout the data layout
-                //! \tparam N the dimension of the SizeArray
-                //! \param n a SizeArray
-                //! \param alignment the alignment (bytes) to be used for the padding of the innermost extent of `n`
-                //! \return an allocation shape
-                //!
-                template <DataLayout Layout, SizeT N>
-                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
-                    -> std::enable_if_t<Layout != DataLayout::SoA, AllocationShape>
-                {
-                    return {Padding(n[0], alignment), NumParameters * n.ReduceMul(1), alignment};
-                }
-
-                //!
                 //! \brief Get the allocation shape for given SizeArray (SoA data layout).
                 //!
                 //! Allocation shape:
@@ -460,25 +466,34 @@ namespace XXX_NAMESPACE
                 {
                     return {Padding(n.ReduceMul(), alignment), NumParameters, alignment};
                 }
+
+                //!
+                //! \brief Get the allocation shape for given SizeArray (not SoA data layout).
+                //!
+                //! Allocation shape:
+                //!     1st component: innermost extent of the SizeArray padded according to the alignment.
+                //!     2nd component: product of all other extents and the number of members of the HST (the number of stabs).
+                //!
+                //! \tparam Layout the data layout
+                //! \tparam N the dimension of the SizeArray
+                //! \param n a SizeArray
+                //! \param alignment the alignment (bytes) to be used for the padding of the innermost extent of `n`
+                //! \return an allocation shape
+                //!
+                template <DataLayout Layout, SizeT N>
+                static auto GetAllocationShape(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
+                    -> std::enable_if_t<Layout != DataLayout::SoA, AllocationShape>
+                {
+                    return {Padding(((n[0] + N0 - 1) / N0) * N0, alignment), NumParameters * n.ReduceMul(1), alignment};
+                }
             };
 
-          private:
+          protected:
             // Extent of the innermost dimension (w.r.t. a multidimensional field declaration).
             SizeT n_0;
             // Base pointer.
             ValueT* raw_c_pointer;
         };
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //!
-        //! \brief A homogeneous structured type witn `N` members.
-        //!
-        //! \tparam T the type of the members
-        //! \tparam N the number of members
-        //!
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, SizeT N>
-        using PointerN = ::XXX_NAMESPACE::dataTypes::Builder<::XXX_NAMESPACE::memory::Pointer, T, N>;
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!

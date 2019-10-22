@@ -92,7 +92,8 @@ namespace XXX_NAMESPACE
 
               public:
                 using ConstT = const TupleProxy<const ValueT...>;
-                using BasePointer = std::conditional_t<::XXX_NAMESPACE::variadic::Pack<ValueT...>::SameSize(), ::XXX_NAMESPACE::memory::Pointer<ValueT...>, ::XXX_NAMESPACE::memory::MultiPointer<ValueT...>>;
+                static constexpr bool IsHomogeneous = ::XXX_NAMESPACE::variadic::Pack<ValueT...>::SameSize();
+                //using BasePointer = std::conditional_t<::XXX_NAMESPACE::variadic::Pack<ValueT...>::SameSize(), ::XXX_NAMESPACE::memory::Pointer<0, ValueT...>, ::XXX_NAMESPACE::memory::MultiPointer<ValueT...>>;
 
                 //!
                 //! \brief Assignment operator.

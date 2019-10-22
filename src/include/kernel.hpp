@@ -17,12 +17,12 @@
 // Data types and layouts.
 using SizeT = ::fw::dataTypes::SizeT;
 using RealT = ::fw::dataTypes::RealT;
-/*
+
 using TypeX = RealT;
 using TypeY = RealT;
 using TypeZ = RealT;
 using ElementT = ::fw::dataTypes::Vec<RealT, 3>;
-*/
+
 /*
 using TypeX = std::uint32_t;
 using TypeY = std::uint32_t;
@@ -53,12 +53,12 @@ using TypeY = double;
 using TypeZ = std::uint32_t;
 using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
 */
-
+/*
 using TypeX = float;
 using TypeY = std::int16_t;
 using TypeZ = std::int32_t;
 using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
-
+*/
 using ConstElementT = const ElementT;
 
 #if defined(AOS_LAYOUT)
@@ -67,6 +67,8 @@ constexpr ::fw::memory::DataLayout Layout = ::fw::memory::DataLayout::AoS;
 constexpr ::fw::memory::DataLayout Layout = ::fw::memory::DataLayout::SoA;
 #elif defined(SOAI_LAYOUT)
 constexpr ::fw::memory::DataLayout Layout = ::fw::memory::DataLayout::SoAi;
+#elif defined(AOSOA_LAYOUT)
+constexpr ::fw::memory::DataLayout Layout = ::fw::memory::DataLayout::AoSoA;
 #endif
 
 template <typename ValueT, SizeT Dimension>

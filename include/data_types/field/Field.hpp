@@ -252,6 +252,44 @@ namespace XXX_NAMESPACE
                     return {pointer.At(stab_index * n[0] + index)};
                 }
 
+                //!
+                //! \brief Array subscript operator (SoA data layout).
+                //!
+                //! The return value of `At(..)` is a tuple of references that is used for the proxy type construction.
+                //!
+                //! \tparam Enable used for multi-versioning depending on the data layout
+                //! \param index the intra-stab index
+                //! \return a proxy type
+                //!
+                template <DataLayout Enable = Layout>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable == DataLayout::AoSoA, Proxy>
+                {
+                    assert(index < n[0]);
+                    
+                    constexpr SizeT N0 = BasePointer::TParam_N0;
+                    
+                    return {pointer.At(stab_index * ((n[0] + N0 - 1) / N0) + (index / N0), index % N0)};
+                }
+
+                //!
+                //! \brief Array subscript operator (SoA data layout).
+                //!
+                //! The return value of `At(..)` is a tuple of references that is used for the proxy type construction.
+                //!
+                //! \tparam Enable used for multi-versioning depending on the data layout
+                //! \param index the intra-stab index
+                //! \return a const proxy type
+                //!
+                template <DataLayout Enable = Layout>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable == DataLayout::AoSoA, ConstProxy>
+                {
+                    assert(index < n[0]);
+
+                    constexpr SizeT N0 = BasePointer::TParam_N0;
+
+                    return {pointer.At(stab_index * ((n[0] + N0 - 1) / N0) + (index / N0), index % N0)};
+                }
+
               private:
                 Pointer& pointer;
                 const SizeArray& n;
@@ -298,6 +336,7 @@ namespace XXX_NAMESPACE
                 using ConstProxy = typename Traits<ConstValueT>::Proxy;
                 using ReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, Proxy, ValueT&>, Accessor<ValueT, Dimension - 1>>;
                 using ConstReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, ConstProxy, const ValueT&>, Accessor<ConstValueT, Dimension - 1>>;
+                static constexpr SizeT N0 = BasePointer<ValueT>::TParam_N0;
 
                 // Friend declarations.
                 friend class ::XXX_NAMESPACE::dataTypes::Field<ValueT, Dimension, Layout>;

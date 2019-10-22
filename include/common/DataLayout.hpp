@@ -18,7 +18,8 @@ namespace XXX_NAMESPACE
         {
             AoS,
             SoA,
-            SoAi
+            SoAi,
+            AoSoA
         };
     } // namespace memory
 } // namespace XXX_NAMESPACE
