@@ -17,12 +17,12 @@
 // Data types and layouts.
 using SizeT = ::fw::dataTypes::SizeT;
 using RealT = ::fw::dataTypes::RealT;
-/*
+
 using TypeX = RealT;
 using TypeY = RealT;
 using TypeZ = RealT;
 using ElementT = ::fw::dataTypes::Vec<RealT, 3>;
-*/
+
 /*
 using TypeX = std::uint32_t;
 using TypeY = std::uint32_t;
@@ -59,9 +59,11 @@ using TypeY = double;
 using TypeZ = std::uint32_t;
 using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
 */
+/*
 using TypeX = float;
 using TypeY = std::int16_t;
 using TypeZ = std::int32_t;
+*/
 using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
 
 using ConstElementT = const ElementT;

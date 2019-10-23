@@ -194,7 +194,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
         const SizeT n = size.ReduceMul();
         std::vector<ElementT> reference(n);
-        std::vector<ElementT> field_3_copy = field_3.Get(true);
+        std::vector<ElementT> field_3_result = field_3.Get(true);
     
         ElementT deviation;
 
@@ -205,7 +205,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 #else
             reference[i] = Exp(field_1_copy[i] + field_2_copy[i]);
 #endif
-            ElementT rel_error = (reference[i] - field_3_copy[i]) / Max(ElementT(1.0E-9), reference[i]);
+            ElementT rel_error = (reference[i] - field_3_result[i]) / Max(ElementT(1.0E-9), reference[i]);
             deviation = Max(deviation, Abs(rel_error));
 
 #if defined(ELEMENT_ACCESS)
@@ -213,16 +213,16 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 #endif
         }
 
-        std::vector<ElementT> field_1_copy = field_1.Get(true);
+        std::vector<ElementT> field_1_result = field_1.Get(true);
 
         for (SizeT i = 0; i < n; ++i)
         {
 #if defined(ELEMENT_ACCESS)
-            reference[i].x = Log(field_3_copy[i].z) - field_2_copy[i].y;
+            reference[i].x = Log(field_3_result[i].z) - field_2_copy[i].y;
 #else
-            reference[i] = Log(field_3_copy[i]) - field_2_copy[i];
+            reference[i] = Log(field_3_result[i]) - field_2_copy[i];
 #endif
-            ElementT rel_error = (reference[i] - field_1_copy[i]) / Max(ElementT(1.0E-9), reference[i]);
+            ElementT rel_error = (reference[i] - field_1_result[i]) / Max(ElementT(1.0E-9), reference[i]);
             deviation = Max(deviation, Abs(rel_error));
         }
 

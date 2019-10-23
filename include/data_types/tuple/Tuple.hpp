@@ -488,7 +488,9 @@ namespace XXX_NAMESPACE
         template <typename TupleT, SizeT ...I>
         std::ostream& TupleToStream(std::ostream& os, const TupleT& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>)
         {
-            int dummy[] = {TupleToStream(os, Get<I>(tuple))...};
+            using dummy = int[];
+            
+            (void) dummy{TupleToStream(os, Get<I>(tuple))...};   
 
             return os;
         }

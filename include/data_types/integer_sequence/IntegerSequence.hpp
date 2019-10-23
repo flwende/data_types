@@ -83,7 +83,7 @@ namespace XXX_NAMESPACE
             using ReturnT = std::conditional_t<N == 0, IntegerSequence<IntegerT>, typename IntegerSequenceImplementation<IntegerT, N>::Type>;
 
             return ReturnT{};
-        };
+        }
 
         //!
         //! \brief The type of an integer sequence.
@@ -119,7 +119,7 @@ namespace XXX_NAMESPACE
         HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto MakeIndexSequence()
         {
             return MakeIntegerSequence<SizeT, N>();
-        };
+        }
 
         //!
         //! \brief The type of an index sequence.

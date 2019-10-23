@@ -372,7 +372,7 @@ namespace XXX_NAMESPACE
                 //!
                 //! Create an empty `Container`.
                 //!
-                Container() = default;
+                Container() : n{}, allocation_shape{}, base_pointer{}, pointer{}, const_pointer{} {}
 
                 //!
                 //! \brief Constructor (private).
