@@ -120,6 +120,21 @@ namespace XXX_NAMESPACE
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
               public:
+#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto& FUNC() { return MEMBER; }                                                                                                                                                                       \
+                                                                                                                                                                                                                           \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline const auto& FUNC() const { return MEMBER; }
+
+                MACRO(GetX, x)
+                MACRO(GetY, y)
+                MACRO(GetZ, z)
+                MACRO(GetW, w)
+#undef MACRO
+
                 union {
                     struct
                     {
@@ -167,6 +182,20 @@ namespace XXX_NAMESPACE
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
               public:
+#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto& FUNC() { return MEMBER; }                                                                                                                                                                       \
+                                                                                                                                                                                                                           \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline const auto& FUNC() const { return MEMBER; }
+
+                MACRO(GetX, x)
+                MACRO(GetY, y)
+                MACRO(GetZ, z)
+#undef MACRO
+
                 union {
                     struct
                     {
@@ -212,6 +241,19 @@ namespace XXX_NAMESPACE
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
               public:
+#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto& FUNC() { return MEMBER; }                                                                                                                                                                       \
+                                                                                                                                                                                                                           \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline const auto& FUNC() const { return MEMBER; }
+
+                MACRO(GetX, x)
+                MACRO(GetY, y)
+#undef MACRO
+
                 union {
                     struct
                     {
@@ -251,6 +293,18 @@ namespace XXX_NAMESPACE
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
               public:
+#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto& FUNC() { return MEMBER; }                                                                                                                                                                       \
+                                                                                                                                                                                                                           \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline const auto& FUNC() const { return MEMBER; }
+
+                MACRO(GetX, x)
+#undef MACRO
+
                 union {
                     struct
                     {
@@ -298,7 +352,7 @@ namespace XXX_NAMESPACE
         {
             using Base = internal::TupleBase<ValueT...>;
 
-            template <typename ...T>
+            template <typename... T>
             using Pack = ::XXX_NAMESPACE::variadic::Pack<T...>;
             template <SizeT N>
             using CompileTimeLoop = ::XXX_NAMESPACE::compileTime::Loop<N>;
@@ -313,7 +367,7 @@ namespace XXX_NAMESPACE
             //! \tparam I a list of indices used for the parameter access
             //! \param proxy a `Tuple` instance
             //! \param unnamed used for template parameter deduction
-            //!      
+            //!
             template <typename... T, SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION Tuple(const Tuple<T...>& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
             {
@@ -330,7 +384,7 @@ namespace XXX_NAMESPACE
             HOST_VERSION
             CUDA_DEVICE_VERSION
             constexpr Tuple() = default;
-            
+
             //!
             //! \brief Constructor.
             //!
@@ -340,8 +394,10 @@ namespace XXX_NAMESPACE
             //! \param value the value to be assigned to all members
             //!
             template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(T value) : Base(value) {}
-            
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(T value) : Base(value)
+            {
+            }
+
             //!
             //! \brief Constructor.
             //!
@@ -352,21 +408,21 @@ namespace XXX_NAMESPACE
             HOST_VERSION
             CUDA_DEVICE_VERSION
             constexpr Tuple(ValueT... values) : Base(values...) {}
-            
+
             //!
             //! \brief Copy / conversion constructor.
             //!
             //! \tparam T a variadic list of type parameters
             //! \param tuple another `Tuple` instance
             //!
-            template <typename ...T>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr Tuple(const Tuple<T...>& tuple) : Tuple(tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>()) {}
-            
+            template <typename... T>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const Tuple<T...>& tuple) : Tuple(tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
+            {
+            }
+
             //!
             //! \brief Constructor.
-            //! 
+            //!
             //! Create a `Tuple` from a `TupleProxy`.
             //! The following cases are handler:
             //!
@@ -382,7 +438,7 @@ namespace XXX_NAMESPACE
             //! foo(proxy); // ERROR -> static_assert
             //! ```
             //! In this case the `TupleProxy` is converted to its base class `Tuple<int&, float&>`, and references to the members are given to the `foo`.
-            //! This is errorneous behavior. 
+            //! This is errorneous behavior.
             //! Instead the programmer must make an explicit copy of the `TupleProxy` type to `Tuple`, which would happen anyway when calling `foo`,
             //! or a static cast to `Tuple<int, float>`.
             //!
@@ -394,13 +450,13 @@ namespace XXX_NAMESPACE
             {
                 static_assert(!Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
             }
-            
+
             template <typename... T>
             HOST_VERSION CUDA_DEVICE_VERSION Tuple(const internal::TupleProxy<T...>& proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
             {
                 static_assert(!Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
             }
-            
+
             //!
             //! \brief Sign operator.
             //!
@@ -484,7 +540,7 @@ namespace XXX_NAMESPACE
         //
         // Write a `Tuple` to an output stream.
         // We do not use the compile-time loop here as it causes warnings regarding __host__ call from __device__ function.
-        // 
+        //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename ValueT>
         auto TupleToStream(std::ostream& os, const ValueT& value) -> int
@@ -496,17 +552,17 @@ namespace XXX_NAMESPACE
             return 0;
         }
 
-        template <typename TupleT, SizeT ...I>
+        template <typename TupleT, SizeT... I>
         std::ostream& TupleToStream(std::ostream& os, const TupleT& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>)
         {
             using dummy = int[];
-            
-            (void) dummy{TupleToStream(os, Get<I>(tuple))...};   
+
+            (void)dummy{TupleToStream(os, Get<I>(tuple))...};
 
             return os;
         }
 
-        template <typename... ValueT> 
+        template <typename... ValueT>
         std::ostream& operator<<(std::ostream& os, const Tuple<ValueT...>& tuple)
         {
             os << "( ";
