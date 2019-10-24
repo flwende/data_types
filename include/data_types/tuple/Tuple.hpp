@@ -303,6 +303,9 @@ namespace XXX_NAMESPACE
             template <SizeT N>
             using CompileTimeLoop = ::XXX_NAMESPACE::compileTime::Loop<N>;
 
+            friend class ::XXX_NAMESPACE::dataTypes::internal::TupleProxy<std::decay_t<ValueT>...>;
+            friend class ::XXX_NAMESPACE::dataTypes::internal::TupleProxy<const std::decay_t<ValueT>...>;
+
             //!
             //! \brief Constructor.
             //!
@@ -314,7 +317,7 @@ namespace XXX_NAMESPACE
             template <typename... T, SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION Tuple(const Tuple<T...>& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
             {
-                //static_assert(Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
+                static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
             }
 
           public:
@@ -337,10 +340,8 @@ namespace XXX_NAMESPACE
             //! \param value the value to be assigned to all members
             //!
             template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(T value) : Base(value)
-            {
-            }
-
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(T value) : Base(value) {}
+            
             //!
             //! \brief Constructor.
             //!
@@ -362,33 +363,44 @@ namespace XXX_NAMESPACE
             HOST_VERSION
             CUDA_DEVICE_VERSION
             constexpr Tuple(const Tuple<T...>& tuple) : Tuple(tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>()) {}
-        
+            
             //!
-            //! \brief Constructor (Invalid object construction).
+            //! \brief Constructor.
+            //! 
+            //! Create a `Tuple` from a `TupleProxy`.
+            //! The following cases are handler:
             //!
-            //! This constructor handles the case of a base class conversion of a `TupleProxy` where in the calling context a non-reference
-            //! instance of the base class is needed, e.g.
+            //! 1) A static_cast from the `TupleProxy` type to this `Tuple` type.
+            //!
+            //!
+            //! 2) Erroneous base class conversion of a `TupleProxy` where in the calling context a non-reference instance of the base class is needed, e.g.
             //! ```
             //! template <typename ...T>
             //! void foo(Tuple<T...> tuple) {..}
             //! ..
             //! TupleProxy<int, float> proxy = ..;
-            //! foo(proxy); // ERROR
+            //! foo(proxy); // ERROR -> static_assert
             //! ```
             //! In this case the `TupleProxy` is converted to its base class `Tuple<int&, float&>`, and references to the members are given to the `foo`.
             //! This is errorneous behavior. 
             //! Instead the programmer must make an explicit copy of the `TupleProxy` type to `Tuple`, which would happen anyway when calling `foo`,
-            //! or use a static cast to `Tuple<int, float>`
+            //! or a static cast to `Tuple<int, float>`.
             //!
             //! \tparam T the decay types of the proxy members (must be convertibe to this type's type parameters)
             //! \param proxy a `TupleProxy` instance
             //!
             template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(internal::TupleProxy<T...> proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(internal::TupleProxy<T...>& proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
             {
                 static_assert(!Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
             }
-
+            
+            template <typename... T>
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const internal::TupleProxy<T...>& proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
+            {
+                static_assert(!Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
+            }
+            
             //!
             //! \brief Sign operator.
             //!
@@ -418,7 +430,6 @@ namespace XXX_NAMESPACE
     template <typename... T>                                                                                                                                                                                               \
     HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const IN_T<T...>& tuple)->Tuple&                                                                                                                              \
     {                                                                                                                                                                                                                      \
-        static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");                                                                                                                   \
         static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");                                                                                                             \
                                                                                                                                                                                                                            \
         CompileTimeLoop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) OP Get<I>(tuple); });                                                                                                     \
