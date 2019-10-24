@@ -400,7 +400,7 @@ namespace XXX_NAMESPACE
             //! \param value the value to be assigned to all members
             //!
             template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(T value) : Base(value)
+            HOST_VERSION CUDA_DEVICE_VERSION explicit constexpr Tuple(T value) : Base(value)
             {
             }
 
@@ -413,7 +413,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Tuple(ValueT... values) : Base(values...) {}
+            explicit constexpr Tuple(ValueT... values) : Base(values...) {}
 
             //!
             //! \brief Copy / conversion constructor.
