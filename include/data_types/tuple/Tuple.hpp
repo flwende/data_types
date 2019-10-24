@@ -369,6 +369,12 @@ namespace XXX_NAMESPACE
             //! \param unnamed used for template parameter deduction
             //!
             template <typename... T, SizeT... I>
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(Tuple<T...>& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
+            {
+                static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
+            }
+
+            template <typename... T, SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION Tuple(const Tuple<T...>& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
             {
                 static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
@@ -412,12 +418,24 @@ namespace XXX_NAMESPACE
             //!
             //! \brief Copy / conversion constructor.
             //!
+            //! We do not allow the case where this type has reference template type-parameters!
+            //! The only case where this can happen is the base class conversion of a `TupleProxy`. 
+            //! If this is the case, the programmer must have requested a hard copy of this type (e.g. a function call with value parameters).
+            //! Do not build the program then!
+            //!
             //! \tparam T a variadic list of type parameters
             //! \param tuple another `Tuple` instance
             //!
             template <typename... T>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(Tuple<T...>& tuple) : Tuple(tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
+            {
+                static_assert(!Pack<ValueT...>::IsReference(), "error: this type has reference template type-parameters, which is not allowed here!");
+            }
+
+            template <typename... T>
             HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const Tuple<T...>& tuple) : Tuple(tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
             {
+                static_assert(!Pack<ValueT...>::IsReference(), "error: this type has reference template type-parameters, which is not allowed here!");
             }
 
             //!
