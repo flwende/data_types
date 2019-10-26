@@ -17,6 +17,7 @@
 #include <common/DataLayout.hpp>
 #include <common/Math.hpp>
 #include <data_types/DataTypes.hpp>
+#include <data_types/integer_sequence/IntegerSequence.hpp>
 #include <data_types/tuple/Record.hpp>
 #include <platform/Target.hpp>
 #include <platform/simd/Simd.hpp>
@@ -236,7 +237,7 @@ namespace XXX_NAMESPACE
             //! \return a tuple of references (one reference for each member of the HST)
             //!
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
             {
                 assert(IsValid());
 
@@ -244,7 +245,7 @@ namespace XXX_NAMESPACE
             }
 
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
             {
                 assert(IsValid());
                 assert(n_0 == InnerArraySize);
@@ -266,7 +267,7 @@ namespace XXX_NAMESPACE
             //! \return a tuple of references (one reference for each member of the HST)
             //!
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) const -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
             {
                 assert(IsValid());
 
@@ -274,7 +275,7 @@ namespace XXX_NAMESPACE
             }
 
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) const -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
             {
                 assert(IsValid());
                 assert(n_0 == InnerArraySize);
@@ -383,7 +384,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeT index) { return GetValues(0, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
+            inline auto At(const SizeT index) { return GetValues(0, index, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<NumParameters>()); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -395,7 +396,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeT index) const { return GetValues(0, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
+            inline auto At(const SizeT index) const { return GetValues(0, index, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<NumParameters>()); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -408,7 +409,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeT stab_index, const SizeT index) { return GetValues(stab_index, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
+            inline auto At(const SizeT stab_index, const SizeT index) { return GetValues(stab_index, index, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<NumParameters>()); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -421,7 +422,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeT stab_index, const SizeT index) const { return GetValues(stab_index, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
+            inline auto At(const SizeT stab_index, const SizeT index) const { return GetValues(stab_index, index, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<NumParameters>()); }
 
             //!
             //! \brief An allocator class.
@@ -600,7 +601,7 @@ namespace XXX_NAMESPACE
             //! \return a tuple of (base) pointers (one pointer for each member of the IST)
             //!
             template <SizeT N = N0, SizeT... I>
-            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T*...>>
+            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T*...>>
             {
                 assert(raw_c_pointer != nullptr);
 
@@ -608,7 +609,7 @@ namespace XXX_NAMESPACE
             }
 
             template <SizeT N = N0, SizeT... I>
-            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T*...>>
+            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T*...>>
             {
                 assert(raw_c_pointer != nullptr);
 
@@ -632,7 +633,7 @@ namespace XXX_NAMESPACE
             //! \return a tuple of references (one reference for each member of the HST)
             //!
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
             {
                 assert(IsValid());
 
@@ -640,7 +641,7 @@ namespace XXX_NAMESPACE
             }
 
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
             {
                 assert(IsValid());
 
@@ -664,7 +665,7 @@ namespace XXX_NAMESPACE
             //! \return a tuple of references (one reference for each member of the HST)
             //!
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) const -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
             {
                 assert(IsValid());
 
@@ -672,7 +673,7 @@ namespace XXX_NAMESPACE
             }
 
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) const -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
             {
                 assert(IsValid());
 
@@ -719,7 +720,7 @@ namespace XXX_NAMESPACE
             //! \param raw_c_pointer an external pointer that is used as the base pointer internally (it is the 0th element of the pointer tuple)
             //! \param n_0 the innermost dimension of the field
             //!
-            MultiPointer(ValueT* raw_c_pointer, const SizeT n_0) : n_0x((n_0 * RecordSize) / SizeOfLargestParameter), pointer(make_pointer_tuple(raw_c_pointer, n_0, std::make_integer_sequence<SizeT, NumParameters>{}))
+            MultiPointer(ValueT* raw_c_pointer, const SizeT n_0) : n_0x((n_0 * RecordSize) / SizeOfLargestParameter), pointer(make_pointer_tuple(raw_c_pointer, n_0, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<NumParameters>()))
             {
                 assert(((n_0 * RecordSize) % SizeOfLargestParameter) == 0);
             }
@@ -783,7 +784,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeT index) { return GetValues(0, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
+            inline auto At(const SizeT index) { return GetValues(0, index, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<NumParameters>()); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -795,7 +796,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeT index) const { return GetValues(0, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
+            inline auto At(const SizeT index) const { return GetValues(0, index, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<NumParameters>()); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -808,7 +809,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeT stab_index, const SizeT index) { return GetValues(stab_index, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
+            inline auto At(const SizeT stab_index, const SizeT index) { return GetValues(stab_index, index, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<NumParameters>()); }
 
             //!
             //! \brief Access the field through the base pointer.
@@ -821,7 +822,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto At(const SizeT stab_index, const SizeT index) const { return GetValues(stab_index, index, std::make_integer_sequence<SizeT, NumParameters>{}); }
+            inline auto At(const SizeT stab_index, const SizeT index) const { return GetValues(stab_index, index, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<NumParameters>()); }
 
             //!
             //! \brief An allocator class.
