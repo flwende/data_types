@@ -19,6 +19,7 @@
 #include <common/Memory.hpp>
 #include <common/Traits.hpp>
 #include <data_types/DataTypes.hpp>
+#include <data_types/tuple/Get.hpp>
 #include <platform/Target.hpp>
 
 namespace XXX_NAMESPACE
@@ -152,7 +153,7 @@ namespace XXX_NAMESPACE
                 //! \brief Array subscript operator (AoS data layout).
                 //!
                 //! The return value of `At(..)` is a tuple with a single reference to some variable of type `ValueT`.
-                //! Get the reference through `std::get<0>`.
+                //! Get the reference through `Gget<0>`.
                 //!
                 //! \tparam Enable used for multi-versioning depending on the data layout
                 //! \param index the intra-stab index
@@ -163,14 +164,14 @@ namespace XXX_NAMESPACE
                 {
                     assert(index < n[0]);
 
-                    return std::get<0>(pointer.At(stab_index, index));
+                    return ::XXX_NAMESPACE::dataTypes::internal::Get<0>(pointer.At(stab_index, index));
                 }
 
                 //!
                 //! \brief Array subscript operator (AoS data layout).
                 //!
                 //! The return value of `At(..)` is a tuple with a single reference to some variable of type `ValueT`.
-                //! Get the reference through `std::get<0>`.
+                //! Get the reference through `Get<0>`.
                 //!
                 //! \tparam Enable used for multi-versioning depending on the data layout
                 //! \param index the intra-stab index
@@ -181,7 +182,7 @@ namespace XXX_NAMESPACE
                 {
                     assert(index < n[0]);
 
-                    return std::get<0>(pointer.At(stab_index, index));
+                    return ::XXX_NAMESPACE::dataTypes::internal::Get<0>(pointer.At(stab_index, index));
                 }
 
                 //!

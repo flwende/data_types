@@ -239,7 +239,26 @@ namespace XXX_NAMESPACE
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr auto& Get(Record<T...>&);
 
                 template <SizeT Index, typename... T>
+                HOST_VERSION CUDA_DEVICE_VERSION friend constexpr auto& Get(Record<T...>&&);
+
+                template <SizeT Index, typename... T>
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&);
+
+                template <SizeT Index, typename... T>
+                HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&&);
+            
+                //!
+                //! \brief Constructor.
+                //!
+                //! \tparam T a variadic list of type parameters
+                //! \tparam I index list used for `Record` element access
+                //! \param other another `Record` instance
+                //! \param unnamed used for template parameter deduction
+                //!
+                template <typename ...T, SizeT ...I>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr Record(const Record<T...>& other, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Record(::XXX_NAMESPACE::dataTypes::internal::Get<I>(other)...) {}
 
               public:
                 //!
@@ -273,6 +292,17 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr Record(ValueT... values) : Base(RecordHelper<::XXX_NAMESPACE::dataTypes::IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Make(values...)) {}
+
+                //!
+                //! \brief Copy/conversion constructor.
+                //!
+                //! \tparam T a variadic list of type parameters
+                //! \param other another `Record` instance
+                //!
+                template <typename ...T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr Record(const Record<T...>& other) : Record(other, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>()) {}
             };
 
             //!
@@ -292,7 +322,13 @@ namespace XXX_NAMESPACE
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr auto& Get(Record<T...>&);
 
                 template <SizeT Index, typename... T>
+                HOST_VERSION CUDA_DEVICE_VERSION friend constexpr auto& Get(Record<T...>&&);
+
+                template <SizeT Index, typename... T>
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&);
+
+                template <SizeT Index, typename... T>
+                HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&&);
 
               public:
                 //!

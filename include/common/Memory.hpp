@@ -7,7 +7,6 @@
 #define COMMON_MEMORY_HPP
 
 #include <cassert>
-#include <tuple>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
@@ -18,6 +17,7 @@
 #include <common/DataLayout.hpp>
 #include <common/Math.hpp>
 #include <data_types/DataTypes.hpp>
+#include <data_types/tuple/Record.hpp>
 #include <platform/Target.hpp>
 #include <platform/simd/Simd.hpp>
 
@@ -236,7 +236,7 @@ namespace XXX_NAMESPACE
             //! \return a tuple of references (one reference for each member of the HST)
             //!
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, std::tuple<T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
             {
                 assert(IsValid());
 
@@ -244,7 +244,7 @@ namespace XXX_NAMESPACE
             }
 
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, std::tuple<T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
             {
                 assert(IsValid());
                 assert(n_0 == InnerArraySize);
@@ -266,7 +266,7 @@ namespace XXX_NAMESPACE
             //! \return a tuple of references (one reference for each member of the HST)
             //!
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N == 1, std::tuple<const T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
             {
                 assert(IsValid());
 
@@ -274,7 +274,7 @@ namespace XXX_NAMESPACE
             }
 
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N != 1, std::tuple<const T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
             {
                 assert(IsValid());
                 assert(n_0 == InnerArraySize);
@@ -600,7 +600,7 @@ namespace XXX_NAMESPACE
             //! \return a tuple of (base) pointers (one pointer for each member of the IST)
             //!
             template <SizeT N = N0, SizeT... I>
-            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, std::tuple<T*...>>
+            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T*...>>
             {
                 assert(raw_c_pointer != nullptr);
 
@@ -608,7 +608,7 @@ namespace XXX_NAMESPACE
             }
 
             template <SizeT N = N0, SizeT... I>
-            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, std::tuple<T*...>>
+            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T*...>>
             {
                 assert(raw_c_pointer != nullptr);
 
@@ -632,19 +632,19 @@ namespace XXX_NAMESPACE
             //! \return a tuple of references (one reference for each member of the HST)
             //!
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, std::tuple<T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
             {
                 assert(IsValid());
 
-                return {std::get<I>(pointer)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
+                return {::XXX_NAMESPACE::dataTypes::internal::Get<I>(pointer)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
             }
 
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, std::tuple<T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<T&...>>
             {
                 assert(IsValid());
 
-                return {std::get<I>(pointer)[stab_index * (((InnerArraySize * RecordSize) / SizeOfLargestParameter) * SizeScalingFactor[I]) + index]...};
+                return {::XXX_NAMESPACE::dataTypes::internal::Get<I>(pointer)[stab_index * (((InnerArraySize * RecordSize) / SizeOfLargestParameter) * SizeScalingFactor[I]) + index]...};
             }
 
             //!
@@ -664,19 +664,19 @@ namespace XXX_NAMESPACE
             //! \return a tuple of references (one reference for each member of the HST)
             //!
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N == 1, std::tuple<const T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N == 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
             {
                 assert(IsValid());
 
-                return {std::get<I>(pointer)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
+                return {::XXX_NAMESPACE::dataTypes::internal::Get<I>(pointer)[stab_index * (n_0x * SizeScalingFactor[I]) + index]...};
             }
 
             template <SizeT N = N0, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N != 1, std::tuple<const T&...>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, std::integer_sequence<SizeT, I...>) const -> std::enable_if_t<N != 1, ::XXX_NAMESPACE::dataTypes::internal::Record<const T&...>>
             {
                 assert(IsValid());
 
-                return {std::get<I>(pointer)[stab_index * (((InnerArraySize * RecordSize) / SizeOfLargestParameter) * SizeScalingFactor[I]) + index]...};
+                return {::XXX_NAMESPACE::dataTypes::internal::Get<I>(pointer)[stab_index * (((InnerArraySize * RecordSize) / SizeOfLargestParameter) * SizeScalingFactor[I]) + index]...};
             }
 
             //!
@@ -688,7 +688,7 @@ namespace XXX_NAMESPACE
             { 
                 assert(IsValid());
 
-                return reinterpret_cast<ValueT*>(std::get<0>(pointer));
+                return reinterpret_cast<ValueT*>(::XXX_NAMESPACE::dataTypes::internal::Get<0>(pointer));
             }
 
             //!
@@ -700,7 +700,7 @@ namespace XXX_NAMESPACE
             { 
                 assert(IsValid());
 
-                return reinterpret_cast<const ValueT*>(std::get<0>(pointer));
+                return reinterpret_cast<const ValueT*>(::XXX_NAMESPACE::dataTypes::internal::Get<0>(pointer));
             }
 
           public:
@@ -749,7 +749,7 @@ namespace XXX_NAMESPACE
             {
                 bool contains_nullptr = false;
 
-                ::XXX_NAMESPACE::compileTime::Loop<NumParameters>::Execute([&contains_nullptr, this] (const auto I) -> void { contains_nullptr |= (std::get<I>(pointer) == nullptr); });
+                ::XXX_NAMESPACE::compileTime::Loop<NumParameters>::Execute([&contains_nullptr, this] (const auto I) -> void { contains_nullptr |= (::XXX_NAMESPACE::dataTypes::internal::Get<I>(pointer) == nullptr); });
 
                 return !contains_nullptr;
             }
@@ -766,7 +766,7 @@ namespace XXX_NAMESPACE
                 n_0x = other.n_0x;
                 other.n_0x = this_n0x;
 
-                std::tuple<T*...> this_ptr = pointer;
+                ::XXX_NAMESPACE::dataTypes::internal::Record<T*...> this_ptr = pointer;
                 pointer = other.pointer;
                 other.pointer = this_ptr;
 
@@ -920,7 +920,7 @@ namespace XXX_NAMESPACE
             // Extent of the innermost dimension (w.r.t. a multidimensional field declaration).
             SizeT n_0x;
             // Base pointers (of different type).
-            std::tuple<T*...> pointer;
+            ::XXX_NAMESPACE::dataTypes::internal::Record<T*...> pointer;
         };
     } // namespace memory
 } // namespace XXX_NAMESPACE

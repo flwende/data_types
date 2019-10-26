@@ -67,22 +67,30 @@ namespace XXX_NAMESPACE
                     //!
                     //! \brief Get the value of the requested member (according to `Index`).
                     //!
-                    //! \param tuple a reference to the considered `ReverseRecord` type
+                    //! \param record a reference to the considered `ReverseRecord` type
                     //! \return a reference to the requested member
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static inline constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& tuple) { return GetImplementation<Index - 1, Tail...>::Value(tuple); }
+                    static inline constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& record) { return GetImplementation<Index - 1, Tail...>::Value(record); }
+
+                    HOST_VERSION
+                    CUDA_DEVICE_VERSION
+                    static inline constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>&& record) { return GetImplementation<Index - 1, Tail...>::Value(std::move(record)); }
 
                     //!
                     //! \brief Get the value of the requested member (according to `Index`).
                     //!
-                    //! \param tuple a const reference to the considered `ReverseRecord` type
+                    //! \param record a const reference to the considered `ReverseRecord` type
                     //! \return a const reference to the requested member
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static inline constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& tuple) { return GetImplementation<Index - 1, Tail...>::Value(tuple); }
+                    static inline constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& record) { return GetImplementation<Index - 1, Tail...>::Value(record); }
+
+                    HOST_VERSION
+                    CUDA_DEVICE_VERSION
+                    static inline constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>&& record) { return GetImplementation<Index - 1, Tail...>::Value(std::move(record)); }
                 };
 
                 //!
@@ -97,22 +105,30 @@ namespace XXX_NAMESPACE
                     //!
                     //! \brief Get the value of the requested member (according to `Index`).
                     //!
-                    //! \param tuple a reference to the considered `ReverseRecord` type
+                    //! \param record a reference to the considered `ReverseRecord` type
                     //! \return a reference to the requested member
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static inline constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& tuple) { return tuple.Get(); }
+                    static inline constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& record) { return record.Get(); }
+
+                    HOST_VERSION
+                    CUDA_DEVICE_VERSION
+                    static inline constexpr auto& Value(::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>&& record) { return record.Get(); }
 
                     //!
                     //! \brief Get the value of the requested member (according to `Index`).
                     //!
-                    //! \param tuple a reference to the considered `ReverseRecord` type
+                    //! \param record a reference to the considered `ReverseRecord` type
                     //! \return a reference to the requested member
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static inline constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& tuple) { return tuple.Get(); }
+                    static inline constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>& record) { return record.Get(); }
+
+                    HOST_VERSION
+                    CUDA_DEVICE_VERSION
+                    static inline constexpr const auto& Value(const ::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<ValueT, Tail...>&& record) { return record.Get(); }
                 };
             } // namespace
 
@@ -122,18 +138,28 @@ namespace XXX_NAMESPACE
             //!
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
-            //! \param tuple a reference to the considered `ReverseRecord` type
+            //! \param record a reference to the considered `ReverseRecord` type
             //! \return a reference to the requested member
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <SizeT Index, typename... ValueT>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline auto& Get(internal::ReverseRecord<ValueT...>& tuple)
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline auto& Get(internal::ReverseRecord<ValueT...>& record)
             {
                 constexpr SizeT N = sizeof...(ValueT);
 
                 static_assert(Index < N, "error: out of bounds.");
 
-                return GetImplementation<Index, ValueT...>::Value(tuple);
+                return GetImplementation<Index, ValueT...>::Value(record);
+            }
+
+            template <SizeT Index, typename... ValueT>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline auto& Get(internal::ReverseRecord<ValueT...>&& record)
+            {
+                constexpr SizeT N = sizeof...(ValueT);
+
+                static_assert(Index < N, "error: out of bounds.");
+
+                return GetImplementation<Index, ValueT...>::Value(std::move(record));
             }
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,18 +168,28 @@ namespace XXX_NAMESPACE
             //!
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
-            //! \param tuple a const reference to the considered `ReverseRecord` type
+            //! \param record a const reference to the considered `ReverseRecord` type
             //! \return a const reference to the requested member
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <SizeT Index, typename... ValueT>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline const auto& Get(const internal::ReverseRecord<ValueT...>& tuple)
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline const auto& Get(const internal::ReverseRecord<ValueT...>& record)
             {
                 constexpr SizeT N = sizeof...(ValueT);
 
                 static_assert(Index < N, "error: out of bounds.");
 
-                return GetImplementation<Index, ValueT...>::Value(tuple);
+                return GetImplementation<Index, ValueT...>::Value(record);
+            }
+
+            template <SizeT Index, typename... ValueT>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline const auto& Get(const internal::ReverseRecord<ValueT...>&& record)
+            {
+                constexpr SizeT N = sizeof...(ValueT);
+
+                static_assert(Index < N, "error: out of bounds.");
+
+                return GetImplementation<Index, ValueT...>::Value(std::move(record));
             }
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,18 +198,28 @@ namespace XXX_NAMESPACE
             //!
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
-            //! \param tuple a reference to the considered `Record` type
+            //! \param record a reference to the considered `Record` type
             //! \return a reference to the requested member
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <SizeT Index, typename... ValueT>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline auto& Get(internal::Record<ValueT...>& tuple)
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline auto& Get(internal::Record<ValueT...>& record)
             {
                 constexpr SizeT N = sizeof...(ValueT);
 
                 static_assert(N > 0 && Index < N, "error: out of bounds.");
 
-                return Get<(N - 1) - Index>(static_cast<typename internal::Record<ValueT...>::Base&>(tuple));
+                return Get<(N - 1) - Index>(static_cast<typename internal::Record<ValueT...>::Base&>(record));
+            }
+
+            template <SizeT Index, typename... ValueT>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline auto& Get(internal::Record<ValueT...>&& record)
+            {
+                constexpr SizeT N = sizeof...(ValueT);
+
+                static_assert(N > 0 && Index < N, "error: out of bounds.");
+
+                return Get<(N - 1) - Index>(static_cast<typename internal::Record<ValueT...>::Base&&>(std::move(record)));
             }
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,19 +228,30 @@ namespace XXX_NAMESPACE
             //!
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
-            //! \param tuple a const reference to the considered `Record` type
+            //! \param record a const reference to the considered `Record` type
             //! \return a const reference to the requested member
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <SizeT Index, typename... ValueT>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline const auto& Get(const internal::Record<ValueT...>& tuple)
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline const auto& Get(const internal::Record<ValueT...>& record)
             {
                 constexpr SizeT N = sizeof...(ValueT);
 
                 static_assert(N > 0 && Index < N, "error: out of bounds.");
 
-                return Get<(N - 1) - Index>(static_cast<const typename internal::Record<ValueT...>::Base&>(tuple));
+                return Get<(N - 1) - Index>(static_cast<const typename internal::Record<ValueT...>::Base&>(record));
             }
+
+            template <SizeT Index, typename... ValueT>
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr inline const auto& Get(const internal::Record<ValueT...>&& record)
+            {
+                constexpr SizeT N = sizeof...(ValueT);
+
+                static_assert(N > 0 && Index < N, "error: out of bounds.");
+
+                return Get<(N - 1) - Index>(static_cast<const typename internal::Record<ValueT...>::Base&&>(std::move(record)));
+            }
+            
         } // namespace internal
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -213,6 +270,12 @@ namespace XXX_NAMESPACE
             return internal::Get<Index>(tuple.data);
         }
 
+        template <SizeT Index, typename... ValueT>
+        static inline constexpr auto& Get(Tuple<ValueT...>&& tuple)
+        {
+            return internal::Get<Index>(std::move(tuple.data));
+        }
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
         //! \brief A Getter function to access the members of a `Tuple` type.
@@ -227,6 +290,12 @@ namespace XXX_NAMESPACE
         static inline constexpr const auto& Get(const Tuple<ValueT...>& tuple)
         {
             return internal::Get<Index>(tuple.data);
+        }
+
+        template <SizeT Index, typename... ValueT>
+        static inline constexpr const auto& Get(const Tuple<ValueT...>&& tuple)
+        {
+            return internal::Get<Index>(std::move(tuple.data));
         }
     } // namespace dataTypes
 } // namespace XXX_NAMESPACE
@@ -245,9 +314,21 @@ namespace std
     }
 
     template <std::size_t Index, typename ...ValueT>
+    static inline constexpr auto& get(::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>&& tuple)
+    {
+        return ::XXX_NAMESPACE::dataTypes::Get<Index>(std::move(tuple));
+    }
+
+    template <std::size_t Index, typename ...ValueT>
     static inline constexpr const auto& get(const ::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>& tuple)
     {
         return ::XXX_NAMESPACE::dataTypes::Get<Index>(tuple);
+    }
+
+    template <std::size_t Index, typename ...ValueT>
+    static inline constexpr const auto& get(const ::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>&& tuple)
+    {
+        return ::XXX_NAMESPACE::dataTypes::Get<Index>(std::move(tuple));
     }
 }
 

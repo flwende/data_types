@@ -75,7 +75,7 @@ namespace XXX_NAMESPACE
                 //! \param unnamed used for template parameter deduction
                 //!
                 template <SizeT... I>
-                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(std::tuple<ValueT&...>&& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Base(std::get<I>(tuple)...)
+                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(::XXX_NAMESPACE::dataTypes::internal::Record<ValueT&...>&& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Base(::XXX_NAMESPACE::dataTypes::internal::Get<I>(tuple)...)
                 {
                 }
 
@@ -88,12 +88,11 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                TupleProxy(std::tuple<ValueT&...> tuple) : TupleProxy(std::move(tuple), ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(ValueT)>()) {}
+                TupleProxy(::XXX_NAMESPACE::dataTypes::internal::Record<ValueT&...> tuple) : TupleProxy(std::move(tuple), ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(ValueT)>()) {}
 
               public:
                 using ConstT = const TupleProxy<const ValueT...>;
                 static constexpr bool IsHomogeneous = ::XXX_NAMESPACE::variadic::Pack<ValueT...>::SameSize();
-                //using BasePointer = std::conditional_t<::XXX_NAMESPACE::variadic::Pack<ValueT...>::SameSize(), ::XXX_NAMESPACE::memory::Pointer<0, ValueT...>, ::XXX_NAMESPACE::memory::MultiPointer<ValueT...>>;
 
                 //!
                 //! \brief Assignment operator.
