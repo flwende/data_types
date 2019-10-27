@@ -22,8 +22,6 @@ namespace XXX_NAMESPACE
     namespace dataTypes
     {
         using ::XXX_NAMESPACE::compileTime::Loop;
-        using ::XXX_NAMESPACE::dataTypes::IndexSequence;
-        using ::XXX_NAMESPACE::dataTypes::MakeIndexSequence;
         using ::XXX_NAMESPACE::variadic::Pack;
 
         namespace internal

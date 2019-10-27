@@ -28,7 +28,6 @@ namespace XXX_NAMESPACE
     {
         using ::XXX_NAMESPACE::memory::DataLayout;
         using ::XXX_NAMESPACE::internal::Traits;
-        using ::XXX_NAMESPACE::dataTypes::SizeArray;
         using ::XXX_NAMESPACE::platform::Identifier;
         using ::XXX_NAMESPACE::internal::ProvidesProxy;
 
@@ -38,7 +37,6 @@ namespace XXX_NAMESPACE
 
         namespace internal
         {
-            using ::XXX_NAMESPACE::dataTypes::internal::Get;
             using ::XXX_NAMESPACE::variadic::IsInvocable;
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

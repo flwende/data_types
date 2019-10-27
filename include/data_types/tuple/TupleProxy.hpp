@@ -25,8 +25,6 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
-        using ::XXX_NAMESPACE::dataTypes::Tuple;
-
         namespace internal
         {
             using ::XXX_NAMESPACE::compileTime::Loop;

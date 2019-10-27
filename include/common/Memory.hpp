@@ -52,7 +52,6 @@ namespace XXX_NAMESPACE
         using ::XXX_NAMESPACE::math::IsPowerOf;
         using ::XXX_NAMESPACE::math::LeastCommonMultiple;
         using ::XXX_NAMESPACE::math::PrefixSum;
-        using ::XXX_NAMESPACE::memory::DataLayout;
         using ::XXX_NAMESPACE::platform::Identifier;
         using ::XXX_NAMESPACE::variadic::Pack;
 
