@@ -387,6 +387,7 @@ namespace XXX_NAMESPACE
     namespace compileTime
     {
         using SizeT = ::XXX_NAMESPACE::dataTypes::SizeT;
+        using ::XXX_NAMESPACE::variadic::IsInvocable;
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //
@@ -446,7 +447,7 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 static constexpr auto Execute(FuncT loop_body) -> void
                 {
-                    static_assert(::XXX_NAMESPACE::variadic::IsInvocable<FuncT, std::integral_constant<SizeT, C_Begin>>::value, "error: callable is not invocable. void (*) (std::integral_constant<SizeT,..>) expected.");
+                    static_assert(IsInvocable<FuncT, std::integral_constant<SizeT, C_Begin>>::value, "error: callable is not invocable. void (*) (std::integral_constant<SizeT,..>) expected.");
 
                     loop_body(std::integral_constant<SizeT, C_Begin>{});
                 }
@@ -511,7 +512,7 @@ namespace XXX_NAMESPACE
         HOST_VERSION
         CUDA_DEVICE_VERSION
         constexpr auto IfElse(T_1 x, T_2 y)
-            -> std::enable_if_t<Predicate && !::XXX_NAMESPACE::variadic::IsInvocable<T_1>::value, T_1>
+            -> std::enable_if_t<Predicate && !IsInvocable<T_1>::value, T_1>
         {
             return x;
         }
@@ -520,7 +521,7 @@ namespace XXX_NAMESPACE
         HOST_VERSION
         CUDA_DEVICE_VERSION
         constexpr auto IfElse(T_1 x, T_2 y)
-            -> std::enable_if_t<Predicate && ::XXX_NAMESPACE::variadic::IsInvocable<T_1>::value, decltype(x())>
+            -> std::enable_if_t<Predicate && IsInvocable<T_1>::value, decltype(x())>
         {
             return x();
         }
@@ -529,7 +530,7 @@ namespace XXX_NAMESPACE
         HOST_VERSION
         CUDA_DEVICE_VERSION
         constexpr auto IfElse(T_1 x, T_2 y)
-            -> std::enable_if_t<!Predicate && !::XXX_NAMESPACE::variadic::IsInvocable<T_2>::value, T_2>
+            -> std::enable_if_t<!Predicate && !IsInvocable<T_2>::value, T_2>
         {
             return y;
         }
@@ -538,7 +539,7 @@ namespace XXX_NAMESPACE
         HOST_VERSION
         CUDA_DEVICE_VERSION
         constexpr auto IfElse(T_1 x, T_2 y)
-            -> std::enable_if_t<!Predicate && ::XXX_NAMESPACE::variadic::IsInvocable<T_2>::value, decltype(y())>
+            -> std::enable_if_t<!Predicate && IsInvocable<T_2>::value, decltype(y())>
         {
             return y();
         }

@@ -21,6 +21,11 @@ namespace XXX_NAMESPACE
     {
         namespace internal
         {
+            using ::XXX_NAMESPACE::dataTypes::IndexSequence;
+            using ::XXX_NAMESPACE::dataTypes::IndexSequenceT;
+            using ::XXX_NAMESPACE::dataTypes::MakeIndexSequence;
+            using ::XXX_NAMESPACE::variadic::Pack;
+
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief A record type with reverse order of the members.
@@ -193,13 +198,13 @@ namespace XXX_NAMESPACE
                 //! \tparam I a list of indices used for the parameter and argument inversion
                 //!
                 template <typename... ValueT, SizeT... I>
-                struct RecordHelper<::XXX_NAMESPACE::dataTypes::IndexSequence<I...>, ValueT...>
+                struct RecordHelper<IndexSequence<I...>, ValueT...>
                 {
                     static constexpr SizeT N = sizeof...(ValueT);
 
                     static_assert(N == sizeof...(I), "error: type parameter count does not match non-type parameter count.");
 
-                    using Type = ReverseRecord<typename ::XXX_NAMESPACE::variadic::Pack<ValueT...>::template Type<(N - 1) - I>...>;
+                    using Type = ReverseRecord<typename Pack<ValueT...>::template Type<(N - 1) - I>...>;
 
                     //!
                     //! \brief Argument inversion.
@@ -212,7 +217,7 @@ namespace XXX_NAMESPACE
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
-                    static inline constexpr auto Make(ValueT... values) -> Type { return {::XXX_NAMESPACE::variadic::Pack<ValueT...>::template Value<(N - 1) - I>(values...)...}; }
+                    static inline constexpr auto Make(ValueT... values) -> Type { return {Pack<ValueT...>::template Value<(N - 1) - I>(values...)...}; }
                 };
             } // namespace
 
@@ -230,9 +235,9 @@ namespace XXX_NAMESPACE
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename... ValueT>
-            class Record : public RecordHelper<::XXX_NAMESPACE::dataTypes::IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Type
+            class Record : public RecordHelper<IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Type
             {
-                using Base = typename RecordHelper<::XXX_NAMESPACE::dataTypes::IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Type;
+                using Base = typename RecordHelper<IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Type;
 
                 // Needed for access to `Base` type.
                 template <SizeT Index, typename... T>
@@ -258,7 +263,7 @@ namespace XXX_NAMESPACE
                 template <typename ...T, SizeT ...I>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr Record(const Record<T...>& other, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Record(::XXX_NAMESPACE::dataTypes::internal::Get<I>(other)...) {}
+                constexpr Record(const Record<T...>& other, IndexSequence<I...>) : Record(Get<I>(other)...) {}
 
               public:
                 //!
@@ -279,7 +284,7 @@ namespace XXX_NAMESPACE
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
                 HOST_VERSION CUDA_DEVICE_VERSION constexpr Record(T value) : Base(value)
                 {
-                    static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
+                    static_assert(Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
                 }
 
                 //!
@@ -291,7 +296,7 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr Record(ValueT... values) : Base(RecordHelper<::XXX_NAMESPACE::dataTypes::IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Make(values...)) {}
+                constexpr Record(ValueT... values) : Base(RecordHelper<IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Make(values...)) {}
 
                 //!
                 //! \brief Copy/conversion constructor.
@@ -302,7 +307,7 @@ namespace XXX_NAMESPACE
                 template <typename ...T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr Record(const Record<T...>& other) : Record(other, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>()) {}
+                constexpr Record(const Record<T...>& other) : Record(other, MakeIndexSequence<sizeof...(T)>()) {}
             };
 
             //!

@@ -34,6 +34,8 @@ namespace XXX_NAMESPACE
 
     namespace dataTypes
     {
+        using ::XXX_NAMESPACE::variadic::Pack;
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
         //! \brief A fixed sized array.
@@ -89,7 +91,7 @@ namespace XXX_NAMESPACE
             HOST_VERSION CUDA_DEVICE_VERSION constexpr Array(const T... args) : data{static_cast<ValueT>(std::move(args))...}
             {
                 static_assert(sizeof...(T) <= Size, "error: parameter list does not match the size of this array.");
-                static_assert(::XXX_NAMESPACE::variadic::Pack<T...>::template IsConvertibleTo<ValueT>(), "error: types are not convertible.");
+                static_assert(Pack<T...>::template IsConvertibleTo<ValueT>(), "error: types are not convertible.");
             }
 
             //!

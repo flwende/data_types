@@ -20,6 +20,12 @@ namespace XXX_NAMESPACE
 {
     namespace math
     {
+        using ::XXX_NAMESPACE::compileTime::Loop;
+        using ::XXX_NAMESPACE::dataTypes::Compare;
+        using ::XXX_NAMESPACE::dataTypes::SizeT;
+        using ::XXX_NAMESPACE::dataTypes::Tuple;
+        using ::XXX_NAMESPACE::dataTypes::Get;
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //
         // Arithmetic on `Tuple` types.
@@ -27,10 +33,8 @@ namespace XXX_NAMESPACE
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define MACRO(OP)                                                                                                                                                                                                          \
     template <typename... T_1, typename... T_2>                                                                                                                                                                            \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const ::XXX_NAMESPACE::dataTypes::Tuple<T_1...>& x_1, const ::XXX_NAMESPACE::dataTypes::Tuple<T_2...>& x_2)                                                   \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const Tuple<T_1...>& x_1, const Tuple<T_2...>& x_2)                                                                                                           \
     {                                                                                                                                                                                                                      \
-        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
-                                                                                                                                                                                                                           \
         constexpr SizeT N_1 = sizeof...(T_1);                                                                                                                                                                              \
         constexpr SizeT N_2 = sizeof...(T_2);                                                                                                                                                                              \
                                                                                                                                                                                                                            \
@@ -57,10 +61,8 @@ namespace XXX_NAMESPACE
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define MACRO(OP)                                                                                                                                                                                                          \
     template <typename T_2, typename... T_1, typename EnableType = std::enable_if_t<std::is_fundamental<T_2>::value>>                                                                                                      \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const ::XXX_NAMESPACE::dataTypes::Tuple<T_1...>& x_1, const T_2 x_2)                                                                                          \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const Tuple<T_1...>& x_1, const T_2 x_2)                                                                                                                      \
     {                                                                                                                                                                                                                      \
-        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
-                                                                                                                                                                                                                           \
         Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y{x_1};                                                                                                                                                 \
                                                                                                                                                                                                                            \
         y OP## = x_2;                                                                                                                                                                                                      \
@@ -69,10 +71,8 @@ namespace XXX_NAMESPACE
     }                                                                                                                                                                                                                      \
                                                                                                                                                                                                                            \
     template <typename T_1, typename... T_2, typename EnableType = std::enable_if_t<std::is_fundamental<T_1>::value>>                                                                                                      \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const T_1 x_1, const ::XXX_NAMESPACE::dataTypes::Tuple<T_2...>& x_2)                                                                                          \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const T_1 x_1, const Tuple<T_2...>& x_2)                                                                                                                      \
     {                                                                                                                                                                                                                      \
-        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
-                                                                                                                                                                                                                           \
         Tuple<typename Compare<T_2, T_1>::UnqualifiedStrongerT...> y(x_1);                                                                                                                                                 \
                                                                                                                                                                                                                            \
         y OP## = x_2;                                                                                                                                                                                                      \
@@ -93,10 +93,8 @@ namespace XXX_NAMESPACE
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename... T_1, typename... T_2>
-        HOST_VERSION CUDA_DEVICE_VERSION inline auto CrossProduct(const ::XXX_NAMESPACE::dataTypes::Tuple<T_1...>& x_1, const ::XXX_NAMESPACE::dataTypes::Tuple<T_2...>& x_2)
+        HOST_VERSION CUDA_DEVICE_VERSION inline auto CrossProduct(const Tuple<T_1...>& x_1, const Tuple<T_2...>& x_2)
         {
-            using namespace ::XXX_NAMESPACE::dataTypes;
-
             constexpr SizeT N_1 = sizeof...(T_1);
             constexpr SizeT N_2 = sizeof...(T_2);
 
@@ -124,10 +122,8 @@ namespace XXX_NAMESPACE
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <typename... T_1, typename... T_2>
-        HOST_VERSION CUDA_DEVICE_VERSION inline auto DotProduct(const ::XXX_NAMESPACE::dataTypes::Tuple<T_1...>& x_1, const ::XXX_NAMESPACE::dataTypes::Tuple<T_2...>& x_2)
+        HOST_VERSION CUDA_DEVICE_VERSION inline auto DotProduct(const Tuple<T_1...>& x_1, const Tuple<T_2...>& x_2)
         {
-            using namespace ::XXX_NAMESPACE::dataTypes;
-
             constexpr SizeT N_1 = sizeof...(T_1);
             constexpr SizeT N_2 = sizeof...(T_2);
 
@@ -135,9 +131,7 @@ namespace XXX_NAMESPACE
                                                                                                                                                                                                                             
             typename Compare<T_1..., T_2...>::UnqualifiedStrongerT y{};
 
-            ::XXX_NAMESPACE::compileTime::Loop<N_1>::Execute([&y, &x_1, &x_2] (const auto I) {
-                using namespace ::XXX_NAMESPACE::dataTypes;
-
+            Loop<N_1>::Execute([&y, &x_1, &x_2] (const auto I) {
                 y += Get<I>(x_1) * Get<I>(x_2);
             });
             
@@ -159,17 +153,13 @@ namespace XXX_NAMESPACE
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define MACRO(OP)                                                                                                                                                                                                          \
     template <typename... T>                                                                                                                                                                                               \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto OP(const ::XXX_NAMESPACE::dataTypes::Tuple<T...>& x)                                                                                                                      \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto OP(const Tuple<T...>& x)                                                                                                                                                  \
     {                                                                                                                                                                                                                      \
-        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
-                                                                                                                                                                                                                           \
         constexpr SizeT N = sizeof...(T);                                                                                                                                                                                  \
                                                                                                                                                                                                                            \
         Tuple<std::decay_t<T>...> y;                                                                                                                                                                                       \
                                                                                                                                                                                                                            \
-        ::XXX_NAMESPACE::compileTime::Loop<N>::Execute([&y, &x](const auto I) {                                                                                                                                            \
-            using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                    \
-                                                                                                                                                                                                                           \
+        Loop<N>::Execute([&y, &x](const auto I) {                                                                                                                                                                          \
             using ElementT = std::decay_t<decltype(Get<I>(y))>;                                                                                                                                                            \
                                                                                                                                                                                                                            \
             Get<I>(y) = ::XXX_NAMESPACE::math::internal::Func<ElementT>::OP(Get<I>(x));                                                                                                                                    \
@@ -192,17 +182,13 @@ namespace XXX_NAMESPACE
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define MACRO(OP)                                                                                                                                                                                                          \
     template <typename... T>                                                                                                                                                                                               \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto OP(const ::XXX_NAMESPACE::dataTypes::Tuple<T...>& x_1, const ::XXX_NAMESPACE::dataTypes::Tuple<T...>& x_2)                                                                \
+    HOST_VERSION CUDA_DEVICE_VERSION inline auto OP(const Tuple<T...>& x_1, const Tuple<T...>& x_2)                                                                                                                        \
     {                                                                                                                                                                                                                      \
-        using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                        \
-                                                                                                                                                                                                                           \
         constexpr SizeT N = sizeof...(T);                                                                                                                                                                                  \
                                                                                                                                                                                                                            \
         Tuple<std::decay_t<T>...> y;                                                                                                                                                                                       \
                                                                                                                                                                                                                            \
-        ::XXX_NAMESPACE::compileTime::Loop<N>::Execute([&y, &x_1, &x_2](const auto I) {                                                                                                                                    \
-            using namespace ::XXX_NAMESPACE::dataTypes;                                                                                                                                                                    \
-                                                                                                                                                                                                                           \
+        Loop<N>::Execute([&y, &x_1, &x_2](const auto I) {                                                                                                                                                                  \
             using ElementT = std::decay_t<decltype(Get<I>(y))>;                                                                                                                                                            \
                                                                                                                                                                                                                            \
             Get<I>(y) = ::XXX_NAMESPACE::math::internal::Func<ElementT>::OP(Get<I>(x_1), Get<I>(x_2));                                                                                                                     \
@@ -220,9 +206,8 @@ namespace XXX_NAMESPACE
             //! \brief Specialization of the `Func` data structure for the `Tuple` type.
             //!
             template <typename... ValueT>
-            struct Func<::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>>
+            struct Func<Tuple<ValueT...>>
             {
-                using Tuple = ::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>;
                 using ElementT = typename ::XXX_NAMESPACE::dataTypes::Compare<ValueT...>::UnqualifiedStrongerT;
 
                 static constexpr ElementT One = static_cast<ElementT>(1);
@@ -230,67 +215,67 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto Sqrt(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::Sqrt(x_1); }
+                static inline auto Sqrt(const Tuple<ValueT...>& x_1) { return ::XXX_NAMESPACE::math::internal::Sqrt(x_1); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto Log(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::Log(x_1); }
+                static inline auto Log(const Tuple<ValueT...>& x_1) { return ::XXX_NAMESPACE::math::internal::Log(x_1); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto Exp(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::Exp(x_1); }
+                static inline auto Exp(const Tuple<ValueT...>& x_1) { return ::XXX_NAMESPACE::math::internal::Exp(x_1); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto Max(const Tuple& x_1, const Tuple& x_2) { return ::XXX_NAMESPACE::math::internal::Max(x_1, x_2); }
+                static inline auto Max(const Tuple<ValueT...>& x_1, const Tuple<ValueT...>& x_2) { return ::XXX_NAMESPACE::math::internal::Max(x_1, x_2); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto Min(const Tuple& x_1, const Tuple& x_2) { return ::XXX_NAMESPACE::math::internal::Min(x_1, x_2); }
+                static inline auto Min(const Tuple<ValueT...>& x_1, const Tuple<ValueT...>& x_2) { return ::XXX_NAMESPACE::math::internal::Min(x_1, x_2); }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static inline auto Abs(const Tuple& x_1) { return ::XXX_NAMESPACE::math::internal::Abs(x_1); }
+                static inline auto Abs(const Tuple<ValueT...>& x_1) { return ::XXX_NAMESPACE::math::internal::Abs(x_1); }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Sqrt(T x_1) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Sqrt(T x_1) -> Tuple<ValueT...>
                 {
                     return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Sqrt(x_1)};
                 }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Log(T x_1) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Log(T x_1) -> Tuple<ValueT...>
                 {
                     return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Log(x_1)};
                 }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Exp(T x_1) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Exp(T x_1) -> Tuple<ValueT...>
                 {
                     return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Exp(x_1)};
                 }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Max(T x_1, T x_2) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Max(T x_1, T x_2) -> Tuple<ValueT...>
                 {
                     return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Max(x_1, x_2)};
                 }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Min(T x_1, T x_2) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Min(T x_1, T x_2) -> Tuple<ValueT...>
                 {
                     return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Min(x_1, x_2)};
                 }
 
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Abs(T x_1) -> Tuple
+                HOST_VERSION CUDA_DEVICE_VERSION static inline auto Abs(T x_1) -> Tuple<ValueT...>
                 {
                     return {::XXX_NAMESPACE::math::internal::Func<ElementT>::Abs(x_1)};
                 }
             };
 
             template <>
-            struct Func<::XXX_NAMESPACE::dataTypes::Tuple<>>
+            struct Func<Tuple<>>
             {
             };
         } // namespace internal

@@ -23,6 +23,7 @@ namespace XXX_NAMESPACE
     namespace math
     {
         using SizeT = ::XXX_NAMESPACE::dataTypes::SizeT;
+        using ::XXX_NAMESPACE::dataTypes::SizeArray;
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
@@ -129,9 +130,9 @@ namespace XXX_NAMESPACE
         template <SizeT N>
         HOST_VERSION
         CUDA_DEVICE_VERSION
-        constexpr inline auto PrefixSum(const ::XXX_NAMESPACE::dataTypes::SizeArray<N>& x_1)
+        constexpr inline auto PrefixSum(const SizeArray<N>& x_1)
         {
-            ::XXX_NAMESPACE::dataTypes::SizeArray<N> y{0};
+            SizeArray<N> y{0};
 
             for (SizeT i = 1; i < N; ++i)
             {

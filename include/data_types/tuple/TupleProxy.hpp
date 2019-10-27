@@ -25,14 +25,22 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
+        using ::XXX_NAMESPACE::dataTypes::Tuple;
+
         namespace internal
         {
+            using ::XXX_NAMESPACE::compileTime::Loop;
+            using ::XXX_NAMESPACE::dataTypes::IndexSequence;
+            using ::XXX_NAMESPACE::dataTypes::MakeIndexSequence;
+            using ::XXX_NAMESPACE::memory::DataLayout;
+            using ::XXX_NAMESPACE::variadic::Pack;
+
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //
             // Forward declarations.
             //
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <typename, SizeT, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
+            template <typename, SizeT, SizeT, DataLayout>
             class Accessor;
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,20 +56,17 @@ namespace XXX_NAMESPACE
             //! \tparam ValueT a type parameter list defining the member types
             //!
             template <typename... ValueT>
-            class TupleProxy : public ::XXX_NAMESPACE::dataTypes::Tuple<ValueT&...>
+            class TupleProxy : public Tuple<ValueT&...>
             {
-                using Base = ::XXX_NAMESPACE::dataTypes::Tuple<ValueT&...>;
+                using Base = Tuple<ValueT&...>;
 
                 // Member types must be fundamental and non-void.
-                static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
-                static_assert(!::XXX_NAMESPACE::variadic::Pack<ValueT...>::IsVoid(), "error: non-void parameter types assumed.");
-
-                template <SizeT N>
-                using CompileTimeLoop = ::XXX_NAMESPACE::compileTime::Loop<N>;
+                static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
+                static_assert(!Pack<ValueT...>::IsVoid(), "error: non-void parameter types assumed.");
 
                 // Friend declarations.
-                template <typename, SizeT, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
-                friend class ::XXX_NAMESPACE::dataTypes::internal::Accessor;
+                template <typename, SizeT, SizeT, DataLayout>
+                friend class Accessor;
 
               //private:
               public:
@@ -75,7 +80,7 @@ namespace XXX_NAMESPACE
                 //! \param unnamed used for template parameter deduction
                 //!
                 template <SizeT... I>
-                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(::XXX_NAMESPACE::dataTypes::internal::Record<ValueT&...>&& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Base(::XXX_NAMESPACE::dataTypes::internal::Get<I>(tuple)...)
+                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(Record<ValueT&...>&& tuple, IndexSequence<I...>) : Base(Get<I>(tuple)...)
                 {
                 }
 
@@ -88,11 +93,10 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                TupleProxy(::XXX_NAMESPACE::dataTypes::internal::Record<ValueT&...> tuple) : TupleProxy(std::move(tuple), ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(ValueT)>()) {}
+                TupleProxy(Record<ValueT&...> tuple) : TupleProxy(std::move(tuple), MakeIndexSequence<sizeof...(ValueT)>()) {}
 
               public:
                 using ConstT = const TupleProxy<const ValueT...>;
-                static constexpr bool IsHomogeneous = ::XXX_NAMESPACE::variadic::Pack<ValueT...>::SameSize();
 
                 //!
                 //! \brief Assignment operator.
@@ -108,12 +112,12 @@ namespace XXX_NAMESPACE
                 //! \return a reference to this `TupleProxy` instance
                 //!
                 template <typename... T>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator=(const ::XXX_NAMESPACE::dataTypes::Tuple<T...>& tuple) -> TupleProxy&
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator=(const Tuple<T...>& tuple) -> TupleProxy&
                 {
                     static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");
-                    static_assert(::XXX_NAMESPACE::variadic::Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
+                    static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
 
-                    CompileTimeLoop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) = Get<I>(tuple); });
+                    Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) = Get<I>(tuple); });
 
                     return *this;
                 }
@@ -133,9 +137,9 @@ namespace XXX_NAMESPACE
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
                 HOST_VERSION CUDA_DEVICE_VERSION inline auto operator=(const T value) -> TupleProxy&
                 {
-                    static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
+                    static_assert(Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
 
-                    CompileTimeLoop<sizeof...(ValueT)>::Execute([value, this](const auto I) { Get<I>(*this) = value; });
+                    Loop<sizeof...(ValueT)>::Execute([value, this](const auto I) { Get<I>(*this) = value; });
 
                     return *this;
                 }
@@ -147,11 +151,13 @@ namespace XXX_NAMESPACE
     {
         namespace internal
         {
+            using ::XXX_NAMESPACE::dataTypes::internal::TupleProxy;
+            
             //!
             //! \brief Specialization of the `Func` data structure for the `TupleProxy` type.
             //!
             template <typename... ValueT>
-            struct Func<::XXX_NAMESPACE::dataTypes::internal::TupleProxy<ValueT...>> : public Func<::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>>
+            struct Func<TupleProxy<ValueT...>> : public Func<Tuple<ValueT...>>
             {
             };
         }

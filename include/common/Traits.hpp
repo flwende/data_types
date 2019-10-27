@@ -20,9 +20,6 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
-        template <typename ...T>
-        class Tuple;
-
         namespace internal
         {
             template <typename ...T>
@@ -32,6 +29,9 @@ namespace XXX_NAMESPACE
 
     namespace internal
     {
+        using ::XXX_NAMESPACE::memory::DataLayout;
+        using ::XXX_NAMESPACE::memory::Pointer;
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
         //! \brief Test if there exist a proxy type for type T.
@@ -56,31 +56,34 @@ namespace XXX_NAMESPACE
         //! \tparam Enable template parameter used for multi-versioning
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, ::XXX_NAMESPACE::memory::DataLayout Layout, typename Enabled = void>
+        template <typename T, DataLayout Layout, typename Enabled = void>
         struct Traits
         {
             using ConstT = const T;
             using Proxy = T;
-            using BasePointer = typename ::XXX_NAMESPACE::memory::Pointer<1, T>;
+            using BasePointer = Pointer<1, T>;
         };
 
         // Helper struct.
         namespace
         {
-            template <typename Proxy, ::XXX_NAMESPACE::memory::DataLayout Layout>
+            using ::XXX_NAMESPACE::memory::MultiPointer;
+            using ::XXX_NAMESPACE::variadic::Pack;
+
+            template <typename Proxy, DataLayout Layout>
             struct GetBasePointer
             {
                 using Type = typename Proxy::BasePointer;
             };
 
-            template <::XXX_NAMESPACE::memory::DataLayout Layout, typename ...T>
-            struct GetBasePointer<::XXX_NAMESPACE::dataTypes::internal::TupleProxy<T...>, Layout>
+            template <DataLayout Layout, template <typename...> typename Proxy, typename ...T>
+            struct GetBasePointer<Proxy<T...>, Layout>
             {
-                static constexpr bool IsHomogeneous = ::XXX_NAMESPACE::variadic::Pack<T...>::SameSize();
+                static constexpr bool IsHomogeneous = Pack<T...>::SameSize();
 
                 using Type = std::conditional_t<IsHomogeneous, 
-                    std::conditional_t<Layout == ::XXX_NAMESPACE::memory::DataLayout::AoSoA, ::XXX_NAMESPACE::memory::Pointer<32, T...>, ::XXX_NAMESPACE::memory::Pointer<1, T...>>, 
-                    std::conditional_t<Layout == ::XXX_NAMESPACE::memory::DataLayout::AoSoA, ::XXX_NAMESPACE::memory::MultiPointer<32, T...>, ::XXX_NAMESPACE::memory::MultiPointer<1, T...>>>;
+                    std::conditional_t<Layout == DataLayout::AoSoA, Pointer<32, T...>, Pointer<1, T...>>, 
+                    std::conditional_t<Layout == DataLayout::AoSoA, MultiPointer<32, T...>, MultiPointer<1, T...>>>;
             };
         }
 
@@ -94,8 +97,8 @@ namespace XXX_NAMESPACE
         //! \tparam Layout the data layout
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename T, ::XXX_NAMESPACE::memory::DataLayout Layout>
-        struct Traits<T, Layout, std::enable_if_t<(Layout != ::XXX_NAMESPACE::memory::DataLayout::AoS && ProvidesProxy<T>::value)>>
+        template <typename T, DataLayout Layout>
+        struct Traits<T, Layout, std::enable_if_t<(Layout != DataLayout::AoS && ProvidesProxy<T>::value)>>
         {
             using ConstT = const T;
             using Proxy = std::conditional_t<std::is_const<T>::value, typename T::Proxy::ConstT, typename T::Proxy>;

@@ -21,6 +21,11 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
+        using ::XXX_NAMESPACE::compileTime::Loop;
+        using ::XXX_NAMESPACE::dataTypes::IndexSequence;
+        using ::XXX_NAMESPACE::dataTypes::MakeIndexSequence;
+        using ::XXX_NAMESPACE::variadic::Pack;
+
         namespace internal
         {
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,7 +62,7 @@ namespace XXX_NAMESPACE
                 template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
                 HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(T value) : data(value)
                 {
-                    static_assert(::XXX_NAMESPACE::variadic::Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
+                    static_assert(Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
                 }
 
                 //!
@@ -352,13 +357,8 @@ namespace XXX_NAMESPACE
         {
             using Base = internal::TupleBase<ValueT...>;
 
-            template <typename... T>
-            using Pack = ::XXX_NAMESPACE::variadic::Pack<T...>;
-            template <SizeT N>
-            using CompileTimeLoop = ::XXX_NAMESPACE::compileTime::Loop<N>;
-
-            friend class ::XXX_NAMESPACE::dataTypes::internal::TupleProxy<std::decay_t<ValueT>...>;
-            friend class ::XXX_NAMESPACE::dataTypes::internal::TupleProxy<const std::decay_t<ValueT>...>;
+            friend class internal::TupleProxy<std::decay_t<ValueT>...>;
+            friend class internal::TupleProxy<const std::decay_t<ValueT>...>;
 
             //!
             //! \brief Constructor.
@@ -369,13 +369,13 @@ namespace XXX_NAMESPACE
             //! \param unnamed used for template parameter deduction
             //!
             template <typename... T, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(Tuple<T...>& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(Tuple<T...>& tuple, IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
             {
                 static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
             }
 
             template <typename... T, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const Tuple<T...>& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const Tuple<T...>& tuple, IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
             {
                 static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
             }
@@ -427,13 +427,13 @@ namespace XXX_NAMESPACE
             //! \param tuple another `Tuple` instance
             //!
             template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(Tuple<T...>& tuple) : Tuple(tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(Tuple<T...>& tuple) : Tuple(tuple, MakeIndexSequence<sizeof...(T)>())
             {
                 static_assert(!Pack<ValueT...>::IsReference(), "error: this type has reference template type-parameters, which is not allowed here!");
             }
 
             template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const Tuple<T...>& tuple) : Tuple(tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const Tuple<T...>& tuple) : Tuple(tuple, MakeIndexSequence<sizeof...(T)>())
             {
                 static_assert(!Pack<ValueT...>::IsReference(), "error: this type has reference template type-parameters, which is not allowed here!");
             }
@@ -464,13 +464,13 @@ namespace XXX_NAMESPACE
             //! \param proxy a `TupleProxy` instance
             //!
             template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(internal::TupleProxy<T...>& proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(internal::TupleProxy<T...>& proxy) : Tuple(proxy, MakeIndexSequence<sizeof...(T)>())
             {
                 static_assert(!Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
             }
 
             template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const internal::TupleProxy<T...>& proxy) : Tuple(proxy, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(T)>())
+            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const internal::TupleProxy<T...>& proxy) : Tuple(proxy, MakeIndexSequence<sizeof...(T)>())
             {
                 static_assert(!Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
             }
@@ -488,7 +488,7 @@ namespace XXX_NAMESPACE
             {
                 Tuple tuple;
 
-                CompileTimeLoop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(tuple) = -Get<I>(*this); });
+                Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(tuple) = -Get<I>(*this); });
 
                 return tuple;
             }
@@ -506,7 +506,7 @@ namespace XXX_NAMESPACE
     {                                                                                                                                                                                                                      \
         static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");                                                                                                             \
                                                                                                                                                                                                                            \
-        CompileTimeLoop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) OP Get<I>(tuple); });                                                                                                     \
+        Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) OP Get<I>(tuple); });                                                                                                                \
                                                                                                                                                                                                                            \
         return *this;                                                                                                                                                                                                      \
     }
@@ -529,7 +529,7 @@ namespace XXX_NAMESPACE
     template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>                                                                                                                           \
     HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(T value)->Tuple&                                                                                                                                              \
     {                                                                                                                                                                                                                      \
-        CompileTimeLoop<sizeof...(ValueT)>::Execute([&value, this](const auto I) { Get<I>(*this) OP value; });                                                                                                             \
+        Loop<sizeof...(ValueT)>::Execute([&value, this](const auto I) { Get<I>(*this) OP value; });                                                                                                                        \
                                                                                                                                                                                                                            \
         return *this;                                                                                                                                                                                                      \
     }
@@ -571,7 +571,7 @@ namespace XXX_NAMESPACE
         }
 
         template <typename TupleT, SizeT... I>
-        std::ostream& TupleToStream(std::ostream& os, const TupleT& tuple, ::XXX_NAMESPACE::dataTypes::IndexSequence<I...>)
+        std::ostream& TupleToStream(std::ostream& os, const TupleT& tuple, IndexSequence<I...>)
         {
             using dummy = int[];
 
@@ -585,7 +585,7 @@ namespace XXX_NAMESPACE
         {
             os << "( ";
 
-            TupleToStream(os, tuple, ::XXX_NAMESPACE::dataTypes::MakeIndexSequence<sizeof...(ValueT)>());
+            TupleToStream(os, tuple, MakeIndexSequence<sizeof...(ValueT)>());
 
             os << ")";
 
@@ -602,17 +602,19 @@ namespace XXX_NAMESPACE
 {
     namespace internal
     {
+        using ::XXX_NAMESPACE::dataTypes::Tuple;
+
         //!
         //! \brief Specialization of the `ProvidesProxy` type for `Tuple`s.
         //!
         template <typename... ValueT>
-        struct ProvidesProxy<::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>>
+        struct ProvidesProxy<Tuple<ValueT...>>
         {
             static constexpr bool value = true;
         };
 
         template <typename... ValueT>
-        struct ProvidesProxy<const ::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>>
+        struct ProvidesProxy<const Tuple<ValueT...>>
         {
             static constexpr bool value = true;
         };

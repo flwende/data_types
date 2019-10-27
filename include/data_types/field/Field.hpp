@@ -26,8 +26,21 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
+        using ::XXX_NAMESPACE::memory::DataLayout;
+        using ::XXX_NAMESPACE::internal::Traits;
+        using ::XXX_NAMESPACE::dataTypes::SizeArray;
+        using ::XXX_NAMESPACE::platform::Identifier;
+        using ::XXX_NAMESPACE::internal::ProvidesProxy;
+
+        // Forward declaration.
+        template <typename, SizeT, DataLayout>
+        class Field;
+
         namespace internal
         {
+            using ::XXX_NAMESPACE::dataTypes::internal::Get;
+            using ::XXX_NAMESPACE::variadic::IsInvocable;
+
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief Accessor type for array subscript operator chaining [][]..[].
@@ -49,13 +62,11 @@ namespace XXX_NAMESPACE
             //! \tparam Layout any of AoS, SoAi, SoA
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <typename ValueT, SizeT Level, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout>
+            template <typename ValueT, SizeT Level, SizeT Dimension, DataLayout Layout>
             class Accessor
             {
-                using BasePointer = typename ::XXX_NAMESPACE::internal::Traits<ValueT, Layout>::BasePointer;
+                using BasePointer = typename Traits<ValueT, Layout>::BasePointer;
                 using Pointer = std::conditional_t<std::is_const<ValueT>::value, const BasePointer, BasePointer>;
-                using DataLayout = ::XXX_NAMESPACE::memory::DataLayout;
-                using SizeArray = ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>;
 
               public:
                 //!
@@ -67,7 +78,7 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                Accessor(Pointer& pointer, const SizeArray& n, const SizeT stab_index = 0) : pointer(pointer), n(n), stab_index(stab_index)
+                Accessor(Pointer& pointer, const SizeArray<Dimension>& n, const SizeT stab_index = 0) : pointer(pointer), n(n), stab_index(stab_index)
                 {
                     assert(pointer.IsValid());
                 }
@@ -110,7 +121,7 @@ namespace XXX_NAMESPACE
 
               private:
                 Pointer& pointer;
-                const SizeArray& n;
+                const SizeArray<Dimension>& n;
                 const SizeT stab_index;
             };
 
@@ -124,15 +135,13 @@ namespace XXX_NAMESPACE
             //! \tparam Dimension the dimension of the field
             //! \tparam Layout any of AoS, SoAi, SoA
             //!
-            template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout>
+            template <typename ValueT, SizeT Dimension, DataLayout Layout>
             class Accessor<ValueT, 1, Dimension, Layout>
             {
-                using BasePointer = typename ::XXX_NAMESPACE::internal::Traits<ValueT, Layout>::BasePointer;
+                using BasePointer = typename Traits<ValueT, Layout>::BasePointer;
                 using Pointer = std::conditional_t<std::is_const<ValueT>::value, const BasePointer, BasePointer>;
-                using Proxy = typename ::XXX_NAMESPACE::internal::Traits<ValueT, Layout>::Proxy;
-                using ConstProxy = typename ::XXX_NAMESPACE::internal::Traits<const ValueT, Layout>::Proxy;
-                using SizeArray = ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>;
-                using DataLayout = ::XXX_NAMESPACE::memory::DataLayout;
+                using Proxy = typename Traits<ValueT, Layout>::Proxy;
+                using ConstProxy = typename Traits<const ValueT, Layout>::Proxy;
 
               public:
                 //!
@@ -144,7 +153,7 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                Accessor(Pointer& pointer, const SizeArray& n, const SizeT stab_index = 0) : pointer(pointer), n(n), stab_index(stab_index) 
+                Accessor(Pointer& pointer, const SizeArray<Dimension>& n, const SizeT stab_index = 0) : pointer(pointer), n(n), stab_index(stab_index) 
                 {
                     assert(pointer.IsValid());
                 }
@@ -164,7 +173,7 @@ namespace XXX_NAMESPACE
                 {
                     assert(index < n[0]);
 
-                    return ::XXX_NAMESPACE::dataTypes::internal::Get<0>(pointer.At(stab_index, index));
+                    return Get<0>(pointer.At(stab_index, index));
                 }
 
                 //!
@@ -182,7 +191,7 @@ namespace XXX_NAMESPACE
                 {
                     assert(index < n[0]);
 
-                    return ::XXX_NAMESPACE::dataTypes::internal::Get<0>(pointer.At(stab_index, index));
+                    return Get<0>(pointer.At(stab_index, index));
                 }
 
                 //!
@@ -293,17 +302,10 @@ namespace XXX_NAMESPACE
 
               private:
                 Pointer& pointer;
-                const SizeArray& n;
+                const SizeArray<Dimension>& n;
                 const SizeT stab_index;
             };
-        } // namespace internal
-
-        // Forward declaration.
-        template <typename, SizeT, ::XXX_NAMESPACE::memory::DataLayout>
-        class Field;
-
-        namespace internal
-        {
+       
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief A container type.
@@ -317,22 +319,19 @@ namespace XXX_NAMESPACE
             //! \tparam Target the target platform
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout, ::XXX_NAMESPACE::platform::Identifier Target>
+            template <typename ValueT, SizeT Dimension, DataLayout Layout, Identifier Target>
             class Container
             {
-                using DataLayout = ::XXX_NAMESPACE::memory::DataLayout;
-                using PlatformId = ::XXX_NAMESPACE::platform::Identifier;
                 template <typename T>
-                using Traits = ::XXX_NAMESPACE::internal::Traits<T, Layout>;
+                using Traits = Traits<T, Layout>;
                 using ConstValueT = typename Traits<ValueT>::ConstT;
-                using SizeArray = ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>;
                 template <typename T>
                 using BasePointer = typename Traits<T>::BasePointer;
                 using Allocator = typename BasePointer<ValueT>::Allocator;
                 using AllocationShape = typename Allocator::AllocationShape;
                 template <typename T, SizeT D>
                 using Accessor = internal::Accessor<T, D, Dimension, Layout>;
-                static constexpr bool UseProxy = (Layout != DataLayout::AoS && ::XXX_NAMESPACE::internal::ProvidesProxy<ValueT>::value);
+                static constexpr bool UseProxy = (Layout != DataLayout::AoS && ProvidesProxy<ValueT>::value);
                 using Proxy = typename Traits<ValueT>::Proxy;
                 using ConstProxy = typename Traits<ConstValueT>::Proxy;
                 using ReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, Proxy, ValueT&>, Accessor<ValueT, Dimension - 1>>;
@@ -347,7 +346,7 @@ namespace XXX_NAMESPACE
                 using TParam_ValueT = ValueT;
                 static constexpr SizeT TParam_Dimension = Dimension;
                 static constexpr DataLayout TParam_Layout = Layout;
-                static constexpr PlatformId TParam_Target = Target;
+                static constexpr Identifier TParam_Target = Target;
 
               private:
                 //!
@@ -382,7 +381,7 @@ namespace XXX_NAMESPACE
                 //!
                 //! \param n a `SizeArray` (e.g. extent of a `Field`)
                 //!
-                Container(const SizeArray& n)
+                Container(const SizeArray<Dimension>& n)
                     : n(n), allocation_shape(Allocator::template GetAllocationShape<Layout>(n)),
                       base_pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0), Deleter()), pointer(*base_pointer), const_pointer(*base_pointer)
                 {
@@ -441,7 +440,7 @@ namespace XXX_NAMESPACE
                 template <typename FuncT>
                 auto Set(FuncT func) -> void
                 {
-                    static_assert(::XXX_NAMESPACE::variadic::IsInvocable<FuncT, SizeT>::value, "error: callable is not invocable. void (*) (SizeT) expected.");
+                    static_assert(IsInvocable<FuncT, SizeT>::value, "error: callable is not invocable. void (*) (SizeT) expected.");
 
                     if (Dimension == 1)
                     {
@@ -559,7 +558,7 @@ namespace XXX_NAMESPACE
                     return const_pointer.GetBasePointer();
                 }
 
-                SizeArray n;
+                SizeArray<Dimension> n;
                 AllocationShape allocation_shape;
                 std::shared_ptr<BasePointer<ValueT>> base_pointer;
                 BasePointer<ValueT> pointer;
@@ -609,22 +608,20 @@ namespace XXX_NAMESPACE
         //! \tparam Layout any of SoA (struct of arrays) and AoS (array of structs)
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        template <typename ValueT, SizeT Dimension, ::XXX_NAMESPACE::memory::DataLayout Layout = ::XXX_NAMESPACE::memory::DataLayout::AoS>
+        template <typename ValueT, SizeT Dimension, DataLayout Layout = DataLayout::AoS>
         class Field
         {
             static_assert(Dimension > 0, "error: a field without zero-dimension is not valid.");
             static_assert(!std::is_const<ValueT>::value, "error: field with const elements is not allowed.");
 
-            using DataLayout = ::XXX_NAMESPACE::memory::DataLayout;
             template <typename T>
-            using Traits = ::XXX_NAMESPACE::internal::Traits<T, Layout>;
+            using Traits = Traits<T, Layout>;
             using ConstValueT = typename Traits<ValueT>::ConstT;
-            using SizeArray = ::XXX_NAMESPACE::dataTypes::SizeArray<Dimension>;
-            template <::XXX_NAMESPACE::platform::Identifier Target>
+            template <Identifier Target>
             using Container = internal::Container<ValueT, Dimension, Layout, Target>;
             template <typename T, SizeT D>
             using Accessor = internal::Accessor<T, D, Dimension, Layout>;
-            static constexpr bool UseProxy = (Layout != DataLayout::AoS && ::XXX_NAMESPACE::internal::ProvidesProxy<ValueT>::value);
+            static constexpr bool UseProxy = (Layout != DataLayout::AoS && ProvidesProxy<ValueT>::value);
             using ReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, typename Traits<ValueT>::Proxy, ValueT&>, Accessor<ValueT, Dimension - 1>>;
             using ConstReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, typename Traits<ConstValueT>::Proxy, const ValueT&>, Accessor<ConstValueT, Dimension - 1>>;
 
@@ -650,7 +647,7 @@ namespace XXX_NAMESPACE
             //! \param n the extent of the field
             //! \param initialize_to_zero (optional) if `true`, zero all its elements
             //!
-            Field(const SizeArray& n, const bool initialize_to_zero = false) : n{} { Resize(n, initialize_to_zero); }
+            Field(const SizeArray<Dimension>& n, const bool initialize_to_zero = false) : n{} { Resize(n, initialize_to_zero); }
 
             //!
             //! \brief Resize the container.
@@ -662,13 +659,13 @@ namespace XXX_NAMESPACE
             //! \param n_new the new extent of the field
             //! \param initialize_to_zero (optional) if `true`, zero all its elements
             //!
-            auto Resize(const SizeArray& n_new, const bool initialize_to_zero = false) -> void
+            auto Resize(const SizeArray<Dimension>& n_new, const bool initialize_to_zero = false) -> void
             {
                 if (n != n_new)
                 {
                     n = n_new;
 
-                    data = Container<::XXX_NAMESPACE::platform::Identifier::Host>(n);
+                    data = Container<Identifier::Host>(n);
 
                     if (initialize_to_zero)
                     {
@@ -770,7 +767,7 @@ namespace XXX_NAMESPACE
             //!
             //! \return the size of the container
             //!
-            inline auto Size() const -> const SizeArray& { return n; }
+            inline auto Size() const -> const SizeArray<Dimension>& { return n; }
 
             //!
             //! \brief Get the size of the container for a specific dimension.
@@ -805,7 +802,7 @@ namespace XXX_NAMESPACE
             auto DeviceResize(const bool sync_with_host = false) -> void
             {
                 // Resize only of there is already a non-empty device container.
-                device_data = Container<::XXX_NAMESPACE::platform::Identifier::GPU_CUDA>(n);
+                device_data = Container<Identifier::GPU_CUDA>(n);
 
                 if (sync_with_host)
                 {
@@ -822,7 +819,7 @@ namespace XXX_NAMESPACE
             //! \param sync_with_host (optional) if `true`, copy all data from the host to the device
             //! \return a reference to the device container
             //!
-            auto DeviceData(const bool sync_with_host = false) -> Container<::XXX_NAMESPACE::platform::Identifier::GPU_CUDA>&
+            auto DeviceData(const bool sync_with_host = false) -> Container<Identifier::GPU_CUDA>&
             {
                 if (DeviceContainerIsEmpty())
                 {
@@ -866,10 +863,10 @@ namespace XXX_NAMESPACE
             }
 #endif
           private:
-            SizeArray n;
-            Container<::XXX_NAMESPACE::platform::Identifier::Host> data;
+            SizeArray<Dimension> n;
+            Container<Identifier::Host> data;
 #if defined(__CUDACC__)
-            Container<::XXX_NAMESPACE::platform::Identifier::GPU_CUDA> device_data;
+            Container<Identifier::GPU_CUDA> device_data;
 #endif
         };
     } // namespace dataTypes
