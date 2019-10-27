@@ -300,7 +300,7 @@ namespace XXX_NAMESPACE
             //!
             //! \brief Get the base pointer.
             //!
-            //! \return the base pointer
+            //! \return the (const) base pointer
             //!
             inline auto GetBasePointer() -> ValueT* 
             { 
@@ -309,11 +309,6 @@ namespace XXX_NAMESPACE
                 return raw_c_pointer; 
             }
 
-            //!
-            //! \brief Get the base pointer.
-            //!
-            //! \return the base pointer
-            //!
             inline auto GetBasePointer() const -> const ValueT* 
             { 
                 assert(IsValid());
@@ -394,20 +389,12 @@ namespace XXX_NAMESPACE
             //! This implementation uses a single intra-stab index within stab 0.
             //!
             //! \param index the intra-stab index
-            //! \return a tuple of references (one reference for each member of the HST)
+            //! \return a tuple of (const) references (one reference for each member of the HST)
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto At(const SizeT index) { return GetValues(0, index, MakeIndexSequence<NumParameters>()); }
 
-            //!
-            //! \brief Access the field through the base pointer.
-            //!
-            //! This implementation uses a single intra-stab index within stab 0.
-            //!
-            //! \param index the intra-stab index
-            //! \return a tuple of references (one reference for each member of the HST)
-            //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto At(const SizeT index) const { return GetValues(0, index, MakeIndexSequence<NumParameters>()); }
@@ -419,21 +406,12 @@ namespace XXX_NAMESPACE
             //!
             //! \param stab_index the stab index
             //! \param index the intra-stab index
-            //! \return a tuple of references (one reference for each member of the HST)
+            //! \return a tuple of (const) references (one reference for each member of the HST)
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto At(const SizeT stab_index, const SizeT index) { return GetValues(stab_index, index, MakeIndexSequence<NumParameters>()); }
 
-            //!
-            //! \brief Access the field through the base pointer.
-            //!
-            //! This implementation uses a stab index and an intra-stab index.
-            //!
-            //! \param stab_index the stab index
-            //! \param index the intra-stab index
-            //! \return a tuple of references (one reference for each member of the HST)
-            //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto At(const SizeT stab_index, const SizeT index) const { return GetValues(stab_index, index, MakeIndexSequence<NumParameters>()); }
@@ -612,7 +590,7 @@ namespace XXX_NAMESPACE
             //! \param raw_c_pointer the base pointer
             //! \param n_0 distance between successive pointers
             //! \param unnamed used for template paramter deduction
-            //! \return a tuple of (base) pointers (one pointer for each member of the IST)
+            //! \return a tuple of (const) (base) pointers (one pointer for each member of the IST)
             //!
             template <SizeT N = N0, SizeT... I>
             inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, IndexSequence<I...>) -> std::enable_if_t<N == 1, Record<T*...>>
@@ -644,7 +622,7 @@ namespace XXX_NAMESPACE
             //! \param stab_index the stab index
             //! \param index the intra-stab index
             //! \param unnamed used for template paramter deduction
-            //! \return a tuple of references (one reference for each member of the HST)
+            //! \return a tuple of (const) references (one reference for each member of the HST)
             //!
             template <SizeT N = N0, SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, IndexSequence<I...>) -> std::enable_if_t<N == 1, Record<T&...>>
@@ -662,22 +640,6 @@ namespace XXX_NAMESPACE
                 return {Get<I>(pointer)[stab_index * (((InnerArraySize * RecordSize) / SizeOfLargestParameter) * SizeScalingFactor[I]) + index]...};
             }
 
-            //!
-            //! \brief Create a tuple of member references from the (base) pointers.
-            //!
-            //! This function sets up a tuple of references pointing to the members of an IST for field index 'stab_index * n + index'.
-            //! The value of `n` is calculated from the stab size of all members `n_0 * RecordSize` in terms of the member-type sizes.
-            //! The actual calculation is: n = n_0 * RecordSize / sizeof(T)...
-            //!                              = ((n_0 * RecordSize) / SizeOfLargestParameter) * (SizeOfLargestParameter / sizeof(T))...
-            //!                              = n_0x * SizeScalingFactor[I]...
-            //!
-            //! \tparam N used for multiversioning: `N0=1` vs. `N0!=1` (the latter case handles the AoSoA data layout)
-            //! \tparam I parameter pack used for indexed array access
-            //! \param stab_index the stab index
-            //! \param index the intra-stab index
-            //! \param unnamed used for template paramter deduction
-            //! \return a tuple of references (one reference for each member of the HST)
-            //!
             template <SizeT N = N0, SizeT... I>
             HOST_VERSION CUDA_DEVICE_VERSION inline auto GetValues(const SizeT stab_index, const SizeT index, IndexSequence<I...>) const -> std::enable_if_t<N == 1, Record<const T&...>>
             {
@@ -697,7 +659,7 @@ namespace XXX_NAMESPACE
             //!
             //! \brief Get the base pointer.
             //!
-            //! \return the base pointer
+            //! \return the (const) base pointer
             //!
             inline auto GetBasePointer() -> ValueT* 
             { 
@@ -705,12 +667,7 @@ namespace XXX_NAMESPACE
 
                 return reinterpret_cast<ValueT*>(Get<0>(pointer));
             }
-
-            //!
-            //! \brief Get the base pointer.
-            //!
-            //! \return the base pointer
-            //!
+            
             inline auto GetBasePointer() const -> const ValueT*
             { 
                 assert(IsValid());
@@ -794,20 +751,12 @@ namespace XXX_NAMESPACE
             //! This implementation uses a single intra-stab index within stab 0.
             //!
             //! \param index the intra-stab index
-            //! \return a tuple of references (one reference for each member of the HST)
+            //! \return a tuple of (const) references (one reference for each member of the HST)
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto At(const SizeT index) { return GetValues(0, index, MakeIndexSequence<NumParameters>()); }
 
-            //!
-            //! \brief Access the field through the base pointer.
-            //!
-            //! This implementation uses a single intra-stab index within stab 0.
-            //!
-            //! \param index the intra-stab index
-            //! \return a tuple of references (one reference for each member of the HST)
-            //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto At(const SizeT index) const { return GetValues(0, index, MakeIndexSequence<NumParameters>()); }
@@ -819,21 +768,12 @@ namespace XXX_NAMESPACE
             //!
             //! \param stab_index the stab index
             //! \param index the intra-stab index
-            //! \return a tuple of references (one reference for each member of the HST)
+            //! \return a tuple of (const) references (one reference for each member of the HST)
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto At(const SizeT stab_index, const SizeT index) { return GetValues(stab_index, index, MakeIndexSequence<NumParameters>()); }
 
-            //!
-            //! \brief Access the field through the base pointer.
-            //!
-            //! This implementation uses a stab index and an intra-stab index.
-            //!
-            //! \param stab_index the stab index
-            //! \param index the intra-stab index
-            //! \return a tuple of references (one reference for each member of the HST)
-            //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto At(const SizeT stab_index, const SizeT index) const { return GetValues(stab_index, index, MakeIndexSequence<NumParameters>()); }

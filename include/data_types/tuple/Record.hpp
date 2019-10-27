@@ -96,17 +96,12 @@ namespace XXX_NAMESPACE
                 //!
                 //! \brief Get the value of the current member.
                 //!
-                //! \return a reference to the current member
+                //! \return a (const) reference to the current member
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 inline constexpr auto& Get() { return value; }
 
-                //!
-                //! \brief Get the value of the current member.
-                //!
-                //! \return a const reference to the current member
-                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 inline constexpr const auto& Get() const { return value; }
@@ -147,17 +142,12 @@ namespace XXX_NAMESPACE
                 //!
                 //! \brief Get the value of the current member.
                 //!
-                //! \return a reference to the current member
+                //! \return a (const) reference to the current member
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 inline constexpr auto Get() -> ValueT& { return value; }
 
-                //!
-                //! \brief Get the value of the current member.
-                //!
-                //! \return a const reference to the current member
-                //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 inline constexpr auto Get() const -> const ValueT& { return value; }

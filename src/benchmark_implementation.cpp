@@ -7,6 +7,9 @@
 #include <benchmark.hpp>
 #include <vector>
 
+using ::XXX_NAMESPACE::memory::DataLayout;
+using ::XXX_NAMESPACE::dataTypes::internal::Get;
+
 constexpr double SPREAD = 0.5;
 constexpr double OFFSET = 2.0;
 
@@ -17,6 +20,9 @@ constexpr std::size_t MEASUREMENT = 1;
 constexpr std::size_t WARMUP = 10;
 constexpr std::size_t MEASUREMENT = 20;
 #endif
+
+template <typename T>
+class DEBUG;
 
 #if defined(__CUDACC__)
 template <typename FuncT, typename Container>
@@ -74,7 +80,7 @@ auto Kernel(FuncT func, Field& a, Field& b, Field& c) -> void
 }
 #else
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 1), void>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
 
@@ -86,7 +92,26 @@ auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) 
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 2), void>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout == DataLayout::AoSoA), void>
+{
+    using namespace ::fw::math;
+
+    for (SizeT x = 0; x < a.Size(0); x += Container::GetInnerArraySize())
+    {
+        const auto& ptr_a = a.At(x);
+        const auto& ptr_b = b.At(x);
+        auto ptr_c = c.At(x);
+
+        #pragma omp simd                
+        for (SizeT i = 0; i < std::min(Container::GetInnerArraySize(), a.Size(0) - x); ++i)
+        {
+            func(ptr_a[i], ptr_b[i], ptr_c[i]);
+        }
+    }
+}
+
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
 
@@ -101,7 +126,29 @@ auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) 
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout == DataLayout::AoSoA), void>
+{
+    using namespace ::fw::math;
+
+    for (SizeT y = 0; y < a.Size(1); ++y)
+    {
+        for (SizeT x = 0; x < a.Size(0); x += Container::GetInnerArraySize())
+        {
+            const auto& ptr_a = a[y].At(x);
+            const auto& ptr_b = b[y].At(x);
+            auto ptr_c = c[y].At(x);
+
+            #pragma omp simd                
+            for (SizeT i = 0; i < std::min(Container::GetInnerArraySize(), a.Size(0) - x); ++i)
+            {
+                func(ptr_a[i], ptr_b[i], ptr_c[i]);
+            }
+        }
+    }
+}
+
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 3 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
 
@@ -118,8 +165,33 @@ auto KernelImplementation(FuncT func, Container& a, Container& b, Container& c) 
     } 
 }
 
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) -> std::enable_if_t<(Container::TParam_Dimension == 3 && Container::TParam_Layout == DataLayout::AoSoA), void>
+{
+    using namespace ::fw::math;
+
+    for (SizeT z = 0; z < a.Size(2); ++z)
+    {
+        for (SizeT y = 0; y < a.Size(1); ++y)
+        {
+            for (SizeT x = 0; x < a.Size(0); x += Container::GetInnerArraySize())
+            {
+                const auto& ptr_a = a[z][y].At(x);
+                const auto& ptr_b = b[z][y].At(x);
+                auto ptr_c = c[z][y].At(x);
+
+                #pragma omp simd                
+                for (SizeT i = 0; i < std::min(Container::GetInnerArraySize(), a.Size(0) - x); ++i)
+                {
+                    func(ptr_a[i], ptr_b[i], ptr_c[i]);
+                }
+            }
+        }
+    } 
+}
+
 template <typename FuncT, typename Field>
-auto Kernel(FuncT func, Field& a, Field& b, Field& c) -> void
+auto Kernel(FuncT func, const Field& a, const Field& b, Field& c) -> void
 {
     KernelImplementation(func, a, b, c);
 }

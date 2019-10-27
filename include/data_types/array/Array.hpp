@@ -155,7 +155,7 @@ namespace XXX_NAMESPACE
             //! \brief Array subscript operator.
             //!
             //! \param index element index
-            //! \return reference to the element
+            //! \return a (const) reference to the element
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
@@ -166,12 +166,6 @@ namespace XXX_NAMESPACE
                 return data[index];
             }
 
-            //!
-            //! \brief Array subscript operator.
-            //!
-            //! \param index element index
-            //! \return const reference to the element
-            //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline constexpr auto operator[](const SizeT index) const -> const ValueT&
@@ -185,7 +179,7 @@ namespace XXX_NAMESPACE
             //! \brief Array access.
             //!
             //! \tparam Index element index
-            //! \return reference to the element
+            //! \return a (const) reference to the element
             //!
             template <SizeT Index>
             HOST_VERSION
@@ -197,12 +191,6 @@ namespace XXX_NAMESPACE
                 return data[Index];
             }
 
-            //!
-            //! \brief Array access.
-            //!
-            //! \tparam Index element index
-            //! \return const reference to the element
-            //!
             template <SizeT Index>
             HOST_VERSION
             CUDA_DEVICE_VERSION

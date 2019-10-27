@@ -68,7 +68,7 @@ namespace XXX_NAMESPACE
                     //! \brief Get the value of the requested member (according to `Index`).
                     //!
                     //! \param record a reference to the considered `ReverseRecord` type
-                    //! \return a reference to the requested member
+                    //! \return a (const) reference to the requested member
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
@@ -78,12 +78,6 @@ namespace XXX_NAMESPACE
                     CUDA_DEVICE_VERSION
                     static inline constexpr auto& Value(ReverseRecord<ValueT, Tail...>&& record) { return GetImplementation<Index - 1, Tail...>::Value(std::move(record)); }
 
-                    //!
-                    //! \brief Get the value of the requested member (according to `Index`).
-                    //!
-                    //! \param record a const reference to the considered `ReverseRecord` type
-                    //! \return a const reference to the requested member
-                    //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
                     static inline constexpr const auto& Value(const ReverseRecord<ValueT, Tail...>& record) { return GetImplementation<Index - 1, Tail...>::Value(record); }
@@ -106,7 +100,7 @@ namespace XXX_NAMESPACE
                     //! \brief Get the value of the requested member (according to `Index`).
                     //!
                     //! \param record a reference to the considered `ReverseRecord` type
-                    //! \return a reference to the requested member
+                    //! \return a (const) reference to the requested member
                     //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
@@ -116,12 +110,6 @@ namespace XXX_NAMESPACE
                     CUDA_DEVICE_VERSION
                     static inline constexpr auto& Value(ReverseRecord<ValueT, Tail...>&& record) { return record.Get(); }
 
-                    //!
-                    //! \brief Get the value of the requested member (according to `Index`).
-                    //!
-                    //! \param record a reference to the considered `ReverseRecord` type
-                    //! \return a reference to the requested member
-                    //!
                     HOST_VERSION
                     CUDA_DEVICE_VERSION
                     static inline constexpr const auto& Value(const ReverseRecord<ValueT, Tail...>& record) { return record.Get(); }
@@ -139,7 +127,7 @@ namespace XXX_NAMESPACE
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
             //! \param record a reference to the considered `ReverseRecord` type
-            //! \return a reference to the requested member
+            //! \return a (const) reference to the requested member
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <SizeT Index, typename... ValueT>
@@ -162,16 +150,6 @@ namespace XXX_NAMESPACE
                 return GetImplementation<Index, ValueT...>::Value(std::move(record));
             }
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //!
-            //! \brief A Getter function to access the members of a `ReverseRecord` type.
-            //!
-            //! \tparam Index the index of the member
-            //! \tparam ValueT a variadic parameter list
-            //! \param record a const reference to the considered `ReverseRecord` type
-            //! \return a const reference to the requested member
-            //!
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <SizeT Index, typename... ValueT>
             HOST_VERSION CUDA_DEVICE_VERSION constexpr inline const auto& Get(const ReverseRecord<ValueT...>& record)
             {
@@ -199,7 +177,7 @@ namespace XXX_NAMESPACE
             //! \tparam Index the index of the member
             //! \tparam ValueT a variadic parameter list
             //! \param record a reference to the considered `Record` type
-            //! \return a reference to the requested member
+            //! \return a (const) reference to the requested member
             //!
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <SizeT Index, typename... ValueT>
@@ -222,16 +200,6 @@ namespace XXX_NAMESPACE
                 return Get<(N - 1) - Index>(static_cast<typename Record<ValueT...>::Base&&>(std::move(record)));
             }
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //!
-            //! \brief A Getter function to access the members of a `Record` type.
-            //!
-            //! \tparam Index the index of the member
-            //! \tparam ValueT a variadic parameter list
-            //! \param record a const reference to the considered `Record` type
-            //! \return a const reference to the requested member
-            //!
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <SizeT Index, typename... ValueT>
             HOST_VERSION CUDA_DEVICE_VERSION constexpr inline const auto& Get(const Record<ValueT...>& record)
             {
@@ -261,7 +229,7 @@ namespace XXX_NAMESPACE
         //! \tparam Index the index of the member
         //! \tparam ValueT a variadic parameter list
         //! \param tuple a reference to the considered `Tuple` type
-        //! \return a reference to the requested member
+        //! \return a (const) reference to the requested member
         //!
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <SizeT Index, typename... ValueT>
@@ -276,16 +244,6 @@ namespace XXX_NAMESPACE
             return internal::Get<Index>(std::move(tuple.data));
         }
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //!
-        //! \brief A Getter function to access the members of a `Tuple` type.
-        //!
-        //! \tparam Index the index of the member
-        //! \tparam ValueT a variadic parameter list
-        //! \param tuple a const reference to the considered `Tuple` type
-        //! \return a const reference to the requested member
-        //!
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
         template <SizeT Index, typename... ValueT>
         static inline constexpr const auto& Get(const Tuple<ValueT...>& tuple)
         {
