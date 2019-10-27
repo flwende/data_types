@@ -103,7 +103,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
         auto ptr_c = c.At(x);
 
         #pragma omp simd                
-        for (SizeT i = 0; i < std::min(Container::GetInnerArraySize(), a.Size(0) - x); ++i)
+        for (SizeT i = 0; i < Container::GetInnerArraySize(); ++i)
         {
             func(ptr_a[i], ptr_b[i], ptr_c[i]);
         }
@@ -139,7 +139,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
             auto ptr_c = c[y].At(x);
 
             #pragma omp simd                
-            for (SizeT i = 0; i < std::min(Container::GetInnerArraySize(), a.Size(0) - x); ++i)
+            for (SizeT i = 0; i < Container::GetInnerArraySize(); ++i)
             {
                 func(ptr_a[i], ptr_b[i], ptr_c[i]);
             }
@@ -180,8 +180,8 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
                 const auto& ptr_b = b[z][y].At(x);
                 auto ptr_c = c[z][y].At(x);
 
-                #pragma omp simd                
-                for (SizeT i = 0; i < std::min(Container::GetInnerArraySize(), a.Size(0) - x); ++i)
+                #pragma omp simd
+                for (SizeT i = 0; i < Container::GetInnerArraySize(); ++i)
                 {
                     func(ptr_a[i], ptr_b[i], ptr_c[i]);
                 }
