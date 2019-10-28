@@ -30,6 +30,7 @@ namespace XXX_NAMESPACE
             using ::XXX_NAMESPACE::compileTime::Loop;
             using ::XXX_NAMESPACE::dataTypes::IndexSequence;
             using ::XXX_NAMESPACE::dataTypes::MakeIndexSequence;
+            using ::XXX_NAMESPACE::dataTypes::Tuple;
             using ::XXX_NAMESPACE::memory::DataLayout;
             using ::XXX_NAMESPACE::variadic::Pack;
 
@@ -57,6 +58,10 @@ namespace XXX_NAMESPACE
             class TupleProxy : public Tuple<ValueT&...>
             {
                 using Base = Tuple<ValueT&...>;
+                using TupleT = Tuple<std::decay_t<ValueT>...>;
+                using ConstTupleT = const Tuple<std::decay_t<ValueT>...>;
+                using RecordT = Record<std::decay_t<ValueT>&...>;
+                using RecordConstT = Record<const std::decay_t<ValueT>&...>;
 
                 // Member types must be fundamental and non-void.
                 static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
@@ -66,35 +71,97 @@ namespace XXX_NAMESPACE
                 template <typename, SizeT, SizeT, DataLayout>
                 friend class Accessor;
 
-              //private:
-              public:
+              private:
                 //!
                 //! \brief Constructor.
                 //!
-                //! This constructor unpacks the references in the tuple argument and forwards them to the base class constructor.
+                //! This constructor unpacks the `Record`'s elements and forwards them to the base class constructor.
                 //!
                 //! \tparam I an `IndexSequence` used for unpacking the tuple argument
-                //! \param tuple a tuple holding references to memory that is associated with the members of the base class
+                //! \param record a `Record` instance holding references to memory that is associated with the members of the base class
                 //! \param unnamed used for template parameter deduction
                 //!
                 template <SizeT... I>
-                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(Record<ValueT&...>&& tuple, IndexSequence<I...>) : Base(Get<I>(tuple)...)
+                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(RecordT&& record, IndexSequence<I...>) : Base(Get<I>(record)...)
+                {
+                }
+
+                template <SizeT... I>
+                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(RecordConstT&& record, IndexSequence<I...>) : Base(Get<I>(record)...)
                 {
                 }
 
                 //!
                 //! \brief Constructor.
                 //!
-                //! Create a `TupleProxy` from a tuple of reference to memory.
+                //! This constructor unpacks the `Tuple`'s elements and forwards them to the base class constructor.
                 //!
-                //! \param tuple a tuple holding references to memory that is associated with the members of the base class
+                //! \tparam I an `IndexSequence` used for unpacking the tuple argument
+                //! \param tuple a `Tuple` instance whose data members are the pointees for this `TupleProxy`
+                //! \param unnamed used for template parameter deduction
+                //!
+                template <SizeT... I>
+                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(TupleT& tuple, IndexSequence<I...>) : Base(Get<I>(tuple)...)
+                {
+                }
+
+                template <SizeT... I>
+                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(ConstTupleT& tuple, IndexSequence<I...>) : Base(Get<I>(tuple)...)
+                {
+                }
+
+                //!
+                //! \brief Constructor.
+                //!
+                //! Construct a `TupleProxy` from a const `Tuple` instance.
+                //! Note: this constructor is not public to avoid incorrect use, e.g. binding to temporaries.
+                //!
+                //! \param tuple a `Tuple` instance whose data members become the pointees for this `TupleProxy`
+                //! \param unnamed used for template parameter deduction
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                TupleProxy(Record<ValueT&...> tuple) : TupleProxy(std::move(tuple), MakeIndexSequence<sizeof...(ValueT)>()) {}
+                TupleProxy(ConstTupleT& tuple) : TupleProxy(tuple, MakeIndexSequence<sizeof...(ValueT)>()) {}
+
+                //!
+                //! \brief Constructor.
+                //!
+                //! Construct a `TupleProxy` from a `Record` instance with const references.
+                //! Note: this constructor is not public to avoid incorrect use, e.g. binding to temporaries.
+                //!
+                //! \tparam I an `IndexSequence` used for unpacking the tuple argument
+                //! \param record a `Record` instance holding references to memory that is associated with the members of the base class
+                //! \param unnamed used for template parameter deduction
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                TupleProxy(RecordConstT record) : TupleProxy(std::move(record), MakeIndexSequence<sizeof...(ValueT)>()) {}
 
               public:
                 using ConstT = const TupleProxy<const ValueT...>;
+
+                //!
+                //! \brief Constructor.
+                //!
+                //! Construct a `TupleProxy` from a `Tuple` instance.
+                //!
+                //! \param tuple a `Tuple` instance whose data members become the pointees for this `TupleProxy`
+                //! \param unnamed used for template parameter deduction
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                TupleProxy(TupleT& tuple) : TupleProxy(tuple, MakeIndexSequence<sizeof...(ValueT)>()) {}
+
+                //!
+                //! \brief Constructor.
+                //!
+                //! Create a `TupleProxy` from a tuple of reference to memory.
+                //!
+                //! \param record a `Record` instance holding references to memory that is associated with the members of the base class
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                TupleProxy(RecordT record) : TupleProxy(std::move(record), MakeIndexSequence<sizeof...(ValueT)>()) {}
 
                 //!
                 //! \brief Assignment operator.
