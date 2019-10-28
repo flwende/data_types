@@ -148,6 +148,9 @@ namespace XXX_NAMESPACE
                     };
                     Record<ValueT_1, ValueT_2, ValueT_3, ValueT_4> data;
                 };
+
+                using DummyT = struct {ValueT_1 x; ValueT_2 y; ValueT_3 z; ValueT_4 w;};
+                static_assert(sizeof(DummyT) == sizeof(Record<ValueT_1, ValueT_2, ValueT_3, ValueT_4>), "error: FATAL union members have different size.");
             };
 
             //!
@@ -208,6 +211,9 @@ namespace XXX_NAMESPACE
                     };
                     Record<ValueT_1, ValueT_2, ValueT_3> data;
                 };
+
+                using DummyT = struct {ValueT_1 x; ValueT_2 y; ValueT_3 z;};
+                static_assert(sizeof(DummyT) == sizeof(Record<ValueT_1, ValueT_2, ValueT_3>), "error: FATAL union members have different size.");
             };
 
             //!
@@ -265,6 +271,9 @@ namespace XXX_NAMESPACE
                     };
                     Record<ValueT_1, ValueT_2> data;
                 };
+
+                using DummyT = struct {ValueT_1 x; ValueT_2 y;};
+                static_assert(sizeof(DummyT) == sizeof(Record<ValueT_1, ValueT_2>), "error: FATAL union members have different size.");
             };
 
             //!
@@ -315,6 +324,9 @@ namespace XXX_NAMESPACE
                     };
                     Record<ValueT> data;
                 };
+                
+                using DummyT = struct {ValueT x;};
+                static_assert(sizeof(DummyT) == sizeof(Record<ValueT>), "error: FATAL union members have different size.");
             };
 
             //!
