@@ -26,21 +26,59 @@ namespace XXX_NAMESPACE
             using ::XXX_NAMESPACE::dataTypes::MakeIndexSequence;
             using ::XXX_NAMESPACE::variadic::Pack;
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //!
-            //! \brief A record type with reverse order of the members.
-            //!
-            //! The order of the members in memory is reversed:
-            //! `ReverseRecord<int, float> {..}` is equivalent to `class {float member_1; int member_2;..}`.
-            //!
-            //! \tparam ValueT a parameter list defining the member types
-            //!
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Forward declarations.
             template <typename... ValueT>
             class ReverseRecord;
 
+            template <typename... ValueT>
+            class Record;
+
             //!
-            //! \brief Definition of a record type with reverse order of the members (recursive).
+            //! \brief A Helper type for the construction of a record type with non-reverse order of the members.
+            //!
+            //! The definition uses an index sequence for the parameter and argument inversion.
+            //!
+            //! \tparam IndexSequenceT an sequence of indices from 0 to the number of template parameters in the variadic list
+            //! \tparam ValueT a variadic list of type parameters
+            //!
+            template <typename IndexSequenceT, typename... ValueT>
+            struct RecordHelper;
+
+            //!
+            //! \brief Definition of the helper type for the construction of a record type with non-reverse order of the members.
+            //!
+            //! \tparam ValueT a variadic list of type parameters
+            //! \tparam I a list of indices used for the parameter and argument inversion
+            //!
+            template <typename... ValueT, SizeT... I>
+            struct RecordHelper<IndexSequence<I...>, ValueT...>
+            {
+                static constexpr SizeT N = sizeof...(ValueT);
+
+                static_assert(N == sizeof...(I), "error: type parameter count does not match non-type parameter count.");
+
+                using Type = ReverseRecord<typename Pack<ValueT...>::template Type<(N - 1) - I>...>;
+
+                //!
+                //! \brief Argument inversion.
+                //!
+                //! This function inverts the order of the arguments and forwards them to a `ReverseRecord` type with
+                //! inverted template parameter list.
+                //!
+                //! \param values arguments to be forwarded to a `ReverseRecord` type with inverted template parameter list
+                //! \return a `ReverseRecord` type with inverted template parameter list
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static inline constexpr auto Make(ValueT... values) -> Type { return {Pack<ValueT...>::template Value<(N - 1) - I>(values...)...}; }
+            };
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //!
+            //! \brief A record type with reverse order of the members (recursion).
+            //!
+            //! The order of the members in memory is reversed:
+            //! `ReverseRecord<int, float> {..}` is equivalent to `class {float member_1; int member_2;..}`.
             //!
             //! The recursion level follows from the the number of parameters removed from the original parameter list.
             //! Each level of recursion takes the front most (current) parameter from the list and inherits from
@@ -53,12 +91,20 @@ namespace XXX_NAMESPACE
             //! \tparam ValueT the type of the current member
             //! \tparam Tail the remaining parameter list
             //!
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename ValueT, typename... Tail>
             class ReverseRecord<ValueT, Tail...> : public ReverseRecord<Tail...>
             {
                 using Base = ReverseRecord<Tail...>;
 
-              public:
+                // Friend declarations.
+                template <typename, typename...>
+                friend struct RecordHelper;
+                template <typename...>
+                friend class ReverseRecord;
+                template <typename...>
+                friend class Record;
+
                 //!
                 //! \brief Standard constructor.
                 //!
@@ -93,6 +139,7 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr ReverseRecord(ValueT value, Tail... tail) : Base(tail...), value(value) {}
 
+            public:
                 //!
                 //! \brief Get the value of the current member.
                 //!
@@ -120,7 +167,14 @@ namespace XXX_NAMESPACE
             template <typename ValueT>
             class ReverseRecord<ValueT>
             {
-              public:
+                // Friend declarations.
+                template <typename, typename...>
+                friend struct RecordHelper;
+                template <typename...>
+                friend class ReverseRecord;
+                template <typename...>
+                friend class Record;
+                            
                 //!
                 //! \brief Standard constructor.
                 //!
@@ -139,6 +193,7 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr ReverseRecord(ValueT value) : value(value) {}
 
+            public:
                 //!
                 //! \brief Get the value of the current member.
                 //!
@@ -162,54 +217,20 @@ namespace XXX_NAMESPACE
             template <>
             class ReverseRecord<>
             {
-              public:
+                // Friend declarations.
+                template <typename, typename...>
+                friend struct RecordHelper;
+
+                template <typename...>
+                friend class ReverseRecord;
+
+                template <typename...>
+                friend class Record;
+
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr ReverseRecord() {}
             };
-
-            namespace
-            {
-                //!
-                //! \brief A Helper type for the construction of a record type with non-reverse order of the members.
-                //!
-                //! The definition uses an index sequence for the parameter and argument inversion.
-                //!
-                //! \tparam IndexSequenceT an sequence of indices from 0 to the number of template parameters in the variadic list
-                //! \tparam ValueT a variadic list of type parameters
-                //!
-                template <typename IndexSequenceT, typename... ValueT>
-                struct RecordHelper;
-
-                //!
-                //! \brief Definition of the helper type for the construction of a record type with non-reverse order of the members.
-                //!
-                //! \tparam ValueT a variadic list of type parameters
-                //! \tparam I a list of indices used for the parameter and argument inversion
-                //!
-                template <typename... ValueT, SizeT... I>
-                struct RecordHelper<IndexSequence<I...>, ValueT...>
-                {
-                    static constexpr SizeT N = sizeof...(ValueT);
-
-                    static_assert(N == sizeof...(I), "error: type parameter count does not match non-type parameter count.");
-
-                    using Type = ReverseRecord<typename Pack<ValueT...>::template Type<(N - 1) - I>...>;
-
-                    //!
-                    //! \brief Argument inversion.
-                    //!
-                    //! This function inverts the order of the arguments and forwards them to a `ReverseRecord` type with
-                    //! inverted template parameter list.
-                    //!
-                    //! \param values arguments to be forwarded to a `ReverseRecord` type with inverted template parameter list
-                    //! \return a `ReverseRecord` type with inverted template parameter list
-                    //!
-                    HOST_VERSION
-                    CUDA_DEVICE_VERSION
-                    static inline constexpr auto Make(ValueT... values) -> Type { return {Pack<ValueT...>::template Value<(N - 1) - I>(values...)...}; }
-                };
-            } // namespace
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
@@ -229,16 +250,13 @@ namespace XXX_NAMESPACE
             {
                 using Base = typename RecordHelper<IndexSequenceT<sizeof...(ValueT)>, ValueT...>::Type;
 
-                // Needed for access to `Base` type.
+                // Friend declarations: needed for access to `Base` type.
                 template <SizeT Index, typename... T>
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr auto& Get(Record<T...>&);
-
                 template <SizeT Index, typename... T>
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr auto& Get(Record<T...>&&);
-
                 template <SizeT Index, typename... T>
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&);
-
                 template <SizeT Index, typename... T>
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&&);
             
@@ -312,16 +330,13 @@ namespace XXX_NAMESPACE
             {
                 using Base = ReverseRecord<ValueT>;
 
-                // Needed for access to `Base` type.
+                // Friend declarations: needed for access to `Base` type.
                 template <SizeT Index, typename... T>
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr auto& Get(Record<T...>&);
-
                 template <SizeT Index, typename... T>
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr auto& Get(Record<T...>&&);
-
                 template <SizeT Index, typename... T>
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&);
-
                 template <SizeT Index, typename... T>
                 HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&&);
 
