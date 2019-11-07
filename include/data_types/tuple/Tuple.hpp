@@ -123,21 +123,6 @@ namespace XXX_NAMESPACE
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
               public:
-#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
-    HOST_VERSION                                                                                                                                                                                                           \
-    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
-    constexpr inline auto& FUNC() { return MEMBER; }                                                                                                                                                                       \
-                                                                                                                                                                                                                           \
-    HOST_VERSION                                                                                                                                                                                                           \
-    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
-    constexpr inline const auto& FUNC() const { return MEMBER; }
-
-                MACRO(GetX, x)
-                MACRO(GetY, y)
-                MACRO(GetZ, z)
-                MACRO(GetW, w)
-#undef MACRO
-
                 union {
                     struct
                     {
@@ -151,6 +136,21 @@ namespace XXX_NAMESPACE
 
                 using DummyT = struct {ValueT_1 x; ValueT_2 y; ValueT_3 z; ValueT_4 w;};
                 static_assert(sizeof(DummyT) == sizeof(Record<ValueT_1, ValueT_2, ValueT_3, ValueT_4>), "error: FATAL union members have different size.");
+
+#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto FUNC() -> std::decay_t<decltype(MEMBER)>& { return MEMBER; }                                                                                                                                     \
+                                                                                                                                                                                                                           \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto FUNC() const -> const std::decay_t<decltype(MEMBER)>& { return MEMBER; }
+
+                MACRO(GetX, x)
+                MACRO(GetY, y)
+                MACRO(GetZ, z)
+                MACRO(GetW, w)
+#undef MACRO
             };
 
             //!
@@ -188,20 +188,6 @@ namespace XXX_NAMESPACE
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
               public:
-#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
-    HOST_VERSION                                                                                                                                                                                                           \
-    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
-    constexpr inline auto& FUNC() { return MEMBER; }                                                                                                                                                                       \
-                                                                                                                                                                                                                           \
-    HOST_VERSION                                                                                                                                                                                                           \
-    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
-    constexpr inline const auto& FUNC() const { return MEMBER; }
-
-                MACRO(GetX, x)
-                MACRO(GetY, y)
-                MACRO(GetZ, z)
-#undef MACRO
-
                 union {
                     struct
                     {
@@ -214,6 +200,20 @@ namespace XXX_NAMESPACE
 
                 using DummyT = struct {ValueT_1 x; ValueT_2 y; ValueT_3 z;};
                 static_assert(sizeof(DummyT) == sizeof(Record<ValueT_1, ValueT_2, ValueT_3>), "error: FATAL union members have different size.");
+
+#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto FUNC() -> std::decay_t<decltype(MEMBER)>& { return MEMBER; }                                                                                                                                     \
+                                                                                                                                                                                                                           \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto FUNC() const -> const std::decay_t<decltype(MEMBER)>& { return MEMBER; }
+
+                MACRO(GetX, x)
+                MACRO(GetY, y)
+                MACRO(GetZ, z)
+#undef MACRO
             };
 
             //!
@@ -250,19 +250,6 @@ namespace XXX_NAMESPACE
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
               public:
-#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
-    HOST_VERSION                                                                                                                                                                                                           \
-    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
-    constexpr inline auto& FUNC() { return MEMBER; }                                                                                                                                                                       \
-                                                                                                                                                                                                                           \
-    HOST_VERSION                                                                                                                                                                                                           \
-    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
-    constexpr inline const auto& FUNC() const { return MEMBER; }
-
-                MACRO(GetX, x)
-                MACRO(GetY, y)
-#undef MACRO
-
                 union {
                     struct
                     {
@@ -274,6 +261,19 @@ namespace XXX_NAMESPACE
 
                 using DummyT = struct {ValueT_1 x; ValueT_2 y;};
                 static_assert(sizeof(DummyT) == sizeof(Record<ValueT_1, ValueT_2>), "error: FATAL union members have different size.");
+
+#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto FUNC() -> std::decay_t<decltype(MEMBER)>& { return MEMBER; }                                                                                                                                     \
+                                                                                                                                                                                                                           \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto FUNC() const -> const std::decay_t<decltype(MEMBER)>& { return MEMBER; }
+
+                MACRO(GetX, x)
+                MACRO(GetY, y)
+#undef MACRO
             };
 
             //!
@@ -305,18 +305,6 @@ namespace XXX_NAMESPACE
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
               public:
-#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
-    HOST_VERSION                                                                                                                                                                                                           \
-    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
-    constexpr inline auto& FUNC() { return MEMBER; }                                                                                                                                                                       \
-                                                                                                                                                                                                                           \
-    HOST_VERSION                                                                                                                                                                                                           \
-    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
-    constexpr inline const auto& FUNC() const { return MEMBER; }
-
-                MACRO(GetX, x)
-#undef MACRO
-
                 union {
                     struct
                     {
@@ -327,6 +315,18 @@ namespace XXX_NAMESPACE
                 
                 using DummyT = struct {ValueT x;};
                 static_assert(sizeof(DummyT) == sizeof(Record<ValueT>), "error: FATAL union members have different size.");
+
+#define MACRO(FUNC, MEMBER)                                                                                                                                                                                                \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto FUNC() -> std::decay_t<decltype(MEMBER)>& { return MEMBER; }                                                                                                                                     \
+                                                                                                                                                                                                                           \
+    HOST_VERSION                                                                                                                                                                                                           \
+    CUDA_DEVICE_VERSION                                                                                                                                                                                                    \
+    constexpr inline auto FUNC() const -> const std::decay_t<decltype(MEMBER)>& { return MEMBER; }
+
+                MACRO(GetX, x)
+#undef MACRO                
             };
 
             //!
