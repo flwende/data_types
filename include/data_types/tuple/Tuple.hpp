@@ -439,50 +439,29 @@ namespace XXX_NAMESPACE
             template <typename... T>
             HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(Tuple<T...>& tuple) : Tuple(tuple, MakeIndexSequence<sizeof...(T)>())
             {
-                static_assert(!Pack<ValueT...>::IsReference(), "error: this type has reference template type-parameters, which is not allowed here!");
+                static_assert(!(Pack<ValueT...>::IsReference() && Pack<T...>::IsReference()), "error: this type has reference template type-parameters, which is not allowed here!");
             }
 
             template <typename... T>
             HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const Tuple<T...>& tuple) : Tuple(tuple, MakeIndexSequence<sizeof...(T)>())
             {
-                static_assert(!Pack<ValueT...>::IsReference(), "error: this type has reference template type-parameters, which is not allowed here!");
+                static_assert(!(Pack<ValueT...>::IsReference() && Pack<T...>::IsReference()), "error: this type has reference template type-parameters, which is not allowed here!");
             }
 
             //!
             //! \brief Constructor.
             //!
             //! Create a `Tuple` from a `TupleProxy`.
-            //! The following cases are handler:
+            //! This constructor enables class template argument deduction with C++17 and later.
+            //! 
+            //! \param tuple a `ProxyTuple` instance
             //!
-            //! 1) A static_cast from the `TupleProxy` type to this `Tuple` type.
-            //!
-            //!
-            //! 2) Erroneous base class conversion of a `TupleProxy` where in the calling context a non-reference instance of the base class is needed, e.g.
-            //! ```
-            //! template <typename ...T>
-            //! void foo(Tuple<T...> tuple) {..}
-            //! ..
-            //! TupleProxy<int, float> proxy = ..;
-            //! foo(proxy); // ERROR -> static_assert
-            //! ```
-            //! In this case the `TupleProxy` is converted to its base class `Tuple<int&, float&>`, and references to the members are given to the `foo`.
-            //! This is errorneous behavior.
-            //! Instead the programmer must make an explicit copy of the `TupleProxy` type to `Tuple`, which would happen anyway when calling `foo`,
-            //! or a static cast to `Tuple<int, float>`.
-            //!
-            //! \tparam T the decay types of the proxy members (must be convertibe to this type's type parameters)
-            //! \param proxy a `TupleProxy` instance
-            //!
-            template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(internal::TupleProxy<T...>& proxy) : Tuple(proxy, MakeIndexSequence<sizeof...(T)>())
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(internal::TupleProxy<ValueT...>& proxy) : Tuple(proxy, MakeIndexSequence<sizeof...(ValueT)>())
             {
-                static_assert(!Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
             }
 
-            template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const internal::TupleProxy<T...>& proxy) : Tuple(proxy, MakeIndexSequence<sizeof...(T)>())
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const internal::TupleProxy<ValueT...>& proxy) : Tuple(proxy, MakeIndexSequence<sizeof...(ValueT)>())
             {
-                static_assert(!Pack<ValueT...>::IsReference(), "error: you're trying to copy a proxy where an explicit copy to the original type is needed -> make an explicit copy or use a static cast!");
             }
 
             //!
