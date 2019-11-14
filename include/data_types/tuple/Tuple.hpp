@@ -75,18 +75,26 @@ namespace XXX_NAMESPACE
                 constexpr TupleBase(ValueT... values) : data(values...) {}
 
                 //!
-                //! \brief Copy constructor.
+                //! \brief Constructor.
+                //!
+                //! Create this object from a `Record`
                 //!
                 //! \param tuple another `TupleBase` instance
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+                constexpr TupleBase(const Record<ValueT...>& data) : data(data) {}
 
-                template <typename...T>
+                //!
+                //! \brief Copy constructor.
+                //!
+                //! \tparam a variadic list of type parameters
+                //! \param tuple another `TupleBase` instance
+                //!
+                template <typename... T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const Record<T...>& data) : data(data) {}
+                constexpr TupleBase(const TupleBase<T...>& tuple) : data(tuple.data) {}
 
               public:
                 Record<ValueT...> data;
@@ -125,11 +133,12 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+                constexpr TupleBase(const Record<ValueT_1, ValueT_2, ValueT_3, ValueT_4>& data) : data(data) {}
 
+                template <typename T_1, typename T_2, typename T_3, typename T_4>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const Record<ValueT_1, ValueT_2, ValueT_3, ValueT_4>& data) : data(data) {}
+                constexpr TupleBase(const TupleBase<T_1, T_2, T_3, T_4>& tuple) : data(tuple.data) {}
 
               public:
                 union {
@@ -194,11 +203,12 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+                constexpr TupleBase(const Record<ValueT_1, ValueT_2, ValueT_3>& data) : data(data) {}
 
+                template <typename T_1, typename T_2, typename T_3>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const Record<ValueT_1, ValueT_2, ValueT_3>& data) : data(data) {}
+                constexpr TupleBase(const TupleBase<T_1, T_2, T_3>& tuple) : data(tuple.data) {}
 
               public:
                 union {
@@ -260,11 +270,12 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+                constexpr TupleBase(const Record<ValueT_1, ValueT_2>& data) : data(data) {}
 
+                template <typename T_1, typename T_2>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const Record<ValueT_1, ValueT_2>& data) : data(data) {}
+                constexpr TupleBase(const TupleBase<T_1, T_2>& tuple) : data(tuple.data) {}
 
               public:
                 union {
@@ -319,11 +330,12 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+                constexpr TupleBase(const Record<ValueT>& data) : data(data) {}
 
+                template <typename T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr TupleBase(const Record<ValueT>& data) : data(data) {}
+                constexpr TupleBase(const TupleBase<T>& tuple) : data(tuple.data) {}
 
               public:
                 union {
@@ -391,6 +403,19 @@ namespace XXX_NAMESPACE
             friend class internal::TupleProxy<std::decay_t<ValueT>...>;
             friend class internal::TupleProxy<const std::decay_t<ValueT>...>;
 
+            //!
+            //! \brief Constructor.
+            //!
+            //! Create this object from a `Record`.
+            //!
+            //! \tparam T a variadic list of type parameters
+            //! \param record a `Record` instance holding the data
+            //!
+            template <typename ...T>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Tuple(const internal::Record<T...>& record) : Base(record) {}
+            
           public:
             using Type = Tuple<ValueT...>;
             using Proxy = internal::TupleProxy<ValueT...>;
