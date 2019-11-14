@@ -83,6 +83,11 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
+                template <typename...T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const Record<T...>& data) : data(data) {}
+
               public:
                 Record<ValueT...> data;
             };
@@ -121,6 +126,10 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const Record<ValueT_1, ValueT_2, ValueT_3, ValueT_4>& data) : data(data) {}
 
               public:
                 union {
@@ -187,6 +196,10 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const Record<ValueT_1, ValueT_2, ValueT_3>& data) : data(data) {}
+
               public:
                 union {
                     struct
@@ -249,6 +262,10 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
 
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const Record<ValueT_1, ValueT_2>& data) : data(data) {}
+
               public:
                 union {
                     struct
@@ -303,6 +320,10 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr TupleBase(const TupleBase& tuple) : data(tuple.data) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr TupleBase(const Record<ValueT>& data) : data(data) {}
 
               public:
                 union {
@@ -370,26 +391,6 @@ namespace XXX_NAMESPACE
             friend class internal::TupleProxy<std::decay_t<ValueT>...>;
             friend class internal::TupleProxy<const std::decay_t<ValueT>...>;
 
-            //!
-            //! \brief Constructor.
-            //!
-            //! \tparam T the decay types of the tuple members (must be convertibe to this type's type parameters)
-            //! \tparam I a list of indices used for the parameter access
-            //! \param proxy a `Tuple` instance
-            //! \param unnamed used for template parameter deduction
-            //!
-            template <typename... T, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(Tuple<T...>& tuple, IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
-            {
-                static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
-            }
-
-            template <typename... T, SizeT... I>
-            HOST_VERSION CUDA_DEVICE_VERSION Tuple(const Tuple<T...>& tuple, IndexSequence<I...>) : Tuple(Get<I>(tuple)...)
-            {
-                static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
-            }
-
           public:
             using Type = Tuple<ValueT...>;
             using Proxy = internal::TupleProxy<ValueT...>;
@@ -437,13 +438,13 @@ namespace XXX_NAMESPACE
             //! \param tuple another `Tuple` instance
             //!
             template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(Tuple<T...>& tuple) : Tuple(tuple, MakeIndexSequence<sizeof...(T)>())
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(Tuple<T...>& tuple) : Base(tuple)
             {
                 static_assert(!(Pack<ValueT...>::IsReference() && Pack<T...>::IsReference()), "error: this type has reference template type-parameters, which is not allowed here!");
             }
 
             template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const Tuple<T...>& tuple) : Tuple(tuple, MakeIndexSequence<sizeof...(T)>())
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const Tuple<T...>& tuple) : Base(tuple)
             {
                 static_assert(!(Pack<ValueT...>::IsReference() && Pack<T...>::IsReference()), "error: this type has reference template type-parameters, which is not allowed here!");
             }
@@ -456,11 +457,11 @@ namespace XXX_NAMESPACE
             //! 
             //! \param tuple a `ProxyTuple` instance
             //!
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(internal::TupleProxy<ValueT...>& proxy) : Tuple(proxy, MakeIndexSequence<sizeof...(ValueT)>())
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(internal::TupleProxy<ValueT...>& proxy) : Base(proxy.data)
             {
             }
 
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const internal::TupleProxy<ValueT...>& proxy) : Tuple(proxy, MakeIndexSequence<sizeof...(ValueT)>())
+            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const internal::TupleProxy<ValueT...>& proxy) : Base(proxy.data)
             {
             }
 
