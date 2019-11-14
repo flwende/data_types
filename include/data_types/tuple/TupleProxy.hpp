@@ -25,6 +25,9 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
+        template <typename T>
+        class DEBUG;
+
         namespace internal
         {
             using ::XXX_NAMESPACE::compileTime::Loop;
@@ -64,7 +67,6 @@ namespace XXX_NAMESPACE
                 using RecordConstT = Record<const std::decay_t<ValueT>&...>;
 
                 // Member types must be fundamental and non-void.
-                static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
                 static_assert(!Pack<ValueT...>::IsVoid(), "error: non-void parameter types assumed.");
 
                 // Friend declarations.
@@ -72,44 +74,6 @@ namespace XXX_NAMESPACE
                 friend class Accessor;
 
               private:
-                //!
-                //! \brief Constructor.
-                //!
-                //! This constructor unpacks the `Record`'s elements and forwards them to the base class constructor.
-                //!
-                //! \tparam I an `IndexSequence` used for unpacking the tuple argument
-                //! \param record a `Record` instance holding references to memory that is associated with the members of the base class
-                //! \param unnamed used for template parameter deduction
-                //!
-                template <SizeT... I>
-                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(RecordT&& record, IndexSequence<I...>) : Base(Get<I>(record)...)
-                {
-                }
-
-                template <SizeT... I>
-                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(RecordConstT&& record, IndexSequence<I...>) : Base(Get<I>(record)...)
-                {
-                }
-
-                //!
-                //! \brief Constructor.
-                //!
-                //! This constructor unpacks the `Tuple`'s elements and forwards them to the base class constructor.
-                //!
-                //! \tparam I an `IndexSequence` used for unpacking the tuple argument
-                //! \param tuple a `Tuple` instance whose data members are the pointees for this `TupleProxy`
-                //! \param unnamed used for template parameter deduction
-                //!
-                template <SizeT... I>
-                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(TupleT& tuple, IndexSequence<I...>) : Base(Get<I>(tuple)...)
-                {
-                }
-
-                template <SizeT... I>
-                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(ConstTupleT& tuple, IndexSequence<I...>) : Base(Get<I>(tuple)...)
-                {
-                }
-
                 //!
                 //! \brief Constructor.
                 //!
@@ -121,7 +85,10 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                TupleProxy(ConstTupleT& tuple) : TupleProxy(tuple, MakeIndexSequence<sizeof...(ValueT)>()) {}
+                TupleProxy(ConstTupleT& tuple) : Base(RecordConstT{tuple.data}) 
+                {
+                    static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
+                }
 
                 //!
                 //! \brief Constructor.
@@ -135,7 +102,10 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                TupleProxy(RecordConstT record) : TupleProxy(std::move(record), MakeIndexSequence<sizeof...(ValueT)>()) {}
+                TupleProxy(RecordConstT record) : Base(record) 
+                {
+                    static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
+                }
 
               public:
                 using ConstT = const TupleProxy<const ValueT...>;
@@ -150,7 +120,10 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                TupleProxy(TupleT& tuple) : TupleProxy(tuple, MakeIndexSequence<sizeof...(ValueT)>()) {}
+                TupleProxy(TupleT& tuple) : Base(RecordT{tuple.data}) 
+                {
+                    static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
+                }
 
                 //!
                 //! \brief Constructor.
@@ -161,7 +134,10 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                TupleProxy(RecordT record) : TupleProxy(std::move(record), MakeIndexSequence<sizeof...(ValueT)>()) {}
+                TupleProxy(const RecordT& record) : Base(record)
+                {
+                    static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
+                }
 
                 //!
                 //! \brief Assignment operator.
