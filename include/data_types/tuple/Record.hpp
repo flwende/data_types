@@ -271,6 +271,11 @@ namespace XXX_NAMESPACE
                 template <typename ...T, SizeT ...I>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
+                constexpr Record(Record<T...>& other, IndexSequence<I...>) : Record(Get<I>(other)...) {}
+
+                template <typename ...T, SizeT ...I>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
                 constexpr Record(const Record<T...>& other, IndexSequence<I...>) : Record(Get<I>(other)...) {}
 
               public:
@@ -312,6 +317,11 @@ namespace XXX_NAMESPACE
                 //! \tparam T a variadic list of type parameters
                 //! \param other another `Record` instance
                 //!
+                template <typename ...T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr Record(Record<T...>& other) : Record(other, MakeIndexSequence<sizeof...(T)>()) {}
+
                 template <typename ...T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
