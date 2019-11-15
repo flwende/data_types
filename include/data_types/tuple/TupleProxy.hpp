@@ -134,7 +134,7 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                TupleProxy(const RecordT& record) : Base(record)
+                TupleProxy(RecordT record) : Base(record)
                 {
                     static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
                 }
