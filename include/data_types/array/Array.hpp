@@ -16,8 +16,8 @@
 
 #include <auxiliary/CPPStandard.hpp>
 #include <auxiliary/Template.hpp>
-#include <data_types/DataTypes.hpp>
 #include <platform/Target.hpp>
+#include <DataTypes.hpp>
 
 namespace XXX_NAMESPACE
 {

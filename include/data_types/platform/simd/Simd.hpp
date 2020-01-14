@@ -39,7 +39,7 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include <data_types/DataTypes.hpp>
+#include <DataTypes.hpp>
 
 namespace XXX_NAMESPACE
 {

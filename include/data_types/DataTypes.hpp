@@ -120,6 +120,6 @@ namespace XXX_NAMESPACE
     }
 }
 
-#include <data_types/array/Array.hpp>
+#include <array/Array.hpp>
 
 #endif

@@ -13,8 +13,8 @@
 #endif
 
 #include <common/Math.hpp>
-#include <data_types/DataTypes.hpp>
-#include <data_types/tuple/Tuple.hpp>
+#include <tuple/Tuple.hpp>
+#include <DataTypes.hpp>
 
 namespace XXX_NAMESPACE
 {

@@ -12,10 +12,10 @@
 
 #include <auxiliary/Template.hpp>
 #include <common/Math.hpp>
-#include <data_types/integer_sequence/IntegerSequence.hpp>
-#include <data_types/tuple/Get.hpp>
-#include <data_types/tuple/Record.hpp>
+#include <integer_sequence/IntegerSequence.hpp>
 #include <platform/Target.hpp>
+#include <tuple/Get.hpp>
+#include <tuple/Record.hpp>
 
 namespace XXX_NAMESPACE
 {
@@ -610,8 +610,8 @@ namespace XXX_NAMESPACE
 } // namespace XXX_NAMESPACE
 
 #include <common/Traits.hpp>
-#include <data_types/tuple/TupleMath.hpp>
-#include <data_types/tuple/TupleProxy.hpp>
+#include <tuple/TupleMath.hpp>
+#include <tuple/TupleProxy.hpp>
 
 namespace XXX_NAMESPACE
 {

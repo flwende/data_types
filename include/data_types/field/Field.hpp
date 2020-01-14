@@ -18,9 +18,9 @@
 #include <common/DataLayout.hpp>
 #include <common/Memory.hpp>
 #include <common/Traits.hpp>
-#include <data_types/DataTypes.hpp>
-#include <data_types/tuple/Get.hpp>
+#include <tuple/Get.hpp>
 #include <platform/Target.hpp>
+#include <DataTypes.hpp>
 
 template <typename T>
 class DEBUG;

@@ -16,11 +16,11 @@
 #include <auxiliary/Template.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Math.hpp>
-#include <data_types/DataTypes.hpp>
-#include <data_types/integer_sequence/IntegerSequence.hpp>
-#include <data_types/tuple/Record.hpp>
+#include <integer_sequence/IntegerSequence.hpp>
 #include <platform/Target.hpp>
 #include <platform/simd/Simd.hpp>
+#include <tuple/Record.hpp>
+#include <DataTypes.hpp>
 
 namespace XXX_NAMESPACE
 {

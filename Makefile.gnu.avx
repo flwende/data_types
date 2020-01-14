@@ -1,7 +1,7 @@
 CXX = g++
 LD = g++
 
-INC = -I./include -I./src/include
+INC = -I./include/data_types -I./src/benchmark/include
 DEBUG = -DNDEBUG
 CXXFLAGS = -O3 -std=c++17 -mavx -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC) $(DEBUG)
 LDFLAGS = -O3 -fopenmp
@@ -30,14 +30,14 @@ bin/benchmark.x: obj/benchmark.o obj/benchmark_implementation.o
 bin/benchmark_original.x: obj/benchmark.o obj/benchmark_implementation_original.o
 	$(LD) $(LDFLAGS) -o $@ $^
 
-obj/benchmark.o: src/benchmark.cpp
+obj/benchmark.o: src/benchmark/benchmark.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-obj/benchmark_implementation.o: src/benchmark_implementation.cpp
+obj/benchmark_implementation.o: src/benchmark/benchmark_implementation.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 	$(CXX) $(CXXFLAGS) -S $<
 
-obj/benchmark_implementation_original.o: src/benchmark_implementation_original.cpp
+obj/benchmark_implementation_original.o: src/benchmark/benchmark_implementation_original.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 	$(CXX) $(CXXFLAGS) -S $<
 

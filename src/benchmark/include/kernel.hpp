@@ -8,10 +8,10 @@
 
 #include <cstdint>
 
-#include <data_types/DataTypes.hpp>
-#include <data_types/field/Field.hpp>
-#include <data_types/vec/Vec.hpp>
-#include <data_types/tuple/Tuple.hpp>
+#include <DataTypes.hpp>
+#include <field/Field.hpp>
+#include <vec/Vec.hpp>
+#include <tuple/Tuple.hpp>
 #include <platform/Target.hpp>
 
 // Data types and layouts.

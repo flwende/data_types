@@ -11,9 +11,9 @@
 #endif
 
 #include <auxiliary/Template.hpp>
-#include <data_types/integer_sequence/IntegerSequence.hpp>
-#include <data_types/tuple/Get.hpp>
+#include <integer_sequence/IntegerSequence.hpp>
 #include <platform/Target.hpp>
+#include <tuple/Get.hpp>
 
 namespace XXX_NAMESPACE
 {

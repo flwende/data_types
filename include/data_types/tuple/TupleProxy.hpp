@@ -17,9 +17,9 @@
 #include <auxiliary/Template.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Memory.hpp>
-#include <data_types/DataTypes.hpp>
-#include <data_types/integer_sequence/IntegerSequence.hpp>
-#include <data_types/tuple/Tuple.hpp>
+#include <integer_sequence/IntegerSequence.hpp>
+#include <tuple/Tuple.hpp>
+#include <DataTypes.hpp>
 
 namespace XXX_NAMESPACE
 {
