@@ -77,6 +77,25 @@ namespace XXX_NAMESPACE
                 //!
                 //! \brief Constructor.
                 //!
+                //! This constructor unpacks the `Record`'s elements and forwards them to the base class constructor.
+                //!
+                //! \tparam I an `IndexSequence` used for unpacking the tuple argument
+                //! \param record a `Record` instance holding references to memory that is associated with the members of the base class
+                //! \param unnamed used for template parameter deduction
+                //!
+                template <SizeT... I>
+                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(RecordT&& record, IndexSequence<I...>) : Base(Get<I>(record)...)
+                {
+                }
+
+                template <SizeT... I>
+                HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(RecordConstT&& record, IndexSequence<I...>) : Base(Get<I>(record)...)
+                {
+                }
+
+                //!
+                //! \brief Constructor.
+                //!
                 //! Construct a `TupleProxy` from a const `Tuple` instance.
                 //! Note: this constructor is not public to avoid incorrect use, e.g. binding to temporaries.
                 //!
@@ -102,7 +121,7 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                TupleProxy(RecordConstT record) : Base(record) 
+                TupleProxy(RecordConstT record) : TupleProxy(std::move(record), MakeIndexSequence<sizeof...(ValueT)>())
                 {
                     static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
                 }
@@ -134,7 +153,7 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                TupleProxy(RecordT record) : Base(record)
+                TupleProxy(RecordT record) : TupleProxy(std::move(record), MakeIndexSequence<sizeof...(ValueT)>())
                 {
                     static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
                 }
