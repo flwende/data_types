@@ -568,7 +568,8 @@ namespace XXX_NAMESPACE
             static constexpr SizeT RecordPaddingFactor = std::max(One, LeastCommonMultiple(SizeOfLargestParameter, SizeRest) / std::max(One, SizeRest));
 
             // Extent of the innermost array: relevant for the AoSoA data layout only.
-            static constexpr SizeT InnerArraySize = LeastCommonMultiple(N0, RecordPaddingFactor);
+            //static constexpr SizeT InnerArraySize = LeastCommonMultiple(N0, RecordPaddingFactor);
+            static constexpr SizeT InnerArraySize = ((N0 + (RecordPaddingFactor - 1)) / RecordPaddingFactor) * RecordPaddingFactor;
 
             // Friend declarations.
             template <SizeT, typename... X>
