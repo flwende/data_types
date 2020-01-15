@@ -145,6 +145,51 @@ namespace XXX_NAMESPACE
                 ValueT value;
             };
 
+            template <typename ValueT>
+            class ReverseRecord<ValueT>
+            {
+                //! @{
+                //!
+                //! Friend declarations.
+                //!
+                template <typename, typename...>
+                friend struct RecordHelperImplementation;
+                template <typename...>
+                friend class ReverseRecord;
+                template <typename...>
+                friend class Record;
+                //! @}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr ReverseRecord() : value{} {};
+
+                template <typename T>
+                HOST_VERSION CUDA_DEVICE_VERSION constexpr ReverseRecord(T&& value) : value(value)
+                {
+                    static_assert(std::is_convertible<T, ValueT>::value, "error: types are not convertible.");
+                }
+
+                template <typename T>
+                HOST_VERSION CUDA_DEVICE_VERSION constexpr ReverseRecord(const T& value) : value(value)
+                {
+                    static_assert(std::is_convertible<T, ValueT>::value, "error: types are not convertible.");
+                }
+
+            public:
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline constexpr auto& Get() { return value; }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline constexpr const auto& Get() const { return value; }
+
+              protected:
+                ValueT value;
+            };
+
+
             //!
             //! \brief Definition of a record type with no members.
             //!
