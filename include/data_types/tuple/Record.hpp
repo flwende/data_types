@@ -27,7 +27,6 @@ namespace XXX_NAMESPACE
         // Forward declarations.
         template <typename... ValueT>
         class ReverseRecord;
-
         template <typename... ValueT>
         class Record;
 
@@ -121,21 +120,21 @@ namespace XXX_NAMESPACE
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr ReverseRecord() : value{} {};
+            constexpr ReverseRecord() : value{} {}
 
             template <typename T>
             HOST_VERSION 
             CUDA_DEVICE_VERSION 
-            constexpr ReverseRecord(T&& value) : Base(value), value(value)
+            constexpr ReverseRecord(T&& value) : Base(value), value(value) 
             {
-                static_assert(std::is_convertible<T, ValueT>::value, "error: types are not convertible.");
+                static_assert(std::is_convertible<T, ValueT>::value, "error: types are not convertible."); 
             }
 
             template <typename T>
             HOST_VERSION 
             CUDA_DEVICE_VERSION 
-            constexpr ReverseRecord(const T& value) : Base(value), value(value)
-            {
+            constexpr ReverseRecord(const T& value) : Base(value), value(value) 
+            { 
                 static_assert(std::is_convertible<T, ValueT>::value, "error: types are not convertible.");
             }
 
@@ -174,28 +173,24 @@ namespace XXX_NAMESPACE
             friend class ReverseRecord;
             //! @}
 
+            //! @{
+            //!
+            //! These constructors can only be called by friends.
+            //! The last two are just needed for the recursion.
+            //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
             constexpr ReverseRecord() = default;
 
-            //! @{
-            //!
-            //! Just needed for the recursion.
-            //! These constructors can only be called by friends.
-            //!
             template <typename T>
             HOST_VERSION 
             CUDA_DEVICE_VERSION 
-            constexpr ReverseRecord(T&&)
-            {
-            }
+            constexpr ReverseRecord(T&&) {}
 
             template <typename T>
             HOST_VERSION 
             CUDA_DEVICE_VERSION 
-            constexpr ReverseRecord(const T&)
-            {
-            }
+            constexpr ReverseRecord(const T&) {}
             //! @}
         };
 
