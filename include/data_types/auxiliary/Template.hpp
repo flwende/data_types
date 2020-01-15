@@ -81,7 +81,7 @@ namespace XXX_NAMESPACE
                 //! \param tail remaining arguments
                 //! \return recursive list definition
                 //!
-                static constexpr auto Value(Head head, Tail... tail) -> typename Parameter<N - 1, Tail...>::Type
+                static constexpr auto Value(Head, Tail... tail) -> typename Parameter<N - 1, Tail...>::Type
                 { 
                     return Parameter<N - 1, Tail...>::Value(tail...);
                 }
@@ -106,7 +106,7 @@ namespace XXX_NAMESPACE
                 //! \param tail remaining arguments
                 //! \return the N-th argument
                 //!
-                static constexpr auto Value(Head head, Tail... tail) -> Head
+                static constexpr auto Value(Head head, Tail...) -> Head
                 { 
                     return head; 
                 }
