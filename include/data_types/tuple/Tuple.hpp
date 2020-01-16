@@ -22,23 +22,44 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
+        template <typename... T>
+        class Tuple;
+    }
+
+    namespace internal
+    {
+        //! @{
+        //! Type traits stuff.
+        //!
+        template <typename T>
+        struct IsTuple
+        {
+            static constexpr bool value = false;
+        };
+
+        template <typename... T>
+        struct IsTuple<::XXX_NAMESPACE::dataTypes::Tuple<T...>>
+        {
+            static constexpr bool value = true;
+        };
+        //! @}
+    } // internal
+
+    namespace dataTypes
+    {
         using ::XXX_NAMESPACE::compileTime::Loop;
         using ::XXX_NAMESPACE::variadic::Pack;
 
         namespace internal
         {
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief A tuple type with non-reverse order of the members (base class).
             //!
             //! The order of the members in memory is NOT reversed:
             //! `TupleBase<int, float> {..}` is equivalent to `class {int member_1; float member_2;..}`.
             //!
-            //! Note: This definition has at least five parameters in the list.
+            //! Note: This definition has at least five parameters in the list: see specializations below!
             //!
-            //! \tparam ValueT a type parameter list defining the member types
-            //!
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename... ValueT>
             class TupleBase
             {
@@ -66,18 +87,8 @@ namespace XXX_NAMESPACE
             };
 
             //!
-            //! \brief A tuple type with non-reverse order of the members (base class).
-            //!
-            //! The order of the members in memory is NOT reversed:
-            //! `TupleBase<int, float> {..}` is equivalent to `class {int member_1; float member_2;..}`.
-            //!
             //! Note: This definition has four parameters in the list.
             //! The `Record` member overlaps with members `x,y,z,w`.
-            //!
-            //! \tparam ValueT_1 type of the 1st member
-            //! \tparam ValueT_2 type of the 2nd member
-            //! \tparam ValueT_3 type of the 3rd member
-            //! \tparam ValueT_4 type of the 4th member
             //!
             template <typename ValueT_1, typename ValueT_2, typename ValueT_3, typename ValueT_4>
             class TupleBase<ValueT_1, ValueT_2, ValueT_3, ValueT_4>
@@ -133,17 +144,8 @@ namespace XXX_NAMESPACE
             };
 
             //!
-            //! \brief A tuple type with non-reverse order of the members (base class).
-            //!
-            //! The order of the members in memory is NOT reversed:
-            //! `TupleBase<int, float> {..}` is equivalent to `class {int member_1; float member_2;..}`.
-            //!
             //! Note: This definition has three parameters in the list.
             //! The `Record` member overlaps with members `x,y,z`.
-            //!
-            //! \tparam ValueT_1 type of the 1st member
-            //! \tparam ValueT_2 type of the 2nd member
-            //! \tparam ValueT_3 type of the 3rd member
             //!
             template <typename ValueT_1, typename ValueT_2, typename ValueT_3>
             class TupleBase<ValueT_1, ValueT_2, ValueT_3>
@@ -197,16 +199,8 @@ namespace XXX_NAMESPACE
             };
 
             //!
-            //! \brief A tuple type with non-reverse order of the members (base class).
-            //!
-            //! The order of the members in memory is NOT reversed:
-            //! `TupleBase<int, float> {..}` is equivalent to `class {int member_1; float member_2;..}`.
-            //!
             //! Note: This definition has two parameters in the list.
             //! The `Record` member overlaps with members `x,y`.
-            //!
-            //! \tparam ValueT_1 type of the 1st member
-            //! \tparam ValueT_2 type of the 2nd member
             //!
             template <typename ValueT_1, typename ValueT_2>
             class TupleBase<ValueT_1, ValueT_2>
@@ -258,15 +252,8 @@ namespace XXX_NAMESPACE
             };
 
             //!
-            //! \brief A tuple type with non-reverse order of the members (base class).
-            //!
-            //! The order of the members in memory is NOT reversed:
-            //! `TupleBase<int, float> {..}` is equivalent to `class {int member_1; float member_2;..}`.
-            //!
             //! Note: This definition has a single parameter in the list.
             //! The `Record` member overlaps with members `x`.
-            //!
-            //! \tparam ValueT_1 type of the 1st member
             //!
             template <typename ValueT>
             class TupleBase<ValueT>
@@ -315,11 +302,7 @@ namespace XXX_NAMESPACE
             class TupleBase<> {};
         } // namespace internal
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //
-        // Forward declarations.
-        //
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Forward declaration.
         namespace internal
         {
             template <typename...>
