@@ -17,7 +17,9 @@
 
 namespace XXX_NAMESPACE
 {
-    namespace dataTypes::internal
+    namespace dataTypes
+    {
+    namespace internal
     {
         using ::XXX_NAMESPACE::dataTypes::IndexSequence;
         using ::XXX_NAMESPACE::dataTypes::IndexSequenceT;
@@ -315,6 +317,7 @@ namespace XXX_NAMESPACE
         class Record<> {};
 
     } // namespace dataTypes::internal
+    }
 } // namespace XXX_NAMESPACE
 
 #endif
