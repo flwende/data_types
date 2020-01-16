@@ -192,6 +192,25 @@ namespace XXX_NAMESPACE
                 //!
                 static constexpr auto Max(AggregateT aggregate, const Head head) { return std::max(aggregate, head); }
             };
+
+            //! @{
+            //! \brief Generate type `T<..>` with reversed template parameter list.
+            //!
+            template <typename T, typename... ParameterList>
+            struct Reverse;
+
+            template <template <typename...> typename T, typename... InverseParameterList, typename Head, typename... ParameterList>
+            struct Reverse<T<InverseParameterList...>, Head, ParameterList...>
+            {
+                using Type = typename Reverse<T<Head, InverseParameterList...>, ParameterList...>::Type;
+            };
+
+            template <template <typename...> typename T, typename... InverseParameterList>
+            struct Reverse<T<InverseParameterList...>>
+            {
+                using Type = T<InverseParameterList...>;
+            };
+            //! @}
         } // namespace
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,6 +242,9 @@ namespace XXX_NAMESPACE
             {
                 return Parameter<N, T...>::Value(values...);
             }
+
+            template <template <typename...> typename TypeName>
+            using TypeWithReverseParameters = typename Reverse<TypeName<>, T...>::Type;
 
             //!
             //! \brief Test for all parameters having the same type.
