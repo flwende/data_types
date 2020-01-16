@@ -10,7 +10,6 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include <auxiliary/Template.hpp>
 #include <integer_sequence/IntegerSequence.hpp>
 #include <platform/Target.hpp>
 #include <tuple/Get.hpp>
@@ -20,69 +19,26 @@ namespace XXX_NAMESPACE
     namespace dataTypes::internal
     {
         using ::XXX_NAMESPACE::dataTypes::IndexSequence;
-        using ::XXX_NAMESPACE::dataTypes::IndexSequenceT;
         using ::XXX_NAMESPACE::dataTypes::MakeIndexSequence;
-        using ::XXX_NAMESPACE::variadic::Pack;
 
-        // Forward declarations.
-        template <typename... ValueT>
-        class ReverseRecord;
-        template <typename... ValueT>
-        class Record;
+        //! @{
+        //! \brief Generate type `T<..>` with reversed template parameter list.
+        //!
+        template <typename T, typename... ParameterList>
+        struct Reverse;
 
-        //!
-        //! \brief A Helper type for the construction of a record type with non-reverse order of the members.
-        //!
-        //! The definition uses an index sequence for the parameter and argument inversion.
-        //!
-        //! \tparam IndexSequenceT an sequence of indices from 0 to the number of template parameters in the variadic list
-        //! \tparam ValueT a variadic list of type parameters
-        //!
-        template <typename IndexSequenceT, typename... ValueT>
-        struct RecordHelperImplementation;
-
-        template <typename... ValueT, SizeT... I>
-        struct RecordHelperImplementation<IndexSequence<I...>, ValueT...>
+        template <template <typename...> typename T, typename... InverseParameterList, typename Head, typename... ParameterList>
+        struct Reverse<T<InverseParameterList...>, Head, ParameterList...>
         {
-            static constexpr SizeT N = sizeof...(ValueT);
-
-            static_assert(N == sizeof...(I), "error: type parameter count does not match non-type parameter count.");
-
-            using Type = ReverseRecord<typename Pack<ValueT...>::template Type<(N - 1) - I>...>;
-
-            //!@{
-            //!
-            //! This function inverts the order of the arguments and forwards them to a `ReverseRecord` type with
-            //! inverted template parameter list.
-            //!
-            template <typename... T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            static inline constexpr auto CreateReverseRecord(T&&... values) -> Type
-            {
-                return {Pack<decltype(values)...>::template Value<(N - 1) - I>(values...)...};
-            }
-
-            template <typename... T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            static inline constexpr auto CreateReverseRecord(Record<T...>& record) -> Type
-            {
-                return {Pack<T...>::template Value<(N - 1) - I>(Get<I>(record)...)...};
-            }
-
-            template <typename... T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            static inline constexpr auto CreateReverseRecord(const Record<T...>& record) -> Type
-            {
-                return {Pack<T...>::template Value<(N - 1) - I>(Get<I>(record)...)...};
-            }
-            //!@}
+            using Type = typename Reverse<T<Head, InverseParameterList...>, ParameterList...>::Type;
         };
 
-        template <typename... ValueT>
-        using RecordHelper = RecordHelperImplementation<IndexSequenceT<sizeof...(ValueT)>, ValueT...>;
+        template <template <typename...> typename T, typename... InverseParameterList>
+        struct Reverse<T<InverseParameterList...>>
+        {
+            using Type = T<InverseParameterList...>;
+        };
+        //! @}
 
         //!
         //! \brief A record type with reverse order of the members (recursion).
@@ -98,51 +54,60 @@ namespace XXX_NAMESPACE
         //!
         //! Note: This definition has at least two parameters in the list.
         //!
-        //! \tparam ValueT the type of the current member
-        //! \tparam Tail the remaining parameter list
-        //!
         template <typename ValueT, typename... Tail>
         class ReverseRecord<ValueT, Tail...> : public ReverseRecord<Tail...>
         {
             using Base = ReverseRecord<Tail...>;
 
+        protected:
             //! @{
+            //! Create a `ReversedRecord` from this instance.
+            //! The count and type of the members may be different: if it is larger, fill in zeros.
             //!
-            //! Friend declarations.
-            //!
-            template <typename, typename...>
-            friend struct RecordHelperImplementation;
-            template <typename...>
-            friend class ReverseRecord;
-            template <typename...>
-            friend class Record;
+            template <SizeT I>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto GetMemberValueOrZero() const
+            {
+                if constexpr (I <= sizeof...(Tail)) { return internal::Get<I>(*this); }
+                else { return 0; }
+            }
+
+            template <typename... T, SizeT... I>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto Convert(IndexSequence<I...>) const -> ReverseRecord<T...>
+            {
+                return {static_cast<T>(GetMemberValueOrZero<I>())...};
+            }
             //! @}
 
+        public:
+            //! @{
+            //! Create a `ReverseRecord` from a single or from multiple values.
+            //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr ReverseRecord() : value{} {}
+            constexpr ReverseRecord() : Base(), value{} {}
 
             template <typename T>
             HOST_VERSION 
             CUDA_DEVICE_VERSION 
-            constexpr ReverseRecord(T&& value) : Base(value), value(value) 
-            {
-                static_assert(std::is_convertible<T, ValueT>::value, "error: types are not convertible."); 
-            }
-
-            template <typename T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            constexpr ReverseRecord(const T& value) : Base(value), value(value) 
-            { 
-                static_assert(std::is_convertible<T, ValueT>::value, "error: types are not convertible.");
-            }
+            constexpr ReverseRecord(T&& value) : Base(std::forward<T>(value)), value(value) {}
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr ReverseRecord(const ValueT& value, const Tail&... tail) : Base(tail...), value(value) {}
+            constexpr ReverseRecord(ValueT&& value, Tail&&... tail) : Base(std::forward<Tail>(tail)...), value(value) {}
+            //! @}
 
-          public:
+            //!
+            //! Convert this instance into another `ReverseRecord` that may differ in member count and type.
+            //!
+            template <typename... T>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr operator ReverseRecord<T...>() const { return Convert<T...>(MakeIndexSequence<sizeof...(T)>()); }
+
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline constexpr auto& Get() { return value; }
@@ -155,44 +120,55 @@ namespace XXX_NAMESPACE
             ValueT value;
         };
 
-        //!
-        //! \brief Definition of a record type with no members.
-        //!
-        template <>
-        class ReverseRecord<>
+        template <typename ValueT>
+        class ReverseRecord<ValueT>
         {
-            //! @{
-            //!
-            //! Friend declaration:
-            //! RecordInverter instantiates this class.
-            //! ReverseRecord needs access for the recursion.
-            //!
-            template <typename, typename...>
-            friend struct RecordHelperImplementation;
-            template <typename...>
-            friend class ReverseRecord;
-            //! @}
-
-            //! @{
-            //!
-            //! These constructors can only be called by friends.
-            //! The last two are just needed for the recursion.
-            //!
+        protected:
+            template <SizeT I>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr ReverseRecord() = default;
+            inline constexpr auto GetMemberValueOrZero() const
+            {
+                if constexpr (I == 0) { return value; }
+                else { return 0; }
+            }
 
-            template <typename T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            constexpr ReverseRecord(T&&) {}
+            template <typename... T, SizeT... I>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto Convert(IndexSequence<I...>) const -> ReverseRecord<T...>
+            {
+                return {static_cast<T>(GetMemberValueOrZero<I>())...};
+            }
 
-            template <typename T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            constexpr ReverseRecord(const T&) {}
-            //! @}
+        public:
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr ReverseRecord() : value{} {}
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr ReverseRecord(ValueT&& value) : value(value) {}
+
+            template <typename... T>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr operator ReverseRecord<T...>() const { return Convert<T...>(MakeIndexSequence<sizeof...(T)>()); }
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto& Get() { return value; }
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr const auto& Get() const { return value; }
+
+        protected:
+            ValueT value;
         };
+
+        template <>
+        class ReverseRecord<> {};
 
         //!
         //! \brief A record type with non-reverse order of the members.
@@ -203,12 +179,73 @@ namespace XXX_NAMESPACE
         //!
         //! Note: This definition has at least one parameter in the list.
         //!
-        //! \tparam ValueT a parameter list defining the member types
-        //!
-        template <typename... ValueT>
-        class Record : public RecordHelper<ValueT...>::Type
+        template <typename ValueT, typename... Tail>
+        class Record<ValueT, Tail...> : public Reverse<ReverseRecord<>, ValueT, Tail...>::Type
         {
-            using Base = typename RecordHelper<ValueT...>::Type;
+            using Base = typename Reverse<ReverseRecord<>, ValueT, Tail...>::Type;
+
+            //! @{
+            //! Friend declarations: needed for access to `Base` type.
+            //!
+            template <SizeT Index, typename... T>
+            HOST_VERSION CUDA_DEVICE_VERSION friend constexpr auto& Get(Record<T...>&);
+            template <SizeT Index, typename... T>
+            HOST_VERSION CUDA_DEVICE_VERSION friend constexpr auto& Get(Record<T...>&&);
+            template <SizeT Index, typename... T>
+            HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&);
+            template <SizeT Index, typename... T>
+            HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&&);
+            //! @}
+
+        protected:
+            template <typename... T, SizeT... I>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto Convert(IndexSequence<I...>) const -> Record<T...>
+            {
+                // The data members are stored in reverse order: I -> sizeof...(Tail) - I.
+                return {static_cast<T>(Base::template GetMemberValueOrZero<sizeof...(Tail) - I>())...};
+            }
+
+            //!
+            //! This constructor unpacks the values of the provided `ReverseRecord` in reverse order
+            //! and moves them to its base class constructor.
+            //! 
+            template <SizeT... I>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Record(ReverseRecord<ValueT, Tail...>&& record, IndexSequence<I...>) 
+                : Base(std::move(internal::Get<sizeof...(Tail) - I>(std::move(record)))...) {}
+
+        public:
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Record() : Base() {}
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Record(ValueT&& value) : Base(std::forward<ValueT>(value)) {}
+
+            //!
+            //! Create a `ReverseRecord` from the arguments and move it to this class' constructor
+            //! that implements the reverse unpacking of the `ReverseRecord`.
+            //!
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Record(ValueT&& value, Tail&&... more_values) 
+                : Record(std::move(ReverseRecord<ValueT, Tail...>{std::forward<ValueT>(value), std::forward<Tail>(more_values)...}), 
+                         MakeIndexSequence<1 + sizeof...(Tail)>()) {}
+
+            template <typename... T>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr operator Record<T...>() const { return Convert<T...>(MakeIndexSequence<sizeof...(T)>()); }
+        };
+
+        template <typename ValueT>
+        class Record<ValueT> : public ReverseRecord<ValueT>
+        {
+            using Base = ReverseRecord<ValueT>;
 
             //! @{
             //!
@@ -224,62 +261,32 @@ namespace XXX_NAMESPACE
             HOST_VERSION CUDA_DEVICE_VERSION friend constexpr const auto& Get(const Record<T...>&&);
             //! @}
 
-            static constexpr SizeT N = sizeof...(ValueT);
-
-          public:
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr Record() = default;
-
-            //! @{
-            //!
-            //! Generate a `Record` from a single or from multiple values,
-            //! or from other `Record`s with the same or different types.
-            //!
-            template <typename T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            constexpr Record(T&& value) : Base(value) {}
-
-            template <typename... T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            constexpr Record(T&&... values) : Base(RecordHelper<ValueT...>::CreateReverseRecord(values...)) {}
-
-            template <typename... T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            constexpr Record(Record<T...>& other) : Base(RecordHelper<ValueT...>::CreateReverseRecord(other)) {}
-
-            template <typename... T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            constexpr Record(const Record<T...>& other) : Base(RecordHelper<ValueT...>::CreateReverseRecord(other)) {}
-
-            template <typename... T>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            constexpr Record(Record<T...>&& other) : Record(std::move(other), MakeIndexSequence<sizeof...(T)>()) {}
-
-          protected:
+        protected:
             template <typename... T, SizeT... I>
-            HOST_VERSION 
-            CUDA_DEVICE_VERSION 
-            constexpr Record(Record<T...>&& other, IndexSequence<I...>) : Record(std::move(Get<I>(other))...) {}
-            //! @}
-        };
-
-        //!
-        //! \brief Definition of a record type with no members.
-        //!
-        template <>
-        class Record<>
-        {
-          public:
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Record() = default;
+            inline constexpr auto Convert(IndexSequence<I...>) const -> Record<T...>
+            {
+                return {static_cast<T>(Base::template GetMemberValueOrZero<I>())...};
+            }
+
+        public:
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Record() : Base() {}
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            constexpr Record(ValueT&& value) : Base(std::forward<ValueT>(value)) {}
+
+            template <typename... T>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr operator Record<T...>() const { return Convert<T...>(MakeIndexSequence<sizeof...(T)>()); }
         };
+
+        template <>
+        class Record<> {};
     } // namespace dataTypes::internal
 } // namespace XXX_NAMESPACE
 
