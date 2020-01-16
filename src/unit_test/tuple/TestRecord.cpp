@@ -207,6 +207,71 @@ TEST(Record, constexpr_copy_initialization_with_other_type)
     EXPECT_EQ(-4.1f, Get<2>(record_2));
 }
 
+TEST(Record, assign_different_types)
+{
+    internal::Record<double, int, float> record_1(2.3, 3, -4.1f);
+    
+    record_1 = 1;
+    EXPECT_EQ(1, Get<0>(record_1));
+    EXPECT_EQ(1, Get<1>(record_1));
+    EXPECT_EQ(1, Get<2>(record_1));
+
+    record_1 = {1, 2, 3};
+    EXPECT_EQ(1, Get<0>(record_1));
+    EXPECT_EQ(2, Get<1>(record_1));
+    EXPECT_EQ(3, Get<2>(record_1));
+
+    record_1 = internal::Record<int, int>{5, 6};
+    EXPECT_EQ(5, Get<0>(record_1));
+    EXPECT_EQ(6, Get<1>(record_1));
+    EXPECT_EQ(0, Get<2>(record_1));
+
+    record_1 = internal::Record<int, int, float, double>{5, 6, 12, 5};
+    EXPECT_EQ(5, Get<0>(record_1));
+    EXPECT_EQ(6, Get<1>(record_1));
+    EXPECT_EQ(12, Get<2>(record_1));
+
+    internal::Record<float> record_2(record_1);
+    EXPECT_EQ(5, Get<0>(record_2));
+
+    record_2 = 12;
+    record_1 = std::move(record_2);
+    EXPECT_EQ(12, Get<0>(record_1));
+    EXPECT_EQ(0, Get<1>(record_1));
+    EXPECT_EQ(0, Get<2>(record_1));
+}
+
+TEST(Record, constexpr_assign_different_types)
+{
+    {
+        constexpr internal::Record<double, int, float> record_1(1);
+        EXPECT_EQ(1, Get<0>(record_1));
+        EXPECT_EQ(1, Get<1>(record_1));
+        EXPECT_EQ(1, Get<2>(record_1));
+    }
+    {
+        constexpr internal::Record<double, int, float> record_1 = {1, 2, 3};
+        EXPECT_EQ(1, Get<0>(record_1));
+        EXPECT_EQ(2, Get<1>(record_1));
+        EXPECT_EQ(3, Get<2>(record_1));
+    }
+    {
+        constexpr internal::Record<double, int, float> record_1 = internal::Record<int, int>{5, 6};
+        EXPECT_EQ(5, Get<0>(record_1));
+        EXPECT_EQ(6, Get<1>(record_1));
+        EXPECT_EQ(0, Get<2>(record_1));
+    }
+    {
+        constexpr internal::Record<double, int, float> record_1 = internal::Record<int, int, float, double>{5, 6, 12, 5};
+        EXPECT_EQ(5, Get<0>(record_1));
+        EXPECT_EQ(6, Get<1>(record_1));
+        EXPECT_EQ(12, Get<2>(record_1));
+    
+        constexpr internal::Record<float> record_2(record_1);
+        EXPECT_EQ(5, Get<0>(record_2));
+    }
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
