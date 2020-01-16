@@ -69,16 +69,6 @@ namespace XXX_NAMESPACE
             //! Create a `ReversedRecord` from this instance.
             //! The count and type of the members may be different: if it is larger, fill in zeros.
             //!
-            /*
-            template <SizeT I>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline constexpr auto GetMemberValueOrZero() const
-            {
-                if constexpr (I <= sizeof...(Tail)) { return internal::Get<I>(*this); }
-                else { return 0; }
-            }
-            */
             template <SizeT I, typename std::enable_if_t<(I <= sizeof...(Tail)), int> = 0>
             HOST_VERSION
             CUDA_DEVICE_VERSION
@@ -93,7 +83,7 @@ namespace XXX_NAMESPACE
             template <typename... T, SizeT... I>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline constexpr auto Convert(IndexSequence<I...>) const -> ReverseRecord<T...>
+            inline constexpr auto Convert(IndexSequence<I...>&&) const -> ReverseRecord<T...>
             {
                 return {static_cast<T>(GetMemberValueOrZero<I>())...};
             }
@@ -141,16 +131,6 @@ namespace XXX_NAMESPACE
         class ReverseRecord<ValueT>
         {
         protected:
-            /*
-            template <SizeT I>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline constexpr auto GetMemberValueOrZero() const
-            {
-                if (I == 0) { return value; }
-                else { return 0; }
-            }
-            */
             template <SizeT I, typename std::enable_if_t<(I == 0), int> = 0>
             HOST_VERSION
             CUDA_DEVICE_VERSION
@@ -164,7 +144,7 @@ namespace XXX_NAMESPACE
             template <typename... T, SizeT... I>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline constexpr auto Convert(IndexSequence<I...>) const -> ReverseRecord<T...>
+            inline constexpr auto Convert(IndexSequence<I...>&&) const -> ReverseRecord<T...>
             {
                 return {static_cast<T>(GetMemberValueOrZero<I>())...};
             }
@@ -229,7 +209,7 @@ namespace XXX_NAMESPACE
             template <typename... T, SizeT... I>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline constexpr auto Convert(IndexSequence<I...>) const -> Record<T...>
+            inline constexpr auto Convert(IndexSequence<I...>&&) const -> Record<T...>
             {
                 // The data members are stored in reverse order: I -> sizeof...(Tail) - I.
                 return {static_cast<T>(Base::template GetMemberValueOrZero<sizeof...(Tail) - I>())...};
@@ -242,7 +222,7 @@ namespace XXX_NAMESPACE
             template <SizeT... I>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Record(ReverseRecord<ValueT, Tail...>&& record, IndexSequence<I...>) 
+            constexpr Record(ReverseRecord<ValueT, Tail...>&& record, IndexSequence<I...>&&) 
                 : Base(internal::Get<sizeof...(Tail) - I>(record)...) {}
 
         public:
@@ -252,7 +232,7 @@ namespace XXX_NAMESPACE
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Record(ValueT value) : Base(std::forward<ValueT>(value)) {}
+            constexpr Record(ValueT value) : Base(value) {}
 
             //!
             //! Create a `ReverseRecord` from the arguments and move it to this class' constructor
@@ -261,8 +241,7 @@ namespace XXX_NAMESPACE
             HOST_VERSION
             CUDA_DEVICE_VERSION
             constexpr Record(ValueT value, Tail... more_values) 
-                : Record(std::move(ReverseRecord<ValueT, Tail...>{value, more_values...}),
-                         MakeIndexSequence<1 + sizeof...(Tail)>()) {}
+                : Record(ReverseRecord<ValueT, Tail...>{value, more_values...}, MakeIndexSequence<1 + sizeof...(Tail)>()) {}
 
             template <typename... T>
             HOST_VERSION
@@ -293,7 +272,7 @@ namespace XXX_NAMESPACE
             template <typename... T, SizeT... I>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline constexpr auto Convert(IndexSequence<I...>) const -> Record<T...>
+            inline constexpr auto Convert(IndexSequence<I...>&&) const -> Record<T...>
             {
                     return {static_cast<T>(Base::template GetMemberValueOrZero<I>())...};
             }
