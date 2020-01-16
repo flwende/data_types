@@ -26,25 +26,6 @@ namespace XXX_NAMESPACE
             using ::XXX_NAMESPACE::dataTypes::MakeIndexSequence;
             using ::XXX_NAMESPACE::variadic::Pack;
 
-            //! @{
-            //! \brief Generate type `T<..>` with reversed template parameter list.
-            //!
-            template <typename T, typename... ParameterList>
-            struct Reverse;
-
-            template <template <typename...> typename T, typename... InverseParameterList, typename Head, typename... ParameterList>
-            struct Reverse<T<InverseParameterList...>, Head, ParameterList...>
-            {
-                using Type = typename Reverse<T<Head, InverseParameterList...>, ParameterList...>::Type;
-            };
-
-            template <template <typename...> typename T, typename... InverseParameterList>
-            struct Reverse<T<InverseParameterList...>>
-            {
-                using Type = T<InverseParameterList...>;
-            };
-            //! @}
-
             //!
             //! \brief A record type with reverse order of the members (recursion).
             //!
@@ -188,9 +169,9 @@ namespace XXX_NAMESPACE
             //! Note: This definition has at least one parameter in the list.
             //!
             template <typename ValueT, typename... Tail>
-            class Record<ValueT, Tail...> : public Reverse<ReverseRecord<>, ValueT, Tail...>::Type
+            class Record<ValueT, Tail...> : public Pack<ValueT, Tail...>::template TypeWithReverseParameters<ReverseRecord>
             {
-                using Base = typename Reverse<ReverseRecord<>, ValueT, Tail...>::Type;
+                using Base = typename Pack<ValueT, Tail...>::template TypeWithReverseParameters<ReverseRecord>;
 
                 //! @{
                 //! Friend declarations: needed for access to `Base` type.
@@ -294,9 +275,27 @@ namespace XXX_NAMESPACE
 
             template <>
             class Record<> {};
-
         } // internal
     } // namespace dataTypes
+
+    namespace internal
+    {
+        //! @{
+        //! Type traits stuff.
+        //!
+        template <typename T>
+        struct IsRecord
+        {
+            static constexpr bool value = false;
+        };
+
+        template <typename... T>
+        struct IsRecord<::XXX_NAMESPACE::dataTypes::internal::Record<T...>>
+        {
+            static constexpr bool value = true;
+        };
+        //! @}
+    } // internal
 } // namespace XXX_NAMESPACE
 
 #endif
