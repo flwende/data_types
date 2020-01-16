@@ -25,9 +25,6 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
-        template <typename T>
-        class DEBUG;
-
         namespace internal
         {
             using ::XXX_NAMESPACE::compileTime::Loop;
@@ -44,7 +41,7 @@ namespace XXX_NAMESPACE
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             template <typename, SizeT, SizeT, DataLayout>
             class Accessor;
-
+            
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief A proxy type for `Tuple`s.
@@ -74,6 +71,7 @@ namespace XXX_NAMESPACE
                 friend class Accessor;
 
               private:
+              /*
                 //!
                 //! \brief Constructor.
                 //!
@@ -92,7 +90,8 @@ namespace XXX_NAMESPACE
                 HOST_VERSION CUDA_DEVICE_VERSION TupleProxy(RecordConstT&& record, IndexSequence<I...>) : Base(Get<I>(record)...)
                 {
                 }
-
+                */
+/*
                 //!
                 //! \brief Constructor.
                 //!
@@ -108,7 +107,8 @@ namespace XXX_NAMESPACE
                 {
                     static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
                 }
-
+*/
+/*
                 //!
                 //! \brief Constructor.
                 //!
@@ -125,10 +125,23 @@ namespace XXX_NAMESPACE
                 {
                     static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
                 }
+*/
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                TupleProxy(RecordConstT record) : Base(record)
+                {
+                    static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
+                }
+
+                template <typename T>
+                static constexpr bool IsRecordOrTupleOrProxy = 
+                    ::XXX_NAMESPACE::internal::IsRecord<std::decay_t<T>>::value ||
+                    ::XXX_NAMESPACE::internal::IsTuple<std::decay_t<T>>::value ||
+                    ::XXX_NAMESPACE::internal::IsProxy<std::decay_t<T>>::value;
 
               public:
                 using ConstT = const TupleProxy<const ValueT...>;
-
+                /*
                 //!
                 //! \brief Constructor.
                 //!
@@ -143,7 +156,8 @@ namespace XXX_NAMESPACE
                 {
                     static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
                 }
-
+*/
+/*
                 //!
                 //! \brief Constructor.
                 //!
@@ -154,6 +168,13 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 TupleProxy(RecordT record) : TupleProxy(std::move(record), MakeIndexSequence<sizeof...(ValueT)>())
+                {
+                    static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
+                }
+*/
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                TupleProxy(RecordT record) : Base(record)
                 {
                     static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
                 }
@@ -172,7 +193,8 @@ namespace XXX_NAMESPACE
                 //! \return a reference to this `TupleProxy` instance
                 //!
                 template <typename... T>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator=(const Tuple<T...>& tuple) -> TupleProxy&
+                //HOST_VERSION CUDA_DEVICE_VERSION inline auto operator=(const Tuple<T...>& tuple) -> TupleProxy&
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator=(Tuple<T...>&& tuple) -> TupleProxy&
                 {
                     static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");
                     static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
@@ -194,7 +216,8 @@ namespace XXX_NAMESPACE
                 //! \param value the value to be assigned
                 //! \return a reference to this `TupleProxy` instance
                 //!
-                template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
+                //template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
+                template <typename T, typename std::enable_if_t<!IsRecordOrTupleOrProxy<T>, int> = 0>
                 HOST_VERSION CUDA_DEVICE_VERSION inline auto operator=(const T value) -> TupleProxy&
                 {
                     static_assert(Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
@@ -204,8 +227,62 @@ namespace XXX_NAMESPACE
                     return *this;
                 }
             };
+
+            /*
+            template <typename... ValueT>
+            class TupleProxy : public Tuple<ValueT&...>
+            {
+                using Base = Tuple<ValueT&...>;
+                using TupleT = Tuple<std::decay_t<ValueT>...>;
+                using ConstTupleT = const Tuple<std::decay_t<ValueT>...>;
+                using RecordT = Record<std::decay_t<ValueT>&...>;
+                using RecordConstT = Record<const std::decay_t<ValueT>&...>;
+
+                // Member types must be fundamental and non-void.
+                static_assert(!Pack<ValueT...>::IsVoid(), "error: non-void parameter types assumed.");
+
+                // Friend declarations.
+                template <typename, SizeT, SizeT, DataLayout>
+                friend class Accessor;
+
+                template <typename T>
+                static constexpr bool IsRecordOrTupleOrProxy = 
+                    ::XXX_NAMESPACE::internal::IsRecord<std::decay_t<T>>::value ||
+                    ::XXX_NAMESPACE::internal::IsTuple<std::decay_t<T>>::value ||
+                    ::XXX_NAMESPACE::internal::IsProxy<std::decay_t<T>>::value;
+
+            public:
+                HOST_VERSION
+                CUDA_DEVICE_VERSION 
+                constexpr TupleProxy(::XXX_NAMESPACE::dataTypes::Tuple<ValueT...>& tuple) : Base(tuple.data) {}
+
+                template <typename T, typename std::enable_if_t<!IsRecordOrTupleOrProxy<T>, int> = 0>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION 
+                inline constexpr auto operator=(T&& value) -> TupleProxy&
+                {
+                    static_assert(Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
+
+                    Loop<sizeof...(ValueT)>::Execute([value, this](const auto I) { Get<I>(*this) = value; });
+
+                    return *this;
+                }
+                
+
+                using ConstT = const TupleProxy<const ValueT...>;
+            };
+            */
         } // namespace internal
     }  // namespace dataTypes
+
+    namespace internal
+    {
+        template <typename... T>
+        struct IsProxy<::XXX_NAMESPACE::dataTypes::internal::TupleProxy<T...>>
+        {
+            static constexpr bool value = true;
+        };
+    }
 
     namespace math
     {

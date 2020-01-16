@@ -12,6 +12,7 @@
 
 #include <auxiliary/Template.hpp>
 #include <common/Math.hpp>
+#include <common/Traits.hpp>
 #include <integer_sequence/IntegerSequence.hpp>
 #include <platform/Target.hpp>
 #include <tuple/Get.hpp>
@@ -42,59 +43,23 @@ namespace XXX_NAMESPACE
             class TupleBase
             {
               protected:
-                //!
-                //! \brief Standard constructor.
-                //!
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase() : data{} {};
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase() : data{} {}
 
-                //!
-                //! \brief Constructor.
-                //!
-                //! Assign the same `value` to all members.
-                //!
-                //! \tparam T the type of the value to be assigned (can be different from the member type, but must be convertible)
-                //! \param value the value to be assigned to all members
-                //!
-                template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(T value) : data(value)
-                {
-                    static_assert(Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
-                }
-
-                //!
-                //! \brief Constructor.
-                //!
-                //! Assign some `values` to the members.
-                //!
-                //! \param values the values to be assigned to the members
-                //!
+                template <typename T>
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(T value) : data(value) {}
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION 
                 constexpr TupleBase(ValueT... values) : data(values...) {}
 
-                //!
-                //! \brief Constructor.
-                //!
-                //! Create this object from a `Record`
-                //!
-                //! \param tuple another `TupleBase` instance
-                //!
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase(const Record<ValueT...>& data) : data(data) {}
-
-                //!
-                //! \brief Copy constructor.
-                //!
-                //! \tparam a variadic list of type parameters
-                //! \param tuple another `TupleBase` instance
-                //!
                 template <typename... T>
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleBase<T...>& tuple) : data(tuple.data) {}
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(Record<T...>&& data) : data(data) {}
 
               public:
                 Record<ValueT...> data;
@@ -119,26 +84,22 @@ namespace XXX_NAMESPACE
             {
               protected:
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
+                CUDA_DEVICE_VERSION 
                 constexpr TupleBase() : data{} {}
 
-                template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(T value) : data(value)
-                {
-                }
+                template <typename T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(T value) : data(value) {}
 
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
+                CUDA_DEVICE_VERSION 
                 constexpr TupleBase(ValueT_1 x, ValueT_2 y, ValueT_3 z, ValueT_4 w) : data(x, y, z, w) {}
 
+                template <typename... T>
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase(const Record<ValueT_1, ValueT_2, ValueT_3, ValueT_4>& data) : data(data) {}
-
-                template <typename T_1, typename T_2, typename T_3, typename T_4>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleBase<T_1, T_2, T_3, T_4>& tuple) : data(tuple.data) {}
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(Record<T...>&& data) : data(data) {}
 
               public:
                 union {
@@ -189,27 +150,23 @@ namespace XXX_NAMESPACE
             {
               protected:
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
+                CUDA_DEVICE_VERSION 
                 constexpr TupleBase() : data{} {}
 
-                template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(T value) : data(value)
-                {
-                }
+                template <typename T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(T value) : data(value) {}
 
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
+                CUDA_DEVICE_VERSION 
                 constexpr TupleBase(ValueT_1 x, ValueT_2 y, ValueT_3 z) : data(x, y, z) {}
 
+                template <typename... T>
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase(const Record<ValueT_1, ValueT_2, ValueT_3>& data) : data(data) {}
-
-                template <typename T_1, typename T_2, typename T_3>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleBase<T_1, T_2, T_3>& tuple) : data(tuple.data) {}
-
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(Record<T...>&& data) : data(data) {}
+              
               public:
                 union {
                     struct
@@ -256,26 +213,22 @@ namespace XXX_NAMESPACE
             {
               protected:
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
+                CUDA_DEVICE_VERSION 
                 constexpr TupleBase() : data{} {}
 
-                template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(T value) : data(value)
-                {
-                }
+                template <typename T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(T value) : data(value) {}
 
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
+                CUDA_DEVICE_VERSION 
                 constexpr TupleBase(ValueT_1 x, ValueT_2 y) : data(x, y) {}
 
+                template <typename... T>
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase(const Record<ValueT_1, ValueT_2>& data) : data(data) {}
-
-                template <typename T_1, typename T_2>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleBase<T_1, T_2>& tuple) : data(tuple.data) {}
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(Record<T...>&& data) : data(data) {}
 
               public:
                 union {
@@ -320,22 +273,18 @@ namespace XXX_NAMESPACE
             {
               protected:
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
+                CUDA_DEVICE_VERSION 
                 constexpr TupleBase() : data{} {}
-
-                template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-                HOST_VERSION CUDA_DEVICE_VERSION constexpr TupleBase(T value) : data(value)
-                {
-                }
-
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase(const Record<ValueT>& data) : data(data) {}
 
                 template <typename T>
                 HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase(const TupleBase<T>& tuple) : data(tuple.data) {}
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(T x) : data(x) {}
+
+                template <typename... T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(Record<T...>&& data) : data(data) {}
 
               public:
                 union {
@@ -361,18 +310,9 @@ namespace XXX_NAMESPACE
                 MACRO(GetX, x)
 #undef MACRO                
             };
-
-            //!
-            //! \brief Definition of a tuple type with no members (base class).
-            //!
+            
             template <>
-            class TupleBase<>
-            {
-              protected:
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleBase() {}
-            };
+            class TupleBase<> {};
         } // namespace internal
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -403,92 +343,38 @@ namespace XXX_NAMESPACE
             friend class internal::TupleProxy<std::decay_t<ValueT>...>;
             friend class internal::TupleProxy<const std::decay_t<ValueT>...>;
 
-            //!
-            //! \brief Constructor.
-            //!
-            //! Create this object from a `Record`.
-            //!
-            //! \tparam T a variadic list of type parameters
-            //! \param record a `Record` instance holding the data
-            //!
-            template <typename ...T>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr Tuple(const internal::Record<T...>& record) : Base(record) {}
-            
+            template <typename T>
+            static constexpr bool IsRecordOrTupleOrProxy = 
+                ::XXX_NAMESPACE::internal::IsRecord<std::decay_t<T>>::value ||
+                ::XXX_NAMESPACE::internal::IsTuple<std::decay_t<T>>::value ||
+                ::XXX_NAMESPACE::internal::IsProxy<std::decay_t<T>>::value;
+
           public:
             using Type = Tuple<ValueT...>;
             using Proxy = internal::TupleProxy<ValueT...>;
 
-            //!
-            //! \brief Standard constructor.
-            //!
             HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr Tuple() = default;
+            CUDA_DEVICE_VERSION 
+            constexpr Tuple() : Base() {}
 
-            //!
-            //! \brief Constructor.
-            //!
-            //! Assign the same `value` to all members.
-            //!
-            //! \tparam T the type of the value to be assigned (can be different from the member type, but must be convertible)
-            //! \param value the value to be assigned to all members
-            //!
-            template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
-            HOST_VERSION CUDA_DEVICE_VERSION explicit constexpr Tuple(T value) : Base(value)
-            {
-            }
-
-            //!
-            //! \brief Constructor.
-            //!
-            //! Assign some `values` to the members.
-            //!
-            //! \param values the values to be assigned to the members
-            //!
+            template <typename T, typename std::enable_if_t<!IsRecordOrTupleOrProxy<T>, int> = 0>
             HOST_VERSION
-            CUDA_DEVICE_VERSION
-            explicit constexpr Tuple(ValueT... values) : Base(values...) {}
+            CUDA_DEVICE_VERSION 
+            constexpr Tuple(T value) : Base(value) {}
 
-            //!
-            //! \brief Copy / conversion constructor.
-            //!
-            //! We do not allow the case where this type has reference template type-parameters!
-            //! The only case where this can happen is the base class conversion of a `TupleProxy`. 
-            //! If this is the case, the programmer must have requested a hard copy of this type (e.g. a function call with value parameters).
-            //! Do not build the program then!
-            //!
-            //! \tparam T a variadic list of type parameters
-            //! \param tuple another `Tuple` instance
-            //!
-            template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(Tuple<T...>& tuple) : Base(tuple)
-            {
-                static_assert(!(Pack<ValueT...>::IsReference() && Pack<T...>::IsReference()), "error: this type has reference template type-parameters, which is not allowed here!");
-            }
+            HOST_VERSION
+            CUDA_DEVICE_VERSION 
+            constexpr Tuple(ValueT... values) : Base(values...) {}
 
             template <typename... T>
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const Tuple<T...>& tuple) : Base(tuple)
-            {
-                static_assert(!(Pack<ValueT...>::IsReference() && Pack<T...>::IsReference()), "error: this type has reference template type-parameters, which is not allowed here!");
-            }
+            HOST_VERSION
+            CUDA_DEVICE_VERSION 
+            constexpr Tuple(internal::Record<T...> data) : Base(data) {}
 
-            //!
-            //! \brief Constructor.
-            //!
-            //! Create a `Tuple` from a `TupleProxy`.
-            //! This constructor enables class template argument deduction with C++17 and later.
-            //! 
-            //! \param tuple a `ProxyTuple` instance
-            //!
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(internal::TupleProxy<ValueT...>& proxy) : Base(proxy.data)
-            {
-            }
-
-            HOST_VERSION CUDA_DEVICE_VERSION constexpr Tuple(const internal::TupleProxy<ValueT...>& proxy) : Base(proxy.data)
-            {
-            }
+            template <typename... T>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION 
+            inline constexpr operator Tuple<T...>() const { return Tuple<T...>{Base::data}; }
 
             //!
             //! \brief Sign operator.
@@ -499,7 +385,7 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator-() const
+            constexpr inline auto operator-() const
             {
                 Tuple tuple;
 
@@ -517,7 +403,7 @@ namespace XXX_NAMESPACE
             //!
 #define MACRO(OP, IN_T)                                                                                                                                                                                                    \
     template <typename... T>                                                                                                                                                                                               \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(const IN_T<T...>& tuple)->Tuple&                                                                                                                              \
+    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(const IN_T<T...>& tuple)->Tuple&                                                                                                                              \
     {                                                                                                                                                                                                                      \
         static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");                                                                                                             \
                                                                                                                                                                                                                            \
@@ -542,7 +428,7 @@ namespace XXX_NAMESPACE
             //!
 #define MACRO(OP)                                                                                                                                                                                                          \
     template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>                                                                                                                           \
-    HOST_VERSION CUDA_DEVICE_VERSION inline auto operator OP(T value)->Tuple&                                                                                                                                              \
+    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(T value)->Tuple&                                                                                                                                              \
     {                                                                                                                                                                                                                      \
         Loop<sizeof...(ValueT)>::Execute([&value, this](const auto I) { Get<I>(*this) OP value; });                                                                                                                        \
                                                                                                                                                                                                                            \
@@ -561,13 +447,7 @@ namespace XXX_NAMESPACE
         //! \brief Definition of a `Tuple` type with no members (implementation).
         //!
         template <>
-        class Tuple<>
-        {
-          public:
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            constexpr Tuple(){};
-        };
+        class Tuple<> {};
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         //

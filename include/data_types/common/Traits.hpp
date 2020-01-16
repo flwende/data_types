@@ -22,15 +22,51 @@ namespace XXX_NAMESPACE
     {
         namespace internal
         {
-            template <typename ...T>
+            template <typename...>
             class TupleProxy;
+
+            template <typename...>
+            class Record;
         }
+
+        template <typename...>
+        class Tuple;
     }
 
     namespace internal
     {
         using ::XXX_NAMESPACE::memory::DataLayout;
         using ::XXX_NAMESPACE::memory::Pointer;
+
+        template <typename T>
+        struct IsProxy
+        {
+            static constexpr bool value = false;
+        };
+
+        template <typename T>
+        struct IsRecord
+        {
+            static constexpr bool value = false;
+        };
+
+        template <typename... T>
+        struct IsRecord<::XXX_NAMESPACE::dataTypes::internal::Record<T...>>
+        {
+            static constexpr bool value = true;
+        };
+
+        template <typename T>
+        struct IsTuple
+        {
+            static constexpr bool value = false;
+        };
+
+        template <typename... T>
+        struct IsTuple<::XXX_NAMESPACE::dataTypes::Tuple<T...>>
+        {
+            static constexpr bool value = true;
+        };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //!
