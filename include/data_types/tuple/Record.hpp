@@ -67,6 +67,7 @@ namespace XXX_NAMESPACE
             //! Create a `ReversedRecord` from this instance.
             //! The count and type of the members may be different: if it is larger, fill in zeros.
             //!
+            /*
             template <SizeT I>
             HOST_VERSION
             CUDA_DEVICE_VERSION
@@ -75,6 +76,17 @@ namespace XXX_NAMESPACE
                 if constexpr (I <= sizeof...(Tail)) { return internal::Get<I>(*this); }
                 else { return 0; }
             }
+            */
+            template <SizeT I, typename std::enable_if_t<(I <= sizeof...(Tail)), int> = 0>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto GetMemberValueOrZero() const { return internal::Get<I>(*this); }
+
+            template <SizeT I, typename std::enable_if_t<(I > sizeof...(Tail)), int> = 0>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto GetMemberValueOrZero() const { return 0; }
+            
 
             template <typename... T, SizeT... I>
             HOST_VERSION
@@ -127,14 +139,25 @@ namespace XXX_NAMESPACE
         class ReverseRecord<ValueT>
         {
         protected:
+            /*
             template <SizeT I>
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline constexpr auto GetMemberValueOrZero() const
             {
-                if constexpr (I == 0) { return value; }
+                if (I == 0) { return value; }
                 else { return 0; }
             }
+            */
+            template <SizeT I, typename std::enable_if_t<(I == 0), int> = 0>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto GetMemberValueOrZero() const { return value; }
+
+            template <SizeT I, typename std::enable_if_t<(I > 0), int> = 0>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline constexpr auto GetMemberValueOrZero() const { return 0; }
 
             template <typename... T, SizeT... I>
             HOST_VERSION
