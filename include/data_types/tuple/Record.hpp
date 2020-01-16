@@ -10,6 +10,7 @@
 #define XXX_NAMESPACE fw
 #endif
 
+#include <auxiliary/Template.hpp>
 #include <integer_sequence/IntegerSequence.hpp>
 #include <platform/Target.hpp>
 #include <tuple/Get.hpp>
@@ -19,7 +20,9 @@ namespace XXX_NAMESPACE
     namespace dataTypes::internal
     {
         using ::XXX_NAMESPACE::dataTypes::IndexSequence;
+        using ::XXX_NAMESPACE::dataTypes::IndexSequenceT;
         using ::XXX_NAMESPACE::dataTypes::MakeIndexSequence;
+        using ::XXX_NAMESPACE::variadic::Pack;
 
         //! @{
         //! \brief Generate type `T<..>` with reversed template parameter list.
@@ -93,11 +96,11 @@ namespace XXX_NAMESPACE
             template <typename T>
             HOST_VERSION 
             CUDA_DEVICE_VERSION 
-            constexpr ReverseRecord(T&& value) : Base(std::forward<T>(value)), value(value) {}
+            constexpr ReverseRecord(T value) : Base(value), value(value) {}
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr ReverseRecord(ValueT&& value, Tail&&... tail) : Base(std::forward<Tail>(tail)...), value(value) {}
+            constexpr ReverseRecord(ValueT value, Tail... tail) : Base(tail...), value(value) {}
             //! @}
 
             //!
@@ -148,7 +151,7 @@ namespace XXX_NAMESPACE
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr ReverseRecord(ValueT&& value) : value(value) {}
+            constexpr ReverseRecord(ValueT value) : value(value) {}
 
             template <typename... T>
             HOST_VERSION
@@ -215,7 +218,7 @@ namespace XXX_NAMESPACE
             HOST_VERSION
             CUDA_DEVICE_VERSION
             constexpr Record(ReverseRecord<ValueT, Tail...>&& record, IndexSequence<I...>) 
-                : Base(std::move(internal::Get<sizeof...(Tail) - I>(std::move(record)))...) {}
+                : Base(internal::Get<sizeof...(Tail) - I>(record)...) {}
 
         public:
             HOST_VERSION
@@ -224,7 +227,7 @@ namespace XXX_NAMESPACE
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Record(ValueT&& value) : Base(std::forward<ValueT>(value)) {}
+            constexpr Record(ValueT value) : Base(std::forward<ValueT>(value)) {}
 
             //!
             //! Create a `ReverseRecord` from the arguments and move it to this class' constructor
@@ -232,8 +235,8 @@ namespace XXX_NAMESPACE
             //!
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Record(ValueT&& value, Tail&&... more_values) 
-                : Record(std::move(ReverseRecord<ValueT, Tail...>{std::forward<ValueT>(value), std::forward<Tail>(more_values)...}), 
+            constexpr Record(ValueT value, Tail... more_values) 
+                : Record(std::move(ReverseRecord<ValueT, Tail...>{value, more_values...}),
                          MakeIndexSequence<1 + sizeof...(Tail)>()) {}
 
             template <typename... T>
@@ -267,7 +270,7 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             inline constexpr auto Convert(IndexSequence<I...>) const -> Record<T...>
             {
-                return {static_cast<T>(Base::template GetMemberValueOrZero<I>())...};
+                    return {static_cast<T>(Base::template GetMemberValueOrZero<I>())...};
             }
 
         public:
@@ -277,7 +280,7 @@ namespace XXX_NAMESPACE
 
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            constexpr Record(ValueT&& value) : Base(std::forward<ValueT>(value)) {}
+            constexpr Record(ValueT value) : Base(value) {}
 
             template <typename... T>
             HOST_VERSION
@@ -287,6 +290,7 @@ namespace XXX_NAMESPACE
 
         template <>
         class Record<> {};
+
     } // namespace dataTypes::internal
 } // namespace XXX_NAMESPACE
 
