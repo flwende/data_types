@@ -29,15 +29,9 @@ namespace XXX_NAMESPACE
             template <typename AggregateT, typename Head, typename... Tail>
             struct AccumulateImplementation<AggregateT, Head, Tail...>
             {
-                static inline constexpr auto Add(AggregateT aggregate, Head head, Tail... tail) 
-                { 
-                    return AccumulateImplementation<AggregateT, Tail...>::Add(aggregate + head, tail...);
-                }
+                static inline constexpr auto Add(AggregateT aggregate, Head head, Tail... tail) { return AccumulateImplementation<AggregateT, Tail...>::Add(aggregate + head, tail...); }
 
-                static inline constexpr auto Max(AggregateT aggregate, Head head, Tail... tail) 
-                { 
-                    return AccumulateImplementation<AggregateT, Tail...>::Max(std::max(aggregate, head), tail...);
-                }
+                static inline constexpr auto Max(AggregateT aggregate, Head head, Tail... tail) { return AccumulateImplementation<AggregateT, Tail...>::Max(std::max(aggregate, head), tail...); }
             };
 
             template <typename AggregateT>
