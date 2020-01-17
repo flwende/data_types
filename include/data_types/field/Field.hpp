@@ -14,16 +14,12 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include <auxiliary/Template.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Memory.hpp>
 #include <common/Traits.hpp>
 #include <tuple/Get.hpp>
 #include <platform/Target.hpp>
 #include <DataTypes.hpp>
-
-template <typename T>
-class DEBUG;
 
 namespace XXX_NAMESPACE
 {

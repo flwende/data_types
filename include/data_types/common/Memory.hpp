@@ -13,7 +13,8 @@
 #endif
 
 #include <auxiliary/CPPStandard.hpp>
-#include <auxiliary/Template.hpp>
+#include <auxiliary/Loop.hpp>
+#include <auxiliary/Pack.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Math.hpp>
 #include <integer_sequence/IntegerSequence.hpp>

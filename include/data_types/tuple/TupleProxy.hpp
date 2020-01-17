@@ -14,7 +14,8 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include <auxiliary/Template.hpp>
+#include <auxiliary/Loop.hpp>
+#include <auxiliary/Pack.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Memory.hpp>
 #include <tuple/Tuple.hpp>

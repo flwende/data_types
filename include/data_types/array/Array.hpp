@@ -15,7 +15,7 @@
 #endif
 
 #include <auxiliary/CPPStandard.hpp>
-#include <auxiliary/Template.hpp>
+#include <auxiliary/Pack.hpp>
 #include <platform/Target.hpp>
 #include <DataTypes.hpp>
 

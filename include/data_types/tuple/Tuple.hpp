@@ -10,7 +10,8 @@
 #define XXX_NAMESPACE fw
 #endif
 
-#include <auxiliary/Template.hpp>
+#include <auxiliary/Loop.hpp>
+#include <auxiliary/Pack.hpp>
 #include <common/Math.hpp>
 #include <common/Traits.hpp>
 #include <integer_sequence/IntegerSequence.hpp>

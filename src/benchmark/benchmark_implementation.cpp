@@ -21,9 +21,6 @@ constexpr std::size_t WARMUP = 10;
 constexpr std::size_t MEASUREMENT = 20;
 #endif
 
-template <typename T>
-class DEBUG;
-
 #if defined(__CUDACC__)
 template <typename FuncT, typename Container>
 CUDA_KERNEL

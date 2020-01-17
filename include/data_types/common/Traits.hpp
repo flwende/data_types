@@ -13,6 +13,7 @@
 #endif
 
 #include <auxiliary/CPPStandard.hpp>
+#include <auxiliary/Pack.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Memory.hpp>
 
