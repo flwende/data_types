@@ -81,7 +81,7 @@ namespace XXX_NAMESPACE
                 template <typename... T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION 
-                constexpr TupleBase(Record<T...>&& data) : data(data) {}
+                constexpr TupleBase(const Record<T...>& data) : data(data) {}
 
               public:
                 Record<ValueT...> data;
@@ -111,7 +111,7 @@ namespace XXX_NAMESPACE
                 template <typename... T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION 
-                constexpr TupleBase(Record<T...>&& data) : data(data) {}
+                constexpr TupleBase(const Record<T...>& data) : data(data) {}
 
               public:
                 union {
@@ -168,7 +168,7 @@ namespace XXX_NAMESPACE
                 template <typename... T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION 
-                constexpr TupleBase(Record<T...>&& data) : data(data) {}
+                constexpr TupleBase(const Record<T...>& data) : data(data) {}
               
               public:
                 union {
@@ -223,7 +223,7 @@ namespace XXX_NAMESPACE
                 template <typename... T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION 
-                constexpr TupleBase(Record<T...>&& data) : data(data) {}
+                constexpr TupleBase(const Record<T...>& data) : data(data) {}
 
               public:
                 union {
@@ -272,7 +272,7 @@ namespace XXX_NAMESPACE
                 template <typename... T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION 
-                constexpr TupleBase(Record<T...>&& data) : data(data) {}
+                constexpr TupleBase(const Record<T...>& data) : data(data) {}
 
               public:
                 union {
@@ -353,7 +353,12 @@ namespace XXX_NAMESPACE
             template <typename... T>
             HOST_VERSION
             CUDA_DEVICE_VERSION 
-            constexpr Tuple(internal::Record<T...> data) : Base(data) {}
+            constexpr Tuple(const internal::Record<T...>& data) : Base(data) {}
+
+            template <typename... T>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION 
+            inline constexpr operator Tuple<T...>() { return Tuple<T...>{Base::data}; }
 
             template <typename... T>
             HOST_VERSION
