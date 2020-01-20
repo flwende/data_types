@@ -131,6 +131,21 @@ TEST(Record, move_assignment_with_other_type)
     EXPECT_EQ(-4.1f, Get<2>(record_2));
 }
 
+TEST(Record, convert_references)
+{
+    int i = 1;
+    float f = 4.0f;
+
+    internal::Record<int&, float&> record_1(i, f);
+    internal::Record<const int&, const float&> record_2(internal::Record<int&, float&>{i, f});
+
+    EXPECT_EQ(1, Get<0>(record_1));
+    EXPECT_EQ(4.0f, Get<1>(record_1));
+
+    EXPECT_EQ(1, Get<0>(record_2));
+    EXPECT_EQ(4.0f, Get<1>(record_2));
+}
+
 TEST(Record, constexpr_empty_compile_test)
 {
     [[maybe_unused]] constexpr internal::Record<> record;
