@@ -6,7 +6,7 @@
 #if !defined(BENCHMARK_HPP)
 #define BENCHMARK_HPP
 
-#include <auxiliary/Template.hpp>
+#include <auxiliary/Pack.hpp>
 #include <kernel.hpp>
 
 template <SizeT Dimension>
