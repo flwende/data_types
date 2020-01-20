@@ -17,11 +17,15 @@
 #include <auxiliary/Pack.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Math.hpp>
+//#include <common/Traits.hpp>
 #include <integer_sequence/IntegerSequence.hpp>
 #include <platform/Target.hpp>
 #include <platform/simd/Simd.hpp>
 #include <tuple/Record.hpp>
 #include <DataTypes.hpp>
+
+template <typename... T>
+class DEBUG;
 
 namespace XXX_NAMESPACE
 {
@@ -41,6 +45,14 @@ namespace XXX_NAMESPACE
         }
     }
 
+    namespace internal
+    {
+        using ::XXX_NAMESPACE::memory::DataLayout;
+
+        template <typename, DataLayout, typename>
+        struct Traits;
+    }
+
     namespace memory
     {
         using ::XXX_NAMESPACE::compileTime::Loop;
@@ -53,6 +65,7 @@ namespace XXX_NAMESPACE
         using ::XXX_NAMESPACE::math::IsPowerOf;
         using ::XXX_NAMESPACE::math::LeastCommonMultiple;
         using ::XXX_NAMESPACE::math::PrefixSum;
+        using ::XXX_NAMESPACE::memory::DataLayout;
         using ::XXX_NAMESPACE::platform::Identifier;
         using ::XXX_NAMESPACE::variadic::Pack;
 
@@ -217,7 +230,7 @@ namespace XXX_NAMESPACE
             // Number of parameters (members of the HST).
             static constexpr SizeT NumParameters = Pack<T...>::Size;
             static_assert(NumParameters > 0, "error: empty parameter pack");
-
+         
             // All members have the same type: get this type.
             using ValueT = typename Pack<T...>::template Type<0>;
 
@@ -236,6 +249,8 @@ namespace XXX_NAMESPACE
             template <typename, SizeT, SizeT, DataLayout>
             friend class ::XXX_NAMESPACE::dataTypes::internal::Accessor;
             friend class AllocatorBase<ValueT>;
+            template <typename, DataLayout, typename>
+            friend struct ::XXX_NAMESPACE::internal::Traits;
 
           protected:
             //!
@@ -350,6 +365,7 @@ namespace XXX_NAMESPACE
             Pointer(const Pointer<N0, OtherT...>& other) : n_0(other.n_0), raw_c_pointer(reinterpret_cast<ValueT*>(other.raw_c_pointer))
             {
                 static_assert(Pack<OtherT...>::template IsConvertibleTo<ValueT>(), "error: types are not convertible");
+                
                 assert(other.IsValid());
             }
 
@@ -548,6 +564,7 @@ namespace XXX_NAMESPACE
 
             // All members have the same type: we don't want that here.
             static constexpr bool IsHomogeneous = Pack<T...>::SameSize();
+
             static_assert(!IsHomogeneous, "error: use the Pointer instead");
 
             // Find out the byte-size of the largest parameter type.
@@ -565,9 +582,11 @@ namespace XXX_NAMESPACE
             static constexpr SizeT One = static_cast<SizeT>(1);
             // Determine the total byte-size of all data members that have a size different from (smaller than) the largest parameter type.
             static constexpr SizeT SizeRest = Pack<T...>::SizeOfPackExcludingLargestParameter();
+          public:
             // Determine the number of ISTs that is needed so that their overall size is an integral multiple of each data member type.
             static constexpr SizeT RecordPaddingFactor = std::max(One, LeastCommonMultiple(SizeOfLargestParameter, SizeRest) / std::max(One, SizeRest));
 
+          private:
             // Extent of the innermost array: relevant for the AoSoA data layout only.
             //static constexpr SizeT InnerArraySize = LeastCommonMultiple(N0, RecordPaddingFactor);
             static constexpr SizeT InnerArraySize = ((N0 + (RecordPaddingFactor - 1)) / RecordPaddingFactor) * RecordPaddingFactor;
@@ -580,6 +599,8 @@ namespace XXX_NAMESPACE
             template <typename, SizeT, SizeT, DataLayout>
             friend class ::XXX_NAMESPACE::dataTypes::internal::Accessor;
             friend class AllocatorBase<ValueT>;
+            template <typename, DataLayout, typename>
+            friend struct ::XXX_NAMESPACE::internal::Traits;
 
             //!
             //! \brief Create a tuple of (base) pointers from a pointer.
