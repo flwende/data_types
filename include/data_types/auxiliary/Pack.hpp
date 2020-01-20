@@ -74,8 +74,8 @@ namespace XXX_NAMESPACE
             template <typename T_1, typename T_2>
             struct IsConvertibleTo
             {
-                static constexpr bool value = !(std::is_const_v<T_1> && !std::is_const_v<T_2>) && 
-                    std::is_convertible_v<typename ConstReferenceToReference<T_1>::Type, typename ConstReferenceToReference<T_2>::Type>;
+                static constexpr bool value = !(std::is_const<T_1>::value && !std::is_const<T_2>::value) && 
+                    std::is_convertible<typename ConstReferenceToReference<T_1>::Type, typename ConstReferenceToReference<T_2>::Type>::value;
             };
         } // namespace
 
