@@ -61,43 +61,31 @@ namespace XXX_NAMESPACE
                 friend struct ::XXX_NAMESPACE::internal::Traits;
                 //! @}
 
-              protected:
-                //!
-                //! This constructor can take `Records` that hold references to temporaries.
-                //! It should be used only internally or by friends.
-                //!
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleProxy(RecordConstT&& record) : Base(record)
-                {
-                    static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
-                }
-
-              public:
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                constexpr TupleProxy(RecordT&& record) : Base(record)
-                {
-                    static_assert(Pack<ValueT...>::IsFundamental(), "error: fundamental parameter types assumed.");
-                }
-
-                //! @{
-                //! \brief Assignment operator.
-                //!
-                //! The assignment operators defined in the base class (if there are any) are non-virtual.
-                //! We thus need to add a version that returns a reference to this `TupleProxy` type.
-                //!
-                //! Note: the base class assignment operators can handle `TupleProxy` types as arguments due to inheritence.
-                //! Note: we use the base class type as argument type as it covers both the `Tuple` and the `TupleProxy` case.
-                //!
+            public:
                 template <typename... T>
                 HOST_VERSION 
                 CUDA_DEVICE_VERSION 
-                inline constexpr auto operator=(Tuple<T...>&& tuple) -> TupleProxy&
-                {
-                    static_assert(sizeof...(T) == sizeof...(ValueT), "error: parameter lists have different size.");
-                    static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
+                TupleProxy(Record<T...>& record) : Base(record) {}
 
+                template <typename... T>
+                HOST_VERSION 
+                CUDA_DEVICE_VERSION 
+                TupleProxy(const Record<T...>& record) : Base(record) {}
+
+                HOST_VERSION 
+                CUDA_DEVICE_VERSION 
+                constexpr inline TupleProxy& operator=(const TupleProxy<ValueT...>& proxy)
+                {
+                    Loop<sizeof...(ValueT)>::Execute([&proxy, this](const auto I) { Get<I>(*this) = Get<I>(proxy); });
+
+                    return *this;
+                }
+
+                template <typename... T>
+                HOST_VERSION 
+                CUDA_DEVICE_VERSION 
+                constexpr inline TupleProxy& operator=(const ::XXX_NAMESPACE::dataTypes::Tuple<T...>& tuple)
+                {
                     Loop<sizeof...(ValueT)>::Execute([&tuple, this](const auto I) { Get<I>(*this) = Get<I>(tuple); });
 
                     return *this;
@@ -106,15 +94,12 @@ namespace XXX_NAMESPACE
                 template <typename T, typename std::enable_if_t<!Base::template IsRecordOrTupleOrProxy<T>, int> = 0>
                 HOST_VERSION 
                 CUDA_DEVICE_VERSION 
-                inline constexpr auto operator=(const T value) -> TupleProxy&
+                constexpr inline TupleProxy& operator=(const T& value)
                 {
-                    static_assert(Pack<ValueT...>::template IsConvertibleFrom<T>(), "error: types are not convertible.");
-
-                    Loop<sizeof...(ValueT)>::Execute([value, this](const auto I) { Get<I>(*this) = value; });
+                    Loop<sizeof...(ValueT)>::Execute([&value, this](const auto I) { Get<I>(*this) = value; });
 
                     return *this;
                 }
-                //! @}
             };
         } // namespace internal
     }  // namespace dataTypes
