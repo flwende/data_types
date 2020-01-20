@@ -41,7 +41,7 @@ namespace XXX_NAMESPACE
         template <typename T>
         struct IsConstReference
         {
-            static constexpr bool value = std::is_reference_v<T> && std::is_const_v<std::remove_reference_t<T>>;
+            static constexpr bool value = std::is_reference<T>::value && std::is_const<std::remove_reference_t<T>>::value;
         };
 
         template <typename T>
