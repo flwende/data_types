@@ -17,6 +17,18 @@
 
 namespace XXX_NAMESPACE
 {
+    namespace internal
+    {
+        //! @{
+        //! Type traits stuff.
+        //!
+        template <typename T>
+        struct IsReverseRecord
+        {
+            static constexpr bool value = false;
+        };
+    }
+
     namespace dataTypes
     {
         namespace internal
@@ -45,6 +57,9 @@ namespace XXX_NAMESPACE
             {
                 using Base = ReverseRecord<Tail...>;
 
+                template <typename T>
+                static constexpr bool IsReverseRecord = ::XXX_NAMESPACE::internal::IsReverseRecord<std::decay_t<T>>::value;
+
             protected:
                 //! @{
                 //! Create a `ReversedRecord` from this instance.
@@ -53,13 +68,30 @@ namespace XXX_NAMESPACE
                 template <SizeT I, typename std::enable_if_t<(I <= sizeof...(Tail)), int> = 0>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline constexpr auto GetMemberValueOrZero() const { return internal::Get<I>(*this); }
+                inline constexpr auto& GetMemberValueOrZero() { return internal::Get<I>(*this); }
+
+                template <SizeT I, typename std::enable_if_t<(I <= sizeof...(Tail)), int> = 0>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline constexpr const auto& GetMemberValueOrZero() const { return internal::Get<I>(*this); }
+
+                template <SizeT I, typename std::enable_if_t<(I > sizeof...(Tail)), int> = 0>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline constexpr auto GetMemberValueOrZero() { return 0; }
 
                 template <SizeT I, typename std::enable_if_t<(I > sizeof...(Tail)), int> = 0>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 inline constexpr auto GetMemberValueOrZero() const { return 0; }
                 
+                template <typename... T, SizeT... I>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline constexpr auto Convert(IndexSequence<I...>&&) -> ReverseRecord<T...>
+                {
+                    return {static_cast<T>(GetMemberValueOrZero<I>())...};
+                }
 
                 template <typename... T, SizeT... I>
                 HOST_VERSION
@@ -78,7 +110,7 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 constexpr ReverseRecord() : Base(), value{} {}
 
-                template <typename T>
+                template <typename T, typename std::enable_if_t<!IsReverseRecord<T>, int> = 0>
                 HOST_VERSION 
                 CUDA_DEVICE_VERSION 
                 constexpr ReverseRecord(T value) : Base(value), value(value) {}
@@ -94,7 +126,22 @@ namespace XXX_NAMESPACE
                 template <typename... T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                constexpr operator ReverseRecord<T...>() const { return Convert<T...>(MakeIndexSequence<sizeof...(T)>()); }
+                constexpr operator ReverseRecord<T...>() 
+                {
+                    static_assert(Pack<ValueT, Tail...>::template IsConvertibleTo<T...>(), "error: types are not convertible.");
+
+                    return Convert<T...>(MakeIndexSequence<sizeof...(T)>());
+                }
+
+                template <typename... T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr operator ReverseRecord<T...>() const
+                {
+                    static_assert(Pack<ValueT, Tail...>::template IsConvertibleTo<T...>(), "error: types are not convertible.");
+
+                    return Convert<T...>(MakeIndexSequence<sizeof...(T)>());
+                }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
@@ -115,12 +162,30 @@ namespace XXX_NAMESPACE
                 template <SizeT I, typename std::enable_if_t<(I == 0), int> = 0>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline constexpr auto GetMemberValueOrZero() const { return value; }
+                inline constexpr auto& GetMemberValueOrZero() { return value; }
+
+                template <SizeT I, typename std::enable_if_t<(I == 0), int> = 0>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline constexpr const auto& GetMemberValueOrZero() const { return value; }
+
+                template <SizeT I, typename std::enable_if_t<(I > 0), int> = 0>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline constexpr auto GetMemberValueOrZero() { return 0; }
 
                 template <SizeT I, typename std::enable_if_t<(I > 0), int> = 0>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 inline constexpr auto GetMemberValueOrZero() const { return 0; }
+
+                template <typename... T, SizeT... I>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline constexpr auto Convert(IndexSequence<I...>&&) -> ReverseRecord<T...>
+                {
+                    return {static_cast<T>(GetMemberValueOrZero<I>())...};
+                }
 
                 template <typename... T, SizeT... I>
                 HOST_VERSION
@@ -138,6 +203,11 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr ReverseRecord(ValueT value) : value(value) {}
+
+                template <typename... T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                constexpr operator ReverseRecord<T...>() { return Convert<T...>(MakeIndexSequence<sizeof...(T)>()); }
 
                 template <typename... T>
                 HOST_VERSION
@@ -190,6 +260,15 @@ namespace XXX_NAMESPACE
                 template <typename... T, SizeT... I>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
+                inline constexpr auto Convert(IndexSequence<I...>&&) -> Record<T...>
+                {
+                    // The data members are stored in reverse order: I -> sizeof...(Tail) - I.
+                    return {static_cast<T>(Base::template GetMemberValueOrZero<sizeof...(Tail) - I>())...};
+                }
+
+                template <typename... T, SizeT... I>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
                 inline constexpr auto Convert(IndexSequence<I...>&&) const -> Record<T...>
                 {
                     // The data members are stored in reverse order: I -> sizeof...(Tail) - I.
@@ -227,6 +306,11 @@ namespace XXX_NAMESPACE
                 template <typename... T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
+                inline constexpr operator Record<T...>() { return Convert<T...>(MakeIndexSequence<sizeof...(T)>()); }
+
+                template <typename... T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
                 inline constexpr operator Record<T...>() const { return Convert<T...>(MakeIndexSequence<sizeof...(T)>()); }
             };
 
@@ -253,6 +337,14 @@ namespace XXX_NAMESPACE
                 template <typename... T, SizeT... I>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
+                inline constexpr auto Convert(IndexSequence<I...>&&) -> Record<T...>
+                {
+                        return {static_cast<T>(Base::template GetMemberValueOrZero<I>())...};
+                }
+
+                template <typename... T, SizeT... I>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
                 inline constexpr auto Convert(IndexSequence<I...>&&) const -> Record<T...>
                 {
                         return {static_cast<T>(Base::template GetMemberValueOrZero<I>())...};
@@ -266,6 +358,11 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 constexpr Record(ValueT value) : Base(value) {}
+
+                template <typename... T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline constexpr operator Record<T...>() { return Convert<T...>(MakeIndexSequence<sizeof...(T)>()); }
 
                 template <typename... T>
                 HOST_VERSION
@@ -291,6 +388,12 @@ namespace XXX_NAMESPACE
 
         template <typename... T>
         struct IsRecord<::XXX_NAMESPACE::dataTypes::internal::Record<T...>>
+        {
+            static constexpr bool value = true;
+        };
+
+        template <typename... T>
+        struct IsReverseRecord<::XXX_NAMESPACE::dataTypes::internal::ReverseRecord<T...>>
         {
             static constexpr bool value = true;
         };
