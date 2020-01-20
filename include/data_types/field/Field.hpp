@@ -21,6 +21,9 @@
 #include <platform/Target.hpp>
 #include <DataTypes.hpp>
 
+template <typename... T>
+class DEBUG;
+
 namespace XXX_NAMESPACE
 {
     namespace dataTypes
@@ -297,6 +300,8 @@ namespace XXX_NAMESPACE
                 using ConstProxy = typename Traits<const ValueT, Layout>::Proxy;
 
               public:
+                using ValueType = ValueT;
+
                 //!
                 //! \brief Constructor.
                 //!
@@ -363,13 +368,39 @@ namespace XXX_NAMESPACE
                     return {pointer.At(stab_index, intra_stab_index + index)};
                 }
 
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto& operator++()
+                {
+                    ++intra_stab_index;
+                    return *this;
+                }
+
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator==(const Accessor& other) const
+                {
+                    return (stab_index == other.stab_index && intra_stab_index == other.intra_stab_index);
+                }
+
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator!=(const Accessor& other) const
+                {
+                    return !(*this == other);
+                }
+
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator*()
+                {
+                    return (*this)[0];
+                }
+
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator*() const
+                {
+                    return (*this)[0];
+                }
+
               private:
                 Pointer& pointer;
                 const SizeT n_0;
                 const SizeT stab_index;
-                const SizeT intra_stab_index;
+                SizeT intra_stab_index;
             };
-       
+
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief A container type.
