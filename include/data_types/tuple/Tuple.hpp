@@ -328,10 +328,12 @@ namespace XXX_NAMESPACE
             friend class internal::TupleProxy<const std::decay_t<ValueT>...>;
 
             template <typename T>
-            static constexpr bool IsRecordOrTupleOrProxy = 
-                ::XXX_NAMESPACE::internal::IsRecord<std::decay_t<T>>::value ||
+            static inline constexpr auto IsRecordOrTupleOrProxy()
+            {
+                return ::XXX_NAMESPACE::internal::IsRecord<std::decay_t<T>>::value ||
                 ::XXX_NAMESPACE::internal::IsTuple<std::decay_t<T>>::value ||
                 ::XXX_NAMESPACE::internal::IsProxy<std::decay_t<T>>::value;
+            }
 
           public:
             using Type = Tuple<ValueT...>;
@@ -341,7 +343,7 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION 
             constexpr Tuple() : Base() {}
 
-            template <typename T, typename std::enable_if_t<!IsRecordOrTupleOrProxy<T>, int> = 0>
+            template <typename T, typename std::enable_if_t<!IsRecordOrTupleOrProxy<T>(), int> = 0>
             HOST_VERSION
             CUDA_DEVICE_VERSION 
             constexpr Tuple(T value) : Base(value) {}

@@ -91,7 +91,7 @@ namespace XXX_NAMESPACE
                     return *this;
                 }
 
-                template <typename T, typename std::enable_if_t<!Base::template IsRecordOrTupleOrProxy<T>, int> = 0>
+                template <typename T, typename std::enable_if_t<!Base::template IsRecordOrTupleOrProxy<T>(), int> = 0>
                 HOST_VERSION 
                 CUDA_DEVICE_VERSION 
                 constexpr inline TupleProxy& operator=(const T& value)
