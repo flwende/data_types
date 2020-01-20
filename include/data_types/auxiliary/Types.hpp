@@ -35,6 +35,21 @@ namespace XXX_NAMESPACE
         };
         //! @}
     } // namespace variadic
+
+    namespace auxiliary
+    {
+        template <typename T>
+        struct IsConstReference
+        {
+            static constexpr bool value = std::is_reference_v<T> && std::is_const_v<std::remove_reference_t<T>>;
+        };
+
+        template <typename T>
+        struct ConstReferenceToReference
+        {
+            using Type = std::conditional_t<IsConstReference<T>::value, std::add_lvalue_reference_t<std::decay_t<T>>, T>;
+        };
+    }
 } // namespace XXX_NAMESPACE
 
 #endif
