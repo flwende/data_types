@@ -16,11 +16,13 @@
 #include <auxiliary/Pack.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Memory.hpp>
+#include <DataTypes.hpp>
 
 namespace XXX_NAMESPACE
 {
     namespace internal
     {
+        using ::XXX_NAMESPACE::dataTypes::SizeT;
         using ::XXX_NAMESPACE::memory::DataLayout;
         using ::XXX_NAMESPACE::memory::Pointer;
 
@@ -60,6 +62,9 @@ namespace XXX_NAMESPACE
             using ConstT = const T;
             using Proxy = T;
             using BasePointer = Pointer<1, T>;
+            using BasePointerValueT = typename BasePointer::ValueT;
+            
+            static constexpr SizeT PaddingFactor = 1;
         };
 
         // Helper struct.
@@ -83,6 +88,11 @@ namespace XXX_NAMESPACE
                     std::conditional_t<Layout == DataLayout::AoSoA, Pointer<32, T...>, Pointer<1, T...>>, 
                     std::conditional_t<Layout == DataLayout::AoSoA, MultiPointer<32, T...>, MultiPointer<1, T...>>>;
             };
+
+            struct Dummy
+            {
+                static constexpr SizeT RecordPaddingFactor = 1;
+            };
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +111,9 @@ namespace XXX_NAMESPACE
             using ConstT = const T;
             using Proxy = std::conditional_t<std::is_const<T>::value, typename T::Proxy::ConstT, typename T::Proxy>;
             using BasePointer = typename GetBasePointer<std::decay_t<Proxy>, Layout>::Type;
+            using BasePointerValueT = typename BasePointer::ValueT;
+
+            static constexpr SizeT PaddingFactor = std::conditional_t<BasePointer::IsHomogeneous, Dummy, BasePointer>::RecordPaddingFactor;
         };
     } // namespace internal
 } // namespace XXX_NAMESPACE
