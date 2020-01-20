@@ -29,8 +29,10 @@ namespace XXX_NAMESPACE
         //
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        namespace
+        namespace internal
         {
+            using ::XXX_NAMESPACE::auxiliary::ConstReferenceToReference;
+
             //! @{
             //! Get the value of the N-th parameter and its type in the variadic list.
             //!
@@ -68,6 +70,13 @@ namespace XXX_NAMESPACE
                 static inline constexpr auto Value() { return 0; }
             };
             //! @}
+
+            template <typename T_1, typename T_2>
+            struct IsConvertibleTo
+            {
+                static constexpr bool value = !(std::is_const_v<T_1> && !std::is_const_v<T_2>) && 
+                    std::is_convertible_v<typename ConstReferenceToReference<T_1>::Type, typename ConstReferenceToReference<T_2>::Type>;
+            };
         } // namespace
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,17 +88,17 @@ namespace XXX_NAMESPACE
         template <typename... ParameterList>
         struct Pack
         {
-            using Head = typename Parameter<0, ParameterList...>::Type;
+            using Head = typename internal::Parameter<0, ParameterList...>::Type;
 
             template <SizeT N>
-            using Type = typename Parameter<N, ParameterList...>::Type;
+            using Type = typename internal::Parameter<N, ParameterList...>::Type;
 
             static constexpr SizeT Size = sizeof...(ParameterList);
 
             template <SizeT N>
-            static inline constexpr auto Value(ParameterList... values) -> typename Parameter<N, ParameterList...>::Type
+            static inline constexpr auto Value(ParameterList... values) -> typename internal::Parameter<N, ParameterList...>::Type
             {
-                return Parameter<N, ParameterList...>::Value(values...);
+                return internal::Parameter<N, ParameterList...>::Value(values...);
             }
 
             template <template <typename...> typename TypeName>
@@ -100,7 +109,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto IsSame()
             {
-                return AccumulateAdd(0, (std::is_same<Head, ParameterList>::value ? 1 : 0)...) == Size;
+                return AccumulateAdd<SizeT>(0, (std::is_same<Head, ParameterList>::value ? 1 : 0)...) == Size;
             }
 
             //!
@@ -108,7 +117,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto SameSize()
             {
-                return AccumulateAdd(0, (sizeof(Head) == sizeof(ParameterList) ? 1 : 0)...) == Size;
+                return AccumulateAdd<SizeT>(0, (sizeof(Head) == sizeof(ParameterList) ? 1 : 0)...) == Size;
             }
 
             //!
@@ -116,7 +125,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto IsConst()
             {
-                return AccumulateAdd(0, (std::is_const<ParameterList>::value ? 1 : 0)...) > 0;
+                return AccumulateAdd<SizeT>(0, (std::is_const<ParameterList>::value ? 1 : 0)...) > 0;
             }
 
             //!
@@ -124,7 +133,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto IsUnsigned()
             {
-                return AccumulateAdd(0, (std::is_unsigned<ParameterList>::value ? 1 : 0)...) == Size;
+                return AccumulateAdd<SizeT>(0, (std::is_unsigned<ParameterList>::value ? 1 : 0)...) == Size;
             }
 
             //!
@@ -132,7 +141,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto IsFundamental()
             {
-                return AccumulateAdd(0, (std::is_fundamental<ParameterList>::value ? 1 : 0)...) == Size;
+                return AccumulateAdd<SizeT>(0, (std::is_fundamental<ParameterList>::value ? 1 : 0)...) == Size;
             }
 
             //!
@@ -140,7 +149,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto IsVoid()
             {
-                return AccumulateAdd(0, (std::is_void<ParameterList>::value ? 1 : 0)...) > 0;
+                return AccumulateAdd<SizeT>(0, (std::is_void<ParameterList>::value ? 1 : 0)...) > 0;
             }
 
             //!
@@ -148,7 +157,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto IsVolatile()
             {
-                return AccumulateAdd(0, (std::is_volatile<ParameterList>::value ? 1 : 0)...) > 0;
+                return AccumulateAdd<SizeT>(0, (std::is_volatile<ParameterList>::value ? 1 : 0)...) > 0;
             }
 
             //!
@@ -156,7 +165,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto IsReference()
             {
-                return AccumulateAdd(0, (std::is_reference<ParameterList>::value ? 1 : 0)...) == Size;
+                return AccumulateAdd<SizeT>(0, (std::is_reference<ParameterList>::value ? 1 : 0)...) == Size;
             }
 
             //! @{
@@ -167,19 +176,25 @@ namespace XXX_NAMESPACE
             template <typename ...X>
             static inline constexpr auto IsConvertibleTo() -> std::enable_if_t<(Size > 1 && sizeof...(X) == 1), bool>
             {
-                return AccumulateAdd(0, (std::is_convertible<ParameterList, typename Parameter<0, X...>::Type>::value ? 1 : 0)...) == Size;
+                return AccumulateAdd<SizeT>(0, (internal::IsConvertibleTo<ParameterList, typename internal::Parameter<0, X...>::Type>::value ? 1 : 0)...) == std::max(Size, sizeof...(X));
             }
 
             template <typename ...X>
             static inline constexpr auto IsConvertibleTo() -> std::enable_if_t<(Size == 1 && sizeof...(X) > 1), bool>
             {
-                return AccumulateAdd(0, (std::is_convertible<typename Parameter<0, ParameterList...>::Type, X>::value ? 1 : 0)...) == sizeof...(X);
+                return AccumulateAdd<SizeT>(0, (internal::IsConvertibleTo<typename internal::Parameter<0, ParameterList...>::Type, X>::value ? 1 : 0)...) == std::max(Size, sizeof...(X));
+            }
+
+            template <typename ...X>
+            static inline constexpr auto IsConvertibleTo() -> std::enable_if_t<(Size == 1 && Size == sizeof...(X)), bool>
+            {
+                return internal::IsConvertibleTo<typename internal::Parameter<0, ParameterList...>::Type, typename internal::Parameter<0, X...>::Type>::value;
             }
 
             template <typename ...X>
             static inline constexpr auto IsConvertibleTo() -> std::enable_if_t<(Size > 1 && Size == sizeof...(X)), bool>
             {
-                return AccumulateAdd(0, (std::is_convertible<ParameterList, X>::value ? 1 : 0)...) == Size;
+                return AccumulateAdd<SizeT>(0, (internal::IsConvertibleTo<ParameterList, X>::value ? 1 : 0)...) == Size;
             }
 
             template <typename ...X>
@@ -194,7 +209,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto SizeOfLargestParameter()
             {
-                return AccumulateMax(0, sizeof(ParameterList)...);
+                return AccumulateMax<SizeT>(0, sizeof(ParameterList)...);
             }
 
             //!
@@ -202,7 +217,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto SizeOfPack()
             {
-                return AccumulateAdd(0, sizeof(ParameterList)...);
+                return AccumulateAdd<SizeT>(0, sizeof(ParameterList)...);
             }
 
             //!
@@ -210,7 +225,7 @@ namespace XXX_NAMESPACE
             //!
             static inline constexpr auto SizeOfPackExcludingLargestParameter()
             {
-                return AccumulateAdd(0, (sizeof(ParameterList) == SizeOfLargestParameter() ? 0 : sizeof(ParameterList))...);
+                return AccumulateAdd<SizeT>(0, (sizeof(ParameterList) == SizeOfLargestParameter() ? 0 : sizeof(ParameterList))...);
             }
         };
     } // namespace variadic
