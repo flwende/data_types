@@ -73,8 +73,8 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> 
     } 
 }
 
-template <typename FuncT, typename Field>
-auto Kernel(FuncT func, Field& a, Field& b, Field& c) -> void
+template <typename FuncT, typename Field, typename Filter_A, typename Filter_B, typename Filter_C>
+auto Kernel(FuncT func, Field& a, Field& b, Field& c, Filter_A, Filter_B, Filter_C)) -> void
 {
     const dim3 block{128, 1, 1};
     const dim3 grid = GetGridSize(a.Size(), block);
