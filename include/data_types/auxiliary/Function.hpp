@@ -32,7 +32,7 @@ namespace XXX_NAMESPACE
 
     namespace auxiliary
     {
-        static constexpr auto AssignAll = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out = in; };
+        static auto AssignAll = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out = in; };
         using AssignAllT = decltype(AssignAll);
     }
 } // namespace XXX_NAMESPACE
