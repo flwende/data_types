@@ -294,6 +294,7 @@ namespace XXX_NAMESPACE
             template <typename ValueT, SizeT Dimension, DataLayout Layout>
             class Accessor<ValueT, 0, Dimension, Layout>
             {
+                using ConstValueT = const ValueT;
                 using BasePointer = typename Traits<ValueT, Layout>::BasePointer;
                 using Pointer = std::conditional_t<std::is_const<ValueT>::value, const BasePointer, BasePointer>;
                 using Proxy = typename Traits<ValueT, Layout>::Proxy;
@@ -342,6 +343,30 @@ namespace XXX_NAMESPACE
 
                     return Get<0>(pointer.At(stab_index, intra_stab_index + index));
                 }
+                
+                //!
+                //! \brief Request an `Accessor` with dimension 0 that points to a specific position.
+                //! 
+                //! \param index the position
+                //! \return a (const) `Accessor` with dimension 0 that points to position `index`
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto At(const SizeT index) -> Accessor<ValueT, 0, Dimension, Layout>
+                { 
+                    assert((intra_stab_index + index) < n_0);
+
+                    return {pointer, n_0, stab_index, intra_stab_index + index};
+                }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto At(const SizeT index) const -> Accessor<ConstValueT, 0, Dimension, Layout>
+                { 
+                    assert((intra_stab_index + index) < n_0);
+
+                    return {pointer, n_0, stab_index, intra_stab_index + index};
+                }
 
                 //!
                 //! \brief Array subscript operator (all other layouts).
@@ -374,6 +399,9 @@ namespace XXX_NAMESPACE
                     return *this;
                 }
 
+                //! @{
+                //! Some iterator functionality.
+                //!
                 HOST_VERSION CUDA_DEVICE_VERSION inline auto operator==(const Accessor& other) const
                 {
                     return (stab_index == other.stab_index && intra_stab_index == other.intra_stab_index);
@@ -384,15 +412,18 @@ namespace XXX_NAMESPACE
                     return !(*this == other);
                 }
 
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator*()
+                template <DataLayout Enable = Layout>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator*() -> std::enable_if_t<Enable != DataLayout::AoS, Proxy>
                 {
                     return (*this)[0];
                 }
 
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator*() const
+                template <DataLayout Enable = Layout>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator*() const -> std::enable_if_t<Enable != DataLayout::AoS, ConstProxy>
                 {
                     return (*this)[0];
                 }
+                //! @}
 
               private:
                 Pointer& pointer;
