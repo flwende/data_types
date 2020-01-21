@@ -14,6 +14,7 @@
 #endif
 
 #include <auxiliary/CPPStandard.hpp>
+#include <platform/Target.hpp>
 
 namespace XXX_NAMESPACE
 {
@@ -28,6 +29,12 @@ namespace XXX_NAMESPACE
             static constexpr bool value = std::is_constructible<std::function<void(T...)>, std::reference_wrapper<std::remove_reference_t<FuncT>>>::value;
         };
     } // namespace variadic
+
+    namespace auxiliary
+    {
+        static constexpr auto AssignAll = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out = in; };
+        using AssignAllT = decltype(AssignAll);
+    }
 } // namespace XXX_NAMESPACE
 
 #endif
