@@ -100,7 +100,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
     -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
-
+    /*
     for (SizeT x = 0; x < a.Size(0); x += Container::GetInnerArraySize())
     {
         const auto& ptr_a = a.At(x);
@@ -113,6 +113,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
             //func(ptr_a[i], ptr_b[i], ptr_c[i]);
         }
     }
+    */
 }
 
 template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
@@ -136,7 +137,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
     -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
-    
+    /*
     for (SizeT y = 0; y < a.Size(1); ++y)
     {
         for (SizeT x = 0; x < a.Size(0); x += Container::GetInnerArraySize())
@@ -152,6 +153,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
             }
         }
     }
+    */
 }
 
 template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
@@ -167,7 +169,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
     {
         for (SizeT y = 0; y < a.Size(1); ++y)
         {
-#if defined(fast)
+#if defined(FW_USE_HIGHLEVEL_VECTOR)
             for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
             {
                 const SizeT i_max = std::min(CHUNK_SIZE, a.Size(0) - x);
@@ -207,11 +209,10 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
     {
         for (SizeT y = 0; y < a.Size(1); ++y)
         {
+#if defined(FW_USE_HIGHLEVEL_VECTOR_REF)
             for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
             {
                 const SizeT i_max = std::min(CHUNK_SIZE, a.Size(0) - x);
-
-#if defined(fast)
                 const SimdVecRef ta(a[z][y].At(x), i_max);
                 const SimdVecRef tb(b[z][y].At(x), i_max);
                 SimdVecRef tc(c[z][y].At(x), i_max);
@@ -221,7 +222,12 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
                 {
                     func(ta[i], tb[i], tc[i]);
                 }
-#else
+            }
+#elif defined(FW_USE_HIGHLEVEL_VECTOR)
+            for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
+            {
+                const SizeT i_max = std::min(CHUNK_SIZE, a.Size(0) - x);
+
                 ta.Load(a[z][y].At(x), fa, i_max);
                 tb.Load(b[z][y].At(x), fb, i_max);
 
@@ -232,8 +238,14 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
                 }
                 
                 tc.Store(c[z][y].At(x), fc, i_max);
-#endif
             }
+#else
+            #pragma omp simd
+            for (SizeT x = 0; x < a.Size(0); ++x)
+            {
+                func(a[z][y][x], b[z][y][x], c[z][y][x]);
+            }
+#endif
         }
     } 
 }

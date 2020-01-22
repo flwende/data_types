@@ -32,7 +32,7 @@ namespace XXX_NAMESPACE
             class Accessor;
         }
 
-        template <typename ValueT, SizeT D, DataLayout Layout>
+        template <typename ValueT, DataLayout Layout>
         class SimdVecRef
         {
             using ConstValueT = const ValueT;
@@ -40,9 +40,13 @@ namespace XXX_NAMESPACE
             using ConstReturnValueT = std::conditional_t<Layout == DataLayout::AoS, ConstValueT&, typename Traits<ConstValueT, Layout>::Proxy>;
 
         public:
-            SimdVecRef(internal::Accessor<ValueT, 0, D, Layout>&& accessor, const SizeT size) : accessor(std::move(accessor)), size(size) {}
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            SimdVecRef(internal::Accessor<ValueT, 0, 0, Layout>&& accessor, const SizeT size) : accessor(std::move(accessor)), size(size) {}
             
             template <typename Accessor, typename Filter>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             auto& Load(const Accessor& external_data, Filter filter, const SizeT n)
             {
                 assert(n <= size);
@@ -57,6 +61,8 @@ namespace XXX_NAMESPACE
             }
 
             template <typename Accessor, typename Filter>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             const auto& Store(Accessor&& external_data, Filter filter, const SizeT n) const
             {
                 assert(n <= size);
@@ -71,49 +77,65 @@ namespace XXX_NAMESPACE
             }
 
             template <typename Accessor>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             auto& Load(const Accessor& external_data, const SizeT n)
             {
                 return Load(external_data, AssignAll, n);
             }
 
             template <typename Accessor>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             auto& Store(Accessor&& external_data, const SizeT n) const
             {
                 return Store(external_data, AssignAll, n);
             }
 
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline auto operator[](const SizeT index) -> ReturnValueT
             {
                 return accessor[index];
             }
             
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline auto operator[](const SizeT index) const -> ConstReturnValueT
             {
                 return accessor[index];
             }
             
-            inline auto begin() -> internal::Accessor<ValueT, 0, D, Layout>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto begin()
             {
                 return accessor;
             }
 
-            inline auto end() -> internal::Accessor<ValueT, 0, D, Layout>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto end()
             {
                 return accessor;
             }
 
-            inline auto begin() const -> internal::Accessor<ConstValueT, 0, D, Layout>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto begin() const
             {
                 return accessor.At(size);
             }
 
-            inline auto end() const -> internal::Accessor<ConstValueT, 0, D, Layout>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto end() const
             {
                 return accessor.At(size);
             }
-            
+        
         protected:
-            internal::Accessor<ValueT, 0, D, Layout> accessor;
+            internal::Accessor<ValueT, 0, 0, Layout> accessor;
             const SizeT size;
         };
 
@@ -130,82 +152,87 @@ namespace XXX_NAMESPACE
             static constexpr SizeT NumElements = ((Size + (PaddingFactor - 1)) / PaddingFactor) * PaddingFactor;
 
         public:
-            SimdVec() : pointer(reinterpret_cast<PointerValueT*>(data.data()), NumElements), ref(internal::Accessor<ValueT, 0, 1, Layout>(pointer, Size), Size) {}
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            SimdVec() : pointer(reinterpret_cast<PointerValueT*>(&data[0]), NumElements) {}
         
             template <typename Accessor, typename Filter>
-            auto& Load(const Accessor& external_data, Filter filter, const SizeT n)
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            auto& Load(const Accessor& external_data, const Filter& filter, const SizeT n)
             {
-                ref.Load(external_data, filter, n);
+                #pragma omp simd
+                for (SizeT i = 0; i < n; ++i)
+                {
+                    filter(external_data[i], (*this)[i]);
+                }
 
                 return *this;
             }
 
             template <typename Accessor, typename Filter>
-            auto& Load(const Accessor& external_data, Filter filter)
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            auto& Load(const Accessor& external_data, const Filter& filter)
             {
                 return Load(external_data, filter, Size);
             }
 
             template <typename Accessor>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             auto& Load(const Accessor& external_data, SizeT n)
             {
                 return Load(external_data, AssignAll, n);
             }
 
             template <typename Accessor, typename Filter>
-            const auto& Store(Accessor&& external_data, Filter filter, const SizeT n) const
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            const auto& Store(Accessor&& external_data, const Filter& filter, const SizeT n) const
             {
-                ref.Store(std::forward<Accessor>(external_data), filter, n);
+                #pragma omp simd
+                for (SizeT i = 0; i < n; ++i)
+                {
+                    filter((*this)[i], external_data[i]);
+                }
 
                 return *this;
             }
 
             template <typename Accessor, typename Filter>
-            const auto& Store(Accessor&& external_data, Filter filter) const
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            const auto& Store(Accessor&& external_data, const Filter& filter) const
             {
                 return Store(std::forward<Accessor>(external_data), filter, Size);
             }
 
             template <typename Accessor>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             const auto& Store(Accessor&& external_data, SizeT n) const
             {
                 return Store(std::forward<Accessor>(external_data), AssignAll, n);
             }
 
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline auto operator[](const SizeT index) -> ReturnValueT
             {
-                return ref[index];
+                return {pointer.At(0, index)};
             }
             
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline auto operator[](const SizeT index) const -> ConstReturnValueT
             {
-                return ref[index];
-            }
-            
-            inline auto begin() -> internal::Accessor<ValueT, 0, 1, Layout>
-            {
-                return ref.begin();
-            }
-
-            inline auto end() -> internal::Accessor<ValueT, 0, 1, Layout>
-            {
-                return ref.end();
-            }
-
-            inline auto begin() const -> internal::Accessor<ConstValueT, 0, 1, Layout>
-            {
-                return ref.begin();
-            }
-
-            inline auto end() const -> internal::Accessor<ConstValueT, 0, 1, Layout>
-            {
-                return ref.end();
+                return {pointer.At(0, index)};
             }
             
         protected:
-            std::array<ValueT, NumElements> data;
+            ValueT data[NumElements];
             Pointer pointer;
-            SimdVecRef<ValueT, 1, Layout> ref;
         };
     }
 }
