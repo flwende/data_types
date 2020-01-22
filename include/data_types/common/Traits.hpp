@@ -64,6 +64,7 @@ namespace XXX_NAMESPACE
             using BasePointer = Pointer<1, T>;
             using BasePointerValueT = typename BasePointer::ValueT;
             
+            static constexpr SizeT BlockingFactor = 1;
             static constexpr SizeT PaddingFactor = 1;
         };
 
@@ -72,6 +73,18 @@ namespace XXX_NAMESPACE
         {
             using ::XXX_NAMESPACE::memory::MultiPointer;
             using ::XXX_NAMESPACE::variadic::Pack;
+
+            template <DataLayout Layout>
+            struct GetBlockingFactor
+            {
+                static constexpr SizeT value = 1;
+            };
+
+            template <>
+            struct GetBlockingFactor<DataLayout::AoSoA>
+            {
+                static constexpr SizeT value = 32;
+            };
 
             template <typename Proxy, DataLayout Layout>
             struct GetBasePointer
@@ -83,10 +96,9 @@ namespace XXX_NAMESPACE
             struct GetBasePointer<Proxy<T...>, Layout>
             {
                 static constexpr bool IsHomogeneous = Pack<T...>::SameSize();
+                static constexpr SizeT BlockingFactor = GetBlockingFactor<Layout>::value;
 
-                using Type = std::conditional_t<IsHomogeneous, 
-                    std::conditional_t<Layout == DataLayout::AoSoA, Pointer<32, T...>, Pointer<1, T...>>, 
-                    std::conditional_t<Layout == DataLayout::AoSoA, MultiPointer<32, T...>, MultiPointer<1, T...>>>;
+                using Type = std::conditional_t<IsHomogeneous, Pointer<BlockingFactor, T...>,  MultiPointer<BlockingFactor, T...>>;
             };
 
             struct Dummy
@@ -113,6 +125,7 @@ namespace XXX_NAMESPACE
             using BasePointer = typename GetBasePointer<std::decay_t<Proxy>, Layout>::Type;
             using BasePointerValueT = typename BasePointer::ValueT;
 
+            static constexpr SizeT BlockingFactor = GetBlockingFactor<Layout>::value;
             static constexpr SizeT PaddingFactor = std::conditional_t<BasePointer::IsHomogeneous, Dummy, BasePointer>::RecordPaddingFactor;
         };
     } // namespace internal
