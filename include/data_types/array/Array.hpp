@@ -407,6 +407,18 @@ namespace XXX_NAMESPACE
         template <SizeT N>
         using SizeArray = Array<SizeT, N>;
 
+        template <typename T, typename ValueT, SizeT N>
+        bool operator==(const T& value, const Array<ValueT, N>& array)
+        {
+            return array == Array<ValueT, N>(value);
+        }
+
+        template <typename T, typename ValueT, SizeT N>
+        bool operator==(const Array<ValueT, N>& array, const T& value)
+        {
+            return array == Array<ValueT, N>(value);
+        }
+
         template <typename ValueT, SizeT N>
         std::ostream& operator<<(std::ostream& os, const Array<ValueT, N>& array)
         {
