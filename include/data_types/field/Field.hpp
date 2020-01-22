@@ -255,7 +255,7 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) -> Accessor<ValueT, 0, Dimension, Layout>
+                inline auto At(const SizeT index) -> Accessor<ValueT, 0, 0, Layout>
                 { 
                     assert(index < n[0]);
 
@@ -266,7 +266,7 @@ namespace XXX_NAMESPACE
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) const -> Accessor<ConstValueT, 0, Dimension, Layout>
+                inline auto At(const SizeT index) const -> Accessor<ConstValueT, 0, 0, Layout>
                 { 
                     assert(index < n[0]);
 
@@ -291,8 +291,8 @@ namespace XXX_NAMESPACE
             //! \tparam Dimension the dimension of the field
             //! \tparam Layout any of AoS, SoAi, SoA
             //!
-            template <typename ValueT, SizeT Dimension, DataLayout Layout>
-            class Accessor<ValueT, 0, Dimension, Layout>
+            template <typename ValueT, DataLayout Layout>
+            class Accessor<ValueT, 0, 0, Layout>
             {
                 using ConstValueT = const ValueT;
                 using BasePointer = typename Traits<ValueT, Layout>::BasePointer;
@@ -345,30 +345,6 @@ namespace XXX_NAMESPACE
                 }
                 
                 //!
-                //! \brief Request an `Accessor` with dimension 0 that points to a specific position.
-                //! 
-                //! \param index the position
-                //! \return a (const) `Accessor` with dimension 0 that points to position `index`
-                //!
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) -> Accessor<ValueT, 0, Dimension, Layout>
-                { 
-                    assert((intra_stab_index + index) < n_0);
-
-                    return {pointer, n_0, stab_index, intra_stab_index + index};
-                }
-
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) const -> Accessor<ConstValueT, 0, Dimension, Layout>
-                { 
-                    assert((intra_stab_index + index) < n_0);
-
-                    return {pointer, n_0, stab_index, intra_stab_index + index};
-                }
-
-                //!
                 //! \brief Array subscript operator (all other layouts).
                 //!
                 //! The return value of `At(..)` is a tuple of references that is used for the proxy type construction.
@@ -397,6 +373,30 @@ namespace XXX_NAMESPACE
                 {
                     ++intra_stab_index;
                     return *this;
+                }
+
+                //!
+                //! \brief Request an `Accessor` with dimension 0 that points to a specific position.
+                //! 
+                //! \param index the position
+                //! \return a (const) `Accessor` with dimension 0 that points to position `index`
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto At(const SizeT index) -> Accessor<ValueT, 0, 0, Layout>
+                { 
+                    assert((intra_stab_index + index) < n_0);
+
+                    return {pointer, n_0, stab_index, intra_stab_index + index};
+                }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto At(const SizeT index) const -> Accessor<ConstValueT, 0, 0, Layout>
+                { 
+                    assert((intra_stab_index + index) < n_0);
+
+                    return {pointer, n_0, stab_index, intra_stab_index + index};
                 }
 
                 //! @{
@@ -663,6 +663,13 @@ namespace XXX_NAMESPACE
                     return n[dimension];
                 }
 
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto Pitch() const
+                { 
+                    return allocation_shape.n_0;
+                }
+
                 //!
                 //! \brief Test for this container being empty.
                 //!
@@ -767,7 +774,7 @@ namespace XXX_NAMESPACE
             //!
             //! Create an empty `Field`.
             //!
-            Field() = default;
+            Field() : n{} {}
 
             //!
             //! \brief Constructor.
@@ -799,7 +806,7 @@ namespace XXX_NAMESPACE
 
                     if (initialize_to_zero)
                     {
-                        data.Set([](SizeT index) { return 0; });
+                        data.Set([](SizeT) { return 0; });
                     }
 
 #if defined(__CUDACC__)
@@ -827,7 +834,7 @@ namespace XXX_NAMESPACE
             //! \param func a callable
             //!
             template <typename FuncT>
-            auto Set(FuncT func, const bool sync_with_device = true)
+            auto Set(FuncT func, [[maybe_unused]] const bool sync_with_device = true)
             {
                 
                 data.Set(func);
@@ -914,6 +921,11 @@ namespace XXX_NAMESPACE
                 assert(dimension < Dimension);
 
                 return n[dimension];
+            }
+
+            inline auto Pitch() const
+            { 
+                return data.Pitch();
             }
 
             static constexpr inline auto GetInnerArraySize() { return Container<Identifier::Host>::GetInnerArraySize(); }
