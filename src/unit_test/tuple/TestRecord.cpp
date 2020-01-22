@@ -291,8 +291,5 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    if (::fw::variadic::Pack<float, float, float>::template IsConvertibleFrom<int>())
-        std::cout << "Yeah" << std::endl;
-
     return RUN_ALL_TESTS();
 }
