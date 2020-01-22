@@ -18,6 +18,7 @@
 #include <auxiliary/Pack.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Memory.hpp>
+#include <integer_sequence/IntegerSequence.hpp>
 #include <tuple/Tuple.hpp>
 #include <DataTypes.hpp>
 
@@ -28,6 +29,8 @@ namespace XXX_NAMESPACE
         namespace internal
         {
             using ::XXX_NAMESPACE::compileTime::Loop;
+            using ::XXX_NAMESPACE::dataTypes::IndexSequence;
+            using ::XXX_NAMESPACE::dataTypes::MakeIndexSequence;
             using ::XXX_NAMESPACE::dataTypes::Tuple;
             using ::XXX_NAMESPACE::memory::DataLayout;
             using ::XXX_NAMESPACE::variadic::Pack;
@@ -61,16 +64,32 @@ namespace XXX_NAMESPACE
                 friend struct ::XXX_NAMESPACE::internal::Traits;
                 //! @}
 
+                template <typename... T, SizeT... I>
+                HOST_VERSION 
+                CUDA_DEVICE_VERSION 
+                TupleProxy(Record<T...>& record, IndexSequence<I...>&&) : Base(Get<I>(record)...) {}
+
+                template <typename... T, SizeT... I>
+                HOST_VERSION 
+                CUDA_DEVICE_VERSION 
+                TupleProxy(Record<T...>&& record, IndexSequence<I...>&&) : Base(Get<I>(record)...) {}
+
             public:
+                //! @{
+                //! These constructors do not forward the record argument to its base class,
+                //! but unpack it using another `TupleProxy` constructor. 
+                //! Why? older GNU compilers seem not to vectorize when forwarding the record to the base class directly.
+                //!
                 template <typename... T>
                 HOST_VERSION 
                 CUDA_DEVICE_VERSION 
-                TupleProxy(Record<T...>& record) : Base(record) {}
+                TupleProxy(Record<T...>& record) : TupleProxy(record, MakeIndexSequence<sizeof...(ValueT)>()) {}
 
                 template <typename... T>
                 HOST_VERSION 
                 CUDA_DEVICE_VERSION 
-                TupleProxy(const Record<T...>& record) : Base(record) {}
+                TupleProxy(Record<T...>&& record) : TupleProxy(std::forward<Record<T...>>(record), MakeIndexSequence<sizeof...(ValueT)>()) {}
+                //! @}
 
                 HOST_VERSION 
                 CUDA_DEVICE_VERSION 
