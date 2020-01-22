@@ -394,7 +394,7 @@ namespace XXX_NAMESPACE
             //!
 #define MACRO(OP, IN_T)                                                                                                                                                                                                    \
     template <typename... T>                                                                                                                                                                                               \
-    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(const IN_T<T...>& tuple)->Tuple&                                                                                                                              \
+    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(const IN_T<T...>& tuple)->Tuple&                                                                                                                    \
     {                                                                                                                                                                                                                      \
         static_assert(Pack<T...>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");                                                                                                             \
                                                                                                                                                                                                                            \
@@ -419,7 +419,7 @@ namespace XXX_NAMESPACE
             //!
 #define MACRO(OP)                                                                                                                                                                                                          \
     template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>                                                                                                                           \
-    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(T value)->Tuple&                                                                                                                                              \
+    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(T value)->Tuple&                                                                                                                                    \
     {                                                                                                                                                                                                                      \
         Loop<sizeof...(ValueT)>::Execute([&value, this](const auto I) { Get<I>(*this) OP value; });                                                                                                                        \
                                                                                                                                                                                                                            \
@@ -432,6 +432,32 @@ namespace XXX_NAMESPACE
             MACRO(*=)
             MACRO(/=)
 #undef MACRO
+
+            template <typename... T>
+            HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator==(const Tuple<T...>& tuple) const
+            {
+                static_assert(sizeof...(T) == sizeof...(ValueT), "error: types have different size.");
+
+                bool is_equal = true;
+
+                Loop<sizeof...(ValueT)>::Execute([&tuple, &is_equal, this](const auto I) { is_equal &= (Get<I>(*this) == Get<I>(tuple)); });
+
+                return is_equal;
+            }
+
+            template <typename T, typename EnableType = std::enable_if_t<std::is_fundamental<T>::value>>
+            HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator==(const T& value) const
+            {
+                static_assert(Pack<T>::template IsConvertibleTo<ValueT...>(), "error: types are not convertible.");
+
+                return (*this) == Tuple<ValueT...>(value);
+            }
+
+            template <typename T>
+            HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator!=(const T& value) const
+            {
+                return !((*this) == value);
+            }
         };
 
         //!
