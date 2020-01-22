@@ -17,15 +17,11 @@
 #include <auxiliary/Pack.hpp>
 #include <common/DataLayout.hpp>
 #include <common/Math.hpp>
-//#include <common/Traits.hpp>
 #include <integer_sequence/IntegerSequence.hpp>
 #include <platform/Target.hpp>
 #include <platform/simd/Simd.hpp>
 #include <tuple/Record.hpp>
 #include <DataTypes.hpp>
-
-template <typename... T>
-class DEBUG;
 
 namespace XXX_NAMESPACE
 {
@@ -623,7 +619,7 @@ namespace XXX_NAMESPACE
             }
 
             template <SizeT N = N0, SizeT... I>
-            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT n_0, IndexSequence<I...>) -> std::enable_if_t<N != 1, Record<T*...>>
+            inline auto make_pointer_tuple(ValueT* raw_c_pointer, const SizeT, IndexSequence<I...>) -> std::enable_if_t<N != 1, Record<T*...>>
             {
                 assert(raw_c_pointer != nullptr);
 
