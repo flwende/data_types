@@ -21,9 +21,6 @@
 #include <platform/Target.hpp>
 #include <DataTypes.hpp>
 
-template <typename... T>
-class DEBUG;
-
 namespace XXX_NAMESPACE
 {
     namespace dataTypes
@@ -455,8 +452,8 @@ namespace XXX_NAMESPACE
                 using BasePointer = typename Traits<T>::BasePointer;
                 using Allocator = typename BasePointer<ValueT>::Allocator;
                 using AllocationShape = typename Allocator::AllocationShape;
-                template <typename T, SizeT D>
-                using Accessor = internal::Accessor<T, D, Dimension, Layout>;
+                template <typename T, SizeT L, SizeT D = Dimension>
+                using Accessor = internal::Accessor<T, L, D, Layout>;
                 static constexpr bool UseProxy = (Layout != DataLayout::AoS && ProvidesProxy<ValueT>::value);
                 using Proxy = typename Traits<ValueT>::Proxy;
                 using ConstProxy = typename Traits<ConstValueT>::Proxy;
@@ -551,12 +548,12 @@ namespace XXX_NAMESPACE
                 template <SizeT D = Dimension>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0>> { return Accessor<ValueT, 1>(pointer, n).At(index); }
+                inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0, 0>> { return Accessor<ValueT, 1>(pointer, n).At(index); }
 
                 template <SizeT D = Dimension>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0>> { return Accessor<ConstValueT, 1>(const_pointer, n).At(index); }
+                inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0, 0>> { return Accessor<ConstValueT, 1>(const_pointer, n).At(index); }
 
                 //!
                 //! \brief Set the content of the container.
@@ -756,8 +753,8 @@ namespace XXX_NAMESPACE
             using ConstValueT = typename Traits<ValueT>::ConstT;
             template <Identifier Target>
             using Container = internal::Container<ValueT, Dimension, Layout, Target>;
-            template <typename T, SizeT D>
-            using Accessor = internal::Accessor<T, D, Dimension, Layout>;
+            template <typename T, SizeT L, SizeT D = Dimension>
+            using Accessor = internal::Accessor<T, L, D, Layout>;
             static constexpr bool UseProxy = (Layout != DataLayout::AoS && ProvidesProxy<ValueT>::value);
             using ReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, typename Traits<ValueT>::Proxy, ValueT&>, Accessor<ValueT, Dimension - 1>>;
             using ConstReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, typename Traits<ConstValueT>::Proxy, const ValueT&>, Accessor<ConstValueT, Dimension - 1>>;
@@ -898,10 +895,10 @@ namespace XXX_NAMESPACE
             //! \return a (const) `Accessor` with dimension 0 that points to position `index`
             //!
             template <SizeT D = Dimension>
-            inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0>> { return data.At(index); }
+            inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0, 0>> { return data.At(index); }
 
             template <SizeT D = Dimension>
-            inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0>> { return data.At(index); }
+            inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0, 0>> { return data.At(index); }
 
             //!
             //! \brief Get the size of the container.
