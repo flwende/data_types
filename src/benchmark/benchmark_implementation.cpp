@@ -27,6 +27,9 @@ constexpr std::size_t WARMUP = 10;
 constexpr std::size_t MEASUREMENT = 20;
 #endif
 
+//#define FW_USE_HIGHLEVEL_VECTOR_REF
+//#define FW_USE_HIGHLEVEL_VECTOR
+
 #if defined(__CUDACC__)
 template <typename FuncT, typename Container>
 CUDA_KERNEL
@@ -83,77 +86,174 @@ auto Kernel(FuncT func, Field& a, Field& b, Field& c, Filter_A, Filter_B, Filter
 }
 #else
 template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A, Filter_B, Filter_C) 
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A fa, Filter_B fb, Filter_C fc) 
     -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
+
+    constexpr SizeT CHUNK_SIZE = 32;
+    [[maybe_unused]] SimdVec<ElementT, CHUNK_SIZE, DataLayout::SoA> ta, tb, tc;
     
+#if defined(FW_USE_HIGHLEVEL_VECTOR)
+    for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
+    {
+        const SizeT i_max = std::min(CHUNK_SIZE, a.Size(0) - x);
+
+        ta.Load(a.At(x), fa, i_max);
+        tb.Load(b.At(x), fb, i_max);
+
+        #pragma omp simd
+        for (SizeT i = 0; i < CHUNK_SIZE; ++i)
+        {
+            func(ta[i], tb[i], tc[i]);
+        }
+        
+        tc.Store(c.At(x), fc, i_max);
+    }
+#else        
     #pragma omp simd
     for (SizeT x = 0; x < a.Size(0); ++x)
     {
-        //func(a[x], b[x], c[x]);
+        func(a[x], b[x], c[x]);
     }
+#endif
 }
 
 template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A, Filter_B, Filter_C)  
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A fa, Filter_B fb, Filter_C fc) 
     -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
-    /*
-    for (SizeT x = 0; x < a.Size(0); x += Container::GetInnerArraySize())
-    {
-        const auto& ptr_a = a.At(x);
-        const auto& ptr_b = b.At(x);
-        auto ptr_c = c.At(x);
 
-        #pragma omp simd                
-        for (SizeT i = 0; i < Container::GetInnerArraySize(); ++i)
+    constexpr SizeT CHUNK_SIZE = Container::GetInnerArraySize();
+    [[maybe_unused]] SimdVec<ElementT, CHUNK_SIZE, DataLayout::SoA> ta, tb, tc;
+
+#if defined(FW_USE_HIGHLEVEL_VECTOR_REF)
+    for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
+    {
+        const SizeT i_max = std::min(CHUNK_SIZE, a.Size(0) - x);
+        const SimdVecRef ta(a.At(x), i_max);
+        const SimdVecRef tb(b.At(x), i_max);
+        SimdVecRef tc(c.At(x), i_max);
+
+        #pragma omp simd
+        for (SizeT i = 0; i < i_max; ++i)
         {
-            //func(ptr_a[i], ptr_b[i], ptr_c[i]);
+            func(ta[i], tb[i], tc[i]);
         }
     }
-    */
+#elif defined(FW_USE_HIGHLEVEL_VECTOR)
+    for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
+    {
+        const SizeT i_max = std::min(CHUNK_SIZE, a.Size(0) - x);
+
+        ta.Load(a.At(x), fa, i_max);
+        tb.Load(b.At(x), fb, i_max);
+
+        #pragma omp simd
+        for (SizeT i = 0; i < CHUNK_SIZE; ++i)
+        {
+            func(ta[i], tb[i], tc[i]);
+        }
+        
+        tc.Store(c.At(x), fc, i_max);
+    }
+#else 
+    #pragma omp simd
+    for (SizeT x = 0; x < a.Size(0); ++x)
+    {    
+        func(a[x], b[x], c[x]);
+    }
+#endif
 }
 
 template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A, Filter_B, Filter_C) 
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A fa, Filter_B fb, Filter_C fc) 
     -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
+
+    constexpr SizeT CHUNK_SIZE = 32;
+    [[maybe_unused]] SimdVec<ElementT, CHUNK_SIZE, DataLayout::SoA> ta, tb, tc;
     
     for (SizeT y = 0; y < a.Size(1); ++y)
     {
+#if defined(FW_USE_HIGHLEVEL_VECTOR)
+        for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
+        {
+            const SizeT i_max = std::min(CHUNK_SIZE, a.Size(0) - x);
+
+            ta.Load(a[y].At(x), fa, i_max);
+            tb.Load(b[y].At(x), fb, i_max);
+
+            #pragma omp simd
+            for (SizeT i = 0; i < CHUNK_SIZE; ++i)
+            {
+                func(ta[i], tb[i], tc[i]);
+            }
+            
+            tc.Store(c[y].At(x), fc, i_max);
+        }
+#else        
         #pragma omp simd
         for (SizeT x = 0; x < a.Size(0); ++x)
         {
-            //func(a[y][x], b[y][x], c[y][x]);
+            func(a[y][x], b[y][x], c[y][x]);
         }
+#endif
     }
 }
 
 template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A, Filter_B, Filter_C) 
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A fa, Filter_B fb, Filter_C fc) 
     -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
-    /*
+
+    constexpr SizeT CHUNK_SIZE = Container::GetInnerArraySize();
+    [[maybe_unused]] SimdVec<ElementT, CHUNK_SIZE, DataLayout::SoA> ta, tb, tc;
+    
     for (SizeT y = 0; y < a.Size(1); ++y)
     {
-        for (SizeT x = 0; x < a.Size(0); x += Container::GetInnerArraySize())
+#if defined(FW_USE_HIGHLEVEL_VECTOR_REF)
+        for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
         {
-            const auto& ptr_a = a[y].At(x);
-            const auto& ptr_b = b[y].At(x);
-            auto ptr_c = c[y].At(x);
-            
-            #pragma omp simd                
-            for (SizeT i = 0; i < Container::GetInnerArraySize(); ++i)
+            const SizeT i_max = std::min(CHUNK_SIZE, a.Size(0) - x);
+            const SimdVecRef ta(a[y].At(x), i_max);
+            const SimdVecRef tb(b[y].At(x), i_max);
+            SimdVecRef tc(c[y].At(x), i_max);
+
+            #pragma omp simd
+            for (SizeT i = 0; i < i_max; ++i)
             {
-                //func(ptr_a[i], ptr_b[i], ptr_c[i]);
+                func(ta[i], tb[i], tc[i]);
             }
         }
+#elif defined(FW_USE_HIGHLEVEL_VECTOR)
+        for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
+        {
+            const SizeT i_max = std::min(CHUNK_SIZE, a.Size(0) - x);
+
+            ta.Load(a[y].At(x), fa, i_max);
+            tb.Load(b[y].At(x), fb, i_max);
+
+            #pragma omp simd
+            for (SizeT i = 0; i < CHUNK_SIZE; ++i)
+            {
+                func(ta[i], tb[i], tc[i]);
+            }
+            
+            tc.Store(c[y].At(x), fc, i_max);
+        }
+#else       
+        #pragma omp simd
+        for (SizeT x = 0; x < a.Size(0); ++x)
+        {    
+            func(a[y][x], b[y][x], c[y][x]);
+        }
+#endif
     }
-    */
+
 }
 
 template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
