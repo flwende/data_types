@@ -9,7 +9,13 @@
 #include <cstdint>
 #include <immintrin.h>
 
-#if defined(__AVX512F__)
+#if defined(__CUDACC__)
+#define SIMD_WIDTH_NATIVE_64BIT 16
+#define SIMD_WIDTH_NATIVE_32BIT 32
+#define SIMD_WIDTH_NATIVE_16BIT 64
+#define SIMD_WIDTH_NATIVE_8BIT 128
+#define SIMD_ALIGNMENT 128
+#elif defined(__AVX512F__)
 #define SIMD_WIDTH_NATIVE_64BIT 8
 #define SIMD_WIDTH_NATIVE_32BIT 16
 #define SIMD_WIDTH_NATIVE_16BIT 32
