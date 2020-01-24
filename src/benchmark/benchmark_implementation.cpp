@@ -23,8 +23,10 @@ constexpr double OFFSET = 2.0;
 constexpr std::size_t WARMUP = 0;
 constexpr std::size_t MEASUREMENT = 1;
 #else
-constexpr std::size_t WARMUP = 10;
-constexpr std::size_t MEASUREMENT = 20;
+//constexpr std::size_t WARMUP = 10;
+//constexpr std::size_t MEASUREMENT = 20;
+constexpr std::size_t WARMUP = 0;
+constexpr std::size_t MEASUREMENT = 1;
 #endif
 
 //#define FW_USE_HIGHLEVEL_VECTOR_REF
@@ -357,6 +359,103 @@ auto Kernel(FuncT func, const Field& a, const Field& b, Field& c, Filter_A fa, F
 }
 #endif
 
+#define TESTING_1
+
+#if defined(TESTING_1)
+#if defined(__CUDACC__)
+typename <typename Container>
+CUDA_KERNEL
+auto TestKernelImplemenation(Container a, Container b) -> std::enable_if_t<(Container::TParam_Dimension != 3), void>
+{
+    return 0;
+}
+
+typename <typename Container>
+CUDA_KERNEL
+auto TestKernelImplemenation(Container a, Container b) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
+{
+    using namespace ::fw::math;
+
+    const SizeT x = blockIdx.x * blockDim.x + threadIdx.x;
+    const SizeT y = blockIdx.y * blockDim.y + threadIdx.y;
+    const SizeT z = blockIdx.z * blockDim.z + threadIdx.z;
+
+    if (x < a.Size(0) && y < a.Size(1) && z < a.Size(2))
+    {
+        b[z][y][x] = 2.0 * a[z][y][x];
+    } 
+}
+
+template <SizeT Dimension, typename T>
+auto TestKernel(const T& a, T& b) -> SizeT
+{
+    const dim3 block{128, 1, 1};
+    const dim3 grid = GetGridSize(a.Size(), block);
+
+    TestKernelImplemenation<<<grid, block>>>(func, a.DeviceData(), b.DeviceData());
+
+    return 0;
+}
+#else
+template <SizeT Dimension, typename T>
+auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimension != 3, SizeT>
+{
+    return 0;
+}
+
+template <SizeT Dimension, typename T>
+auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimension == 3, SizeT>
+{
+    using namespace ::fw::math;
+
+    SizeT sum = 0;
+
+    for (SizeT z = 0; z < a.Size(2); ++z)
+    {
+        for (SizeT y = 0; y < a.Size(1); ++y)
+        {
+            #pragma omp simd reduction(+:sum)
+            for (SizeT x = 0; x < a.Size(0); ++x)
+            {
+                //sum += Dot(a[z][y][x], b[z][y][x]);                                                    
+                sum += a[z][y][x].z * b[z][y][x].z;
+            }
+        }
+    }
+
+    return sum;
+}
+
+template <SizeT Dimension, typename T>
+auto TestKernel(const T& a, const T& b) -> SizeT
+{
+    return TestKernelImplemenation<Dimension>(a, b);
+}
+#endif
+#endif
+
+#if defined(TESTING_2)
+template <SizeT Dimension, typename T>
+void Print(const T& field)
+{
+    if constexpr (Dimension == 3)
+    {
+        for (SizeT z = 0; z < field.Size(2); ++z)
+        {
+            for (SizeT y = 0; y < field.Size(1); ++y)
+            {
+                for (SizeT x = 0; x < field.Size(0); ++x)
+                {
+                    std::cout << field[z][y][x] << " ";
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+        }
+    }
+}
+#endif
+
 template <SizeT Dimension>
 int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 {
@@ -364,12 +463,55 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     Field<ElementT, Dimension> field_1(size);
     Field<ElementT, Dimension> field_2(size);
-    Field<ElementT, Dimension> field_3(size, true);
+
+#if defined(TESTING_1)
+    field_1.Set([] (const auto&) { return 0; });
+    field_2.Set([] (const auto&) { return 0; });
+
+    SizeT sum = 0;
+    for (SizeT i = 0; i < (argc > 4 ? std::atoi(argv[4]) : 1); ++i)
+    {
+        sum += TestKernel<Dimension>(field_1, field_2);
+    }
+
+    if (sum == 0)
+    {
+        std::cout << "Success!" << std::endl;
+    }
+
+    return 0;
+#endif
 
     // Field initialization.
     srand48(1);
     field_1.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
     field_2.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
+
+    Field<ElementT, Dimension> field_3(size, true);
+
+#if defined(TESTING_2)
+    //Print<Dimension>(field_1);
+
+    Kernel([] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Exp(a + b); }
+        , field_1, field_2, field_3, ::fw::auxiliary::AssignAll, ::fw::auxiliary::AssignAll, ::fw::auxiliary::AssignAll);
+
+    if constexpr (Dimension == 3)
+    {
+        for (SizeT z = 0; z < field_1.Size(2); ++z)
+        {
+            for (SizeT y = 0; y < field_1.Size(1); ++y)
+            {
+                for (SizeT x = 0; x < field_1.Size(0); ++x)
+                {
+                    const auto& result = Exp(field_1[z][y][x] + field_2[z][y][x]);
+                    if (result != field_3[z][y][x]) { std::cout << "error: " << result << " vs. " << field_3[z][y][x] << std::endl; return 1; }
+                }
+            }
+        }
+    }
+
+    return 0;
+#endif
 
 #if defined(CHECK_RESULTS)
     std::vector<ElementT> field_1_copy = field_1.Get();
