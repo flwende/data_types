@@ -13,6 +13,23 @@
 using namespace ::fw::dataTypes;
 using namespace ::fw::memory;
 
+using TypeX = int;
+using TypeY = float;
+using TypeZ = short;
+
+/*
+using TypeX = short;
+using TypeY = short;
+using TypeZ = short;
+*/
+/*
+using TypeX = char;
+using TypeY = char;
+using TypeZ = char;
+*/
+
+using ElementT = Tuple<TypeX, TypeY, TypeZ>;
+
 auto loop_1d = [] (auto& field, auto&& loop_body) 
     {
         for (SizeT x = 0; x < field.Size(0); ++x) 
@@ -48,8 +65,6 @@ auto loop_3d = [] (auto& field, auto&& loop_body)
 
 TEST(Field, aos_1d_default)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 1, DataLayout::AoS> field;
     EXPECT_EQ(0, field.Size());
 
@@ -64,8 +79,6 @@ TEST(Field, aos_1d_default)
 
 TEST(Field, aos_2d_default)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 2, DataLayout::AoS> field;
     EXPECT_EQ(SizeArray<2>(0), field.Size());
 
@@ -80,8 +93,6 @@ TEST(Field, aos_2d_default)
 
 TEST(Field, aos_3d_default)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 3, DataLayout::AoS> field;
     EXPECT_EQ(SizeArray<3>(0), field.Size());
 
@@ -96,8 +107,6 @@ TEST(Field, aos_3d_default)
 
 TEST(Field, aos_1d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 1, DataLayout::AoS> field;
     EXPECT_EQ(0, field.Size());
 
@@ -128,8 +137,6 @@ TEST(Field, aos_1d_assign_1dindex_as_value)
 
 TEST(Field, aos_2d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 2, DataLayout::AoS> field;
     EXPECT_EQ(0, field.Size());
 
@@ -165,8 +172,6 @@ TEST(Field, aos_2d_assign_1dindex_as_value)
 
 TEST(Field, aos_3d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 3, DataLayout::AoS> field;
     EXPECT_EQ(0, field.Size());
 
@@ -202,8 +207,6 @@ TEST(Field, aos_3d_assign_1dindex_as_value)
 
 TEST(Field, soa_soai_1d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 1, DataLayout::SoA> field;
     EXPECT_EQ(0, field.Size());
 
@@ -221,12 +224,12 @@ TEST(Field, soa_soai_1d_assign_1dindex_as_value)
     // Check data in memory
     EXPECT_EQ(true, [&field]() {
         const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer());
-        const int *i_ptr = reinterpret_cast<const int*>(stab_ptr);
-        const float *f_ptr = reinterpret_cast<const float*>(stab_ptr + field.Pitch() * sizeof(int));
-        const short *s_ptr = reinterpret_cast<const short*>(stab_ptr + field.Pitch() * (sizeof(int) + sizeof(float)));
+        const TypeX *i_ptr = reinterpret_cast<const TypeX*>(stab_ptr);
+        const TypeY *f_ptr = reinterpret_cast<const TypeY*>(stab_ptr + field.Pitch() * sizeof(TypeX));
+        const TypeZ *s_ptr = reinterpret_cast<const TypeZ*>(stab_ptr + field.Pitch() * (sizeof(TypeX) + sizeof(TypeY)));
         for (SizeT i = 0; i < field.Size().ReduceMul(); ++i)
         {
-            if (i_ptr[i] != static_cast<int>(3 * i) || f_ptr[i] != static_cast<float>(3 * i + 1) || s_ptr[i] != static_cast<short>(3 * i + 2))
+            if (i_ptr[i] != static_cast<TypeX>(3 * i) || f_ptr[i] != static_cast<TypeY>(3 * i + 1) || s_ptr[i] != static_cast<TypeZ>(3 * i + 2))
             {
                 return false;
             }
@@ -237,8 +240,6 @@ TEST(Field, soa_soai_1d_assign_1dindex_as_value)
 
 TEST(Field, soa_2d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 2, DataLayout::SoA> field;
     EXPECT_EQ(0, field.Size());
 
@@ -256,12 +257,12 @@ TEST(Field, soa_2d_assign_1dindex_as_value)
     // Check data in memory
     EXPECT_EQ(true, [&field]() {
         const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer());
-        const int *i_ptr = reinterpret_cast<const int*>(stab_ptr);
-        const float *f_ptr = reinterpret_cast<const float*>(stab_ptr + field.Pitch() * sizeof(int));
-        const short *s_ptr = reinterpret_cast<const short*>(stab_ptr + field.Pitch() * (sizeof(int) + sizeof(float)));
+        const TypeX *i_ptr = reinterpret_cast<const TypeX*>(stab_ptr);
+        const TypeY *f_ptr = reinterpret_cast<const TypeY*>(stab_ptr + field.Pitch() * sizeof(TypeX));
+        const TypeZ *s_ptr = reinterpret_cast<const TypeZ*>(stab_ptr + field.Pitch() * (sizeof(TypeX) + sizeof(TypeY)));
         for (SizeT i = 0; i < field.Size().ReduceMul(); ++i)
         {
-            if (i_ptr[i] != static_cast<int>(3 * i) || f_ptr[i] != static_cast<float>(3 * i + 1) || s_ptr[i] != static_cast<short>(3 * i + 2))
+            if (i_ptr[i] != static_cast<TypeX>(3 * i) || f_ptr[i] != static_cast<TypeY>(3 * i + 1) || s_ptr[i] != static_cast<TypeZ>(3 * i + 2))
             {
                 return false;
             }
@@ -272,8 +273,6 @@ TEST(Field, soa_2d_assign_1dindex_as_value)
 
 TEST(Field, soai_2d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 2, DataLayout::SoAi> field;
     EXPECT_EQ(0, field.Size());
 
@@ -292,14 +291,14 @@ TEST(Field, soai_2d_assign_1dindex_as_value)
     EXPECT_EQ(true, [&field]() {
         for (SizeT stab_index = 0; stab_index < field.Size().ReduceMul(1); ++stab_index)
         {
-            const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer()) + stab_index * field.Pitch() * (sizeof(int) + sizeof(float) + sizeof(short));
-            const int *i_ptr = reinterpret_cast<const int*>(stab_ptr);
-            const float *f_ptr = reinterpret_cast<const float*>(stab_ptr + field.Pitch() * sizeof(int));
-            const short *s_ptr = reinterpret_cast<const short*>(stab_ptr + field.Pitch() * (sizeof(int) + sizeof(float)));
+            const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer()) + stab_index * field.Pitch() * (sizeof(TypeX) + sizeof(TypeY) + sizeof(TypeZ));
+            const TypeX *i_ptr = reinterpret_cast<const TypeX*>(stab_ptr);
+            const TypeY *f_ptr = reinterpret_cast<const TypeY*>(stab_ptr + field.Pitch() * sizeof(TypeX));
+            const TypeZ *s_ptr = reinterpret_cast<const TypeZ*>(stab_ptr + field.Pitch() * (sizeof(TypeX) + sizeof(TypeY)));
             for (SizeT i = 0; i < field.Size(0); ++i)
             {
                 const SizeT index = stab_index * field.Size(0) + i;
-                if (i_ptr[i] != static_cast<int>(3 * index) || f_ptr[i] != static_cast<float>(3 * index + 1) || s_ptr[i] != static_cast<short>(3 * index + 2))
+                if (i_ptr[i] != static_cast<TypeX>(3 * index) || f_ptr[i] != static_cast<TypeY>(3 * index + 1) || s_ptr[i] != static_cast<TypeZ>(3 * index + 2))
                 {
                     return false;
                 }
@@ -311,8 +310,6 @@ TEST(Field, soai_2d_assign_1dindex_as_value)
 
 TEST(Field, soa_3d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 3, DataLayout::SoA> field;
     EXPECT_EQ(0, field.Size());
 
@@ -330,12 +327,12 @@ TEST(Field, soa_3d_assign_1dindex_as_value)
     // Check data in memory
     EXPECT_EQ(true, [&field]() {
         const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer());
-        const int *i_ptr = reinterpret_cast<const int*>(stab_ptr);
-        const float *f_ptr = reinterpret_cast<const float*>(stab_ptr + field.Pitch() * sizeof(int));
-        const short *s_ptr = reinterpret_cast<const short*>(stab_ptr + field.Pitch() * (sizeof(int) + sizeof(float)));
+        const TypeX *i_ptr = reinterpret_cast<const TypeX*>(stab_ptr);
+        const TypeY *f_ptr = reinterpret_cast<const TypeY*>(stab_ptr + field.Pitch() * sizeof(TypeX));
+        const TypeZ *s_ptr = reinterpret_cast<const TypeZ*>(stab_ptr + field.Pitch() * (sizeof(TypeX) + sizeof(TypeY)));
         for (SizeT i = 0; i < field.Size().ReduceMul(); ++i)
         {
-            if (i_ptr[i] != static_cast<int>(3 * i) || f_ptr[i] != static_cast<float>(3 * i + 1) || s_ptr[i] != static_cast<short>(3 * i + 2))
+            if (i_ptr[i] != static_cast<TypeX>(3 * i) || f_ptr[i] != static_cast<TypeY>(3 * i + 1) || s_ptr[i] != static_cast<TypeZ>(3 * i + 2))
             {
                 return false;
             }
@@ -346,8 +343,6 @@ TEST(Field, soa_3d_assign_1dindex_as_value)
 
 TEST(Field, soai_3d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
-
     Field<ElementT, 3, DataLayout::SoAi> field;
     EXPECT_EQ(0, field.Size());
 
@@ -366,14 +361,14 @@ TEST(Field, soai_3d_assign_1dindex_as_value)
     EXPECT_EQ(true, [&field]() {
         for (SizeT stab_index = 0; stab_index < field.Size().ReduceMul(1); ++stab_index)
         {
-            const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer()) + stab_index * field.Pitch() * (sizeof(int) + sizeof(float) + sizeof(short));
-            const int *i_ptr = reinterpret_cast<const int*>(stab_ptr);
-            const float *f_ptr = reinterpret_cast<const float*>(stab_ptr + field.Pitch() * sizeof(int));
-            const short *s_ptr = reinterpret_cast<const short*>(stab_ptr + field.Pitch() * (sizeof(int) + sizeof(float)));
+            const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer()) + stab_index * field.Pitch() * (sizeof(TypeX) + sizeof(TypeY) + sizeof(TypeZ));
+            const TypeX *i_ptr = reinterpret_cast<const TypeX*>(stab_ptr);
+            const TypeY *f_ptr = reinterpret_cast<const TypeY*>(stab_ptr + field.Pitch() * sizeof(TypeX));
+            const TypeZ *s_ptr = reinterpret_cast<const TypeZ*>(stab_ptr + field.Pitch() * (sizeof(TypeX) + sizeof(TypeY)));
             for (SizeT i = 0; i < field.Size(0); ++i)
             {
                 const SizeT index = stab_index * field.Size(0) + i;
-                if (i_ptr[i] != static_cast<int>(3 * index) || f_ptr[i] != static_cast<float>(3 * index + 1) || s_ptr[i] != static_cast<short>(3 * index + 2))
+                if (i_ptr[i] != static_cast<TypeX>(3 * index) || f_ptr[i] != static_cast<TypeY>(3 * index + 1) || s_ptr[i] != static_cast<TypeZ>(3 * index + 2))
                 {
                     return false;
                 }
@@ -385,7 +380,6 @@ TEST(Field, soai_3d_assign_1dindex_as_value)
 
 TEST(Field, aosoa_1d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
     constexpr SizeT BlockingFactor = ::fw::internal::Traits<ElementT, DataLayout::AoSoA>::BlockingFactor;
 
     Field<ElementT, 1, DataLayout::AoSoA> field;
@@ -407,15 +401,15 @@ TEST(Field, aosoa_1d_assign_1dindex_as_value)
         const SizeT num_stabs = (field.Size(0) + (BlockingFactor - 1)) / BlockingFactor;
         for (SizeT stab_index = 0; stab_index < num_stabs; ++stab_index)
         {
-            const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer()) + stab_index * field.Pitch() * (sizeof(int) + sizeof(float) + sizeof(short));
-            const int *i_ptr = reinterpret_cast<const int*>(stab_ptr);
-            const float *f_ptr = reinterpret_cast<const float*>(stab_ptr + field.Pitch() * sizeof(int));
-            const short *s_ptr = reinterpret_cast<const short*>(stab_ptr + field.Pitch() * (sizeof(int) + sizeof(float)));
+            const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer()) + stab_index * field.Pitch() * (sizeof(TypeX) + sizeof(TypeY) + sizeof(TypeZ));
+            const TypeX *i_ptr = reinterpret_cast<const TypeX*>(stab_ptr);
+            const TypeY *f_ptr = reinterpret_cast<const TypeY*>(stab_ptr + field.Pitch() * sizeof(TypeX));
+            const TypeZ *s_ptr = reinterpret_cast<const TypeZ*>(stab_ptr + field.Pitch() * (sizeof(TypeX) + sizeof(TypeY)));
             for (SizeT i = 0; i < BlockingFactor; ++i)
             {
                 const SizeT index = stab_index * BlockingFactor + i;
                 if (index >= field.Size().ReduceMul()) continue;    
-                if (i_ptr[i] != static_cast<int>(3 * index) || f_ptr[i] != static_cast<float>(3 * index + 1) || s_ptr[i] != static_cast<short>(3 * index + 2))
+                if (i_ptr[i] != static_cast<TypeX>(3 * index) || f_ptr[i] != static_cast<TypeY>(3 * index + 1) || s_ptr[i] != static_cast<TypeZ>(3 * index + 2))
                 {
                     return false;
                 }
@@ -427,11 +421,8 @@ TEST(Field, aosoa_1d_assign_1dindex_as_value)
 
 TEST(Field, aosoa_2d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
     constexpr SizeT BlockingFactor = ::fw::internal::Traits<ElementT, DataLayout::AoSoA>::BlockingFactor;
-    constexpr SizeT PaddingFactor = ::fw::internal::Traits<ElementT, DataLayout::AoSoA>::PaddingFactor;
-    constexpr SizeT Pitch = ((BlockingFactor + (PaddingFactor - 1)) / PaddingFactor) * PaddingFactor;
-
+    
     Field<ElementT, 2, DataLayout::AoSoA> field;
     EXPECT_EQ(0, field.Size());
 
@@ -454,16 +445,16 @@ TEST(Field, aosoa_2d_assign_1dindex_as_value)
         {
             for (SizeT n_0 = 0; n_0 < num_inner_stabs; ++n_0)
             {
-                const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer()) + (n_1 + n_0) * Pitch * (sizeof(int) + sizeof(float) + sizeof(short));
-                const int *i_ptr = reinterpret_cast<const int*>(stab_ptr);
-                const float *f_ptr = reinterpret_cast<const float*>(stab_ptr + Pitch * sizeof(int));
-                const short *s_ptr = reinterpret_cast<const short*>(stab_ptr + Pitch * (sizeof(int) + sizeof(float)));
+                const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer()) + (n_1 + n_0) * field.Pitch() * (sizeof(TypeX) + sizeof(TypeY) + sizeof(TypeZ));
+                const TypeX *i_ptr = reinterpret_cast<const TypeX*>(stab_ptr);
+                const TypeY *f_ptr = reinterpret_cast<const TypeY*>(stab_ptr + field.Pitch() * sizeof(TypeX));
+                const TypeZ *s_ptr = reinterpret_cast<const TypeZ*>(stab_ptr + field.Pitch() * (sizeof(TypeX) + sizeof(TypeY)));
                 for (SizeT i = 0; i < BlockingFactor; ++i)
                 {
                     const SizeT intra_stab_index = n_0 * BlockingFactor + i;
                     if (intra_stab_index >= field.Size(0)) continue;
                     const SizeT index = stab_index * field.Size(0) + intra_stab_index;
-                    if (i_ptr[i] != static_cast<int>(3 * index) || f_ptr[i] != static_cast<float>(3 * index + 1) || s_ptr[i] != static_cast<short>(3 * index + 2))
+                    if (i_ptr[i] != static_cast<TypeX>(3 * index) || f_ptr[i] != static_cast<TypeY>(3 * index + 1) || s_ptr[i] != static_cast<TypeZ>(3 * index + 2))
                     {
                         return false;
                     }
@@ -476,11 +467,8 @@ TEST(Field, aosoa_2d_assign_1dindex_as_value)
 
 TEST(Field, aosoa_3d_assign_1dindex_as_value)
 {
-    using ElementT = Tuple<int, float, short>;
     constexpr SizeT BlockingFactor = ::fw::internal::Traits<ElementT, DataLayout::AoSoA>::BlockingFactor;
-    constexpr SizeT PaddingFactor = ::fw::internal::Traits<ElementT, DataLayout::AoSoA>::PaddingFactor;
-    constexpr SizeT Pitch = ((BlockingFactor + (PaddingFactor - 1)) / PaddingFactor) * PaddingFactor;
-
+    
     Field<ElementT, 3, DataLayout::AoSoA> field;
     EXPECT_EQ(0, field.Size());
 
@@ -494,7 +482,7 @@ TEST(Field, aosoa_3d_assign_1dindex_as_value)
         loop_3d(field, [&all_values_correct, &index](auto&& item) { if (item != ElementT(3 * index + 0, 3 * index + 1, 3 * index + 2)) all_values_correct = false; ++index; });
         return all_values_correct;
     } ());
-
+    
     // Check data in memory
     EXPECT_EQ(true, [&field]() {
         const SizeT num_stabs = (field.Size().ReduceMul() + (BlockingFactor - 1)) / BlockingFactor;
@@ -503,16 +491,16 @@ TEST(Field, aosoa_3d_assign_1dindex_as_value)
         {
             for (SizeT n_0 = 0; n_0 < num_inner_stabs; ++n_0)
             {
-                const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer()) + (n_1 + n_0) * Pitch * (sizeof(int) + sizeof(float) + sizeof(short));
-                const int *i_ptr = reinterpret_cast<const int*>(stab_ptr);
-                const float *f_ptr = reinterpret_cast<const float*>(stab_ptr + Pitch * sizeof(int));
-                const short *s_ptr = reinterpret_cast<const short*>(stab_ptr + Pitch * (sizeof(int) + sizeof(float)));
+                const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer()) + (n_1 + n_0) * field.Pitch() * (sizeof(TypeX) + sizeof(TypeY) + sizeof(TypeZ));
+                const TypeX *i_ptr = reinterpret_cast<const TypeX*>(stab_ptr);
+                const TypeY *f_ptr = reinterpret_cast<const TypeY*>(stab_ptr + field.Pitch() * sizeof(TypeX));
+                const TypeZ *s_ptr = reinterpret_cast<const TypeZ*>(stab_ptr + field.Pitch() * (sizeof(TypeX) + sizeof(TypeY)));
                 for (SizeT i = 0; i < BlockingFactor; ++i)
                 {
                     const SizeT intra_stab_index = n_0 * BlockingFactor + i;
                     if (intra_stab_index >= field.Size(0)) continue;
                     const SizeT index = stab_index * field.Size(0) + intra_stab_index;
-                    if (i_ptr[i] != static_cast<int>(3 * index) || f_ptr[i] != static_cast<float>(3 * index + 1) || s_ptr[i] != static_cast<short>(3 * index + 2))
+                    if (i_ptr[i] != static_cast<TypeX>(3 * index) || f_ptr[i] != static_cast<TypeY>(3 * index + 1) || s_ptr[i] != static_cast<TypeZ>(3 * index + 2))
                     {
                         return false;
                     }
