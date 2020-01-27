@@ -23,10 +23,10 @@ constexpr double OFFSET = 2.0;
 constexpr std::size_t WARMUP = 0;
 constexpr std::size_t MEASUREMENT = 1;
 #else
-//constexpr std::size_t WARMUP = 10;
-//constexpr std::size_t MEASUREMENT = 20;
-constexpr std::size_t WARMUP = 0;
-constexpr std::size_t MEASUREMENT = 1;
+constexpr std::size_t WARMUP = 10;
+constexpr std::size_t MEASUREMENT = 20;
+//constexpr std::size_t WARMUP = 0;
+//constexpr std::size_t MEASUREMENT = 1;
 #endif
 
 //#define FW_USE_HIGHLEVEL_VECTOR_REF
@@ -359,7 +359,7 @@ auto Kernel(FuncT func, const Field& a, const Field& b, Field& c, Filter_A fa, F
 }
 #endif
 
-#define TESTING_1
+//#define TESTING_1
 
 #if defined(TESTING_1)
 #if defined(__CUDACC__)
