@@ -363,14 +363,14 @@ auto Kernel(FuncT func, const Field& a, const Field& b, Field& c, Filter_A fa, F
 
 #if defined(TESTING_1)
 #if defined(__CUDACC__)
-typename <typename Container>
+template <typename Container>
 CUDA_KERNEL
 auto TestKernelImplemenation(Container a, Container b) -> std::enable_if_t<(Container::TParam_Dimension != 3), void>
 {
     return 0;
 }
 
-typename <typename Container>
+template <typename Container>
 CUDA_KERNEL
 auto TestKernelImplemenation(Container a, Container b) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
 {
@@ -387,12 +387,12 @@ auto TestKernelImplemenation(Container a, Container b) -> std::enable_if_t<(Cont
 }
 
 template <SizeT Dimension, typename T>
-auto TestKernel(const T& a, T& b) -> SizeT
+auto TestKernel(T& a, T& b) -> SizeT
 {
     const dim3 block{128, 1, 1};
     const dim3 grid = GetGridSize(a.Size(), block);
 
-    TestKernelImplemenation<<<grid, block>>>(func, a.DeviceData(), b.DeviceData());
+    TestKernelImplemenation<<<grid, block>>>(a.DeviceData(), b.DeviceData());
 
     return 0;
 }
