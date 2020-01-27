@@ -365,10 +365,7 @@ auto Kernel(FuncT func, const Field& a, const Field& b, Field& c, Filter_A fa, F
 #if defined(__CUDACC__)
 template <typename Container>
 CUDA_KERNEL
-auto TestKernelImplemenation(Container a, Container b) -> std::enable_if_t<(Container::TParam_Dimension != 3), void>
-{
-    return 0;
-}
+auto TestKernelImplemenation(Container a, Container b) -> std::enable_if_t<(Container::TParam_Dimension != 3), void> {}
 
 template <typename Container>
 CUDA_KERNEL
@@ -398,7 +395,10 @@ auto TestKernel(T& a, T& b) -> SizeT
 }
 #else
 template <SizeT Dimension, typename T>
-auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimension != 3, SizeT> {}
+auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimension != 3, SizeT>
+{
+    return 0;
+}
 
 template <SizeT Dimension, typename T>
 auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimension == 3, SizeT>
