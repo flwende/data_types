@@ -398,10 +398,7 @@ auto TestKernel(T& a, T& b) -> SizeT
 }
 #else
 template <SizeT Dimension, typename T>
-auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimension != 3, SizeT>
-{
-    return 0;
-}
+auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimension != 3, SizeT> {}
 
 template <SizeT Dimension, typename T>
 auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimension == 3, SizeT>
