@@ -66,6 +66,30 @@ TEST(TupleProxy, assign_scalar)
     EXPECT_EQ(2.0, Get<2>(proxy));
 }
 
+TEST(TupleProxy, multiply_by_scalar)
+{
+    using namespace ::fw::math;
+
+    int i = 12;
+    float f = -3.0f;
+    double d = 1024.0;
+
+    ::fw::dataTypes::internal::Record<int&, float&, double&> references(i, f, d);
+    ::fw::dataTypes::internal::TupleProxy<int, float, double> proxy(references);
+
+    const auto result = proxy * 0;
+
+    EXPECT_EQ(0, Get<0>(result));
+    EXPECT_EQ(0.0f, Get<1>(result));
+    EXPECT_EQ(0.0, Get<2>(result));
+
+    proxy = 2;
+
+    EXPECT_EQ(2, Get<0>(proxy));
+    EXPECT_EQ(2.0f, Get<1>(proxy));
+    EXPECT_EQ(2.0, Get<2>(proxy));
+}
+
 TEST(TupleProxy, assign_tuple)
 {
     int i = 12;
