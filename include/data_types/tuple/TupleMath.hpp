@@ -33,14 +33,14 @@ namespace XXX_NAMESPACE
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define MACRO(OP)                                                                                                                                                                                                          \
     template <typename... T_1, typename... T_2>                                                                                                                                                                            \
-    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(const Tuple<T_1...>& x_1, const Tuple<T_2...>& x_2)                                                                                                           \
+HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(const Tuple<T_1...>& x_1, const Tuple<T_2...>& x_2)                                                                                                     \
     {                                                                                                                                                                                                                      \
         constexpr SizeT N_1 = sizeof...(T_1);                                                                                                                                                                              \
         constexpr SizeT N_2 = sizeof...(T_2);                                                                                                                                                                              \
                                                                                                                                                                                                                            \
         static_assert(N_1 == N_2, "error: parameter lists have different size.");                                                                                                                                          \
                                                                                                                                                                                                                            \
-        Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y{x_1};                                                                                                                                                 \
+        Tuple<typename Compare<std::decay_t<T_1>, std::decay_t<T_2>>::UnqualifiedStrongerT...> y{x_1};                                                                                                                     \
                                                                                                                                                                                                                            \
         y OP## = x_2;                                                                                                                                                                                                      \
                                                                                                                                                                                                                            \
@@ -61,9 +61,9 @@ namespace XXX_NAMESPACE
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define MACRO(OP)                                                                                                                                                                                                          \
     template <typename T_2, typename... T_1, typename EnableType = std::enable_if_t<std::is_fundamental<T_2>::value>>                                                                                                      \
-    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(const Tuple<T_1...>& x_1, const T_2 x_2)                                                                                                                      \
+    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(const Tuple<T_1...>& x_1, const T_2 x_2)                                                                                                            \
     {                                                                                                                                                                                                                      \
-        Tuple<typename Compare<T_1, T_2>::UnqualifiedStrongerT...> y{x_1};                                                                                                                                                 \
+        Tuple<typename Compare<std::decay_t<T_1>, std::decay_t<T_2>>::UnqualifiedStrongerT...> y{x_1};                                                                                                                     \
                                                                                                                                                                                                                            \
         y OP## = x_2;                                                                                                                                                                                                      \
                                                                                                                                                                                                                            \
@@ -71,14 +71,14 @@ namespace XXX_NAMESPACE
     }                                                                                                                                                                                                                      \
                                                                                                                                                                                                                            \
     template <typename T_1, typename... T_2, typename EnableType = std::enable_if_t<std::is_fundamental<T_1>::value>>                                                                                                      \
-    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(const T_1 x_1, const Tuple<T_2...>& x_2)                                                                                                                      \
+    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto operator OP(const T_1 x_1, const Tuple<T_2...>& x_2)                                                                                                            \
     {                                                                                                                                                                                                                      \
-        Tuple<typename Compare<T_2, T_1>::UnqualifiedStrongerT...> y(x_1);                                                                                                                                                 \
+        Tuple<typename Compare<std::decay_t<T_2>, std::decay_t<T_1>>::UnqualifiedStrongerT...> y(x_1);                                                                                                                     \
                                                                                                                                                                                                                            \
         y OP## = x_2;                                                                                                                                                                                                      \
                                                                                                                                                                                                                            \
         return y;                                                                                                                                                                                                          \
-    }
+    }                                                                                                                                                                                                                      \
 
         MACRO(+)
         MACRO(-)
@@ -153,7 +153,7 @@ namespace XXX_NAMESPACE
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define MACRO(OP)                                                                                                                                                                                                          \
     template <typename... T>                                                                                                                                                                                               \
-    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto OP(const Tuple<T...>& x)                                                                                                                                                  \
+    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto OP(const Tuple<T...>& x)                                                                                                                                        \
     {                                                                                                                                                                                                                      \
         constexpr SizeT N = sizeof...(T);                                                                                                                                                                                  \
                                                                                                                                                                                                                            \
@@ -182,7 +182,7 @@ namespace XXX_NAMESPACE
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define MACRO(OP)                                                                                                                                                                                                          \
     template <typename... T>                                                                                                                                                                                               \
-    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto OP(const Tuple<T...>& x_1, const Tuple<T...>& x_2)                                                                                                                        \
+    HOST_VERSION CUDA_DEVICE_VERSION inline constexpr auto OP(const Tuple<T...>& x_1, const Tuple<T...>& x_2)                                                                                                              \
     {                                                                                                                                                                                                                      \
         constexpr SizeT N = sizeof...(T);                                                                                                                                                                                  \
                                                                                                                                                                                                                            \
