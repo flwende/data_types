@@ -516,8 +516,13 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 #endif
 
 #if defined(ELEMENT_ACCESS)
+#if defined(CROSS_PRODUCT)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z = (a.x * b.y - a.y * b.x); };
+    auto kernel_2 = kernel_1;
+#else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z = Exp(a.x + b.y); };
     auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.x = Log(a.z) - b.y; };
+#endif
     auto load_1_a = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = in.x; out.y = 0; out.z = 0; };
     auto load_1_b = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 0; out.y = in.y; out.z = 0; };
     auto store_1_c = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.z = in.z; };
@@ -525,8 +530,13 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     auto load_2_b = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 0; out.y = in.y; out.z = 0; };
     auto store_2_c = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = in.x; };
 #else
+#if defined(CROSS_PRODUCT)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Cross(a, b); };
+    auto kernel_2 = kernel_1;
+#else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Exp(a + b); };
     auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Log(a) - b; };
+#endif
     auto load_1_a = ::fw::auxiliary::AssignAll;
     auto load_1_b = ::fw::auxiliary::AssignAll;
     auto store_1_c = ::fw::auxiliary::AssignAll;
