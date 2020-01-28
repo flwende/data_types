@@ -517,8 +517,21 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
 #if defined(ELEMENT_ACCESS)
 #if defined(COMPUTE_KERNEL)
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z = (a.x * b.y - a.y * b.x); };
-    auto kernel_2 = kernel_1;
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { 
+        using namespace ::fw::math; 
+        const RealT zero = 0;
+        RealT tmp = c.z;
+        for (SizeT i = 0; i < 10; ++i) tmp += Exp(Min(zero, tmp + a.x) + b.y);
+        c.z = tmp;
+    };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { 
+        using namespace ::fw::math; 
+        const RealT one = 1;
+        const RealT two = 2;
+        RealT tmp = c.x;
+        for (SizeT i = 0; i < 10; ++i) tmp += Log(Max(one, static_cast<RealT>(Min(two, tmp + a.z))) - b.y);
+        c.x = tmp;
+    };
 #else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z = Exp(a.x + b.y); };
     auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.x = Log(a.z) - b.y; };
@@ -535,7 +548,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
         using namespace ::fw::math; 
         const ElementT zero(0);
         ElementT tmp = c;
-        for (int i = 0; i < 10; ++i) tmp += Exp(Min(zero, tmp + a) + b);
+        for (SizeT i = 0; i < 10; ++i) tmp += Exp(Min(zero, tmp + a) + b);
         c = tmp;
     };
     auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { 
@@ -543,7 +556,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
         const ElementT one(1);
         const ElementT two(2);
         ElementT tmp = c;
-        for (int i = 0; i < 10; ++i) tmp += Log(Max(one, Min(two, tmp + a)) - b);
+        for (SizeT i = 0; i < 10; ++i) tmp += Log(Max(one, Min(two, tmp + a)) - b);
         c = tmp;
     };
 #else
