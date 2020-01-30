@@ -116,7 +116,7 @@ TEST(Field, aos_3d_assign_1dindex_as_value_componentwise)
     EXPECT_EQ(true, [&field]() {
         bool output_is_correct = true;
         SizeT index = 0;
-        loop_3d(field, [&output_is_correct, &index](auto&& item) { if (item.x != index || item.y != index || item.z != index) output_is_correct = false; ++index; });
+        loop_3d(field, [&output_is_correct, &index](auto&& item) { if (item.x != (3 * index) || item.y != (3 * index + 1) || item.z != (3 * index + 2)) output_is_correct = false; ++index; });
         return output_is_correct;
     } ());
 }
