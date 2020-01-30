@@ -348,6 +348,8 @@ TEST(Field, soai_3d_assign_1dindex_as_value)
 
     field.Resize({254, 33, 52});
     EXPECT_EQ(SizeArray<3>(254, 33, 52), field.Size());
+    //field.Resize({255, 256, 256});
+    //EXPECT_EQ(SizeArray<3>(255, 256, 256), field.Size());
     SizeT value = 0;
     field.Set([&value](auto) { SizeT a = value++, b = value++, c = value++; return ElementT(a, b, c); });
     EXPECT_EQ(true, [&field]() { 
