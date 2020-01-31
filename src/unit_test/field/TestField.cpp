@@ -205,7 +205,7 @@ TEST(Field, aos_3d_assign_1dindex_as_value)
     } ());
 }
 
-TEST(Field, soa_soai_1d_assign_1dindex_as_value)
+TEST(Field, soa_soai_1d_assign_1dindex_as_value_1)
 {
     Field<ElementT, 1, DataLayout::SoA> field;
     EXPECT_EQ(0, field.Size());
@@ -230,6 +230,76 @@ TEST(Field, soa_soai_1d_assign_1dindex_as_value)
         for (SizeT i = 0; i < field.Size().ReduceMul(); ++i)
         {
             if (i_ptr[i] != static_cast<TypeX>(3 * i) || f_ptr[i] != static_cast<TypeY>(3 * i + 1) || s_ptr[i] != static_cast<TypeZ>(3 * i + 2))
+            {
+                return false;
+            }
+        }
+        return true;
+    } ());
+}
+
+TEST(Field, soa_soai_1d_assign_1dindex_as_value_2)
+{
+    using TypeX = float;
+    using ElementT = Tuple<TypeX>;
+
+    Field<ElementT, 1, DataLayout::SoA> field;
+    EXPECT_EQ(0, field.Size());
+
+    field.Resize({1011});
+    EXPECT_EQ(1011, field.Size());
+    SizeT value = 0;
+    field.Set([&value](auto) { SizeT a = value++; return ElementT(a); });
+    EXPECT_EQ(true, [&field]() { 
+        bool all_values_correct = true;
+        SizeT index = 0;
+        loop_1d(field, [&all_values_correct, &index](auto&& item) { if (item != ElementT(index)) all_values_correct = false; ++index; });
+        return all_values_correct;
+    } ());
+
+    // Check data in memory
+    EXPECT_EQ(true, [&field]() {
+        const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer());
+        const TypeX *f_ptr = reinterpret_cast<const TypeX*>(stab_ptr);
+        for (SizeT i = 0; i < field.Size().ReduceMul(); ++i)
+        {
+            if (f_ptr[i] != static_cast<TypeX>(i))
+            {
+                return false;
+            }
+        }
+        return true;
+    } ());
+}
+
+TEST(Field, soa_soai_1d_assign_1dindex_as_value_3)
+{
+    using TypeX = float;
+    using TypeY = short;
+    using ElementT = Tuple<TypeX, TypeY>;
+
+    Field<ElementT, 1, DataLayout::SoA> field;
+    EXPECT_EQ(0, field.Size());
+
+    field.Resize({1011});
+    EXPECT_EQ(1011, field.Size());
+    SizeT value = 0;
+    field.Set([&value](auto) { SizeT a = value++, b = value++; return ElementT(a, b); });
+    EXPECT_EQ(true, [&field]() { 
+        bool all_values_correct = true;
+        SizeT index = 0;
+        loop_1d(field, [&all_values_correct, &index](auto&& item) { if (item != ElementT(2 * index + 0, 2 * index + 1)) all_values_correct = false; ++index; });
+        return all_values_correct;
+    } ());
+
+    // Check data in memory
+    EXPECT_EQ(true, [&field]() {
+        const char* stab_ptr = reinterpret_cast<const char*>(field.GetBasePointer());
+        const TypeX *f_ptr = reinterpret_cast<const TypeX*>(stab_ptr);
+        const TypeY *i_ptr = reinterpret_cast<const TypeY*>(stab_ptr + field.Pitch() * sizeof(TypeX));
+        for (SizeT i = 0; i < field.Size().ReduceMul(); ++i)
+        {
+            if (f_ptr[i] != static_cast<TypeX>(2 * i) || i_ptr[i] != static_cast<TypeX>(2 * i + 1))
             {
                 return false;
             }
