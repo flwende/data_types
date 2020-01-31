@@ -267,7 +267,12 @@ namespace XXX_NAMESPACE
                 template <typename T>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION 
-                constexpr TupleBase(T x) : data(x) {}
+                constexpr TupleBase(T& x) : data(x) {}
+
+                template <typename T>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION 
+                constexpr TupleBase(T&& x) : data(x) {}
 
                 template <typename... T>
                 HOST_VERSION
