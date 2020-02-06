@@ -60,7 +60,7 @@ namespace XXX_NAMESPACE
         struct Traits
         {
             using ConstT = const T;
-            using Proxy = T;
+            using Proxy = T&;
             using BasePointer = Pointer<1, T>;
             using BasePointerValueT = typename BasePointer::ValueT;
             
