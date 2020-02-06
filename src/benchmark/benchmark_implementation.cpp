@@ -515,6 +515,16 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     std::vector<ElementT> field_2_copy = field_2.Get();
 #endif
 
+#if defined(SAXPY_KERNEL)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c =  a * 3.2 + b; };
+    auto kernel_2 = kernel_1;
+    auto load_1_a = ::fw::auxiliary::AssignAll;
+    auto load_1_b = ::fw::auxiliary::AssignAll;
+    auto store_1_c = ::fw::auxiliary::AssignAll;
+    auto load_2_a = ::fw::auxiliary::AssignAll;
+    auto load_2_b = ::fw::auxiliary::AssignAll;
+    auto store_2_c = ::fw::auxiliary::AssignAll;
+#else
 #if defined(ELEMENT_ACCESS)
 #if defined(COMPUTE_KERNEL)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { 
@@ -569,6 +579,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     auto load_2_a = ::fw::auxiliary::AssignAll;
     auto load_2_b = ::fw::auxiliary::AssignAll;
     auto store_2_c = ::fw::auxiliary::AssignAll;
+#endif
 #endif
 
 #if defined(__CUDACC__)

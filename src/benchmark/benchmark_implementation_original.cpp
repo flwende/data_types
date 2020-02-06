@@ -85,10 +85,8 @@ auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, Siz
     using namespace ::fw::math;
 
     #pragma omp simd
-    for (SizeT x = 0; x < size[0]; ++x)
+    for (SizeT i = 0; i < size[0]; ++i)
     {
-        const SizeT i = x;
-
         func(&a[i], &b[i], &c[i]);
     }
 }
@@ -98,15 +96,10 @@ auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, Siz
 {
     using namespace ::fw::math;
 
-    for (SizeT y = 0; y < size[1]; ++y)
+    #pragma omp simd
+    for (SizeT i = 0; i < (size[0] * size[1]); ++i)
     {
-        #pragma omp simd
-        for (SizeT x = 0; x < size[0]; ++x)
-        {
-            const SizeT i = y * size[0] + x;
-
-            func(&a[i], &b[i], &c[i]);
-        }
+        func(&a[i], &b[i], &c[i]);
     }
 }
 
@@ -115,19 +108,11 @@ auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, Siz
 {
     using namespace ::fw::math;
 
-    for (SizeT z = 0; z < size[2]; ++z)
+    #pragma omp simd
+    for (SizeT i = 0; i < (size[0] * size[1] * size[2]); ++i)
     {
-        for (SizeT y = 0; y < size[1]; ++y)
-        {
-            #pragma omp simd
-            for (SizeT x = 0; x < size[0]; ++x)
-            {
-                const SizeT i = (z * size[1] + y) * size[0] + x;
-
-                func(&a[i], &b[i], &c[i]);
-            }
-        }
-    } 
+        func(&a[i], &b[i], &c[i]);
+    }
 }
 
 template <typename FuncT, SizeT Dimension>
@@ -141,10 +126,11 @@ template <SizeT Dimension>
 int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 {
     const SizeT n = size.ReduceMul();
-    std::vector<ElementT> data_1(size.ReduceMul());
-    std::vector<ElementT> data_2(size.ReduceMul());    
-    std::vector<ElementT> data_3(size.ReduceMul());
 
+    ElementT* data_1 = reinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
+    ElementT* data_2 = reinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
+    ElementT* data_3 = reinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
+    
     // Field initialization.
     srand48(1);
     for (SizeT i = 0; i < n; ++i)
@@ -166,24 +152,29 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     cudaMalloc((void**)&d_data_2, n * sizeof(ElementT));
     cudaMalloc((void**)&d_data_3, n * sizeof(ElementT));
 
-    cudaMemcpy((void*)d_data_1, (const void*)data_1.data(), n * sizeof(ElementT), cudaMemcpyHostToDevice);
-    cudaMemcpy((void*)d_data_2, (const void*)data_2.data(), n * sizeof(ElementT), cudaMemcpyHostToDevice);
+    cudaMemcpy((void*)d_data_1, (const void*)data_1, n * sizeof(ElementT), cudaMemcpyHostToDevice);
+    cudaMemcpy((void*)d_data_2, (const void*)data_2, n * sizeof(ElementT), cudaMemcpyHostToDevice);
 
     ElementT* field_1 = d_data_1;
     ElementT* field_2 = d_data_2;
     ElementT* field_3 = d_data_3;
 #else
-    ElementT* field_1 = data_1.data();
-    ElementT* field_2 = data_2.data();
-    ElementT* field_3 = data_3.data();
+    ElementT* field_1 = data_1;
+    ElementT* field_2 = data_2;
+    ElementT* field_3 = data_3;
 #endif
 
-    #if defined(ELEMENT_ACCESS)
+#if defined(SAXPY_KERNEL)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; *c =  (*a) * 3.2 + *b; };
+    auto kernel_2 = kernel_1;
+#else
+#if defined(ELEMENT_ACCESS)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c->z = Exp(a->x + b->y); };
     auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c->x = Log(a->z) - b->y; };
 #else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; *c = Exp((*a) + (*b)); };
     auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; *c = Log(*a) - (*b); };
+#endif
 #endif
 
     for (SizeT i = 0; i < WARMUP; ++i)
@@ -217,6 +208,10 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     std::cout << "elapsed time: " << (stop_time - start_time) * 1.0E3 << " ms" << std::endl;
     
+    _mm_free(data_1);
+    _mm_free(data_2);
+    _mm_free(data_3);
+
     return 0;
 }
 
