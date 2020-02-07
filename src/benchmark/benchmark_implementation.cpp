@@ -516,17 +516,15 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 #endif
 
 #if defined(SAXPY_KERNEL)
+#if defined(ELEMENT_ACCESS)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z =  a.x * 3.2 + b.y; };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.x =  a.z * 3.2 + b.y; };
+#else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c =  a * 3.2 + b; };
     auto kernel_2 = kernel_1;
-    auto load_1_a = ::fw::auxiliary::AssignAll;
-    auto load_1_b = ::fw::auxiliary::AssignAll;
-    auto store_1_c = ::fw::auxiliary::AssignAll;
-    auto load_2_a = ::fw::auxiliary::AssignAll;
-    auto load_2_b = ::fw::auxiliary::AssignAll;
-    auto store_2_c = ::fw::auxiliary::AssignAll;
-#else
+#endif
+#elif defined(COMPUTE_KERNEL)
 #if defined(ELEMENT_ACCESS)
-#if defined(COMPUTE_KERNEL)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { 
         using namespace ::fw::math; 
         const RealT zero = 0;
@@ -543,17 +541,6 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
         c.x = tmp;
     };
 #else
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z = Exp(a.x + b.y); };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.x = Log(a.z) - b.y; };
-#endif
-    auto load_1_a = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = in.x; out.y = 0; out.z = 0; };
-    auto load_1_b = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 0; out.y = in.y; out.z = 0; };
-    auto store_1_c = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.z = in.z; };
-    auto load_2_a = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 1; out.y = 1; out.z = in.z; };
-    auto load_2_b = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 0; out.y = in.y; out.z = 0; };
-    auto store_2_c = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = in.x; };
-#else
-#if defined(COMPUTE_KERNEL)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { 
         using namespace ::fw::math; 
         const ElementT zero(0);
@@ -569,17 +556,31 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
         for (SizeT i = 0; i < 10; ++i) tmp += Log(Max(one, Min(two, tmp + a)) - b);
         c = tmp;
     };
+#endif
+#else
+#if defined(ELEMENT_ACCESS)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z = Exp(a.x + b.y); };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.x = Log(a.z) - b.y; };
 #else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Exp(a + b); };
     auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Log(a) - b; };
 #endif
+#endif
+
+#if defined(ELEMENT_ACCESS)
+    auto load_1_a = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = in.x; out.y = 0; out.z = 0; };
+    auto load_1_b = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 0; out.y = in.y; out.z = 0; };
+    auto store_1_c = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.z = in.z; };
+    auto load_2_a = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 1; out.y = 1; out.z = in.z; };
+    auto load_2_b = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 0; out.y = in.y; out.z = 0; };
+    auto store_2_c = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = in.x; };
+#else
     auto load_1_a = ::fw::auxiliary::AssignAll;
     auto load_1_b = ::fw::auxiliary::AssignAll;
     auto store_1_c = ::fw::auxiliary::AssignAll;
     auto load_2_a = ::fw::auxiliary::AssignAll;
     auto load_2_b = ::fw::auxiliary::AssignAll;
     auto store_2_c = ::fw::auxiliary::AssignAll;
-#endif
 #endif
 
 #if defined(__CUDACC__)

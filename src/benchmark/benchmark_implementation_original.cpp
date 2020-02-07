@@ -165,8 +165,13 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 #endif
 
 #if defined(SAXPY_KERNEL)
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; *c =  (*a) * 3.2 + *b; };
+#if defined(ELEMENT_ACCESS)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c->z = a->x * 3.2 + b->y; };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c->x = a->z * 3.2 + b->y; };
+#else
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; (*c) = (*a) * 3.2 + (*b); };
     auto kernel_2 = kernel_1;
+#endif
 #else
 #if defined(ELEMENT_ACCESS)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c->z = Exp(a->x + b->y); };
