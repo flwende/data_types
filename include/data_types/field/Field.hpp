@@ -505,7 +505,7 @@ namespace XXX_NAMESPACE
                 //!
                 Container(const SizeArray<Dimension>& n)
                     : n(n), allocation_shape(Allocator::template GetAllocationShape<Layout>(n)),
-                      base_pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0), Deleter()), pointer(*base_pointer), const_pointer(*base_pointer)
+                      base_pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0)), pointer(*base_pointer), const_pointer(*base_pointer)
                 {
                 }
 
@@ -694,7 +694,7 @@ namespace XXX_NAMESPACE
 
                 SizeArray<Dimension> n;
                 AllocationShape allocation_shape;
-                std::shared_ptr<BasePointer<ValueT>> base_pointer;
+                std::unique_ptr<BasePointer<ValueT>, Deleter> base_pointer;
                 BasePointer<ValueT> pointer;
                 BasePointer<ConstValueT> const_pointer;
             };
