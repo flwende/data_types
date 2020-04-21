@@ -64,6 +64,67 @@ namespace XXX_NAMESPACE
         using ::XXX_NAMESPACE::platform::Identifier;
         using ::XXX_NAMESPACE::variadic::Pack;
 
+        template <typename T, Identifier Target>
+        auto Allocate(const SizeT num_bytes, const SizeT alignment = ::XXX_NAMESPACE::simd::alignment)
+            -> std::enable_if_t<Target == Identifier::Host, T*>
+        {
+            return reinterpret_cast<T*>(_mm_malloc(num_bytes, alignment));
+        }
+
+        template <Identifier Target, typename T>
+        auto Deallocate(T* pointer)
+            -> std::enable_if_t<Target == Identifier::Host, void>
+        {
+            assert(pointer != nullptr);
+
+            if (pointer != nullptr)
+            {
+                _mm_free(pointer);
+            }
+        }
+
+#if defined(__CUDACC__)
+        template <typename T, Identifier Target>
+        auto Allocate(const SizeT num_bytes, const SizeT alignment = ::XXX_NAMESPACE::simd::alignment)
+            -> std::enable_if_t<Target == Identifier::GPU_CUDA, T*>
+        {
+            T* pointer = nullptr;
+
+            cudaMalloc((void**)&pointer, num_bytes);
+
+            return pointer;
+        }
+
+        template <Identifier Target, typename T>
+        auto Deallocate(T* pointer)
+            -> std::enable_if_t<Target == Identifier::GPU_CUDA, void>
+        {
+            assert(pointer != nullptr);
+
+            if (pointer != nullptr)
+            {
+                cudaFree(pointer);
+            }
+        }
+#endif
+
+        template <Identifier Target>
+        struct Deleter
+        {
+            //!
+            //! \brief Callable for shared pointer deallocation.
+            //!
+            //! \param pointer a pointer to either `Pointer` or `MultiPointer`
+            //!
+            template <typename Pointer>
+            auto operator()(Pointer* pointer) const -> void
+            { 
+                assert(pointer != nullptr);
+
+                Deallocate<Target>(pointer);
+            }
+        };
+
         namespace
         {
             ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +196,7 @@ namespace XXX_NAMESPACE
                 template <Identifier Target, typename AllocationShapeT>
                 static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<Target == Identifier::Host, T*>::type
                 {
-                    return reinterpret_cast<T*>(_mm_malloc(allocation_shape.GetByteSize(), allocation_shape.alignment));
+                    return ::XXX_NAMESPACE::memory::Allocate<T, Target>(allocation_shape.GetByteSize(), allocation_shape.alignment);
                 }
 
                 //!
@@ -150,49 +211,8 @@ namespace XXX_NAMESPACE
                 {
                     assert(pointer.IsValid());
 
-                    if (pointer.GetBasePointer())
-                    {
-                        _mm_free(pointer.GetBasePointer());
-                    }
+                    ::XXX_NAMESPACE::memory::Deallocate<Target>(pointer.GetBasePointer());
                 }
-
-#if defined(__CUDACC__)
-                //!
-                //! \brief Memory allocation (GPU).
-                //!
-                //! \tparam Target the target platform memory should be allocated for/on
-                //! \tparam AllocationShapeT the type of the allocation shape
-                //! \param allocation_shape the allocation shape used for the memory allocation
-                //! \return a pointer to memory according to the allocation shape
-                //!
-                template <Identifier Target, typename AllocationShapeT>
-                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<Target == Identifier::GPU_CUDA, T*>::type
-                {
-                    T* d_ptr = nullptr;
-
-                    cudaMalloc((void**)&d_ptr, allocation_shape.GetByteSize());
-
-                    return d_ptr;
-                }
-
-                //!
-                //! \brief Memory deallocation (GPU).
-                //!
-                //! \tparam Target the target platform memory should be allocated for/on
-                //! \tparam PointerT the type of the pointer
-                //! \param pointer a pointer variable
-                //!
-                template <Identifier Target, typename PointerT>
-                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<Target == Identifier::GPU_CUDA, void>::type
-                {
-                    assert(pointer.IsValid());
-
-                    if (pointer.GetBasePointer())
-                    {
-                        cudaFree(pointer.GetBasePointer());
-                    }
-                }
-#endif
             };
         } // namespace
 
@@ -476,7 +496,9 @@ namespace XXX_NAMESPACE
                 static auto GetAllocationShape(const SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
                     -> std::enable_if_t<Layout == DataLayout::SoA, AllocationShape>
                 {
-                    return {Padding(n.ReduceMul(), alignment), NumParameters, alignment};
+                    const SizeT n_total = n.ReduceMul();
+                    
+                    return {Padding((IsPowerOf<2>(n_total) ? n_total + 1 : n_total), alignment), NumParameters, alignment};
                 }
 
                 //!
@@ -845,7 +867,9 @@ namespace XXX_NAMESPACE
                 static auto GetAllocationShape(const SizeArray<N>& n, const SizeT alignment = DefaultAlignment)
                     -> std::enable_if_t<Layout == DataLayout::SoA, AllocationShape>
                 {
-                    return {Padding(n.ReduceMul(), alignment), 1, alignment};
+                    const SizeT n_total = n.ReduceMul();
+
+                    return {Padding((IsPowerOf<2>(n_total) ? n_total + 1 : n_total), alignment), 1, alignment};
                 }
 
                 //!
@@ -889,7 +913,7 @@ namespace XXX_NAMESPACE
                 }
             };
 
-          private:
+          protected:
             // Extent of the innermost dimension (w.r.t. a multidimensional field declaration).
             SizeT n_0x;
             // Base pointers (of different type).

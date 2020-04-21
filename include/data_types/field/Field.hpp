@@ -17,6 +17,7 @@
 #include <common/DataLayout.hpp>
 #include <common/Memory.hpp>
 #include <common/Traits.hpp>
+#include <common/SmartPointer.hpp>
 #include <tuple/Get.hpp>
 #include <platform/Target.hpp>
 #include <DataTypes.hpp>
@@ -25,10 +26,14 @@ namespace XXX_NAMESPACE
 {
     namespace dataTypes
     {
-        using ::XXX_NAMESPACE::memory::DataLayout;
+        using namespace ::XXX_NAMESPACE::memory;
+
         using ::XXX_NAMESPACE::internal::Traits;
-        using ::XXX_NAMESPACE::platform::Identifier;
         using ::XXX_NAMESPACE::internal::ProvidesProxy;
+        using ::XXX_NAMESPACE::memory::DataLayout;
+        using ::XXX_NAMESPACE::memory::SmartPointer;
+        using ::XXX_NAMESPACE::platform::Identifier;
+        using ::XXX_NAMESPACE::variadic::IsInvocable;
 
         // Forward declaration.
         template <typename, SizeT, DataLayout>
@@ -36,8 +41,6 @@ namespace XXX_NAMESPACE
 
         namespace internal
         {
-            using ::XXX_NAMESPACE::variadic::IsInvocable;
-
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
             //! \brief Accessor type for array subscript operator chaining [][]..[].
@@ -63,7 +66,7 @@ namespace XXX_NAMESPACE
             class Accessor
             {
                 using ConstValueT = typename Traits<ValueT, Layout>::ConstT;
-                using BasePointer = typename Traits<ValueT, Layout>::BasePointer;
+                using BasePointer = typename Traits<std::decay_t<ValueT>, Layout>::BasePointer;
                 using Pointer = std::conditional_t<std::is_const<ValueT>::value, const BasePointer, BasePointer>;
 
               public:
@@ -108,7 +111,7 @@ namespace XXX_NAMESPACE
                     return {pointer, n, stab_index + index * n.ReduceMul(1, Level - 1)};
                 }
 
-              private:
+              protected:
                 Pointer& pointer;
                 const SizeArray<Dimension>& n;
                 const SizeT stab_index;
@@ -128,7 +131,7 @@ namespace XXX_NAMESPACE
             class Accessor<ValueT, 1, Dimension, Layout>
             {
                 using ConstValueT = typename Traits<ValueT, Layout>::ConstT;
-                using BasePointer = typename Traits<ValueT, Layout>::BasePointer;
+                using BasePointer = typename Traits<std::decay_t<ValueT>, Layout>::BasePointer;
                 using Pointer = std::conditional_t<std::is_const<ValueT>::value, const BasePointer, BasePointer>;
                 using Proxy = typename Traits<ValueT, Layout>::Proxy;
                 using ConstProxy = typename Traits<const ValueT, Layout>::Proxy;
@@ -272,7 +275,7 @@ namespace XXX_NAMESPACE
                     return {pointer, n[0], indices.stab_index, indices.intra_stab_index};
                 }
 
-              private:
+              protected:
                 Pointer& pointer;
                 const SizeArray<Dimension>& n;
                 const SizeT stab_index;
@@ -292,7 +295,7 @@ namespace XXX_NAMESPACE
             class Accessor<ValueT, 0, 0, Layout>
             {
                 using ConstValueT = const ValueT;
-                using BasePointer = typename Traits<ValueT, Layout>::BasePointer;
+                using BasePointer = typename Traits<std::decay_t<ValueT>, Layout>::BasePointer;
                 using Pointer = std::conditional_t<std::is_const<ValueT>::value, const BasePointer, BasePointer>;
                 using Proxy = typename Traits<ValueT, Layout>::Proxy;
                 using ConstProxy = typename Traits<const ValueT, Layout>::Proxy;
@@ -422,7 +425,7 @@ namespace XXX_NAMESPACE
                 }
                 //! @}
 
-              private:
+              protected:
                 Pointer& pointer;
                 const SizeT n_0;
                 const SizeT stab_index;
@@ -450,6 +453,8 @@ namespace XXX_NAMESPACE
                 using ConstValueT = typename Traits<ValueT>::ConstT;
                 template <typename T>
                 using BasePointer = typename Traits<T>::BasePointer;
+                template <typename T>
+                using BasePointerT = typename BasePointer<T>::ValueT;
                 using Allocator = typename BasePointer<ValueT>::Allocator;
                 using AllocationShape = typename Allocator::AllocationShape;
                 template <typename T, SizeT L, SizeT D = Dimension>
@@ -459,6 +464,13 @@ namespace XXX_NAMESPACE
                 using ConstProxy = typename Traits<ConstValueT>::Proxy;
                 using ReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, Proxy, ValueT&>, Accessor<ValueT, Dimension - 1>>;
                 using ConstReturnT = std::conditional_t<Dimension == 1, std::conditional_t<UseProxy, ConstProxy, const ValueT&>, Accessor<ConstValueT, Dimension - 1>>;
+
+                template <typename T>
+                using SmartPointerHost = SmartPointer<T, Deleter<Identifier::Host>>;
+#if defined(__CUDACC__)
+                template <typename T>
+                using SmartPointerGPU = SmartPointer<T, Deleter<Identifier::GPU_CUDA>>;
+#endif
 
                 // Friend declarations.
                 friend class ::XXX_NAMESPACE::dataTypes::Field<ValueT, Dimension, Layout>;
@@ -494,7 +506,7 @@ namespace XXX_NAMESPACE
                 //!
                 //! Create an empty `Container`.
                 //!
-                Container() : n{}, allocation_shape{}, base_pointer{}, pointer{}, const_pointer{} {}
+                Container() : n{}, allocation_shape{}, pointer{} {}
 
                 //!
                 //! \brief Constructor (private).
@@ -505,12 +517,7 @@ namespace XXX_NAMESPACE
                 //!
                 Container(const SizeArray<Dimension>& n)
                     : n(n), allocation_shape(Allocator::template GetAllocationShape<Layout>(n)),
-#if defined(__CUDACC__)
-                      base_pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0), Deleter()), 
-#else
-                      base_pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0)), 
-#endif
-                      pointer(*base_pointer), const_pointer(*base_pointer)
+                      pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0))
                 {
                 }
 
@@ -536,11 +543,11 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto operator[](const SizeT index) -> ReturnT { return Accessor<ValueT, Dimension>(pointer, n)[index]; }
+                inline auto operator[](const SizeT index) -> ReturnT { return Accessor<ValueT, Dimension>(*pointer, n)[index]; }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto operator[](const SizeT index) const -> ConstReturnT { return Accessor<ConstValueT, Dimension>(const_pointer, n)[index]; }
+                inline auto operator[](const SizeT index) const -> ConstReturnT { return Accessor<ConstValueT, Dimension>(*pointer, n)[index]; }
 
                 //!
                 //! \brief Request an `Accessor` with dimension 0 that points to a specific position.
@@ -553,12 +560,12 @@ namespace XXX_NAMESPACE
                 template <SizeT D = Dimension>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0, 0>> { return Accessor<ValueT, 1>(pointer, n).At(index); }
+                inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0, 0>> { return Accessor<ValueT, 1>(*pointer, n).At(index); }
 
                 template <SizeT D = Dimension>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0, 0>> { return Accessor<ConstValueT, 1>(const_pointer, n).At(index); }
+                inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0, 0>> { return Accessor<ConstValueT, 1>(*pointer, n).At(index); }
 
                 //!
                 //! \brief Set the content of the container.
@@ -576,7 +583,7 @@ namespace XXX_NAMESPACE
 
                     if (Dimension == 1)
                     {
-                        internal::Accessor<ValueT, 1, Dimension, Layout> accessor(pointer, n);
+                        internal::Accessor<ValueT, 1, Dimension, Layout> accessor(*pointer, n);
 
                         for (SizeT i = 0; i < n[0]; ++i)
                         {
@@ -587,7 +594,7 @@ namespace XXX_NAMESPACE
                     {
                         for (SizeT k = 0; k < n.ReduceMul(2); ++k)
                         {
-                            internal::Accessor<ValueT, 2, Dimension, Layout> accessor(pointer, n, k * n[1]);
+                            internal::Accessor<ValueT, 2, Dimension, Layout> accessor(*pointer, n, k * n[1]);
 
                             for (SizeT stab_index = 0; stab_index < n[1]; ++stab_index)
                             {
@@ -615,7 +622,7 @@ namespace XXX_NAMESPACE
                     
                     if (Dimension == 1)
                     {
-                        internal::Accessor<ConstValueT, 1, Dimension, Layout> accessor(const_pointer, n);
+                        internal::Accessor<ConstValueT, 1, Dimension, Layout> accessor(*pointer, n);
 
                         for (SizeT i = 0; i < n[0]; ++i)
                         {
@@ -626,7 +633,7 @@ namespace XXX_NAMESPACE
                     {
                         for (SizeT k = 0; k < n.ReduceMul(2); ++k)
                         {
-                            internal::Accessor<ConstValueT, 2, Dimension, Layout> accessor(const_pointer, n, k * n[1]);
+                            internal::Accessor<ConstValueT, 2, Dimension, Layout> accessor(*pointer, n, k * n[1]);
 
                             for (SizeT stab_index = 0; stab_index < n[1]; ++stab_index)
                             {
@@ -677,9 +684,9 @@ namespace XXX_NAMESPACE
                 //!
                 //! \return `true` if the container is empty, otherwise `false`
                 //!
-                inline auto IsEmpty() const { return (base_pointer.get() == nullptr || n.ReduceMul() == 0); }
+                inline auto IsEmpty() const { return (pointer->Get() == nullptr || n.ReduceMul() == 0); }
 
-              private:
+              protected:
                 //!
                 //! \brief Get the total size of the container in bytes.
                 //!
@@ -694,18 +701,12 @@ namespace XXX_NAMESPACE
                 //!
                 auto GetBasePointer() const
                 { 
-                    return const_pointer.GetBasePointer();
+                    return pointer->GetBasePointer();
                 }
 
                 SizeArray<Dimension> n;
                 AllocationShape allocation_shape;
-#if defined(__CUDACC__)
-                std::shared_ptr<BasePointer<ValueT>> base_pointer;
-#else
-                std::unique_ptr<BasePointer<ValueT>, Deleter> base_pointer;
-#endif
-                BasePointer<ValueT> pointer;
-                BasePointer<ConstValueT> const_pointer;
+                SmartPointer<BasePointer<ValueT>, Deleter> pointer;
             };
         } // namespace internal
 
@@ -780,7 +781,12 @@ namespace XXX_NAMESPACE
             //!
             //! Create an empty `Field`.
             //!
-            Field() : n{} {}
+            
+#if defined(__CUDACC__)
+            Field() : n{}, data{}, d_data{} {}
+#else
+            Field() : n{}, data{} {}
+#endif
 
             //!
             //! \brief Constructor.
@@ -790,7 +796,7 @@ namespace XXX_NAMESPACE
             //! \param n the extent of the field
             //! \param initialize_to_zero (optional) if `true`, zero all its elements
             //!
-            Field(const SizeArray<Dimension>& n, const bool initialize_to_zero = false) : n{} { Resize(n, initialize_to_zero); }
+            Field(const SizeArray<Dimension>& n, const bool initialize_to_zero = false) : Field() { Resize(n, initialize_to_zero); }
 
             //!
             //! \brief Resize the container.
@@ -817,7 +823,7 @@ namespace XXX_NAMESPACE
 
 #if defined(__CUDACC__)
                     // Resize only of there is already a non-empty device container.
-                    if (!DeviceContainerIsEmpty())
+                    if (!d_data.IsEmpty())
                     {
                         DeviceResize(initialize_to_zero);
                     }
@@ -842,13 +848,17 @@ namespace XXX_NAMESPACE
             template <typename FuncT>
             auto Set(FuncT func, [[maybe_unused]] const bool sync_with_device = true)
             {
-                
                 data.Set(func);
                 
 #if defined(__CUDACC__)
                 // Copy data to device only if there is already a device container.
-                if (sync_with_device && !DeviceContainerIsEmpty())
+                if (sync_with_device)
                 {
+                    if (d_data.IsEmpty())
+                    {
+                        DeviceResize();
+                    }
+
                     CopyHostToDevice();
                 }
 #endif                
@@ -914,7 +924,7 @@ namespace XXX_NAMESPACE
             //!
             //! \return the size of the container
             //!
-            inline auto Size() const -> const SizeArray<Dimension>& { return n; }
+            inline const auto& Size() const { return n; }
 
             //!
             //! \brief Get the size of the container for a specific dimension.
@@ -937,34 +947,6 @@ namespace XXX_NAMESPACE
             static constexpr inline auto GetInnerArraySize() { return Container<Identifier::Host>::GetInnerArraySize(); }
 
 #if defined(__CUDACC__)
-          private:
-            //!
-            //! \brief Test for device container has been set up.
-            //!
-            //! \return `true` if the device container has been set up, otherwise `false`
-            //!
-            auto DeviceContainerIsEmpty() const
-            {
-                return device_data.IsEmpty();
-            }
-
-            //!
-            //! \brief Resize the device container.
-            //!
-            //! \param sync_with_host (optional) if `true`, copy all data from the host to the device
-            //!
-            auto DeviceResize(const bool sync_with_host = false) -> void
-            {
-                // Resize only of there is already a non-empty device container.
-                device_data = Container<Identifier::GPU_CUDA>(n);
-
-                if (sync_with_host)
-                {
-                    CopyHostToDevice();
-                }
-            }
-
-          public:
             //!
             //! \brief Get access to the device data.
             //!
@@ -975,12 +957,12 @@ namespace XXX_NAMESPACE
             //!
             auto DeviceData(const bool sync_with_host = false) -> Container<Identifier::GPU_CUDA>&
             {
-                if (DeviceContainerIsEmpty())
+                if (d_data.IsEmpty())
                 {
                     DeviceResize(sync_with_host);
                 }
 
-                return device_data;
+                return d_data;
             }
 
             //!
@@ -988,14 +970,14 @@ namespace XXX_NAMESPACE
             //!
             auto CopyDeviceToHost() const -> void
             {
-                assert(!DeviceContainerIsEmpty());
+                assert(!data.IsEmpty());
 
-                if (!DeviceContainerIsEmpty())
+                if (!data.IsEmpty())
                 {
                     assert(data.GetBasePointer() != nullptr);
-                    assert(device_data.GetBasePointer() != nullptr);
+                    assert(d_data.GetBasePointer() != nullptr);
 
-                    cudaMemcpy((void*)data.GetBasePointer(), (const void*)device_data.GetBasePointer(), data.GetByteSize(), cudaMemcpyDeviceToHost);
+                    cudaMemcpy((void*)data.GetBasePointer(), (const void*)d_data.GetBasePointer(), data.GetByteSize(), cudaMemcpyDeviceToHost);
                 }
             }
 
@@ -1005,22 +987,39 @@ namespace XXX_NAMESPACE
             auto CopyHostToDevice() -> void
             {
                 // Create device container if not already there.
-                if (DeviceContainerIsEmpty())
+                if (d_data.IsEmpty())
                 {
                     DeviceResize();
                 }
 
                 assert(data.GetBasePointer() != nullptr);
-                assert(device_data.GetBasePointer() != nullptr);
+                assert(d_data.GetBasePointer() != nullptr);
 
-                cudaMemcpy((void*)device_data.GetBasePointer(), (const void*)data.GetBasePointer(), data.GetByteSize(), cudaMemcpyHostToDevice);
+                cudaMemcpy((void*)d_data.GetBasePointer(), (const void*)data.GetBasePointer(), data.GetByteSize(), cudaMemcpyHostToDevice);
+            }
+
+          protected:
+            //!
+            //! \brief Resize the device container.
+            //!
+            //! \param sync_with_host (optional) if `true`, copy all data from the host to the device
+            //!
+            auto DeviceResize(const bool sync_with_host = false) -> void
+            {
+                // Resize only of there is already a non-empty device container.
+                d_data = Container<Identifier::GPU_CUDA>(n);
+
+                if (sync_with_host)
+                {
+                    CopyHostToDevice();
+                }
             }
 #endif
-          private:
+          protected:
             SizeArray<Dimension> n;
             Container<Identifier::Host> data;
 #if defined(__CUDACC__)
-            Container<Identifier::GPU_CUDA> device_data;
+            Container<Identifier::GPU_CUDA> d_data;
 #endif
         };
     } // namespace dataTypes
