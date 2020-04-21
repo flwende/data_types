@@ -453,6 +453,8 @@ namespace XXX_NAMESPACE
                 using ConstValueT = typename Traits<ValueT>::ConstT;
                 template <typename T>
                 using BasePointer = typename Traits<T>::BasePointer;
+                template <typename T>
+                using BasePointerT = typename BasePointer<T>::ValueT;
                 using Allocator = typename BasePointer<ValueT>::Allocator;
                 using AllocationShape = typename Allocator::AllocationShape;
                 template <typename T, SizeT L, SizeT D = Dimension>
@@ -515,11 +517,7 @@ namespace XXX_NAMESPACE
                 //!
                 Container(const SizeArray<Dimension>& n)
                     : n(n), allocation_shape(Allocator::template GetAllocationShape<Layout>(n)),
-#if defined(__CUDACC__)
-                      base_pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0), Deleter()), 
-#else
                       base_pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0)), 
-#endif
                       pointer(*base_pointer)
                 {
                 }
@@ -709,11 +707,7 @@ namespace XXX_NAMESPACE
 
                 SizeArray<Dimension> n;
                 AllocationShape allocation_shape;
-#if defined(__CUDACC__)
-                std::shared_ptr<BasePointer<ValueT>> base_pointer;
-#else
-                std::unique_ptr<BasePointer<ValueT>, Deleter> base_pointer;
-#endif
+                SmartPointer<BasePointer<ValueT>, Deleter> base_pointer;
                 BasePointer<ValueT> pointer;
                 //BasePointer<ConstValueT> const_pointer;
             };
