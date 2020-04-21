@@ -685,7 +685,7 @@ namespace XXX_NAMESPACE
                 //!
                 //! \return `true` if the container is empty, otherwise `false`
                 //!
-                inline auto IsEmpty() const { return (base_pointer.get() == nullptr || n.ReduceMul() == 0); }
+                inline auto IsEmpty() const { return (GetBasePointer() == nullptr || n.ReduceMul() == 0); }
 
               protected:
                 //!
