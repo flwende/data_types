@@ -506,7 +506,7 @@ namespace XXX_NAMESPACE
                 //!
                 //! Create an empty `Container`.
                 //!
-                Container() : n{}, allocation_shape{}, pointer{} {}
+                Container() : n{}, allocation_shape{}, base_pointer{}, pointer{} {}
 
                 //!
                 //! \brief Constructor (private).
@@ -517,8 +517,8 @@ namespace XXX_NAMESPACE
                 //!
                 Container(const SizeArray<Dimension>& n)
                     : n(n), allocation_shape(Allocator::template GetAllocationShape<Layout>(n)),
-                      pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0))
-                      //pointer(*base_pointer)
+                      base_pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0)), 
+                      pointer(*base_pointer)
                 {
                 }
 
@@ -544,11 +544,11 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto operator[](const SizeT index) -> ReturnT { return Accessor<ValueT, Dimension>(*pointer, n)[index]; }
+                inline auto operator[](const SizeT index) -> ReturnT { return Accessor<ValueT, Dimension>(pointer, n)[index]; }
 
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto operator[](const SizeT index) const -> ConstReturnT { return Accessor<ConstValueT, Dimension>(*pointer, n)[index]; }
+                inline auto operator[](const SizeT index) const -> ConstReturnT { return Accessor<ConstValueT, Dimension>(pointer, n)[index]; }
 
                 //!
                 //! \brief Request an `Accessor` with dimension 0 that points to a specific position.
@@ -561,12 +561,12 @@ namespace XXX_NAMESPACE
                 template <SizeT D = Dimension>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0, 0>> { return Accessor<ValueT, 1>(*pointer, n).At(index); }
+                inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0, 0>> { return Accessor<ValueT, 1>(pointer, n).At(index); }
 
                 template <SizeT D = Dimension>
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0, 0>> { return Accessor<ConstValueT, 1>(*pointer, n).At(index); }
+                inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0, 0>> { return Accessor<ConstValueT, 1>(pointer, n).At(index); }
 
                 //!
                 //! \brief Set the content of the container.
@@ -582,11 +582,9 @@ namespace XXX_NAMESPACE
                 {
                     static_assert(IsInvocable<FuncT, SizeT>::value, "error: callable is not invocable. void (*) (SizeT) expected.");
 
-                    assert(pointer.Get() != nullptr);
-
                     if (Dimension == 1)
                     {
-                        internal::Accessor<ValueT, 1, Dimension, Layout> accessor(*pointer, n);
+                        internal::Accessor<ValueT, 1, Dimension, Layout> accessor(pointer, n);
 
                         for (SizeT i = 0; i < n[0]; ++i)
                         {
@@ -597,7 +595,7 @@ namespace XXX_NAMESPACE
                     {
                         for (SizeT k = 0; k < n.ReduceMul(2); ++k)
                         {
-                            internal::Accessor<ValueT, 2, Dimension, Layout> accessor(*pointer, n, k * n[1]);
+                            internal::Accessor<ValueT, 2, Dimension, Layout> accessor(pointer, n, k * n[1]);
 
                             for (SizeT stab_index = 0; stab_index < n[1]; ++stab_index)
                             {
@@ -623,11 +621,9 @@ namespace XXX_NAMESPACE
                     std::vector<ValueT> data;
                     data.reserve(n.ReduceMul());
                     
-                    assert(pointer.Get() != nullptr);
-
                     if (Dimension == 1)
                     {
-                        internal::Accessor<ConstValueT, 1, Dimension, Layout> accessor(*pointer, n);
+                        internal::Accessor<ConstValueT, 1, Dimension, Layout> accessor(pointer, n);
 
                         for (SizeT i = 0; i < n[0]; ++i)
                         {
@@ -638,7 +634,7 @@ namespace XXX_NAMESPACE
                     {
                         for (SizeT k = 0; k < n.ReduceMul(2); ++k)
                         {
-                            internal::Accessor<ConstValueT, 2, Dimension, Layout> accessor(*pointer, n, k * n[1]);
+                            internal::Accessor<ConstValueT, 2, Dimension, Layout> accessor(pointer, n, k * n[1]);
 
                             for (SizeT stab_index = 0; stab_index < n[1]; ++stab_index)
                             {
@@ -689,7 +685,7 @@ namespace XXX_NAMESPACE
                 //!
                 //! \return `true` if the container is empty, otherwise `false`
                 //!
-                inline auto IsEmpty() const { return (pointer.Get() == nullptr || n.ReduceMul() == 0); }
+                inline auto IsEmpty() const { return (base_pointer.Get() == nullptr || n.ReduceMul() == 0); }
 
               protected:
                 //!
@@ -706,16 +702,13 @@ namespace XXX_NAMESPACE
                 //!
                 auto GetBasePointer() const
                 { 
-                    assert(pointer.Get() != nullptr);
-
-                    return pointer->GetBasePointer();
+                    return pointer.GetBasePointer();
                 }
 
                 SizeArray<Dimension> n;
                 AllocationShape allocation_shape;
-                //SmartPointer<BasePointer<ValueT>, Deleter> base_pointer;
-                SmartPointer<BasePointer<ValueT>, Deleter> pointer;
-                //BasePointer<ValueT> pointer;
+                SmartPointer<BasePointer<ValueT>, Deleter> base_pointer;
+                BasePointer<ValueT> pointer;
                 //BasePointer<ConstValueT> const_pointer;
             };
         } // namespace internal
