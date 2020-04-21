@@ -194,7 +194,7 @@ namespace XXX_NAMESPACE
                 //! \return a pointer to memory according to the allocation shape
                 //!
                 template <Identifier Target, typename AllocationShapeT>
-                static auto Allocate(const AllocationShapeT& allocation_shape) -> typename std::enable_if<Target == Identifier::Host, T*>::type
+                static auto* Allocate(const AllocationShapeT& allocation_shape)
                 {
                     return ::XXX_NAMESPACE::memory::Allocate<T, Target>(allocation_shape.GetByteSize(), allocation_shape.alignment);
                 }
@@ -207,7 +207,7 @@ namespace XXX_NAMESPACE
                 //! \param pointer a pointer variable
                 //!
                 template <Identifier Target, typename PointerT>
-                static auto Deallocate(PointerT& pointer) -> typename std::enable_if<Target == Identifier::Host, void>::type
+                static void Deallocate(PointerT& pointer)
                 {
                     assert(pointer.IsValid());
 
