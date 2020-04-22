@@ -133,6 +133,7 @@ namespace XXX_NAMESPACE
                 using ConstValueT = typename Traits<ValueT, Layout>::ConstT;
                 using BasePointer = typename Traits<std::decay_t<ValueT>, Layout>::BasePointer;
                 using Pointer = std::conditional_t<std::is_const<ValueT>::value, const BasePointer, BasePointer>;
+                static constexpr bool UseProxy = (Layout != DataLayout::AoS && ProvidesProxy<ValueT>::value);
                 using Proxy = typename Traits<ValueT, Layout>::Proxy;
                 using ConstProxy = typename Traits<const ValueT, Layout>::Proxy;
 
@@ -202,16 +203,16 @@ namespace XXX_NAMESPACE
                 //! \param index the intra-stab index
                 //! \return a (const) reference to a variable of type `ValueT`
                 //!
-                template <DataLayout Enable = Layout>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable == DataLayout::AoS, ValueT&>
+                template <bool Enable = UseProxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<!Enable, ValueT&>
                 {
                     assert(index < n[0]);
 
                     return Get<0>(pointer.At(stab_index, index));
                 }
 
-                template <DataLayout Enable = Layout>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable == DataLayout::AoS, ConstValueT&>
+                template <bool Enable = UseProxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<!Enable, ConstValueT&>
                 {
                     assert(index < n[0]);
 
@@ -227,8 +228,8 @@ namespace XXX_NAMESPACE
                 //! \param index the intra-stab index
                 //! \return a (const) proxy type
                 //!
-                template <DataLayout Enable = Layout>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable != DataLayout::AoS, Proxy>
+                template <bool Enable = UseProxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable, Proxy>
                 {
                     assert(index < n[0]);
 
@@ -237,8 +238,8 @@ namespace XXX_NAMESPACE
                     return {pointer.At(indices.stab_index, indices.intra_stab_index)};
                 }
 
-                template <DataLayout Enable = Layout>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable != DataLayout::AoS, ConstProxy>
+                template <bool Enable = UseProxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable, ConstProxy>
                 {
                     assert(index < n[0]);
 
@@ -344,24 +345,6 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 inline auto operator[](const SizeT index) const -> ConstReturnT { return Accessor<ConstValueT, Dimension>(pointer, n)[index]; }
-
-                //!
-                //! \brief Request an `Accessor` with dimension 0 that points to a specific position.
-                //! 
-                //! This function exists only for `Dimension` 1.
-                //!
-                //! \param index the position
-                //! \return a (const) `Accessor` with dimension 0 that points to position `index`
-                //!
-                template <SizeT D = Dimension>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0, 0>> { return Accessor<ValueT, 1>(pointer, n).At(index); }
-
-                template <SizeT D = Dimension>
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0, 0>> { return Accessor<ConstValueT, 1>(pointer, n).At(index); }
 
                 //!
                 //! \brief Set the content of the container.
