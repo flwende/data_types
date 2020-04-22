@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <tuple>
+#include <type_traits>
 
 #if !defined(XXX_NAMESPACE)
 #define XXX_NAMESPACE fw
