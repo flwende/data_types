@@ -99,7 +99,8 @@ namespace XXX_NAMESPACE
                 { 
                     assert(index < n[Level - 1]);
 
-                    return {pointer, n, stab_index + index * n.ReduceMul(1, Level - 1)};
+                    //return {pointer, n, stab_index + index * n.ReduceMul(1, Level - 1)};
+                    return {pointer, n, stab_index * n[Level - 1] + index};
                 }
 
                 HOST_VERSION
@@ -108,7 +109,8 @@ namespace XXX_NAMESPACE
                 {
                     assert(index < n[Level - 1]);
 
-                    return {pointer, n, stab_index + index * n.ReduceMul(1, Level - 1)};
+                    //return {pointer, n, stab_index + index * n.ReduceMul(1, Level - 1)};
+                    return {pointer, n, stab_index * n[Level - 1] + index};
                 }
 
               protected:
@@ -451,11 +453,9 @@ namespace XXX_NAMESPACE
                 template <typename T>
                 using Traits = Traits<T, Layout>;
                 using ConstValueT = typename Traits<ValueT>::ConstT;
-                template <typename T>
-                using BasePointer = typename Traits<T>::BasePointer;
-                template <typename T>
-                using BasePointerT = typename BasePointer<T>::ValueT;
-                using Allocator = typename BasePointer<ValueT>::Allocator;
+                using BasePointer = typename Traits<ValueT>::BasePointer;
+                using BasePointerT = typename BasePointer::ValueT;
+                using Allocator = typename BasePointer::Allocator;
                 using AllocationShape = typename Allocator::AllocationShape;
                 template <typename T, SizeT L, SizeT D = Dimension>
                 using Accessor = internal::Accessor<T, L, D, Layout>;
@@ -476,26 +476,6 @@ namespace XXX_NAMESPACE
                 static constexpr Identifier TParam_Target = Target;
 
               private:
-                /*
-                //!
-                //! \brief A deleter type for shared pointer deallocation.
-                //!
-                struct Deleter
-                {
-                    //!
-                    //! \brief Callable for shared pointer deallocation.
-                    //!
-                    //! \param pointer a pointer to either `Pointer` or `MultiPointer`
-                    //!
-                    auto operator()(BasePointer<ValueT>* pointer) const -> void
-                    { 
-                        assert(pointer != nullptr);
-
-                        Allocator::template Deallocate<Target>(*pointer);
-                    }
-                };
-                */
-
                 //!
                 //! \brief Standard constructor (private).
                 //!
@@ -511,12 +491,12 @@ namespace XXX_NAMESPACE
                 //! \param n a `SizeArray` (e.g. extent of a `Field`)
                 //!
                 Container(const SizeArray<Dimension>& n)
-                    : n(n), allocation_shape(Allocator::template GetAllocationShape<Layout>(n)),
-                      base_pointer(Allocator::template Allocate<Target>(allocation_shape)),
-                      //pointer(new BasePointer<ValueT>(Allocator::template Allocate<Target>(allocation_shape), allocation_shape.n_0))
-                      pointer(base_pointer.Get(), allocation_shape.n_0)
-                {
-                }
+                    : 
+                    n(n), 
+                    allocation_shape(Allocator::template GetAllocationShape<Layout>(n)),
+                    base_pointer(Allocator::template Allocate<Target>(allocation_shape)),
+                    pointer(base_pointer.Get(), allocation_shape.n_0)
+                {}
 
               public:
                 //!
@@ -526,7 +506,7 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                static constexpr inline auto GetInnerArraySize() { return BasePointer<ValueT>::InnerArraySize; }
+                static constexpr inline auto GetInnerArraySize() { return BasePointer::InnerArraySize; }
 
                 //!
                 //! \brief Array subscript operator.
@@ -591,7 +571,8 @@ namespace XXX_NAMESPACE
                     {
                         for (SizeT k = 0; k < n.ReduceMul(2); ++k)
                         {
-                            internal::Accessor<ValueT, 2, Dimension, Layout> accessor(pointer, n, k * n[1]);
+                            //internal::Accessor<ValueT, 2, Dimension, Layout> accessor(pointer, n, k * n[1]);
+                            internal::Accessor<ValueT, 2, Dimension, Layout> accessor(pointer, n, k);
 
                             for (SizeT stab_index = 0; stab_index < n[1]; ++stab_index)
                             {
@@ -630,7 +611,8 @@ namespace XXX_NAMESPACE
                     {
                         for (SizeT k = 0; k < n.ReduceMul(2); ++k)
                         {
-                            internal::Accessor<ConstValueT, 2, Dimension, Layout> accessor(pointer, n, k * n[1]);
+                            //internal::Accessor<ConstValueT, 2, Dimension, Layout> accessor(pointer, n, k * n[1]);
+                            internal::Accessor<ConstValueT, 2, Dimension, Layout> accessor(pointer, n, k);
 
                             for (SizeT stab_index = 0; stab_index < n[1]; ++stab_index)
                             {
@@ -703,8 +685,10 @@ namespace XXX_NAMESPACE
 
                 SizeArray<Dimension> n;
                 AllocationShape allocation_shape;
-                SmartPointer<BasePointerT<ValueT>, Deleter<Target>> base_pointer;
-                BasePointer<ValueT> pointer;
+                // This pointer is invalid on GPU! 
+                SmartPointer<BasePointerT, Deleter<Target>> base_pointer;
+                // Non-pointer variable for flat copy to GPU! It holds a pointer to either host or GPU memory.
+                BasePointer pointer;
             };
         } // namespace internal
 
