@@ -99,7 +99,6 @@ namespace XXX_NAMESPACE
                 { 
                     assert(index < n[Level - 1]);
 
-                    //return {pointer, n, stab_index + index * n.ReduceMul(1, Level - 1)};
                     return {pointer, n, stab_index * n[Level - 1] + index};
                 }
 
@@ -109,7 +108,6 @@ namespace XXX_NAMESPACE
                 {
                     assert(index < n[Level - 1]);
 
-                    //return {pointer, n, stab_index + index * n.ReduceMul(1, Level - 1)};
                     return {pointer, n, stab_index * n[Level - 1] + index};
                 }
 
@@ -249,189 +247,10 @@ namespace XXX_NAMESPACE
                     return {pointer.At(indices.stab_index, indices.intra_stab_index)};
                 }
 
-                //!
-                //! \brief Request an `Accessor` with dimension 0 that points to a specific position.
-                //! 
-                //! \param index the position
-                //! \return a (const) `Accessor` with dimension 0 that points to position `index`
-                //!
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) -> Accessor<ValueT, 0, 0, Layout>
-                { 
-                    assert(index < n[0]);
-
-                    const auto& indices = GetStabAndIntraStabIndex(index);
-                    
-                    return {pointer, n[0], indices.stab_index, indices.intra_stab_index};
-                }
-
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) const -> Accessor<ConstValueT, 0, 0, Layout>
-                { 
-                    assert(index < n[0]);
-
-                    const auto& indices = GetStabAndIntraStabIndex(index);
-                    
-                    return {pointer, n[0], indices.stab_index, indices.intra_stab_index};
-                }
-
               protected:
                 Pointer& pointer;
                 const SizeArray<Dimension>& n;
                 const SizeT stab_index;
-            };
-
-            //!
-            //! \brief Accessor type for array subscript operator chaining [][]..[] (special version).
-            //!
-            //! This is the recursion anchor (`Level=1`). Depending on the element type and the data layout, either a reference
-            //! to an element or a proxy type is returned by the array subscript operator.
-            //!
-            //! \tparam ValueT element type
-            //! \tparam Dimension the dimension of the field
-            //! \tparam Layout any of AoS, SoAi, SoA
-            //!
-            template <typename ValueT, DataLayout Layout>
-            class Accessor<ValueT, 0, 0, Layout>
-            {
-                using ConstValueT = const ValueT;
-                using BasePointer = typename Traits<std::decay_t<ValueT>, Layout>::BasePointer;
-                using Pointer = std::conditional_t<std::is_const<ValueT>::value, const BasePointer, BasePointer>;
-                using Proxy = typename Traits<ValueT, Layout>::Proxy;
-                using ConstProxy = typename Traits<const ValueT, Layout>::Proxy;
-
-              public:
-                using ValueType = ValueT;
-
-                //!
-                //! \brief Constructor.
-                //!
-                //! \param pointer base pointer
-                //! \param n extent of the field
-                //! \param stab_index the stab_index
-                //! \param intra_stab_index the index offset within a stab
-                //!
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                Accessor(Pointer& pointer, const SizeT n_0, const SizeT stab_index = 0, const SizeT intra_stab_index = 0) : pointer(pointer), n_0(n_0), stab_index(stab_index), intra_stab_index(intra_stab_index)
-                {
-                    assert(pointer.IsValid());
-                }
-                
-                //!
-                //! \brief Array subscript operator (AoS data layout).
-                //!
-                //! The return value of `At(..)` is a tuple with a single reference to some variable of type `ValueT`.
-                //! Get the reference through `Gget<0>`.
-                //!
-                //! \tparam Enable used for multi-versioning depending on the data layout
-                //! \param index the intra-stab index
-                //! \return a (const) reference to a variable of type `ValueT`
-                //!
-                template <DataLayout Enable = Layout>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable == DataLayout::AoS, ValueT&>
-                {
-                    assert((intra_stab_index + index) < n_0);
-
-                    return Get<0>(pointer.At(stab_index, intra_stab_index + index));
-                }
-
-                template <DataLayout Enable = Layout>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable == DataLayout::AoS, const ValueT&>
-                {
-                    assert((intra_stab_index + index) < n_0);
-
-                    return Get<0>(pointer.At(stab_index, intra_stab_index + index));
-                }
-                
-                //!
-                //! \brief Array subscript operator (all other layouts).
-                //!
-                //! The return value of `At(..)` is a tuple of references that is used for the proxy type construction.
-                //!
-                //! \tparam Enable used for multi-versioning depending on the data layout
-                //! \param index the intra-stab index
-                //! \return a (const) proxy type
-                //!
-                template <DataLayout Enable = Layout>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable != DataLayout::AoS, Proxy>
-                {
-                    assert((intra_stab_index + index) < n_0);
-
-                    return {pointer.At(stab_index, intra_stab_index + index)};
-                }
-
-                template <DataLayout Enable = Layout>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable != DataLayout::AoS, ConstProxy>
-                {
-                    assert((intra_stab_index + index) < n_0);
-
-                    return {pointer.At(stab_index, intra_stab_index + index)};
-                }
-
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto& operator++()
-                {
-                    ++intra_stab_index;
-                    return *this;
-                }
-
-                //!
-                //! \brief Request an `Accessor` with dimension 0 that points to a specific position.
-                //! 
-                //! \param index the position
-                //! \return a (const) `Accessor` with dimension 0 that points to position `index`
-                //!
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) -> Accessor<ValueT, 0, 0, Layout>
-                { 
-                    assert((intra_stab_index + index) < n_0);
-
-                    return {pointer, n_0, stab_index, intra_stab_index + index};
-                }
-
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                inline auto At(const SizeT index) const -> Accessor<ConstValueT, 0, 0, Layout>
-                { 
-                    assert((intra_stab_index + index) < n_0);
-
-                    return {pointer, n_0, stab_index, intra_stab_index + index};
-                }
-
-                //! @{
-                //! Some iterator functionality.
-                //!
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator==(const Accessor& other) const
-                {
-                    return (stab_index == other.stab_index && intra_stab_index == other.intra_stab_index);
-                }
-
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator!=(const Accessor& other) const
-                {
-                    return !(*this == other);
-                }
-
-                template <DataLayout Enable = Layout>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator*() -> std::enable_if_t<Enable != DataLayout::AoS, Proxy>
-                {
-                    return (*this)[0];
-                }
-
-                template <DataLayout Enable = Layout>
-                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator*() const -> std::enable_if_t<Enable != DataLayout::AoS, ConstProxy>
-                {
-                    return (*this)[0];
-                }
-                //! @}
-
-              protected:
-                Pointer& pointer;
-                const SizeT n_0;
-                const SizeT stab_index;
-                SizeT intra_stab_index;
             };
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -571,7 +390,6 @@ namespace XXX_NAMESPACE
                     {
                         for (SizeT k = 0; k < n.ReduceMul(2); ++k)
                         {
-                            //internal::Accessor<ValueT, 2, Dimension, Layout> accessor(pointer, n, k * n[1]);
                             internal::Accessor<ValueT, 2, Dimension, Layout> accessor(pointer, n, k);
 
                             for (SizeT stab_index = 0; stab_index < n[1]; ++stab_index)
@@ -611,7 +429,6 @@ namespace XXX_NAMESPACE
                     {
                         for (SizeT k = 0; k < n.ReduceMul(2); ++k)
                         {
-                            //internal::Accessor<ConstValueT, 2, Dimension, Layout> accessor(pointer, n, k * n[1]);
                             internal::Accessor<ConstValueT, 2, Dimension, Layout> accessor(pointer, n, k);
 
                             for (SizeT stab_index = 0; stab_index < n[1]; ++stab_index)
@@ -886,20 +703,6 @@ namespace XXX_NAMESPACE
             inline auto operator[](const SizeT index) -> ReturnT { return data[index]; }
 
             inline auto operator[](const SizeT index) const -> ConstReturnT { return data[index]; }
-
-            //!
-            //! \brief Request an `Accessor` with dimension 0 that points to a specific position.
-            //! 
-            //! This function exists only for `Dimension` 1.
-            //!
-            //! \param index the position
-            //! \return a (const) `Accessor` with dimension 0 that points to position `index`
-            //!
-            template <SizeT D = Dimension>
-            inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0, 0>> { return data.At(index); }
-
-            template <SizeT D = Dimension>
-            inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0, 0>> { return data.At(index); }
 
             //!
             //! \brief Get the size of the container.
