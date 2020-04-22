@@ -103,7 +103,7 @@ namespace XXX_NAMESPACE
     template <>                                                                                                                                                                                                            \
     struct Type<VALUE_TYPE>                                                                                                                                                                                                      \
     {                                                                                                                                                                                                                      \
-        static constexpr SizeT width = SW;                                                                                                                                                                                 \
+        static constexpr SizeT Width = SW;                                                                                                                                                                                 \
     };
 
 #define MACRO_C(VALUE_TYPE, SW)                                                                                                                                                                                                  \
