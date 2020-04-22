@@ -24,6 +24,7 @@ namespace XXX_NAMESPACE
     {
         using ::XXX_NAMESPACE::memory::DataLayout;
         using ::XXX_NAMESPACE::internal::Traits;
+        using ::XXX_NAMESPACE::internal::ProvidesProxy;
         using ::XXX_NAMESPACE::auxiliary::AssignAll;
 
         namespace internal
@@ -139,28 +140,94 @@ namespace XXX_NAMESPACE
             const SizeT size;
         };
 
-        template <typename ValueT, SizeT Size, DataLayout Layout>
+        template <typename ValueT, SizeT Size, DataLayout Layout = DataLayout::AoS>
         class SimdVec
         {
-            using ConstValueT = const ValueT;
-            using Pointer = typename Traits<ValueT, Layout>::BasePointer;
-            using PointerValueT = typename Traits<ValueT, Layout>::BasePointerValueT;
-            using ReturnValueT = std::conditional_t<Layout == DataLayout::AoS, ValueT&, typename Traits<ValueT, Layout>::Proxy>;
-            using ConstReturnValueT = std::conditional_t<Layout == DataLayout::AoS, ConstValueT&, typename Traits<ConstValueT, Layout>::Proxy>;
+            template <typename T>
+            using Traits = Traits<T, Layout>;
+            using ConstValueT = typename Traits<ValueT>::ConstT;
+            using Pointer = typename Traits<ValueT>::BasePointer;
+            using PointerValueT = typename Traits<ValueT>::BasePointerValueT;
+            static constexpr bool UseProxy = (Layout != DataLayout::AoS && ProvidesProxy<ValueT>::value);
+            using Proxy = typename Traits<ValueT>::Proxy;
+            using ConstProxy = typename Traits<ConstValueT>::Proxy;
 
-            static constexpr SizeT PaddingFactor = Traits<ValueT, Layout>::PaddingFactor;
+            static constexpr SizeT PaddingFactor = Traits<ValueT>::PaddingFactor;
             static constexpr SizeT NumElements = ((Size + (PaddingFactor - 1)) / PaddingFactor) * PaddingFactor;
 
-        public:
+          public:
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            SimdVec() : pointer(reinterpret_cast<PointerValueT*>(&data[0]), NumElements) {}
+            SimdVec() : data{}, pointer(reinterpret_cast<PointerValueT*>(&data[0]), NumElements) 
+            {
+                #pragma omp simd
+                for (SizeT i = 0; i < Size; ++i)
+                {
+                    data[i] = PointerValueT{};
+                }
+            }
         
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            SimdVec(const SimdVec& other) : data{}, pointer(reinterpret_cast<PointerValueT*>(&data[0]), NumElements)
+            {
+                #pragma omp simd
+                for (SizeT i = 0; i < Size; ++i)
+                {
+                    data[i] = other.data[i];
+                }
+            }
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            SimdVec(SimdVec&& other) : data{}, pointer(reinterpret_cast<PointerValueT*>(&data[0]), NumElements)
+            {
+                #pragma omp simd
+                for (SizeT i = 0; i < Size; ++i)
+                {
+                    data[i] = other.data[i];
+                }
+            }
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto& operator=(const SimdVec& other)
+            {
+                if (this != &other)
+                {
+                    #pragma omp simd
+                    for (SizeT i = 0; i < Size; ++i)
+                    {
+                        data[i] = other.data[i];
+                    }
+                }
+
+                return *this;
+            }
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto& operator=(SimdVec&& other)
+            {
+                if (this != &other)
+                {
+                    #pragma omp simd
+                    for (SizeT i = 0; i < Size; ++i)
+                    {
+                        data[i] = other.data[i];
+                    }
+                }
+
+                return *this;
+            }
+
             template <typename Accessor, typename Filter>
             HOST_VERSION
             CUDA_DEVICE_VERSION
             auto& Load(const Accessor& external_data, const Filter& filter, const SizeT n)
             {
+                assert(n < Size);
+                
                 #pragma omp simd
                 for (SizeT i = 0; i < n; ++i)
                 {
@@ -191,6 +258,8 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             const auto& Store(Accessor&& external_data, const Filter& filter, const SizeT n) const
             {
+                assert(n < Size);
+
                 #pragma omp simd
                 for (SizeT i = 0; i < n; ++i)
                 {
@@ -216,24 +285,77 @@ namespace XXX_NAMESPACE
                 return Store(std::forward<Accessor>(external_data), AssignAll, n);
             }
 
+            template <bool Enable = UseProxy>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[](const SizeT index) -> ReturnValueT
+            inline auto operator[](const SizeT index) -> std::enable_if_t<!Enable, ValueT&>
+            {
+                return Get<0>(pointer.At(0, index));
+            }
+            
+            template <bool Enable = UseProxy>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator[](const SizeT index) const -> std::enable_if_t<!Enable, ConstValueT&>
+            {
+                return Get<0>(pointer.At(0, index));
+            }
+
+            template <bool Enable = UseProxy>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto operator[](const SizeT index) -> std::enable_if_t<Enable, Proxy>
             {
                 return {pointer.At(0, index)};
             }
             
+            template <bool Enable = UseProxy>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            inline auto operator[](const SizeT index) const -> ConstReturnValueT
+            inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable, ConstProxy>
             {
                 return {pointer.At(0, index)};
             }
+
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            inline auto ReduceAdd() const
+            {
+                ValueT aggregate{};
+
+                for (SizeT i = 0; i < Size; ++i)
+                {
+                    aggregate += data[i];
+                }
+                
+                return aggregate;
+            }
             
-        protected:
+          protected:
             ValueT data[NumElements];
             Pointer pointer;
         };
+
+        namespace
+        {
+            template <typename T>
+            struct VectorSize
+            {
+                static constexpr SizeT value = 1;
+            };
+
+            template <typename ValueT, SizeT Size, DataLayout Layout>
+            struct VectorSize<SimdVec<ValueT, Size, Layout>>
+            {
+                static constexpr SizeT value = Size;
+            };
+        }
+
+        template <typename T>
+        inline constexpr SizeT GetVectorSize()
+        {
+            return VectorSize<T>::value;
+        }
     }
 }
 
