@@ -94,21 +94,21 @@ namespace XXX_NAMESPACE
         //!
         //! \tparam T (fundamental) data type
         template <typename T>
-        struct type
+        struct Type
         {
             static_assert(implementation<T>::available, "error: there is no implementation for data type T");
         };
 
-#define MACRO(TYPE, SW)                                                                                                                                                                                                    \
+#define MACRO(VALUE_TYPE, SW)                                                                                                                                                                                                    \
     template <>                                                                                                                                                                                                            \
-    struct type<TYPE>                                                                                                                                                                                                      \
+    struct Type<VALUE_TYPE>                                                                                                                                                                                                      \
     {                                                                                                                                                                                                                      \
         static constexpr SizeT width = SW;                                                                                                                                                                                 \
     };
 
-#define MACRO_C(TYPE, SW)                                                                                                                                                                                                  \
-    MACRO(TYPE, SW)                                                                                                                                                                                                        \
-    MACRO(const TYPE, SW)
+#define MACRO_C(VALUE_TYPE, SW)                                                                                                                                                                                                  \
+    MACRO(VALUE_TYPE, SW)                                                                                                                                                                                                        \
+    MACRO(const VALUE_TYPE, SW)
 
         MACRO_C(double, SIMD_WIDTH_NATIVE_64BIT)
         MACRO_C(float, SIMD_WIDTH_NATIVE_32BIT)
