@@ -85,7 +85,7 @@ namespace XXX_NAMESPACE
 
 #if defined(__CUDACC__)
         template <typename T, Identifier Target>
-        auto Allocate(const SizeT num_bytes, const SizeT alignment = ::XXX_NAMESPACE::simd::alignment)
+        auto Allocate(const SizeT num_bytes, [[maybe_unused]] const SizeT alignment = ::XXX_NAMESPACE::simd::alignment)
             -> std::enable_if_t<Target == Identifier::GPU_CUDA, T*>
         {
             T* pointer = nullptr;
