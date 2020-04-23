@@ -140,6 +140,7 @@ namespace XXX_NAMESPACE
             const SizeT size;
         };
 
+        /*
         template <typename ValueT, SizeT Size, DataLayout Layout = DataLayout::AoS>
         class SimdVec
         {
@@ -346,6 +347,60 @@ namespace XXX_NAMESPACE
 
             template <typename ValueT, SizeT Size, DataLayout Layout>
             struct VectorSize<SimdVec<ValueT, Size, Layout>>
+            {
+                static constexpr SizeT value = Size;
+            };
+        }
+
+        template <typename T>
+        inline constexpr SizeT GetVectorSize()
+        {
+            return VectorSize<T>::value;
+        }
+        */
+        template <typename ValueT, SizeT Size>
+        class SimdVec
+        {
+          public:
+            SimdVec() : data{} {}
+        
+            inline auto& operator[](const SizeT index)
+            {
+                return data[index];
+            }
+            
+            inline const auto& operator[](const SizeT index) const
+            {
+                return data[index];
+            }
+
+            inline auto ReduceAdd() const
+            {
+                ValueT aggregate{};
+
+                #pragma omp simd reduction(+ : aggregate)
+                for (SizeT i = 0; i < Size; ++i)
+                {
+                    aggregate += data[i];
+                }
+                
+                return aggregate;
+            }
+            
+          protected:
+            ValueT data[Size];
+        };
+
+        namespace
+        {
+            template <typename T>
+            struct VectorSize
+            {
+                static constexpr SizeT value = 1;
+            };
+
+            template <typename ValueT, SizeT Size>
+            struct VectorSize<SimdVec<ValueT, Size>>
             {
                 static constexpr SizeT value = Size;
             };
