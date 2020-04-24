@@ -40,7 +40,7 @@ namespace XXX_NAMESPACE
             using ReturnValueT = std::conditional_t<Layout == DataLayout::AoS, ValueT&, typename Traits<ValueT, Layout>::Proxy>;
             using ConstReturnValueT = std::conditional_t<Layout == DataLayout::AoS, ConstValueT&, typename Traits<ConstValueT, Layout>::Proxy>;
 
-        public:
+          public:
             HOST_VERSION
             CUDA_DEVICE_VERSION
             SimdVecRef(internal::Accessor<ValueT, 0, 0, Layout>&& accessor, const SizeT size) : accessor(std::move(accessor)), size(size) {}
@@ -52,7 +52,6 @@ namespace XXX_NAMESPACE
             {
                 assert(n <= size);
 
-                #pragma omp simd
                 for (SizeT i = 0; i < n; ++i)
                 {
                     filter(external_data[i], accessor[i]);
@@ -68,7 +67,6 @@ namespace XXX_NAMESPACE
             {
                 assert(n <= size);
 
-                #pragma omp simd
                 for (SizeT i = 0; i < n; ++i)
                 {
                     filter(accessor[i], external_data[i]);
@@ -135,12 +133,11 @@ namespace XXX_NAMESPACE
                 return accessor.At(size);
             }
         
-        protected:
+          protected:
             internal::Accessor<ValueT, 0, 0, Layout> accessor;
             const SizeT size;
         };
 
-        /*
         template <typename ValueT, SizeT Size, DataLayout Layout = DataLayout::AoS>
         class SimdVec
         {
@@ -149,7 +146,7 @@ namespace XXX_NAMESPACE
             using ConstValueT = typename Traits<ValueT>::ConstT;
             using Pointer = typename Traits<ValueT>::BasePointer;
             using PointerValueT = typename Traits<ValueT>::BasePointerValueT;
-            static constexpr bool UseProxy = (Layout != DataLayout::AoS && ProvidesProxy<ValueT>::value);
+            static constexpr bool UseProxy = ProvidesProxy<ValueT>::value;
             using Proxy = typename Traits<ValueT>::Proxy;
             using ConstProxy = typename Traits<ConstValueT>::Proxy;
 
@@ -161,7 +158,6 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             SimdVec() : data{}, pointer(reinterpret_cast<PointerValueT*>(&data[0]), NumElements) 
             {
-                #pragma omp simd
                 for (SizeT i = 0; i < Size; ++i)
                 {
                     data[i] = PointerValueT{};
@@ -172,7 +168,6 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             SimdVec(const SimdVec& other) : data{}, pointer(reinterpret_cast<PointerValueT*>(&data[0]), NumElements)
             {
-                #pragma omp simd
                 for (SizeT i = 0; i < Size; ++i)
                 {
                     data[i] = other.data[i];
@@ -183,7 +178,6 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             SimdVec(SimdVec&& other) : data{}, pointer(reinterpret_cast<PointerValueT*>(&data[0]), NumElements)
             {
-                #pragma omp simd
                 for (SizeT i = 0; i < Size; ++i)
                 {
                     data[i] = other.data[i];
@@ -196,7 +190,6 @@ namespace XXX_NAMESPACE
             {
                 if (this != &other)
                 {
-                    #pragma omp simd
                     for (SizeT i = 0; i < Size; ++i)
                     {
                         data[i] = other.data[i];
@@ -212,7 +205,6 @@ namespace XXX_NAMESPACE
             {
                 if (this != &other)
                 {
-                    #pragma omp simd
                     for (SizeT i = 0; i < Size; ++i)
                     {
                         data[i] = other.data[i];
@@ -228,8 +220,7 @@ namespace XXX_NAMESPACE
             auto& Load(const Accessor& external_data, const Filter& filter, const SizeT n)
             {
                 assert(n < Size);
-                
-                #pragma omp simd
+
                 for (SizeT i = 0; i < n; ++i)
                 {
                     filter(external_data[i], (*this)[i]);
@@ -261,7 +252,6 @@ namespace XXX_NAMESPACE
             {
                 assert(n < Size);
 
-                #pragma omp simd
                 for (SizeT i = 0; i < n; ++i)
                 {
                     filter((*this)[i], external_data[i]);
@@ -337,48 +327,97 @@ namespace XXX_NAMESPACE
             Pointer pointer;
         };
 
-        namespace
-        {
-            template <typename T>
-            struct VectorSize
-            {
-                static constexpr SizeT value = 1;
-            };
-
-            template <typename ValueT, SizeT Size, DataLayout Layout>
-            struct VectorSize<SimdVec<ValueT, Size, Layout>>
-            {
-                static constexpr SizeT value = Size;
-            };
-        }
-
-        template <typename T>
-        inline constexpr SizeT GetVectorSize()
-        {
-            return VectorSize<T>::value;
-        }
-        */
+        // Data layout AoS: `pointer` member is not needed!
         template <typename ValueT, SizeT Size>
-        class SimdVec
+        class SimdVec<ValueT, Size, DataLayout::AoS>
         {
           public:
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             SimdVec() : data{} {}
+
+            template <typename Accessor, typename Filter>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            auto& Load(const Accessor& external_data, const Filter& filter, const SizeT n)
+            {
+                assert(n < Size);
+
+                for (SizeT i = 0; i < n; ++i)
+                {
+                    filter(external_data[i], data[i]);
+                }
+
+                return *this;
+            }
+
+            template <typename Accessor, typename Filter>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            auto& Load(const Accessor& external_data, const Filter& filter)
+            {
+                return Load(external_data, filter, Size);
+            }
+
+            template <typename Accessor>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            auto& Load(const Accessor& external_data, SizeT n)
+            {
+                return Load(external_data, AssignAll, n);
+            }
+
+            template <typename Accessor, typename Filter>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            const auto& Store(Accessor&& external_data, const Filter& filter, const SizeT n) const
+            {
+                assert(n < Size);
+
+                for (SizeT i = 0; i < n; ++i)
+                {
+                    filter(data[i], external_data[i]);
+                }
+
+                return *this;
+            }
+
+            template <typename Accessor, typename Filter>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            const auto& Store(Accessor&& external_data, const Filter& filter) const
+            {
+                return Store(std::forward<Accessor>(external_data), filter, Size);
+            }
+
+            template <typename Accessor>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            const auto& Store(Accessor&& external_data, SizeT n) const
+            {
+                return Store(std::forward<Accessor>(external_data), AssignAll, n);
+            }
         
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline auto& operator[](const SizeT index)
             {
                 return data[index];
             }
             
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline const auto& operator[](const SizeT index) const
             {
                 return data[index];
             }
 
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
             inline auto ReduceAdd() const
             {
                 ValueT aggregate{};
 
-                #pragma omp simd reduction(+ : aggregate)
                 for (SizeT i = 0; i < Size; ++i)
                 {
                     aggregate += data[i];
@@ -399,8 +438,8 @@ namespace XXX_NAMESPACE
                 static constexpr SizeT value = 1;
             };
 
-            template <typename ValueT, SizeT Size>
-            struct VectorSize<SimdVec<ValueT, Size>>
+            template <typename ValueT, SizeT Size, DataLayout Layout>
+            struct VectorSize<SimdVec<ValueT, Size, Layout>>
             {
                 static constexpr SizeT value = Size;
             };
