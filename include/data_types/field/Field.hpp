@@ -130,6 +130,7 @@ namespace XXX_NAMESPACE
             template <typename ValueT, SizeT Dimension, DataLayout Layout>
             class Accessor<ValueT, 1, Dimension, Layout>
             {
+              protected:
                 using ConstValueT = typename Traits<ValueT, Layout>::ConstT;
                 using BasePointer = typename Traits<std::decay_t<ValueT>, Layout>::BasePointer;
                 using Pointer = std::conditional_t<std::is_const<ValueT>::value, const BasePointer, BasePointer>;
@@ -157,7 +158,7 @@ namespace XXX_NAMESPACE
                 CUDA_DEVICE_VERSION
                 inline auto GetStabAndIntraStabIndex(const SizeT index) const -> std::enable_if_t<Enable == DataLayout::SoA, IndexPair>
                 {
-                    return {0, stab_index * n[0] + index};
+                    return {0, stab_index * n + index};
                 }
 
                 template <DataLayout Enable = Layout>
@@ -167,7 +168,7 @@ namespace XXX_NAMESPACE
                 {
                     constexpr SizeT N0 = BasePointer::InnerArraySize;
 
-                    return {stab_index * ((n[0] + N0 - 1) / N0) + (index / N0), index % N0};
+                    return {stab_index * ((n + N0 - 1) / N0) + (index / N0), index % N0};
                 }
 
                 template <DataLayout Enable = Layout>
@@ -188,10 +189,14 @@ namespace XXX_NAMESPACE
                 //!
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
-                Accessor(Pointer& pointer, const SizeArray<Dimension>& n, const SizeT stab_index = 0) : pointer(pointer), n(n), stab_index(stab_index) 
+                Accessor(Pointer& pointer, const SizeT n, const SizeT stab_index = 0) : pointer(pointer), n(n), stab_index(stab_index) 
                 {
                     assert(pointer.IsValid());
                 }
+
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                Accessor(Pointer& pointer, const SizeArray<Dimension>& n, const SizeT stab_index = 0) : Accessor(pointer, n[0], stab_index) {}
 
                 //!
                 //! \brief Array subscript operator (AoS data layout).
@@ -206,7 +211,7 @@ namespace XXX_NAMESPACE
                 template <bool Enable = UseProxy>
                 HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<!Enable, ValueT&>
                 {
-                    assert(index < n[0]);
+                    assert(index < n);
 
                     return Get<0>(pointer.At(stab_index, index));
                 }
@@ -214,7 +219,7 @@ namespace XXX_NAMESPACE
                 template <bool Enable = UseProxy>
                 HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<!Enable, ConstValueT&>
                 {
-                    assert(index < n[0]);
+                    assert(index < n);
 
                     return Get<0>(pointer.At(stab_index, index));
                 }
@@ -231,7 +236,7 @@ namespace XXX_NAMESPACE
                 template <bool Enable = UseProxy>
                 HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable, Proxy>
                 {
-                    assert(index < n[0]);
+                    assert(index < n);
 
                     const auto& indices = GetStabAndIntraStabIndex(index);
 
@@ -241,18 +246,92 @@ namespace XXX_NAMESPACE
                 template <bool Enable = UseProxy>
                 HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable, ConstProxy>
                 {
-                    assert(index < n[0]);
+                    assert(index < n);
 
                     const auto& indices = GetStabAndIntraStabIndex(index);
 
                     return {pointer.At(indices.stab_index, indices.intra_stab_index)};
                 }
 
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto At(const SizeT index) -> Accessor<ValueT, 0, 0, Layout>
+                {
+                    assert(index < n);
+
+                    const auto& indices = GetStabAndIntraStabIndex(index);
+
+                    return {pointer, n, indices.stab_index, indices.intra_stab_index};
+                }
+
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto At(const SizeT index) const -> Accessor<ConstValueT, 0, 0, Layout>
+                {
+                    assert(index < n);
+
+                    const auto& indices = GetStabAndIntraStabIndex(index);
+
+                    return {pointer, n, indices.stab_index, indices.intra_stab_index};
+                }
+
               protected:
                 Pointer& pointer;
-                const SizeArray<Dimension>& n;
+                const SizeT n;
                 const SizeT stab_index;
             };
+            
+            template <typename ValueT, DataLayout Layout>
+            class Accessor<ValueT, 0, 0, Layout> : public Accessor<ValueT, 1, 1, Layout>
+            {
+                using Base = Accessor<ValueT, 1, 1, Layout>;
+
+                using ConstValueT = typename Base::ConstValueT;
+                using Pointer = typename Base::Pointer;
+                static constexpr bool UseProxy = Base::UseProxy;
+                using Proxy = typename Base::Proxy;
+                using ConstProxy = typename Base::ConstProxy;
+
+              public:
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                Accessor(Pointer& pointer, const SizeT n, const SizeT stab_index = 0, const SizeT intra_stab_index = 0) : Base(pointer, n, stab_index), intra_stab_index(intra_stab_index) {}
+
+                template <bool Enable = UseProxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<!Enable, ValueT&>
+                {
+                    assert((intra_stab_index + index) < n);
+
+                    return Get<0>(pointer.At(stab_index, intra_stab_index + index));
+                }
+
+                template <bool Enable = UseProxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<!Enable, ConstValueT&>
+                {
+                    assert((intra_stab_index + index) < n);
+
+                    return Get<0>(pointer.At(stab_index, intra_stab_index + index));
+                }
+
+                template <bool Enable = UseProxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) -> std::enable_if_t<Enable, Proxy>
+                {
+                    assert((intra_stab_index + index) < n);
+
+                    return {pointer.At(stab_index, intra_stab_index + index)};
+                }
+
+                template <bool Enable = UseProxy>
+                HOST_VERSION CUDA_DEVICE_VERSION inline auto operator[](const SizeT index) const -> std::enable_if_t<Enable, ConstProxy>
+                {
+                    assert((intra_stab_index + index) < n);
+
+                    return {pointer.At(stab_index, intra_stab_index + index)};
+                }
+
+              protected:
+                using Base::pointer;
+                using Base::n;
+                using Base::stab_index;
+                const SizeT intra_stab_index;
+            };
+            
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             //!
@@ -295,7 +374,7 @@ namespace XXX_NAMESPACE
                 static constexpr DataLayout TParam_Layout = Layout;
                 static constexpr Identifier TParam_Target = Target;
 
-              private:
+              protected:
                 //!
                 //! \brief Standard constructor (private).
                 //!
@@ -320,15 +399,6 @@ namespace XXX_NAMESPACE
 
               public:
                 //!
-                //! \brief Get the extent of the innermost array (meaningful for AoSoA data layout only).
-                //!
-                //! \return the extent of the innermost array
-                //!
-                HOST_VERSION
-                CUDA_DEVICE_VERSION
-                static constexpr inline auto GetInnerArraySize() { return BasePointer::InnerArraySize; }
-
-                //!
                 //! \brief Array subscript operator.
                 //!
                 //! The type of the return value is inherited from the `Accessor`'s subscript operator (it is determined above).
@@ -345,6 +415,16 @@ namespace XXX_NAMESPACE
                 HOST_VERSION
                 CUDA_DEVICE_VERSION
                 inline auto operator[](const SizeT index) const -> ConstReturnT { return Accessor<ConstValueT, Dimension>(pointer, n)[index]; }
+
+                template <SizeT D = Dimension>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0, 0>> { return Accessor<ValueT, Dimension>(pointer, n).At(index); }
+
+                template <SizeT D = Dimension>
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0, 0>> { return Accessor<ConstValueT, Dimension>(pointer, n).At(index); }
 
                 //!
                 //! \brief Set the content of the container.
@@ -457,6 +537,15 @@ namespace XXX_NAMESPACE
                 { 
                     return allocation_shape.n_0;
                 }
+
+                //!
+                //! \brief Get the extent of the innermost array (meaningful for AoSoA data layout only).
+                //!
+                //! \return the extent of the innermost array
+                //!
+                HOST_VERSION
+                CUDA_DEVICE_VERSION
+                static constexpr inline auto GetInnerArraySize() { return BasePointer::InnerArraySize; }
 
                 //!
                 //! \brief Test for this container being empty.
@@ -613,10 +702,25 @@ namespace XXX_NAMESPACE
                 }
             }
 
-            const auto* GetBasePointer() const
-            {
-                return data.GetBasePointer();
-            }
+            //!
+            //! \brief Array subscript operator.
+            //!
+            //! The type of the return value is inherited from the `Accessor`'s subscript operator (it is determined above).
+            //! Depending on the dimensionality of the `Container`, this function returns either a reference to a variable of
+            //! type `ValueT` or an `Accessor` of lower dimension.
+            //!
+            //! \param index an index value for the data access
+            //! \return a (const) reference to a variable of type `ValueT` or an `Accessor` of lower dimension
+            //!
+            inline auto operator[](const SizeT index) -> ReturnT { return data[index]; }
+
+            inline auto operator[](const SizeT index) const -> ConstReturnT { return data[index]; }
+
+            template <SizeT D = Dimension>
+            inline auto At(const SizeT index) -> std::enable_if_t<D == 1, Accessor<ValueT, 0, 0>> { return data.At(index); }
+
+            template <SizeT D = Dimension>
+            inline auto At(const SizeT index) const -> std::enable_if_t<D == 1, Accessor<ConstValueT, 0, 0>> { return data.At(index); }
 
             //!
             //! \brief Set the content of the field.
@@ -674,20 +778,6 @@ namespace XXX_NAMESPACE
             }
 
             //!
-            //! \brief Array subscript operator.
-            //!
-            //! The type of the return value is inherited from the `Accessor`'s subscript operator (it is determined above).
-            //! Depending on the dimensionality of the `Container`, this function returns either a reference to a variable of
-            //! type `ValueT` or an `Accessor` of lower dimension.
-            //!
-            //! \param index an index value for the data access
-            //! \return a (const) reference to a variable of type `ValueT` or an `Accessor` of lower dimension
-            //!
-            inline auto operator[](const SizeT index) -> ReturnT { return data[index]; }
-
-            inline auto operator[](const SizeT index) const -> ConstReturnT { return data[index]; }
-
-            //!
             //! \brief Get the size of the container.
             //!
             //! \return the size of the container
@@ -712,7 +802,22 @@ namespace XXX_NAMESPACE
                 return data.Pitch();
             }
 
+            //!
+            //! \brief Get the extent of the innermost array (meaningful for AoSoA data layout only).
+            //!
+            //! \return the extent of the innermost array
+            //!
             static constexpr inline auto GetInnerArraySize() { return Container<Identifier::Host>::GetInnerArraySize(); }
+
+            //!
+            //! \brief Get the base pointer of this container.
+            //!
+            //! \return the base pointer of this container
+            //!
+            const auto* GetBasePointer() const
+            {
+                return data.GetBasePointer();
+            }
 
 #if defined(__CUDACC__)
             //!

@@ -37,8 +37,9 @@ namespace XXX_NAMESPACE
         class SimdVecRef
         {
             using ConstValueT = const ValueT;
-            using ReturnValueT = std::conditional_t<Layout == DataLayout::AoS, ValueT&, typename Traits<ValueT, Layout>::Proxy>;
-            using ConstReturnValueT = std::conditional_t<Layout == DataLayout::AoS, ConstValueT&, typename Traits<ConstValueT, Layout>::Proxy>;
+            static constexpr bool UseProxy = (Layout != DataLayout::AoS && ProvidesProxy<ValueT>::value);
+            using ReturnValueT = std::conditional_t<UseProxy, typename Traits<ValueT, Layout>::Proxy, ValueT&>;
+            using ConstReturnValueT = std::conditional_t<UseProxy, typename Traits<ConstValueT, Layout>::Proxy, ConstValueT&>;
 
           public:
             HOST_VERSION
@@ -105,34 +106,6 @@ namespace XXX_NAMESPACE
                 return accessor[index];
             }
             
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline auto begin()
-            {
-                return accessor;
-            }
-
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline auto end()
-            {
-                return accessor;
-            }
-
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline auto begin() const
-            {
-                return accessor.At(size);
-            }
-
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            inline auto end() const
-            {
-                return accessor.At(size);
-            }
-        
           protected:
             internal::Accessor<ValueT, 0, 0, Layout> accessor;
             const SizeT size;
