@@ -124,6 +124,7 @@ auto Kernel(FuncT func, ValueT* a, ValueT* b, ValueT* c, const SizeArray<Dimensi
 {
     KernelImplementation(func, a, b, c, size);
 }
+#endif
 
 #if defined(SOA_LAYOUT)
 template <SizeT Dimension>
@@ -333,7 +334,6 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     return 0;
 }
-#endif
 #endif
 
 template int benchmark<1>(int, char**, const SizeArray<1>&);
