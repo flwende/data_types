@@ -6,6 +6,7 @@
 #include <omp.h>
 #include <benchmark.hpp>
 #include <vector>
+#include <type_traits>
 
 constexpr double SPREAD = 0.5;
 constexpr double OFFSET = 2.0;
