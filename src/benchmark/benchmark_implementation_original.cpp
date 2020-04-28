@@ -19,9 +19,9 @@ constexpr std::size_t MEASUREMENT = 20;
 #endif
 
 #if defined(__CUDACC__)
-template <typename FuncT, SizeT Dimension>
+template <typename FuncT, SizeT Dimension, typename ValueT>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 1), void>
+auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 1), void>
 {
     using namespace ::fw::math;
 
@@ -31,30 +31,42 @@ auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, Siz
     {
         const SizeT i = x;
 
-        func(&a[i], &b[i], &c[i]);
+#if defined(SOA_LAYOUT)
+        func(&a[i], &b[i], &c[i], size[0]);
+#else
+        func(a[i], b[i], c[i]);
+#endif
     }
 }
 
-template <typename FuncT, SizeT Dimension>
+template <typename FuncT, SizeT Dimension, typename ValueT>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 2), void>
+auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 2), void>
 {
     using namespace ::fw::math;
 
     const SizeT x = blockIdx.x * blockDim.x + threadIdx.x;
     const SizeT y = blockIdx.y * blockDim.y + threadIdx.y;
 
+#if defined(SOA_LAYOUT)
+    const SizeT n = size.ReduceMul();
+#endif
+
     if (x < size[0] && y < size[1])
     {
         const SizeT i = y * size[0] + x;
 
-        func(&a[i], &b[i], &c[i]);
+#if defined(SOA_LAYOUT)
+        func(&a[i], &b[i], &c[i], n);
+#else
+        func(a[i], b[i], c[i]);
+#endif
     }
 }
 
-template <typename FuncT, SizeT Dimension>
+template <typename FuncT, SizeT Dimension, typename ValueT>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 3), void>
+auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 3), void>
 {
     using namespace ::fw::math;
 
@@ -62,66 +74,168 @@ auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, Siz
     const SizeT y = blockIdx.y * blockDim.y + threadIdx.y;
     const SizeT z = blockIdx.z * blockDim.z + threadIdx.z;
 
+#if defined(SOA_LAYOUT)
+    const SizeT n = size.ReduceMul();
+#endif
+
     if (x < size[0] && y < size[1] && z < size[2])
     {
         const SizeT i = (z * size[1] + y) * size[0] + x;
 
-        func(&a[i], &b[i], &c[i]);
+#if defined(SOA_LAYOUT)
+        func(&a[i], &b[i], &c[i], n);
+#else
+        func(a[i], b[i], c[i]);
+#endif
     } 
 }
 
-template <typename FuncT, SizeT Dimension>
-auto Kernel(FuncT func, ElementT* a, ElementT* b, ElementT* c, const SizeArray<Dimension>& size) -> void
+template <typename FuncT, SizeT Dimension, typename ValueT>
+auto Kernel(FuncT func, ValueT* a, ValueT* b, ValueT* c, const SizeArray<Dimension>& size) -> void
 {
     const dim3 block{128, 1, 1};
     const dim3 grid = GetGridSize(size, block);
 
     KernelImplementation<<<grid, block>>>(func, a, b, c, size);
 }
+
+#else // __CUDACC__
+
+template <typename FuncT, SizeT Dimension, typename ValueT>
+void KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size)
+{
+    using namespace ::fw::math;
+
+    const SizeT n = size.ReduceMul();
+
+    #pragma omp simd
+    for (SizeT i = 0; i < n; ++i)
+    {
+#if defined(SOA_LAYOUT)
+        func(&a[i], &b[i], &c[i], n);
 #else
-template <typename FuncT, SizeT Dimension>
-auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 1), void>
-{
-    using namespace ::fw::math;
-
-    #pragma omp simd
-    for (SizeT i = 0; i < size[0]; ++i)
-    {
-        func(&a[i], &b[i], &c[i]);
+        func(a[i], b[i], c[i]);
+#endif
     }
 }
 
-template <typename FuncT, SizeT Dimension>
-auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 2), void>
-{
-    using namespace ::fw::math;
-
-    #pragma omp simd
-    for (SizeT i = 0; i < (size[0] * size[1]); ++i)
-    {
-        func(&a[i], &b[i], &c[i]);
-    }
-}
-
-template <typename FuncT, SizeT Dimension>
-auto KernelImplementation(FuncT func, ElementT* a, ElementT* b, ElementT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 3), void>
-{
-    using namespace ::fw::math;
-
-    #pragma omp simd
-    for (SizeT i = 0; i < (size[0] * size[1] * size[2]); ++i)
-    {
-        func(&a[i], &b[i], &c[i]);
-    }
-}
-
-template <typename FuncT, SizeT Dimension>
-auto Kernel(FuncT func, ElementT* a, ElementT* b, ElementT* c, const SizeArray<Dimension>& size) -> void
+template <typename FuncT, SizeT Dimension, typename ValueT>
+auto Kernel(FuncT func, ValueT* a, ValueT* b, ValueT* c, const SizeArray<Dimension>& size) -> void
 {
     KernelImplementation(func, a, b, c, size);
 }
+
+#if defined(SOA_LAYOUT)
+template <SizeT Dimension>
+int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
+{
+    static_assert(std::is_same_v<ElementT, ::fw::dataTypes::Vec<RealT, 3>>);
+
+    const SizeT n = size.ReduceMul();
+
+    RealT* data_1 = reinterpret_cast<RealT*>(_mm_malloc(n * 3 * sizeof(RealT), ::fw::simd::alignment));
+    RealT* data_2 = reinterpret_cast<RealT*>(_mm_malloc(n * 3 * sizeof(RealT), ::fw::simd::alignment));
+    RealT* data_3 = reinterpret_cast<RealT*>(_mm_malloc(n * 3 * sizeof(RealT), ::fw::simd::alignment));
+    
+    // Field initialization.
+    srand48(1);
+    for (SizeT i = 0; i < n; ++i)
+    {
+        const RealT value = static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+        data_1[i + 0 * n] = value;
+        data_1[i + 1 * n] = value;
+        data_1[i + 2 * n] = value;
+    }
+    for (SizeT i = 0; i < n; ++i)
+    {
+        const RealT value = static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET);
+        data_2[i + 0 * n] = value;
+        data_2[i + 1 * n] = value;
+        data_2[i + 2 * n] = value;
+    }
+
+#if defined(__CUDACC__)
+    // Create device buffer and copy in the host data.
+    RealT* d_data_1;
+    RealT* d_data_2;
+    RealT* d_data_3;
+
+    cudaMalloc((void**)&d_data_1, n * 3 * sizeof(RealT));
+    cudaMalloc((void**)&d_data_2, n * 3 * sizeof(RealT));
+    cudaMalloc((void**)&d_data_3, n * 3 * sizeof(RealT));
+
+    cudaMemcpy((void*)d_data_1, (const void*)data_1, n * 3 * sizeof(RealT), cudaMemcpyHostToDevice);
+    cudaMemcpy((void*)d_data_2, (const void*)data_2, n * 3 * sizeof(RealT), cudaMemcpyHostToDevice);
+
+    RealT* field_1 = d_data_1;
+    RealT* field_2 = d_data_2;
+    RealT* field_3 = d_data_3;
+#else
+    RealT* field_1 = data_1;
+    RealT* field_2 = data_2;
+    RealT* field_3 = data_3;
+#endif    
+
+#if defined(ELEMENT_ACCESS)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[2 * n] = Exp(a[0 * n] + b[1 * n]); };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[0 * n] = Log(a[2 * n]) - b[1 * n]; };
+#else
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void 
+    { 
+        using namespace ::fw::math; 
+        
+        c[0 * n] = Exp(a[0 * n] + b[0 * n]);
+        c[1 * n] = Exp(a[1 * n] + b[1 * n]);
+        c[2 * n] = Exp(a[2 * n] + b[2 * n]);
+    };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void
+    { 
+        using namespace ::fw::math; 
+        
+        c[0 * n] = Log(a[0 * n]) - b[0 * n];
+        c[1 * n] = Log(a[1 * n]) - b[1 * n];
+        c[2 * n] = Log(a[2 * n]) - b[2 * n];
+    };
 #endif
 
+    for (SizeT i = 0; i < WARMUP; ++i)
+    {
+        Kernel(kernel_1, field_1, field_2, field_3, size);
+        Kernel(kernel_2, field_3, field_2, field_1, size);
+    }
+
+#if defined(__CUDACC__)
+    cudaDeviceSynchronize();
+#endif
+
+    double start_time = omp_get_wtime();
+
+    for (SizeT i = 0; i < MEASUREMENT; ++i)
+    {
+        Kernel(kernel_1, field_1, field_2, field_3, size);
+        Kernel(kernel_2, field_3, field_2, field_1, size);
+    }
+
+#if defined(__CUDACC__)
+    cudaDeviceSynchronize();
+#endif
+
+    double stop_time = omp_get_wtime();
+
+#if defined(__CUDACC__)
+    cudaError_t error = cudaGetLastError();
+    std::cout << cudaGetErrorString(error) << std::endl;
+#endif
+
+    std::cout << "elapsed time: " << (stop_time - start_time) * 1.0E3 << " ms" << std::endl;
+    
+    _mm_free(data_1);
+    _mm_free(data_2);
+    _mm_free(data_3);
+
+    return 0;
+}
+#else
 template <SizeT Dimension>
 int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 {
@@ -166,19 +280,19 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
 #if defined(SAXPY_KERNEL)
 #if defined(ELEMENT_ACCESS)
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c->z = a->x * 3.2 + b->y; };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c->x = a->z * 3.2 + b->y; };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.z = a.x * 3.2 + b.y; };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.x = a.z * 3.2 + b.y; };
 #else
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; (*c) = (*a) * 3.2 + (*b); };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c = a * 3.2 + b; };
     auto kernel_2 = kernel_1;
 #endif
 #else
 #if defined(ELEMENT_ACCESS)
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c->z = Exp(a->x + b->y); };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c->x = Log(a->z) - b->y; };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.z = Exp(a.x + b.y); };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.x = Log(a.z) - b.y; };
 #else
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; *c = Exp((*a) + (*b)); };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; *c = Log(*a) - (*b); };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c = Exp(a + b); };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c = Log(a) - b; };
 #endif
 #endif
 
@@ -219,6 +333,8 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     return 0;
 }
+#endif
+#endif
 
 template int benchmark<1>(int, char**, const SizeArray<1>&);
 template int benchmark<2>(int, char**, const SizeArray<2>&);
