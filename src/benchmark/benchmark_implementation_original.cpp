@@ -131,7 +131,7 @@ auto Kernel(FuncT func, ValueT* a, ValueT* b, ValueT* c, const SizeArray<Dimensi
 template <SizeT Dimension>
 int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 {
-    static_assert(std::is_same_v<ElementT, ::fw::dataTypes::Vec<RealT, 3>>);
+    static_assert(std::is_same<ElementT, ::fw::dataTypes::Vec<RealT, 3>>::value);
 
     const SizeT n = size.ReduceMul();
 
