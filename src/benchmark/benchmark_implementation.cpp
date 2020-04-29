@@ -91,7 +91,6 @@ template <typename FuncT, typename Container>
 auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
     -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
-    /*
     using namespace ::fw::math;
        
     #pragma omp simd
@@ -99,7 +98,6 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
     {
         func(a[x], b[x], c[x]);
     }
-    */
 }
 
 template <typename FuncT, typename Container>
@@ -137,7 +135,6 @@ template <typename FuncT, typename Container>
 auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
     -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
-    /*
     using namespace ::fw::math;
 
     for (SizeT y = 0; y < a.Size(1); ++y)
@@ -148,7 +145,6 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
             func(a[y][x], b[y][x], c[y][x]);
         }
     }
-    */
 }
 
 template <typename FuncT, typename Container>
