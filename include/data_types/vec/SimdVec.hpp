@@ -46,31 +46,39 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             SimdVecRef(internal::Accessor<ValueT, 0, 0, Layout>&& accessor, const SizeT size) : accessor(std::move(accessor)), size(size) {}
             
-            template <typename Accessor, typename Filter>
+            template <typename Accessor>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            auto& Load(const Accessor& external_data, Filter filter, const SizeT n)
+            auto& Load(const Accessor& external_data, const SizeT n)
             {
                 assert(n <= size);
 
                 for (SizeT i = 0; i < n; ++i)
                 {
-                    filter(external_data[i], accessor[i]);
+                    accessor[i] = external_data[i];
                 }
 
                 return *this;
             }
 
-            template <typename Accessor, typename Filter>
+            template <typename Accessor>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            const auto& Store(Accessor&& external_data, Filter filter, const SizeT n) const
+            auto& Load(const Accessor& external_data)
+            {
+                return Load(external_data, size);
+            }
+
+            template <typename Accessor>
+            HOST_VERSION
+            CUDA_DEVICE_VERSION
+            const auto& Store(Accessor&& external_data, const SizeT n) const
             {
                 assert(n <= size);
 
                 for (SizeT i = 0; i < n; ++i)
                 {
-                    filter(accessor[i], external_data[i]);
+                    external_data[i] = accessor[i];
                 } 
 
                 return *this;
@@ -79,17 +87,9 @@ namespace XXX_NAMESPACE
             template <typename Accessor>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            auto& Load(const Accessor& external_data, const SizeT n)
+            auto& Store(Accessor&& external_data) const
             {
-                return Load(external_data, AssignAll, n);
-            }
-
-            template <typename Accessor>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            auto& Store(Accessor&& external_data, const SizeT n) const
-            {
-                return Store(external_data, AssignAll, n);
+                return Store(external_data, size);
             }
 
             HOST_VERSION
@@ -187,66 +187,34 @@ namespace XXX_NAMESPACE
                 return *this;
             }
 
-            template <typename Accessor, typename Filter>
+            template <typename Accessor>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            auto& Load(const Accessor& external_data, const Filter& filter, const SizeT n)
+            auto& Load(const Accessor& external_data, const SizeT n = Size)
             {
-                assert(n < Size);
+                assert(n <= Size);
 
                 for (SizeT i = 0; i < n; ++i)
                 {
-                    filter(external_data[i], (*this)[i]);
+                    (*this)[i] = external_data[i];
                 }
 
                 return *this;
             }
 
-            template <typename Accessor, typename Filter>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            auto& Load(const Accessor& external_data, const Filter& filter)
-            {
-                return Load(external_data, filter, Size);
-            }
-
             template <typename Accessor>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            auto& Load(const Accessor& external_data, SizeT n)
+            const auto& Store(Accessor&& external_data, const SizeT n = Size) const
             {
-                return Load(external_data, AssignAll, n);
-            }
-
-            template <typename Accessor, typename Filter>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            const auto& Store(Accessor&& external_data, const Filter& filter, const SizeT n) const
-            {
-                assert(n < Size);
+                assert(n <= Size);
 
                 for (SizeT i = 0; i < n; ++i)
                 {
-                    filter((*this)[i], external_data[i]);
+                    external_data[i] = (*this)[i];
                 }
 
                 return *this;
-            }
-
-            template <typename Accessor, typename Filter>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            const auto& Store(Accessor&& external_data, const Filter& filter) const
-            {
-                return Store(std::forward<Accessor>(external_data), filter, Size);
-            }
-
-            template <typename Accessor>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            const auto& Store(Accessor&& external_data, SizeT n) const
-            {
-                return Store(std::forward<Accessor>(external_data), AssignAll, n);
             }
 
             template <bool Enable = UseProxy>
@@ -309,68 +277,36 @@ namespace XXX_NAMESPACE
             CUDA_DEVICE_VERSION
             SimdVec() : data{} {}
 
-            template <typename Accessor, typename Filter>
+            template <typename Accessor>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            auto& Load(const Accessor& external_data, const Filter& filter, const SizeT n)
+            auto& Load(const Accessor& external_data, const SizeT n = Size)
             {
-                assert(n < Size);
+                assert(n <= Size);
 
                 for (SizeT i = 0; i < n; ++i)
                 {
-                    filter(external_data[i], data[i]);
+                    data[i] = external_data[i];
                 }
 
                 return *this;
             }
 
-            template <typename Accessor, typename Filter>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            auto& Load(const Accessor& external_data, const Filter& filter)
-            {
-                return Load(external_data, filter, Size);
-            }
-
             template <typename Accessor>
             HOST_VERSION
             CUDA_DEVICE_VERSION
-            auto& Load(const Accessor& external_data, SizeT n)
+            const auto& Store(Accessor&& external_data, const SizeT n = Size) const
             {
-                return Load(external_data, AssignAll, n);
-            }
-
-            template <typename Accessor, typename Filter>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            const auto& Store(Accessor&& external_data, const Filter& filter, const SizeT n) const
-            {
-                assert(n < Size);
+                assert(n <= Size);
 
                 for (SizeT i = 0; i < n; ++i)
                 {
-                    filter(data[i], external_data[i]);
+                    external_data[i] = data[i];
                 }
 
                 return *this;
             }
 
-            template <typename Accessor, typename Filter>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            const auto& Store(Accessor&& external_data, const Filter& filter) const
-            {
-                return Store(std::forward<Accessor>(external_data), filter, Size);
-            }
-
-            template <typename Accessor>
-            HOST_VERSION
-            CUDA_DEVICE_VERSION
-            const auto& Store(Accessor&& external_data, SizeT n) const
-            {
-                return Store(std::forward<Accessor>(external_data), AssignAll, n);
-            }
-        
             HOST_VERSION
             CUDA_DEVICE_VERSION
             inline auto& operator[](const SizeT index)
