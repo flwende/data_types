@@ -78,8 +78,8 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> 
     } 
 }
 
-template <typename FuncT, typename Field, typename Filter_A, typename Filter_B, typename Filter_C>
-auto Kernel(FuncT func, Field& a, Field& b, Field& c, Filter_A, Filter_B, Filter_C) -> void
+template <typename FuncT, typename Field>
+void Kernel(FuncT func, Field& a, Field& b, Field& c)
 {
     const dim3 block{128, 1, 1};
     const dim3 grid = GetGridSize(a.Size(), block);
@@ -87,10 +87,11 @@ auto Kernel(FuncT func, Field& a, Field& b, Field& c, Filter_A, Filter_B, Filter
     KernelImplementation<<<grid, block>>>(func, a.DeviceData(), b.DeviceData(), c.DeviceData());
 }
 #else
-template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A fa, Filter_B fb, Filter_C fc) 
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
     -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
+    /*
     using namespace ::fw::math;
        
     #pragma omp simd
@@ -98,10 +99,11 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
     {
         func(a[x], b[x], c[x]);
     }
+    */
 }
 
-template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A fa, Filter_B fb, Filter_C fc) 
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
     -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -131,10 +133,11 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
 #endif
 }
 
-template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A fa, Filter_B fb, Filter_C fc) 
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
     -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
+    /*
     using namespace ::fw::math;
 
     for (SizeT y = 0; y < a.Size(1); ++y)
@@ -145,10 +148,11 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
             func(a[y][x], b[y][x], c[y][x]);
         }
     }
+    */
 }
 
-template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A fa, Filter_B fb, Filter_C fc) 
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
     -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -182,8 +186,8 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
 
 }
 
-template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A fa, Filter_B fb, Filter_C fc) 
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
     -> std::enable_if_t<(Container::TParam_Dimension == 3 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -198,11 +202,11 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
                 func(a[z][y][x], b[z][y][x], c[z][y][x]);
             }
         }
-    } 
+    }
 }
 
-template <typename FuncT, typename Container, typename Filter_A, typename Filter_B, typename Filter_C>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, Filter_A fa, Filter_B fb, Filter_C fc) 
+template <typename FuncT, typename Container>
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
     -> std::enable_if_t<(Container::TParam_Dimension == 3 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -238,10 +242,10 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
     } 
 }
 
-template <typename FuncT, typename Field, typename Filter_A, typename Filter_B, typename Filter_C>
-auto Kernel(FuncT func, const Field& a, const Field& b, Field& c, Filter_A fa, Filter_B fb, Filter_C fc) -> void
+template <typename FuncT, typename Field>
+void Kernel(FuncT func, const Field& a, const Field& b, Field& c)
 {
-    KernelImplementation(func, a, b, c, fa, fb, fc);
+    KernelImplementation(func, a, b, c);
 }
 #endif
 
@@ -299,8 +303,7 @@ auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimensi
         {
             #pragma omp simd reduction(+:sum)
             for (SizeT x = 0; x < a.Size(0); ++x)
-            {
-                //sum += Dot(a[z][y][x], b[z][y][x]);                                                    
+            {                                               
                 sum += a[z][y][x].z * b[z][y][x].z;
             }
         }
@@ -453,22 +456,6 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 #endif
 #endif
 
-#if defined(ELEMENT_ACCESS)
-    auto load_1_a = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = in.x; out.y = 0; out.z = 0; };
-    auto load_1_b = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 0; out.y = in.y; out.z = 0; };
-    auto store_1_c = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.z = in.z; };
-    auto load_2_a = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 1; out.y = 1; out.z = in.z; };
-    auto load_2_b = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = 0; out.y = in.y; out.z = 0; };
-    auto store_2_c = [] CUDA_DEVICE_VERSION (const auto& in, auto&& out) -> void { out.x = in.x; };
-#else
-    auto load_1_a = ::fw::auxiliary::AssignAll;
-    auto load_1_b = ::fw::auxiliary::AssignAll;
-    auto store_1_c = ::fw::auxiliary::AssignAll;
-    auto load_2_a = ::fw::auxiliary::AssignAll;
-    auto load_2_b = ::fw::auxiliary::AssignAll;
-    auto store_2_c = ::fw::auxiliary::AssignAll;
-#endif
-
 #if defined(__CUDACC__)
     // Create device buffer and copy in the host data.
     field_1.CopyHostToDevice();
@@ -478,8 +465,8 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     for (SizeT i = 0; i < WARMUP; ++i)
     {
-        Kernel(kernel_1, field_1, field_2, field_3, load_1_a, load_1_b, store_1_c);
-        Kernel(kernel_2, field_3, field_2, field_1, load_2_a, load_2_b, store_2_c);
+        Kernel(kernel_1, field_1, field_2, field_3);
+        Kernel(kernel_2, field_3, field_2, field_1);
     }
 
 #if defined(__CUDACC__)
@@ -490,8 +477,8 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     for (SizeT i = 0; i < MEASUREMENT; ++i)
     {
-        Kernel(kernel_1, field_1, field_2, field_3, load_1_a, load_1_b, store_1_c);
-        Kernel(kernel_2, field_3, field_2, field_1, load_2_a, load_2_b, store_2_c);
+        Kernel(kernel_1, field_1, field_2, field_3);
+        Kernel(kernel_2, field_3, field_2, field_1);
     }
 
 #if defined(__CUDACC__)
