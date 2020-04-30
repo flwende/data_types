@@ -307,6 +307,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     {
         diffusion = std::atof(env_string);
     }
+    std::cout << "# diffusion factor: " << diffusion << std::endl;
 
     srand48(1);
     for (SizeT i = 0; i < n; ++i)
