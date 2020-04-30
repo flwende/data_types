@@ -301,7 +301,9 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     return 0;
 }
-#else
+
+#else // SOA_LAYOUT
+
 template <SizeT Dimension>
 int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 {
@@ -370,7 +372,6 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     const std::int32_t* index = nullptr;
 #endif
 
-
 #if defined(SAXPY_KERNEL)
 #if defined(ELEMENT_ACCESS)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.z = a.x * 3.2 + b.y; };
@@ -391,8 +392,8 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     for (SizeT i = 0; i < WARMUP; ++i)
     {
-        Kernel(kernel_1, field_1, field_2, field_3, size);
-        Kernel(kernel_2, field_3, field_2, field_1, size);
+        Kernel(kernel_1, field_1, field_2, field_3, size, index);
+        Kernel(kernel_2, field_3, field_2, field_1, size, index);
     }
 
 #if defined(__CUDACC__)
@@ -403,8 +404,8 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     for (SizeT i = 0; i < MEASUREMENT; ++i)
     {
-        Kernel(kernel_1, field_1, field_2, field_3, size);
-        Kernel(kernel_2, field_3, field_2, field_1, size);
+        Kernel(kernel_1, field_1, field_2, field_3, size, index);
+        Kernel(kernel_2, field_3, field_2, field_1, size, index);
     }
 
 #if defined(__CUDACC__)
