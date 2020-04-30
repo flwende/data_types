@@ -53,7 +53,7 @@ void ApplyPinning()
         core_id = std::atoi(variable);
     }
 
-    std::cout << "INFO: use cpu core " << core_id << std::endl;
+    std::cout << "# INFO: use cpu core " << core_id << std::endl;
 
     CPU_ZERO(&mask);
     CPU_SET(core_id, &mask);

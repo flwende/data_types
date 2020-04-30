@@ -408,7 +408,8 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     std::cout << cudaGetErrorString(error) << std::endl;
 #endif
 
-    std::cout << "elapsed time: " << (stop_time - start_time) * 1.0E3 << " ms" << std::endl;
+    std::cout << "# elapsed time in ms:" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
 
 #if defined(CHECK_RESULTS)
     {
