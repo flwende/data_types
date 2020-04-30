@@ -4,6 +4,7 @@
 // (See accompanying file LICENSE)
 
 #include <cstdint>
+#include <cstdlib>
 #include <vector>
 #include <omp.h>
 #include <benchmark.hpp>
@@ -213,7 +214,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
     -> std::enable_if_t<(Container::TParam_Dimension == 3 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
-    
+
     for (SizeT z = 0; z < a.Size(2); ++z)
     {
         for (SizeT y = 0; y < a.Size(1); ++y)
@@ -353,7 +354,11 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
 #if defined(DIFFUSION)
     std::vector<std::int32_t> h_index(n);
-    const double diffusion = 0.0;
+    double diffusion = 0.0;
+    if (const char* env_string = std::getenv("DIFFUSION_FACTOR"))
+    {
+        diffusion = std::atof(env_string);
+    }
 
     srand48(1);
     for (SizeT i = 0; i < n; ++i)
