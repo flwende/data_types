@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <vector>
+#include <type_traits>
 #include <omp.h>
 #include <benchmark.hpp>
 
@@ -32,7 +33,7 @@ constexpr std::size_t MEASUREMENT = 20;
 #if defined(__CUDACC__)
 template <typename FuncT, typename Container>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, Container a, Container b, Container c, const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 1), void>
+auto KernelImplementation(FuncT func, Container a, Container b, Container c, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 1), void>
 {
     using namespace ::fw::math;
 
@@ -60,7 +61,7 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c, con
 
 template <typename FuncT, typename Container>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, Container a, Container b, Container c, const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 2), void>
+auto KernelImplementation(FuncT func, Container a, Container b, Container c, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 2), void>
 {
     using namespace ::fw::math;
 
@@ -75,7 +76,7 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c, con
 
 template <typename FuncT, typename Container>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, Container a, Container b, Container c, const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
+auto KernelImplementation(FuncT func, Container a, Container b, Container c, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
 {
     using namespace ::fw::math;
 
@@ -266,7 +267,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
 }
 
 template <typename FuncT, typename Field>
-void Kernel(FuncT func, const Field& a, const Field& b, Field& c, [[maybe_unused]] const std::int32_t* index = nullptr)
+void Kernel(FuncT func, const Field& a, const Field& b, Field& c, const std::int32_t* index = nullptr)
 {
     KernelImplementation(func, a, b, c, index);
 }
