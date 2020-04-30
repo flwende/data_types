@@ -3,10 +3,12 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
-#include <omp.h>
-#include <benchmark.hpp>
+#include <cstdint>
+#include <cstdlib>
 #include <vector>
 #include <type_traits>
+#include <omp.h>
+#include <benchmark.hpp>
 
 constexpr double SPREAD = 0.5;
 constexpr double OFFSET = 2.0;
@@ -22,27 +24,44 @@ constexpr std::size_t MEASUREMENT = 20;
 #if defined(__CUDACC__)
 template <typename FuncT, SizeT Dimension, typename ValueT>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 1), void>
+auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Dimension == 1), void>
 {
     using namespace ::fw::math;
 
     const SizeT x = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (x < size[0])
+#if defined(DIFFUSION)
+    if (index)
     {
-        const SizeT i = x;
+        if (x < size[0])
+        {        
+            const std::int32_t i = index[x];
 
 #if defined(SOA_LAYOUT)
-        func(&a[i], &b[i], &c[i], size[0]);
+            func(&a[i], &b[i], &c[i], size[0]);
 #else
-        func(a[i], b[i], c[i]);
+            func(a[i], b[i], c[i]);
 #endif
+        }
+    }
+#endif
+    {
+        if (x < size[0])
+        {        
+            const SizeT i = x;
+
+#if defined(SOA_LAYOUT)
+            func(&a[i], &b[i], &c[i], size[0]);
+#else
+            func(a[i], b[i], c[i]);
+#endif
+        }
     }
 }
 
 template <typename FuncT, SizeT Dimension, typename ValueT>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 2), void>
+auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Dimension == 2), void>
 {
     using namespace ::fw::math;
 
@@ -67,7 +86,7 @@ auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray
 
 template <typename FuncT, SizeT Dimension, typename ValueT>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size) -> std::enable_if_t<(Dimension == 3), void>
+auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Dimension == 3), void>
 {
     using namespace ::fw::math;
 
@@ -92,38 +111,57 @@ auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray
 }
 
 template <typename FuncT, SizeT Dimension, typename ValueT>
-auto Kernel(FuncT func, ValueT* a, ValueT* b, ValueT* c, const SizeArray<Dimension>& size) -> void
+auto Kernel(FuncT func, ValueT* a, ValueT* b, ValueT* c, const SizeArray<Dimension>& size, const std::int32_t* index = nullptr) -> void
 {
     const dim3 block{128, 1, 1};
     const dim3 grid = GetGridSize(size, block);
 
-    KernelImplementation<<<grid, block>>>(func, a, b, c, size);
+    KernelImplementation<<<grid, block>>>(func, a, b, c, size, index);
 }
 
 #else // __CUDACC__
 
 template <typename FuncT, SizeT Dimension, typename ValueT>
-void KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size)
+void KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size, [[maybe_unused]] const std::int32_t* index = nullptr)
 {
     using namespace ::fw::math;
 
     const SizeT n = size.ReduceMul();
 
-    #pragma omp simd
-    for (SizeT i = 0; i < n; ++i)
+#if defined(DIFFUSION)
+    if (Dimension == 1 && index)
     {
+        #pragma omp simd
+        for (SizeT i = 0; i < n; ++i)
+        {
+            const std::int32_t j = index[i];
+
 #if defined(SOA_LAYOUT)
-        func(&a[i], &b[i], &c[i], n);
+            func(&a[j], &b[j], &c[j], n);
 #else
-        func(a[i], b[i], c[i]);
+            func(a[j], b[j], c[j]);
 #endif
+        }
+    }
+#endif
+    else
+    {
+        #pragma omp simd
+        for (SizeT i = 0; i < n; ++i)
+        {
+#if defined(SOA_LAYOUT)
+            func(&a[i], &b[i], &c[i], n);
+#else
+            func(a[i], b[i], c[i]);
+#endif
+        }
     }
 }
 
 template <typename FuncT, SizeT Dimension, typename ValueT>
-auto Kernel(FuncT func, ValueT* a, ValueT* b, ValueT* c, const SizeArray<Dimension>& size) -> void
+auto Kernel(FuncT func, ValueT* a, ValueT* b, ValueT* c, const SizeArray<Dimension>& size, const std::int32_t* index = nullptr) -> void
 {
-    KernelImplementation(func, a, b, c, size);
+    KernelImplementation(func, a, b, c, size, index);
 }
 #endif
 
@@ -176,7 +214,33 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     RealT* field_1 = data_1;
     RealT* field_2 = data_2;
     RealT* field_3 = data_3;
-#endif    
+#endif
+
+#if defined(DIFFUSION)
+    std::vector<std::int32_t> h_index(n);
+    double diffusion = 0.0;
+    if (const char* env_string = std::getenv("DIFFUSION_FACTOR"))
+    {
+        diffusion = std::atof(env_string);
+    }
+
+    srand48(1);
+    for (SizeT i = 0; i < n; ++i)
+    {
+        h_index[i] = static_cast<std::int32_t>(i + (n / 2) * drand48() * diffusion) % n;
+    }
+
+#if defined(__CUDACC__)
+    std::int32_t* d_index = nullptr;
+    cudaMalloc((void**)&d_index, n * sizeof(std::int32_t));
+    cudaMemcpy((void*)d_index, (const void*)h_index.data(), n * sizeof(std::int32_t), cudaMemcpyHostToDevice);
+    const std::int32_t* index = d_index;
+#else
+    const std::int32_t* index = h_index.data();
+#endif
+#else // DIFFUSION
+    const std::int32_t* index = nullptr;
+#endif
 
 #if defined(ELEMENT_ACCESS)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[2 * n] = Exp(a[0 * n] + b[1 * n]); };
@@ -202,8 +266,8 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     for (SizeT i = 0; i < WARMUP; ++i)
     {
-        Kernel(kernel_1, field_1, field_2, field_3, size);
-        Kernel(kernel_2, field_3, field_2, field_1, size);
+        Kernel(kernel_1, field_1, field_2, field_3, size, index);
+        Kernel(kernel_2, field_3, field_2, field_1, size, index);
     }
 
 #if defined(__CUDACC__)
@@ -214,8 +278,8 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     for (SizeT i = 0; i < MEASUREMENT; ++i)
     {
-        Kernel(kernel_1, field_1, field_2, field_3, size);
-        Kernel(kernel_2, field_3, field_2, field_1, size);
+        Kernel(kernel_1, field_1, field_2, field_3, size, index);
+        Kernel(kernel_2, field_3, field_2, field_1, size, index);
     }
 
 #if defined(__CUDACC__)
@@ -279,6 +343,33 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     ElementT* field_2 = data_2;
     ElementT* field_3 = data_3;
 #endif
+
+#if defined(DIFFUSION)
+    std::vector<std::int32_t> h_index(n);
+    double diffusion = 0.0;
+    if (const char* env_string = std::getenv("DIFFUSION_FACTOR"))
+    {
+        diffusion = std::atof(env_string);
+    }
+
+    srand48(1);
+    for (SizeT i = 0; i < n; ++i)
+    {
+        h_index[i] = static_cast<std::int32_t>(i + (n / 2) * drand48() * diffusion) % n;
+    }
+
+#if defined(__CUDACC__)
+    std::int32_t* d_index = nullptr;
+    cudaMalloc((void**)&d_index, n * sizeof(std::int32_t));
+    cudaMemcpy((void*)d_index, (const void*)h_index.data(), n * sizeof(std::int32_t), cudaMemcpyHostToDevice);
+    const std::int32_t* index = d_index;
+#else
+    const std::int32_t* index = h_index.data();
+#endif
+#else // DIFFUSION
+    const std::int32_t* index = nullptr;
+#endif
+
 
 #if defined(SAXPY_KERNEL)
 #if defined(ELEMENT_ACCESS)
