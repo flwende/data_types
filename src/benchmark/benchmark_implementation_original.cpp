@@ -44,6 +44,7 @@ auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray
 #endif
         }
     }
+    else
 #endif
     {
         if (x < size[0])
