@@ -410,7 +410,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
 #if defined(DIFFUSION)
     std::cout << "# elapsed time in ms" << "\t" << "diffusion factor" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion std::endl;
+    std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion << std::endl;
 #else
     std::cout << "# elapsed time in ms" << std::endl;
     std::cout << (stop_time - start_time) * 1.0E3 << diffusion std::endl;
