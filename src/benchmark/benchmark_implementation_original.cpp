@@ -44,6 +44,7 @@ auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray
 #endif
         }
     }
+    else
 #endif
     {
         if (x < size[0])
@@ -143,8 +144,8 @@ void KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray
 #endif
         }
     }
-#endif
     else
+#endif
     {
         #pragma omp simd
         for (SizeT i = 0; i < n; ++i)
