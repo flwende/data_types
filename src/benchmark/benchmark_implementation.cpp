@@ -3,9 +3,10 @@
 // Distributed under the BSD 2-clause Software License
 // (See accompanying file LICENSE)
 
+#include <cstdint>
+#include <vector>
 #include <omp.h>
 #include <benchmark.hpp>
-#include <vector>
 
 #include <vec/SimdVec.hpp>
 #include <auxiliary/Function.hpp>
@@ -25,31 +26,40 @@ constexpr std::size_t MEASUREMENT = 1;
 #else
 constexpr std::size_t WARMUP = 10;
 constexpr std::size_t MEASUREMENT = 20;
-//constexpr std::size_t WARMUP = 0;
-//constexpr std::size_t MEASUREMENT = 1;
 #endif
-
-//#define FW_USE_HIGHLEVEL_VECTOR_REF
-//#define FW_USE_HIGHLEVEL_VECTOR
 
 #if defined(__CUDACC__)
 template <typename FuncT, typename Container>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> std::enable_if_t<(Container::TParam_Dimension == 1), void>
+auto KernelImplementation(FuncT func, Container a, Container b, Container c, const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 1), void>
 {
     using namespace ::fw::math;
 
     const SizeT x = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if (x < a.Size(0))
+#if defined(DIFFUSION)
+    if (index)
     {
-        func(a[x], b[x], c[x]);
+        if (x < a.Size(0))
+        {
+            const std::int32_t i = index[x];
+
+            func(a[i], b[i], c[i]);
+        }
+    }
+    else
+#endif
+    {
+        if (x < a.Size(0))
+        {
+            func(a[x], b[x], c[x]);
+        }
     }
 }
 
 template <typename FuncT, typename Container>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> std::enable_if_t<(Container::TParam_Dimension == 2), void>
+auto KernelImplementation(FuncT func, Container a, Container b, Container c, const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 2), void>
 {
     using namespace ::fw::math;
 
@@ -64,7 +74,7 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> 
 
 template <typename FuncT, typename Container>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
+auto KernelImplementation(FuncT func, Container a, Container b, Container c, const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
 {
     using namespace ::fw::math;
 
@@ -79,34 +89,50 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c) -> 
 }
 
 template <typename FuncT, typename Field>
-void Kernel(FuncT func, Field& a, Field& b, Field& c)
+void Kernel(FuncT func, Field& a, Field& b, Field& c, const std::int32_t* index = nullptr)
 {
     const dim3 block{128, 1, 1};
     const dim3 grid = GetGridSize(a.Size(), block);
 
-    KernelImplementation<<<grid, block>>>(func, a.DeviceData(), b.DeviceData(), c.DeviceData());
+    KernelImplementation<<<grid, block>>>(func, a.DeviceData(), b.DeviceData(), c.DeviceData(), index);
 }
-#else
+
+#else // __CUDACC__
+
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
        
-    #pragma omp simd
-    for (SizeT x = 0; x < a.Size(0); ++x)
+#if defined(DIFFUSION)
+    if (index)
     {
-        func(a[x], b[x], c[x]);
+        #pragma omp simd
+        for (SizeT x = 0; x < a.Size(0); ++x)
+        {
+            const std::int32_t i = index[x];
+            func(a[i], b[i], c[i]);
+        }
+    }
+    else
+#endif
+    {
+        #pragma omp simd
+        for (SizeT x = 0; x < a.Size(0); ++x)
+        {
+            func(a[x], b[x], c[x]);
+        }
     }
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
 
-#if defined(FW_USE_HIGHLEVEL_VECTOR_REF)
+#if defined(USE_HIGHLEVEL_VECTOR_REF)
     constexpr SizeT CHUNK_SIZE = Container::GetInnerArraySize();
 
     for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
@@ -132,11 +158,11 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
-
+    
     for (SizeT y = 0; y < a.Size(1); ++y)
     {
         #pragma omp simd
@@ -148,14 +174,14 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
     
     for (SizeT y = 0; y < a.Size(1); ++y)
     {
-#if defined(FW_USE_HIGHLEVEL_VECTOR_REF)
+#if defined(USE_HIGHLEVEL_VECTOR_REF)
         constexpr SizeT CHUNK_SIZE = Container::GetInnerArraySize();
 
         for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
@@ -183,11 +209,11 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 3 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
-
+    
     for (SizeT z = 0; z < a.Size(2); ++z)
     {
         for (SizeT y = 0; y < a.Size(1); ++y)
@@ -202,7 +228,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c) 
+auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 3 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -211,7 +237,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
     {
         for (SizeT y = 0; y < a.Size(1); ++y)
         {
-#if defined(FW_USE_HIGHLEVEL_VECTOR_REF)
+#if defined(USE_HIGHLEVEL_VECTOR_REF)
             constexpr SizeT CHUNK_SIZE = Container::GetInnerArraySize();
 
             for (SizeT x = 0; x < a.Size(0); x += CHUNK_SIZE)
@@ -239,102 +265,9 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
 }
 
 template <typename FuncT, typename Field>
-void Kernel(FuncT func, const Field& a, const Field& b, Field& c)
+void Kernel(FuncT func, const Field& a, const Field& b, Field& c, [[maybe_unused]] const std::int32_t* index = nullptr)
 {
-    KernelImplementation(func, a, b, c);
-}
-#endif
-
-//#define TESTING_1
-
-#if defined(TESTING_1)
-#if defined(__CUDACC__)
-template <typename Container>
-CUDA_KERNEL
-auto TestKernelImplemenation(Container a, Container b) -> std::enable_if_t<(Container::TParam_Dimension != 3), void> {}
-
-template <typename Container>
-CUDA_KERNEL
-auto TestKernelImplemenation(Container a, Container b) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
-{
-    using namespace ::fw::math;
-
-    const SizeT x = blockIdx.x * blockDim.x + threadIdx.x;
-    const SizeT y = blockIdx.y * blockDim.y + threadIdx.y;
-    const SizeT z = blockIdx.z * blockDim.z + threadIdx.z;
-
-    if (x < a.Size(0) && y < a.Size(1) && z < a.Size(2))
-    {
-        b[z][y][x] = 2.0 * a[z][y][x];
-    } 
-}
-
-template <SizeT Dimension, typename T>
-auto TestKernel(T& a, T& b) -> SizeT
-{
-    const dim3 block{128, 1, 1};
-    const dim3 grid = GetGridSize(a.Size(), block);
-
-    TestKernelImplemenation<<<grid, block>>>(a.DeviceData(), b.DeviceData());
-
-    return 0;
-}
-#else
-template <SizeT Dimension, typename T>
-auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimension != 3, SizeT>
-{
-    return 0;
-}
-
-template <SizeT Dimension, typename T>
-auto TestKernelImplemenation(const T& a, const T& b) -> std::enable_if_t<Dimension == 3, SizeT>
-{
-    using namespace ::fw::math;
-
-    SizeT sum = 0;
-
-    for (SizeT z = 0; z < a.Size(2); ++z)
-    {
-        for (SizeT y = 0; y < a.Size(1); ++y)
-        {
-            #pragma omp simd reduction(+:sum)
-            for (SizeT x = 0; x < a.Size(0); ++x)
-            {                                               
-                sum += a[z][y][x].z * b[z][y][x].z;
-            }
-        }
-    }
-
-    return sum;
-}
-
-template <SizeT Dimension, typename T>
-auto TestKernel(const T& a, const T& b) -> SizeT
-{
-    return TestKernelImplemenation<Dimension>(a, b);
-}
-#endif
-#endif
-
-#if defined(TESTING_2)
-template <SizeT Dimension, typename T>
-void Print(const T& field)
-{
-    if constexpr (Dimension == 3)
-    {
-        for (SizeT z = 0; z < field.Size(2); ++z)
-        {
-            for (SizeT y = 0; y < field.Size(1); ++y)
-            {
-                for (SizeT x = 0; x < field.Size(0); ++x)
-                {
-                    std::cout << field[z][y][x] << " ";
-                }
-                std::cout << std::endl;
-            }
-            std::cout << std::endl;
-        }
-    }
+    KernelImplementation(func, a, b, c, index);
 }
 #endif
 
@@ -343,26 +276,9 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 {
     using namespace ::fw::math;
 
+    const SizeT n = size.ReduceMul();
     Field<ElementT, Dimension> field_1(size);
     Field<ElementT, Dimension> field_2(size);
-
-#if defined(TESTING_1)
-    field_1.Set([] (const auto&) { return 0; });
-    field_2.Set([] (const auto&) { return 0; });
-
-    SizeT sum = 0;
-    for (SizeT i = 0; i < (argc > 4 ? std::atoi(argv[4]) : 1); ++i)
-    {
-        sum += TestKernel<Dimension>(field_1, field_2);
-    }
-
-    if (sum == 0)
-    {
-        std::cout << "Success!" << std::endl;
-    }
-
-    return 0;
-#endif
 
     // Field initialization.
     srand48(1);
@@ -370,30 +286,6 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     field_2.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
 
     Field<ElementT, Dimension> field_3(size, true);
-
-#if defined(TESTING_2)
-    //Print<Dimension>(field_1);
-
-    Kernel([] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Exp(a + b); }
-        , field_1, field_2, field_3, ::fw::auxiliary::AssignAll, ::fw::auxiliary::AssignAll, ::fw::auxiliary::AssignAll);
-
-    if constexpr (Dimension == 3)
-    {
-        for (SizeT z = 0; z < field_1.Size(2); ++z)
-        {
-            for (SizeT y = 0; y < field_1.Size(1); ++y)
-            {
-                for (SizeT x = 0; x < field_1.Size(0); ++x)
-                {
-                    const auto& result = Exp(field_1[z][y][x] + field_2[z][y][x]);
-                    if (result != field_3[z][y][x]) { std::cout << "error: " << result << " vs. " << field_3[z][y][x] << std::endl; return 1; }
-                }
-            }
-        }
-    }
-
-    return 0;
-#endif
 
 #if defined(CHECK_RESULTS)
     std::vector<ElementT> field_1_copy = field_1.Get();
@@ -459,10 +351,32 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     field_3.CopyHostToDevice();
 #endif
 
+#if defined(DIFFUSION)
+    std::vector<std::int32_t> h_index(n);
+    const double diffusion = 0.0;
+
+    srand48(1);
+    for (SizeT i = 0; i < n; ++i)
+    {
+        h_index[i] = static_cast<std::int32_t>(i + (n / 2) * drand48() * diffusion) % n;
+    }
+
+#if defined(__CUDACC__)
+    std::int32_t* d_index = nullptr;
+    cudaMalloc((void**)&d_index, n * sizeof(std::int32_t));
+    cudaMemcpy((void*)d_index, (const void*)h_index.data(), n * sizeof(std::int32_t), cudaMemcpyHostToDevice);
+    const std::int32_t* index = d_index;
+#else
+    const std::int32_t* index = h_index.data();
+#endif
+#else // DIFFUSION
+    const std::int32_t* index = nullptr;
+#endif
+
     for (SizeT i = 0; i < WARMUP; ++i)
     {
-        Kernel(kernel_1, field_1, field_2, field_3);
-        Kernel(kernel_2, field_3, field_2, field_1);
+        Kernel(kernel_1, field_1, field_2, field_3, index);
+        Kernel(kernel_2, field_3, field_2, field_1, index);
     }
 
 #if defined(__CUDACC__)
@@ -473,8 +387,8 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     for (SizeT i = 0; i < MEASUREMENT; ++i)
     {
-        Kernel(kernel_1, field_1, field_2, field_3);
-        Kernel(kernel_2, field_3, field_2, field_1);
+        Kernel(kernel_1, field_1, field_2, field_3, index);
+        Kernel(kernel_2, field_3, field_2, field_1, index);
     }
 
 #if defined(__CUDACC__)
@@ -494,7 +408,6 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     {
         using namespace ::fw::math;
 
-        const SizeT n = size.ReduceMul();
         std::vector<ElementT> reference(n);
         std::vector<ElementT> field_3_result = field_3.Get(true);
     
