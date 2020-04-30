@@ -224,8 +224,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     {
         diffusion = std::atof(env_string);
     }
-    std::cout << "# diffusion factor: " << diffusion << std::endl;
-
+    
     srand48(1);
     for (SizeT i = 0; i < n; ++i)
     {
@@ -295,8 +294,13 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     std::cout << "# CUDA: " << cudaGetErrorString(error) << std::endl;
 #endif
 
-    std::cout << "# elapsed time in ms:" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
+#if defined(DIFFUSION)
+    std::cout << "# elapsed time in ms" << "\t" << "diffusion factor" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion std::endl;
+#else
+    std::cout << "# elapsed time in ms" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E3 << diffusion std::endl;
+#endif
     
     _mm_free(data_1);
     _mm_free(data_2);
@@ -356,7 +360,6 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     {
         diffusion = std::atof(env_string);
     }
-    std::cout << "# diffusion factor: " << diffusion << std::endl;
 
     srand48(1);
     for (SizeT i = 0; i < n; ++i)
@@ -423,8 +426,13 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     std::cout << "# CUDA: " << cudaGetErrorString(error) << std::endl;
 #endif
 
-    std::cout << "# elapsed time in ms:" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
+#if defined(DIFFUSION)
+    std::cout << "# elapsed time in ms" << "\t" << "diffusion factor" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion std::endl;
+#else
+    std::cout << "# elapsed time in ms" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E3 << diffusion std::endl;
+#endif
     
     _mm_free(data_1);
     _mm_free(data_2);
