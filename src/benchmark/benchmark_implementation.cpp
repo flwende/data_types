@@ -405,7 +405,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
 #if defined(__CUDACC__)
     cudaError_t error = cudaGetLastError();
-    std::cout << cudaGetErrorString(error) << std::endl;
+    std::cout << "# CUDA: " << cudaGetErrorString(error) << std::endl;
 #endif
 
     std::cout << "# elapsed time in ms:" << std::endl;
@@ -448,7 +448,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
             deviation = Max(deviation, Abs(rel_error));
         }
 
-        std::cout << "deviation: " << deviation << std::endl;
+        std::cout << "# deviation:" << deviation << std::endl;
     }
 #endif
     
