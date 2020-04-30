@@ -280,18 +280,51 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     const SizeT n = size.ReduceMul();
     Field<ElementT, Dimension> field_1(size);
     Field<ElementT, Dimension> field_2(size);
+    Field<ElementT, Dimension> field_3(size, true);
 
     // Field initialization.
     srand48(1);
     field_1.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
     field_2.Set([] (const auto I) { return static_cast<RealT>((2.0 * drand48() -1.0) * SPREAD + OFFSET); });
 
-    Field<ElementT, Dimension> field_3(size, true);
+#if defined(__CUDACC__)
+    // Create device buffer and copy in the host data.
+    field_1.CopyHostToDevice();
+    field_2.CopyHostToDevice();
+    field_3.CopyHostToDevice();
+#endif
 
 #if defined(CHECK_RESULTS)
     std::vector<ElementT> field_1_copy = field_1.Get();
     std::vector<ElementT> field_2_copy = field_2.Get();
 #endif
+
+#if defined(DIFFUSION)
+    std::vector<std::int32_t> h_index(n);
+    double diffusion = 0.0;
+    if (const char* env_string = std::getenv("DIFFUSION_FACTOR"))
+    {
+        diffusion = std::atof(env_string);
+    }
+
+    srand48(1);
+    for (SizeT i = 0; i < n; ++i)
+    {
+        h_index[i] = static_cast<std::int32_t>(i + (n / 2) * drand48() * diffusion) % n;
+    }
+
+#if defined(__CUDACC__)
+    std::int32_t* d_index = nullptr;
+    cudaMalloc((void**)&d_index, n * sizeof(std::int32_t));
+    cudaMemcpy((void*)d_index, (const void*)h_index.data(), n * sizeof(std::int32_t), cudaMemcpyHostToDevice);
+    const std::int32_t* index = d_index;
+#else
+    const std::int32_t* index = h_index.data();
+#endif
+#else // DIFFUSION
+    const std::int32_t* index = nullptr;
+#endif
+
 
 #if defined(SAXPY_KERNEL)
 #if defined(ELEMENT_ACCESS)
@@ -343,39 +376,6 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Exp(a + b); };
     auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c = Log(a) - b; };
 #endif
-#endif
-
-#if defined(__CUDACC__)
-    // Create device buffer and copy in the host data.
-    field_1.CopyHostToDevice();
-    field_2.CopyHostToDevice();
-    field_3.CopyHostToDevice();
-#endif
-
-#if defined(DIFFUSION)
-    std::vector<std::int32_t> h_index(n);
-    double diffusion = 0.0;
-    if (const char* env_string = std::getenv("DIFFUSION_FACTOR"))
-    {
-        diffusion = std::atof(env_string);
-    }
-
-    srand48(1);
-    for (SizeT i = 0; i < n; ++i)
-    {
-        h_index[i] = static_cast<std::int32_t>(i + (n / 2) * drand48() * diffusion) % n;
-    }
-
-#if defined(__CUDACC__)
-    std::int32_t* d_index = nullptr;
-    cudaMalloc((void**)&d_index, n * sizeof(std::int32_t));
-    cudaMemcpy((void*)d_index, (const void*)h_index.data(), n * sizeof(std::int32_t), cudaMemcpyHostToDevice);
-    const std::int32_t* index = d_index;
-#else
-    const std::int32_t* index = h_index.data();
-#endif
-#else // DIFFUSION
-    const std::int32_t* index = nullptr;
 #endif
 
     for (SizeT i = 0; i < WARMUP; ++i)
