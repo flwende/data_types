@@ -6,17 +6,18 @@ DEBUG = -DNDEBUG
 CXXFLAGS = -O3 -std=c++17 -mavx -fopenmp -fopenmp-simd -ftree-vectorize -ffast-math -fopt-info-vec-optimized $(INC) $(DEBUG)
 LDFLAGS = -O3 -fopenmp
 
-
 #GLIBCROOT = $(HOME)/opt/gnu-8.2.0/glibc-2.27
 #CXXFLAGS += -I$(GLIBCROOT)/include
 #LDFLAGS += -Wl,-rpath,$(GLIBCROOT)/lib -Wl,-dynamic-linker,$(GLIBCROOT)/lib/ld-linux-x86-64.so.2 -L$(GLIBCROOT)/lib
 
 #CXXFLAGS += -DCHECK_RESULTS
 #CXXFLAGS += -DAOS_LAYOUT
-#CXXFLAGS += -DSOA_LAYOUT
+CXXFLAGS += -DSOA_LAYOUT
 #CXXFLAGS += -DSOAI_LAYOUT
-CXXFLAGS += -DAOSOA_LAYOUT
+#CXXFLAGS += -DAOSOA_LAYOUT
 #CXXFLAGS += -DELEMENT_ACCESS
+#CXXFLAGS += -DUSE_HIGHLEVEL_VECTOR_REF
+#CXXFLAGS += -DDIFFUSION
 
 target: bin/benchmark.x
 
