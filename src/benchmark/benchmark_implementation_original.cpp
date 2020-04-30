@@ -299,7 +299,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion << std::endl;
 #else
     std::cout << "# elapsed time in ms" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << diffusion std::endl;
+    std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
 #endif
     
     _mm_free(data_1);
@@ -431,7 +431,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion << std::endl;
 #else
     std::cout << "# elapsed time in ms" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << diffusion std::endl;
+    std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
 #endif
     
     _mm_free(data_1);
