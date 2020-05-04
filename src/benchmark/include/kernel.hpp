@@ -64,8 +64,12 @@ using TypeX = float;
 using TypeY = std::int16_t;
 using TypeZ = std::int32_t;
 */
+/*
+using TypeX = float;
+using TypeY = double;
+using TypeZ = std::int32_t;
 using ElementT = ::fw::dataTypes::Tuple<TypeX, TypeY, TypeZ>;
-
+*/
 using ConstElementT = const ElementT;
 
 #if defined(AOS_LAYOUT)
