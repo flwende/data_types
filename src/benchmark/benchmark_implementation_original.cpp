@@ -243,6 +243,22 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     const std::int32_t* index = nullptr;
 #endif
 
+#if defined(SAXPY_KERNEL)
+#if defined(ELEMENT_ACCESS)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c[2 * n] = a[0 * n] * 3.2 + b[1 * n]; };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void { using namespace ::fw::math; c[0 * n] = a[2 * n] * 3.2 + b[1 * n]; };
+#else
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c) -> void 
+    { 
+        using namespace ::fw::math; c = a * 3.2 + b; 
+
+        c[0 * n] = a[0 * n] * 3.2 + b[0 * n];
+        c[1 * n] = a[1 * n] * 3.2 + b[1 * n];
+        c[2 * n] = a[2 * n] * 3.2 + b[2 * n];
+    };
+    auto kernel_2 = kernel_1;
+#endif
+#else // SAXPY_KERNEL
 #if defined(ELEMENT_ACCESS)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[2 * n] = Exp(a[0 * n] + b[1 * n]); };
     auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[0 * n] = Log(a[2 * n]) - b[1 * n]; };
@@ -263,6 +279,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
         c[1 * n] = Log(a[1 * n]) - b[1 * n];
         c[2 * n] = Log(a[2 * n]) - b[2 * n];
     };
+#endif
 #endif
 
     for (SizeT i = 0; i < WARMUP; ++i)
