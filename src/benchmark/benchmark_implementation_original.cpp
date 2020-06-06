@@ -245,16 +245,21 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
 #if defined(SAXPY_KERNEL)
 #if defined(ELEMENT_ACCESS)
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[2 * n] = a[0 * n] * 3.2 + b[1 * n]; };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[0 * n] = a[2 * n] * 3.2 + b[1 * n]; };
+    //auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[2 * n] = a[0 * n] * 3.2 + b[1 * n]; };
+    //auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[0 * n] = a[2 * n] * 3.2 + b[1 * n]; };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[1 * n] = a[0 * n] * 3.2 + c[1 * n]; };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[1 * n] = a[0 * n] * 3.2 + c[1 * n]; };
 #else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void 
     { 
         using namespace ::fw::math; 
 
-        c[0 * n] = a[0 * n] * 3.2 + b[0 * n];
-        c[1 * n] = a[1 * n] * 3.2 + b[1 * n];
-        c[2 * n] = a[2 * n] * 3.2 + b[2 * n];
+        //c[0 * n] = a[0 * n] * 3.2 + b[0 * n];
+        //c[1 * n] = a[1 * n] * 3.2 + b[1 * n];
+        //c[2 * n] = a[2 * n] * 3.2 + b[2 * n];
+        c[0 * n] = a[0 * n] * 3.2 + c[0 * n];
+        c[1 * n] = a[1 * n] * 3.2 + c[1 * n];
+        c[2 * n] = a[2 * n] * 3.2 + c[2 * n];
     };
     auto kernel_2 = kernel_1;
 #endif
@@ -312,11 +317,15 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 #endif
 
 #if defined(DIFFUSION)
-    std::cout << "# elapsed time in ms" << "\t" << "diffusion factor" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion << std::endl;
+    //std::cout << "# elapsed time in ms" << "\t" << "diffusion factor" << std::endl;
+    //std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion << std::endl;
+    std::cout << "# time per loop iteration in ns" << "\t" << "diffusion factor" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E9 / (2 * MEASUREMENT * n) << "\t" << diffusion << std::endl;
 #else
-    std::cout << "# elapsed time in ms" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
+    //std::cout << "# elapsed time in ms" << std::endl;
+    //std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
+    std::cout << "#time per loop iteration in ns" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E9 / (2 * MEASUREMENT * n) << std::endl;
 #endif
     
     _mm_free(data_1);
@@ -335,7 +344,13 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     ElementT* data_1 = reinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
     ElementT* data_2 = reinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
-    ElementT* data_3 = reinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
+    ElementT* data_3 = #if defined(DIFFUSION)
+    std::cout << "# elapsed time in ms" << "\t" << "diffusion factor" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion << std::endl;
+#else
+    std::cout << "# elapsed time in ms" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
+#endifreinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
     
     // Field initialization.
     srand48(1);
@@ -398,10 +413,13 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
 #if defined(SAXPY_KERNEL)
 #if defined(ELEMENT_ACCESS)
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.z = a.x * 3.2 + b.y; };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.x = a.z * 3.2 + b.y; };
+    //auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.z = a.x * 3.2 + b.y; };
+    //auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.x = a.z * 3.2 + b.y; };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.y = a.x * 3.2 + c.y; };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.y = a.x * 3.2 + c.y; };
 #else
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c = a * 3.2 + b; };
+    //auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c = a * 3.2 + b; };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c = a * 3.2 + c; };
     auto kernel_2 = kernel_1;
 #endif
 #else
@@ -444,11 +462,15 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 #endif
 
 #if defined(DIFFUSION)
-    std::cout << "# elapsed time in ms" << "\t" << "diffusion factor" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion << std::endl;
+    //std::cout << "# elapsed time in ms" << "\t" << "diffusion factor" << std::endl;
+    //std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion << std::endl;
+    std::cout << "# time per loop iteration in ns" << "\t" << "diffusion factor" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E9 / (2 * MEASUREMENT * n) << "\t" << diffusion << std::endl;
 #else
-    std::cout << "# elapsed time in ms" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
+    //std::cout << "# elapsed time in ms" << std::endl;
+    //std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
+    std::cout << "#time per loop iteration in ns" << std::endl;
+    std::cout << (stop_time - start_time) * 1.0E9 / (2 * MEASUREMENT * n) << std::endl;
 #endif
     
     _mm_free(data_1);
