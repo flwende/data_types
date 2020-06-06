@@ -344,13 +344,7 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
     ElementT* data_1 = reinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
     ElementT* data_2 = reinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
-    ElementT* data_3 = #if defined(DIFFUSION)
-    std::cout << "# elapsed time in ms" << "\t" << "diffusion factor" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << "\t" << diffusion << std::endl;
-#else
-    std::cout << "# elapsed time in ms" << std::endl;
-    std::cout << (stop_time - start_time) * 1.0E3 << std::endl;
-#endifreinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
+    ElementT* data_3 = reinterpret_cast<ElementT*>(_mm_malloc(size.ReduceMul() * sizeof(ElementT), ::fw::simd::alignment));
     
     // Field initialization.
     srand48(1);
