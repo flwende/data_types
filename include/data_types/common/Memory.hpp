@@ -498,7 +498,8 @@ namespace XXX_NAMESPACE
                 {
                     const SizeT n_total = n.ReduceMul();
                     
-                    return {Padding((IsPowerOf<2>(n_total) && (N > 1) ? n_total + 1 : n_total), alignment), NumParameters, alignment};
+                    //return {Padding((IsPowerOf<2>(n_total) && (N > 1) ? n_total + 1 : n_total), alignment), NumParameters, alignment};
+                    return {Padding(n_total, alignment), NumParameters, alignment};
                 }
 
                 //!
@@ -869,7 +870,8 @@ namespace XXX_NAMESPACE
                 {
                     const SizeT n_total = n.ReduceMul();
 
-                    return {Padding((IsPowerOf<2>(n_total) && (N > 1) ? n_total + 1 : n_total), alignment), 1, alignment};
+                    //return {Padding((IsPowerOf<2>(n_total) && (N > 1) ? n_total + 1 : n_total), alignment), 1, alignment};
+                    return {Padding(n_total, alignment), 1, alignment};
                 }
 
                 //!

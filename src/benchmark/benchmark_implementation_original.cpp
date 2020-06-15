@@ -245,21 +245,21 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
 #if defined(SAXPY_KERNEL)
 #if defined(ELEMENT_ACCESS)
-    //auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[2 * n] = a[0 * n] * 3.2 + b[1 * n]; };
-    //auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[0 * n] = a[2 * n] * 3.2 + b[1 * n]; };
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[1 * n] = a[0 * n] * 3.2 + c[1 * n]; };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[1 * n] = a[0 * n] * 3.2 + c[1 * n]; };
+    //auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[2 * n] = a[0 * n] * static_cast<TypeX>(3.2) + b[1 * n]; };
+    //auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[0 * n] = a[2 * n] * static_cast<TypeZ>(3.2) + b[1 * n]; };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[1 * n] = a[0 * n] * static_cast<TypeX>(3.2) + c[1 * n]; };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[1 * n] = a[0 * n] * static_cast<TypeX>(3.2) + c[1 * n]; };
 #else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void 
     { 
         using namespace ::fw::math; 
 
-        //c[0 * n] = a[0 * n] * 3.2 + b[0 * n];
-        //c[1 * n] = a[1 * n] * 3.2 + b[1 * n];
-        //c[2 * n] = a[2 * n] * 3.2 + b[2 * n];
-        c[0 * n] = a[0 * n] * 3.2 + c[0 * n];
-        c[1 * n] = a[1 * n] * 3.2 + c[1 * n];
-        c[2 * n] = a[2 * n] * 3.2 + c[2 * n];
+        //c[0 * n] = a[0 * n] * static_cast<TypeX>(3.2) + b[0 * n];
+        //c[1 * n] = a[1 * n] * static_cast<TypeY>(3.2) + b[1 * n];
+        //c[2 * n] = a[2 * n] * static_cast<TypeZ>(3.2) + b[2 * n];
+        c[0 * n] = a[0 * n] * static_cast<TypeX>(3.2) + c[0 * n];
+        c[1 * n] = a[1 * n] * static_cast<TypeY>(3.2) + c[1 * n];
+        c[2 * n] = a[2 * n] * static_cast<TypeZ>(3.2) + c[2 * n];
     };
     auto kernel_2 = kernel_1;
 #endif
