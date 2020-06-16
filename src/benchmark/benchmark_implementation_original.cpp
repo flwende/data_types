@@ -123,7 +123,8 @@ auto Kernel(FuncT func, ValueT* a, ValueT* b, ValueT* c, const SizeArray<Dimensi
 #else // __CUDACC__
 
 template <typename FuncT, SizeT Dimension, typename ValueT>
-void KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size, [[maybe_unused]] const std::int32_t* index = nullptr)
+auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size, [[maybe_unused]] const std::int32_t* index = nullptr)
+    -> std::enable_if_t<Dimension == 1, void>
 {
     using namespace ::fw::math;
 
@@ -133,14 +134,14 @@ void KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray
     if (Dimension == 1 && index)
     {
         #pragma omp simd
-        for (SizeT i = 0; i < n; ++i)
+        for (SizeT i = 0; i < size[0]; ++i)
         {
-            const std::int32_t j = index[i];
+            const SizeT index_1d = index[i];
 
 #if defined(SOA_LAYOUT)
-            func(&a[j], &b[j], &c[j], n);
+            func(&a[index_1d], &b[index_1d], &c[index_1d], n);
 #else
-            func(a[j], b[j], c[j]);
+            func(a[index_1d], b[index_1d], c[index_1d]);
 #endif
         }
     }
@@ -148,13 +149,64 @@ void KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray
 #endif
     {
         #pragma omp simd
-        for (SizeT i = 0; i < n; ++i)
+        for (SizeT i = 0; i < size[0]; ++i)
         {
 #if defined(SOA_LAYOUT)
             func(&a[i], &b[i], &c[i], n);
 #else
             func(a[i], b[i], c[i]);
 #endif
+        }
+    }
+}
+
+template <typename FuncT, SizeT Dimension, typename ValueT>
+auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size, [[maybe_unused]] const std::int32_t* index = nullptr)
+    -> std::enable_if_t<Dimension == 2, void>
+{
+    using namespace ::fw::math;
+
+    const SizeT n = size.ReduceMul();
+
+    for (SizeT j = 0; j < size[1]; ++j)
+    {
+        #pragma omp simd
+        for (SizeT i = 0; i < size[0]; ++i)
+        {
+            const SizeT index_1d = j * size[0] + i;
+
+#if defined(SOA_LAYOUT)
+            func(&a[index_1d], &b[index_1d], &c[index_1d], n);
+#else
+            func(a[index_1d], b[index_1d], c[index_1d]);
+#endif
+        }
+    }
+}
+
+template <typename FuncT, SizeT Dimension, typename ValueT>
+auto KernelImplementation(FuncT func, ValueT* a, ValueT* b, ValueT* c, SizeArray<Dimension> size, [[maybe_unused]] const std::int32_t* index = nullptr)
+    -> std::enable_if_t<Dimension == 3, void>
+{
+    using namespace ::fw::math;
+
+    const SizeT n = size.ReduceMul();
+
+    for (SizeT k = 0; k < size[2]; ++k)
+    {
+        for (SizeT j = 0; j < size[1]; ++j)
+        {
+            #pragma omp simd
+            for (SizeT i = 0; i < size[0]; ++i)
+            {
+                const SizeT index_1d = (k * size[1] + j) * size[0] + i;
+
+#if defined(SOA_LAYOUT)
+                func(&a[index_1d], &b[index_1d], &c[index_1d], n);
+#else
+                func(a[index_1d], b[index_1d], c[index_1d]);
+#endif
+            }
         }
     }
 }
