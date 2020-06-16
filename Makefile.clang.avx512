@@ -6,18 +6,19 @@ DEBUG = -DNDEBUG
 CXXFLAGS = -O3 -std=c++17 -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl -fopenmp=libiomp5 -fveclib=SVML -ftree-vectorize -ffast-math -Rpass=loop-vectorize $(INC) $(DEBUG)
 LDFLAGS = -O3 -L$(INTELROOT)/lib/intel64 -lsvml -liomp5 -lintlc
 
-#GLIBCROOT = $(HOME)/opt/gnu-8.2.0/glibc-2.27
-#CXXFLAGS += -I$(GLIBCROOT)/include
-#LDFLAGS += -Wl,-rpath,$(GLIBCROOT)/lib -Wl,-dynamic-linker,$(GLIBCROOT)/lib/ld-linux-x86-64.so.2 -L$(GLIBCROOT)/lib
+GLIBCROOT = $(HOME)/opt/gnu-8.2.0/glibc-2.27
+CXXFLAGS += -I$(GLIBCROOT)/include
+LDFLAGS += -Wl,-rpath,$(GLIBCROOT)/lib -Wl,-dynamic-linker,$(GLIBCROOT)/lib/ld-linux-x86-64.so.2 -L$(GLIBCROOT)/lib
 
 #CXXFLAGS += -DCHECK_RESULTS
 #CXXFLAGS += -DAOS_LAYOUT
 CXXFLAGS += -DSOA_LAYOUT
 #CXXFLAGS += -DSOAI_LAYOUT
 #CXXFLAGS += -DAOSOA_LAYOUT
-#CXXFLAGS += -DELEMENT_ACCESS
+CXXFLAGS += -DELEMENT_ACCESS
 #CXXFLAGS += -DUSE_HIGHLEVEL_VECTOR_REF
 #CXXFLAGS += -DDIFFUSION
+CXXFLAGS += -DSAXPY_KERNEL
 
 target: bin/benchmark.x
 
@@ -40,6 +41,7 @@ obj/benchmark_implementation.o: src/benchmark/benchmark_implementation.cpp
 
 obj/benchmark_implementation_original.o: src/benchmark/benchmark_implementation_original.cpp
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(CXXFLAGS) -S $<
 
 clean:
 	rm -f *~ obj/*.o bin/benchmark.x
