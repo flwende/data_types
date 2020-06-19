@@ -426,6 +426,12 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, auto&& b) -> void { using namespace ::fw::math; b = a * 3.2 + b; };
     auto kernel_2 = kernel_1;
 #endif
+#elif defined(NUM_ACCESSES_1)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (auto&& a) -> void { using namespace ::fw::math; a = a * 3.2; };
+    auto kernel_2 = kernel_1;
+#elif defined(NUM_ACCESSES_3)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto&b, auto&& c) -> void { using namespace ::fw::math; c = a * 3.2 + b; };
+    auto kernel_2 = kernel_1;
 #else
 #if defined(ELEMENT_ACCESS)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z = Exp(a.x + b.y); };

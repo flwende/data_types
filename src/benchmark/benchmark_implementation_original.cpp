@@ -413,7 +413,27 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     };
     auto kernel_2 = kernel_1;
 #endif
-#else // SAXPY_KERNEL
+#elif defined(NUM_ACCESSES_1)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (auto* a, const SizeT n) -> void 
+    { 
+        using namespace ::fw::math; 
+
+        a[0 * n] = a[0 * n] * static_cast<TypeX>(3.2);
+        a[1 * n] = a[1 * n] * static_cast<TypeY>(3.2);
+        a[2 * n] = a[2 * n] * static_cast<TypeZ>(3.2);
+    };
+    auto kernel_2 = kernel_1;
+#elif defined(NUM_ACCESSES_3)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void 
+    { 
+        using namespace ::fw::math; 
+
+        c[0 * n] = a[0 * n] * static_cast<TypeX>(3.2) + b[0 * n];
+        c[1 * n] = a[1 * n] * static_cast<TypeY>(3.2) + b[1 * n];
+        c[2 * n] = a[2 * n] * static_cast<TypeZ>(3.2) + b[2 * n];
+    };
+    auto kernel_2 = kernel_1;
+#else
 #if defined(ELEMENT_ACCESS)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[2 * n] = Exp(a[0 * n] + b[1 * n]); };
     auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto* a, const auto* b, auto* c, const SizeT n) -> void { using namespace ::fw::math; c[0 * n] = Log(a[2 * n]) - b[1 * n]; };
@@ -570,6 +590,12 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, auto& b) -> void { using namespace ::fw::math; b = a * 3.2 + b; };
     auto kernel_2 = kernel_1;
 #endif
+#elif defined(NUM_ACCESSES_1)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (auto& a) -> void { using namespace ::fw::math; a = a * 3.2; };
+    auto kernel_2 = kernel_1;
+#elif defined(NUM_ACCESSES_3)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c = a * 3.2 + b; };
+    auto kernel_2 = kernel_1;
 #else
 #if defined(ELEMENT_ACCESS)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto& c) -> void { using namespace ::fw::math; c.z = Exp(a.x + b.y); };
