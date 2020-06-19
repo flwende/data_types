@@ -22,18 +22,16 @@ using ::XXX_NAMESPACE::dataTypes::SimdVecRef;
 constexpr double SPREAD = 0.5;
 constexpr double OFFSET = 2.0;
 
-#if defined(CHECK_RESULTS)
-constexpr std::size_t WARMUP = 0;
-constexpr std::size_t MEASUREMENT = 1;
+#if defined(SAXPY_KERNEL)
+#define NUM_ACCESSES_2
 #else
-constexpr std::size_t WARMUP = 10;
-constexpr std::size_t MEASUREMENT = 20;
+#define NUM_ACCESSES_3
 #endif
 
 #if defined(__CUDACC__)
 template <typename FuncT, typename Container>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, Container a, Container b, Container c, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 1), void>
+auto KernelImplementation(FuncT func, [[maybe_unused]] Container a, [[maybe_unused]] Container b, Container c, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 1), void>
 {
     using namespace ::fw::math;
 
@@ -44,9 +42,15 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c, [[m
     {
         if (x < a.Size(0))
         {
-            const std::int32_t i = index[x];
+            const SizeT i = index[x];
 
+#if defined(NUM_ACCESSES_1)
+            func(c[i]);
+#elif defined(NUM_ACCESSES_2)
+            func(a[i], c[i]);
+#elif defined(NUM_ACCESSES_3)
             func(a[i], b[i], c[i]);
+#endif
         }
     }
     else
@@ -54,14 +58,20 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c, [[m
     {
         if (x < a.Size(0))
         {
+#if defined(NUM_ACCESSES_1)
+            func(c[x]);
+#elif defined(NUM_ACCESSES_2)
+            func(a[x], c[x]);
+#elif defined(NUM_ACCESSES_3)            
             func(a[x], b[x], c[x]);
+#endif
         }
     }
 }
 
 template <typename FuncT, typename Container>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, Container a, Container b, Container c, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 2), void>
+auto KernelImplementation(FuncT func, [[maybe_unused]] Container a, [[maybe_unused]] Container b, Container c, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 2), void>
 {
     using namespace ::fw::math;
 
@@ -70,13 +80,19 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c, [[m
 
     if (x < a.Size(0) && y < a.Size(1))
     {
+#if defined(NUM_ACCESSES_1)
+        func(c[y][x]);
+#elif defined(NUM_ACCESSES_2)
+        func(a[y][x], c[y][x]);
+#elif defined(NUM_ACCESSES_3)
         func(a[y][x], b[y][x], c[y][x]);
+#endif
     }
 }
 
 template <typename FuncT, typename Container>
 CUDA_KERNEL
-auto KernelImplementation(FuncT func, Container a, Container b, Container c, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
+auto KernelImplementation(FuncT func, [[maybe_unused]] Container a, [[maybe_unused]] Container b, Container c, [[maybe_unused]] const std::int32_t* index = nullptr) -> std::enable_if_t<(Container::TParam_Dimension == 3), void>
 {
     using namespace ::fw::math;
 
@@ -86,7 +102,13 @@ auto KernelImplementation(FuncT func, Container a, Container b, Container c, [[m
 
     if (x < a.Size(0) && y < a.Size(1) && z < a.Size(2))
     {
+#if defined(NUM_ACCESSES_1)
+        func(c[z][y][x]);
+#elif defined(NUM_ACCESSES_2)
+        func(a[z][y][x], c[z][y][x]);
+#elif defined(NUM_ACCESSES_3)
         func(a[z][y][x], b[z][y][x], c[z][y][x]);
+#endif
     } 
 }
 
@@ -102,7 +124,7 @@ void Kernel(FuncT func, Field& a, Field& b, Field& c, const std::int32_t* index 
 #else // __CUDACC__
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
+auto KernelImplementation(FuncT func, [[maybe_unused]] const Container& a, [[maybe_unused]] const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -113,8 +135,15 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
         #pragma omp simd
         for (SizeT x = 0; x < a.Size(0); ++x)
         {
-            const std::int32_t i = index[x];
+            const SizeT i = index[x];
+
+#if defined(NUM_ACCESSES_1)
+            func(c[i]);
+#elif defined(NUM_ACCESSES_2)
+            func(a[i], c[i]);
+#elif defined(NUM_ACCESSES_3)            
             func(a[i], b[i], c[i]);
+#endif
         }
     }
     else
@@ -123,13 +152,19 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
         #pragma omp simd
         for (SizeT x = 0; x < a.Size(0); ++x)
         {
+#if defined(NUM_ACCESSES_1)
+            func(c[x]);
+#elif defined(NUM_ACCESSES_2)
+            func(a[x], c[x]);
+#elif defined(NUM_ACCESSES_3)             
             func(a[x], b[x], c[x]);
+#endif
         }
     }
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
+auto KernelImplementation(FuncT func, [[maybe_unused]] const Container& a, [[maybe_unused]] const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 1 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -147,20 +182,32 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
         #pragma omp simd
         for (SizeT i = 0; i < i_max; ++i)
         {
+#if defined(NUM_ACCESSES_1)
+            func(tc[i]);
+#elif defined(NUM_ACCESSES_2)
+            func(ta[i], tc[i]);
+#elif defined(NUM_ACCESSES_3)            
             func(ta[i], tb[i], tc[i]);
+#endif
         }
     }
 #else 
     #pragma omp simd
     for (SizeT x = 0; x < a.Size(0); ++x)
     {    
+#if defined(NUM_ACCESSES_1)
+        func(c[x]);
+#elif defined(NUM_ACCESSES_2)
+        func(a[x], c[x]);
+#elif defined(NUM_ACCESSES_3)             
         func(a[x], b[x], c[x]);
+#endif
     }
 #endif
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
+auto KernelImplementation(FuncT func, [[maybe_unused]] const Container& a, [[maybe_unused]] const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -170,13 +217,19 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
         #pragma omp simd
         for (SizeT x = 0; x < a.Size(0); ++x)
         {
+#if defined(NUM_ACCESSES_1)
+            func(c[y][x]);
+#elif defined(NUM_ACCESSES_2)
+            func(a[y][x], c[y][x]);
+#elif defined(NUM_ACCESSES_3)              
             func(a[y][x], b[y][x], c[y][x]);
+#endif
         }
     }
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
+auto KernelImplementation(FuncT func, [[maybe_unused]] const Container& a, [[maybe_unused]] const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 2 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -196,14 +249,26 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
             #pragma omp simd
             for (SizeT i = 0; i < i_max; ++i)
             {
+#if defined(NUM_ACCESSES_1)
+                func(tc[i]);
+#elif defined(NUM_ACCESSES_2)
+                func(ta[i], tc[i]);
+#elif defined(NUM_ACCESSES_3)                
                 func(ta[i], tb[i], tc[i]);
+#endif
             }
         }
 #else       
         #pragma omp simd
         for (SizeT x = 0; x < a.Size(0); ++x)
-        {    
+        {   
+#if defined(NUM_ACCESSES_1)
+            func(c[y][x]);
+#elif defined(NUM_ACCESSES_2)
+            func(a[y][x], c[y][x]);
+#elif defined(NUM_ACCESSES_3)
             func(a[y][x], b[y][x], c[y][x]);
+#endif
         }
 #endif
     }
@@ -211,7 +276,7 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
+auto KernelImplementation(FuncT func, [[maybe_unused]] const Container& a, [[maybe_unused]] const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 3 && Container::TParam_Layout != DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -223,14 +288,20 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
             #pragma omp simd
             for (SizeT x = 0; x < a.Size(0); ++x)
             {
+#if defined(NUM_ACCESSES_1)
+                func(c[z][y][x]);
+#elif defined(NUM_ACCESSES_2)
+                func(a[z][y][x], c[z][y][x]);
+#elif defined(NUM_ACCESSES_3)                
                 func(a[z][y][x], b[z][y][x], c[z][y][x]);
+#endif
             }
         }
     }
 }
 
 template <typename FuncT, typename Container>
-auto KernelImplementation(FuncT func, const Container& a, const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
+auto KernelImplementation(FuncT func, [[maybe_unused]] const Container& a, [[maybe_unused]] const Container& b, Container& c, [[maybe_unused]] const std::int32_t* index = nullptr) 
     -> std::enable_if_t<(Container::TParam_Dimension == 3 && Container::TParam_Layout == DataLayout::AoSoA), void>
 {
     using namespace ::fw::math;
@@ -252,14 +323,26 @@ auto KernelImplementation(FuncT func, const Container& a, const Container& b, Co
                 #pragma omp simd
                 for (SizeT i = 0; i < i_max; ++i)
                 {
+#if defined(NUM_ACCESSES_1)
+                    func(tc[i]);
+#elif defined(NUM_ACCESSES_2)
+                    func(ta[i], tc[i]);
+#elif defined(NUM_ACCESSES_3)
                     func(ta[i], tb[i], tc[i]);
+#endif
                 }
             }
 #else
             #pragma omp simd
             for (SizeT x = 0; x < a.Size(0); ++x)
             {
+#if defined(NUM_ACCESSES_1)
+                func(c[z][y][x]);
+#elif defined(NUM_ACCESSES_2)
+                func(a[z][y][x], c[z][y][x]);
+#elif defined(NUM_ACCESSES_3)                
                 func(a[z][y][x], b[z][y][x], c[z][y][x]);
+#endif
             }
 #endif
         }
@@ -279,6 +362,14 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
     using namespace ::fw::math;
 
     const SizeT n = size.ReduceMul();
+#if defined(CHECK_RESULTS)
+    const SizeT WARMUP = 0;
+    const SizeT MEASUREMENT = 1;
+#else
+    const SizeT WARMUP = (n > 1048576 ? 10 : 100);
+    const SizeT MEASUREMENT = (n > 1048576 ? 20 : 1000);
+#endif
+
     Field<ElementT, Dimension> field_1(size);
     Field<ElementT, Dimension> field_2(size);
     Field<ElementT, Dimension> field_3(size, true);
@@ -329,48 +420,11 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 
 #if defined(SAXPY_KERNEL)
 #if defined(ELEMENT_ACCESS)
-    //auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z =  a.x * static_cast<TypeX>(3.2) + b.y; };
-    //auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.x =  a.z * static_cast<TypeZ>(3.2) + b.y; };
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.y =  a.x * static_cast<TypeX>(3.2) + c.y; };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.y =  a.x * static_cast<TypeX>(3.2) + c.y; };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, auto&& b) -> void { using namespace ::fw::math; b.y = a.x * static_cast<TypeX>(3.2) + b.y; };
+    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, auto&& b) -> void { using namespace ::fw::math; b.y = a.x * static_cast<TypeX>(3.2) + b.y; };
 #else
-    //auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c =  a * 3.2 + b; };
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c =  a * 3.2 + c; };
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, auto&& b) -> void { using namespace ::fw::math; b = a * 3.2 + b; };
     auto kernel_2 = kernel_1;
-#endif
-#elif defined(COMPUTE_KERNEL)
-#if defined(ELEMENT_ACCESS)
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { 
-        using namespace ::fw::math; 
-        const RealT zero = 0;
-        RealT tmp = c.z;
-        for (SizeT i = 0; i < 10; ++i) tmp += Exp(Min(zero, tmp + a.x) + b.y);
-        c.z = tmp;
-    };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { 
-        using namespace ::fw::math; 
-        const RealT one = 1;
-        const RealT two = 2;
-        RealT tmp = c.x;
-        for (SizeT i = 0; i < 10; ++i) tmp += Log(Max(one, static_cast<RealT>(Min(two, tmp + a.z))) - b.y);
-        c.x = tmp;
-    };
-#else
-    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { 
-        using namespace ::fw::math; 
-        const ElementT zero(0);
-        ElementT tmp = c;
-        for (SizeT i = 0; i < 10; ++i) tmp += Exp(Min(zero, tmp + a) + b);
-        c = tmp;
-    };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { 
-        using namespace ::fw::math; 
-        const ElementT one(1);
-        const ElementT two(2);
-        ElementT tmp = c;
-        for (SizeT i = 0; i < 10; ++i) tmp += Log(Max(one, Min(two, tmp + a)) - b);
-        c = tmp;
-    };
 #endif
 #else
 #if defined(ELEMENT_ACCESS)
