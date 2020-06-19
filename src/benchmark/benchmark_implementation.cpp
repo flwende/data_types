@@ -421,17 +421,27 @@ int benchmark(int argc, char** argv, const SizeArray<Dimension>& size)
 #if defined(SAXPY_KERNEL)
 #if defined(ELEMENT_ACCESS)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, auto&& b) -> void { using namespace ::fw::math; b.y = a.x * static_cast<TypeX>(3.2) + b.y; };
-    auto kernel_2 = [] CUDA_DEVICE_VERSION (const auto& a, auto&& b) -> void { using namespace ::fw::math; b.y = a.x * static_cast<TypeX>(3.2) + b.y; };
+    auto kernel_2 = kernel_1;
 #else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, auto&& b) -> void { using namespace ::fw::math; b = a * 3.2 + b; };
     auto kernel_2 = kernel_1;
 #endif
 #elif defined(NUM_ACCESSES_1)
+#if defined(ELEMENT_ACCESS)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (auto&& a) -> void { using namespace ::fw::math; a.x = a.x * static_cast<TypeX>(3.2); };
+    auto kernel_2 = kernel_1;
+#else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (auto&& a) -> void { using namespace ::fw::math; a = a * 3.2; };
     auto kernel_2 = kernel_1;
+#endif
 #elif defined(NUM_ACCESSES_3)
+#if defined(ELEMENT_ACCESS)
+    auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto&b, auto&& c) -> void { using namespace ::fw::math; c.x = a.x * static_cast<TypeX>(3.2) + b.x; };
+    auto kernel_2 = kernel_1;
+#else
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto&b, auto&& c) -> void { using namespace ::fw::math; c = a * 3.2 + b; };
     auto kernel_2 = kernel_1;
+#endif
 #else
 #if defined(ELEMENT_ACCESS)
     auto kernel_1 = [] CUDA_DEVICE_VERSION (const auto& a, const auto& b, auto&& c) -> void { using namespace ::fw::math; c.z = Exp(a.x + b.y); };
